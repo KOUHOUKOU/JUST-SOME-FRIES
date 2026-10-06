@@ -1,0 +1,4 @@
+# Godot editor cache
+game/.godot/
+*.avi
+build/

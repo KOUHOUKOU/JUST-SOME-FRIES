@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JUST SOME FRIES · Walkthrough</title>
+<style>
+  :root { --bg: #fdf6e9; --ink: #3a2f25; --muted: #7a6a58; --accent: #e8a33c; --card: #fffaf1; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1d1915; --ink: #f3e9da; --muted: #b8a892; --accent: #f0b453; --card: #27221c; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 28px; letter-spacing: .04em; margin: 0 0 4px; }
+  p.tag { margin: 0 0 18px; color: var(--muted); }
+  video { width: 100%; height: auto; display: block; border-radius: 10px; background: #000; }
+  nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  nav a { padding: 10px 16px; border-radius: 8px; background: var(--card); color: var(--ink); text-decoration: none; border: 1px solid rgba(128,100,60,.25); }
+  nav a.main { background: var(--accent); color: #2b1d0c; border-color: transparent; font-weight: 600; }
+  small { display: block; margin-top: 16px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>JUST SOME FRIES</h1>
+  <p class="tag">Be a gull. Steal magic fries off a seaside pier, and find out what you were really hungry for.</p>
+  <video controls playsinline preload="metadata" poster="walkthrough_poster.jpg">
+    <source src="walkthrough.mp4" type="video/mp4">
+    Your browser cannot play this video. <a href="walkthrough.mp4">Download the .mp4</a>.
+  </video>
+  <nav>
+    <a class="main" href="./">Play in the browser</a>
+    <a href="https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest">Download for Windows</a>
+    <a href="https://github.com/KOUHOUKOU/JUST-SOME-FRIES">Source on GitHub</a>
+    <a href="walkthrough.mp4" download>Download the video</a>
+  </nav>
+  <small>Recorded in-game with Godot's Movie Maker. A test bot is flying, so each dive starts with a cut. Contains the ending.</small>
+</main>
+</body>
+</html>
