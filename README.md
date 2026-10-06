@@ -2,6 +2,8 @@
 
 ## ▶ Walkthrough video (3 min)
 
+https://github.com/user-attachments/assets/c3f35bd6-2460-469f-bcd2-b76cdf8fe108
+
 [![Watch the walkthrough](images/watch.jpg)](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)
 
 **[▶ Watch the walkthrough in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) · **[▶ Play the game in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/)**
