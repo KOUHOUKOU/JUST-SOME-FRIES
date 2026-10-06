@@ -1,6 +1,14 @@
 # JUST SOME FRIES
 
-[![cover](images/cover.jpg)](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)
+## ▶ Walkthrough video (3 min)
+
+[![Watch the walkthrough](images/watch.jpg)](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)
+
+**[▶ Watch the walkthrough in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) · **[▶ Play the game in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/)**
+
+---
+
+![cover](images/cover.jpg)
 
 > Be a gull. Steal magic fries off a seaside pier, and find out what you were really hungry for.
 
