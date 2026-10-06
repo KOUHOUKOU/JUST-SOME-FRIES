@@ -4,8 +4,6 @@
 
 https://github.com/user-attachments/assets/c3f35bd6-2460-469f-bcd2-b76cdf8fe108
 
-[![Watch the walkthrough](images/watch.jpg)](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)
-
 **[▶ Watch the walkthrough in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) · **[▶ Play the game in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/)**
 
 ---
@@ -24,7 +22,7 @@ A small 3D flight game made for **Tripothon**, theme *"A Gift for ____"*.
 |---|---|
 | **Walkthrough video** (3 min, plays in the browser) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
 | **Play in the browser** (no install) | **[kouhoukou.github.io/JUST-SOME-FRIES](https://kouhoukou.github.io/JUST-SOME-FRIES/)** |
-| **Download for Windows** (the full experience) | **[Releases → JustSomeFries_Windows.zip](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest)** |
+| **Download for Windows** (the full experience) | **[Releases → JustSomeFries_Windows.zip](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest)** · [direct download](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/download/version1/JustSomeFries_Windows.zip) |
 | Source (Godot 4 project) | [`game/`](game/) in this repository |
 
 The walkthrough was recorded straight from the game with Godot's Movie Maker. A test bot flies it, so each dive starts with a cut. It shows the opening, the three tutorial fries (one ends with the gull shot down), Gull Sight, silver, gold and diamond fries, a stolen hat, the volleyball players and **the ending (spoilers)**.
