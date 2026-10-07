@@ -9,6 +9,9 @@ var win_mat
 var lamp_mat
 var beam_mat
 var cloud_mat
+var sun_disc = null
+var sun_pos = Vector3(0, 110, 170)     # where the sun is in the sky (it is also what the "catch the sun" quest flies to)
+var sun_caught = false
 var player
 var t = 0.0
 var target = 0.0
@@ -38,6 +41,7 @@ func _apply(delta):
 	var u = clamp(t, 0.0, 1.0)
 	var elev = lerp(58.0, 2.0, pow(u, 0.9))
 	sun.rotation_degrees = Vector3(-max(elev, 1.5), lerp(-35.0, 15.0, u), 0)
+	_place_sun(max(elev, 1.5), lerp(-35.0, 15.0, u))
 	sun.light_color = _k3(Color(1.0, 0.97, 0.9), Color(1.0, 0.78, 0.5), Color(0.95, 0.5, 0.4), u)
 	sun.light_energy = _k3(Color(0.9, 0, 0), Color(0.85, 0, 0), Color(0.3, 0, 0), u).r
 	sky.sky_top_color = _k3(Color(0.30, 0.52, 0.82), Color(0.38, 0.50, 0.72), Color(0.13, 0.17, 0.36), u)
@@ -53,7 +57,11 @@ func _apply(delta):
 	if beam_mat != null:
 		beam_mat.albedo_color.a = smoothstep(0.7, 1.0, u) * 0.22
 	if cloud_mat != null:
-		cloud_mat.albedo_color = Color(1, 1, 1, 0.7).lerp(Color(1.0, 0.72, 0.62, 0.7), u)
+		cloud_mat.set_shader_parameter("top_col", Color(1, 1, 1).lerp(Color(1.0, 0.72, 0.62), u))
+		cloud_mat.set_shader_parameter("bottom_col", Color(0.74, 0.82, 0.93).lerp(Color(0.62, 0.42, 0.55), u))
+		cloud_mat.set_shader_parameter("glow", lerp(0.42, 0.22, u))
+	if sun_disc != null:
+		sun_disc.caught = sun_caught
 	# colour: richer with every special fry, back to natural at the ending, muted in Gull Sense view
 	var sat_t = 1.0 + 0.08 * GS.special_count()
 	if player != null:
@@ -70,3 +78,12 @@ func _apply(delta):
 		glow_t = 0.3
 	glow = move_toward(glow, glow_t, delta * 0.2)
 	env.glow_intensity = glow
+
+# the sun disc hangs where the light comes from: 170 m out over the sea, 90-125 m up (so a strong, fast gull can reach it)
+func _place_sun(elev_deg, yaw_deg):
+	var yaw = deg_to_rad(yaw_deg)
+	var dir = Vector3(sin(yaw), 0.0, cos(yaw))           # the light shines towards -Z, so the sun stands on the +Z (sea) side
+	var h = clamp(170.0 * tan(deg_to_rad(elev_deg)), 90.0, 125.0)
+	sun_pos = Vector3(0, 0, 10) + dir * 170.0 + Vector3(0, h, 0)
+	if sun_disc != null:
+		sun_disc.global_position = sun_pos

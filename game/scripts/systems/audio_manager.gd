@@ -7,6 +7,8 @@ extends Node
 
 const RATE = 22050
 const MRATE = 11025
+# the pitch ladder of a streak of good presses (a major pentatonic climb)
+const PENTA = [1.0, 1.1225, 1.2599, 1.4983, 1.6818, 2.0, 2.2449, 2.5198]
 
 var sounds = {}
 var pool = []
@@ -388,6 +390,33 @@ func _build_sfx(s):
 	s["sip"] = _wav(_mix(_sweep(0.2, 300.0, 540.0, 0.28, 0.8), _lp(_noise(0.28, 0.1, 6.0, 0.15, 0.04), 0.5)))
 	s["heart"] = _wav(_mix(_note(_hz(88), 0.5, 0.16, 6.0, 0.004, 0.2), _note(_hz(95), 0.55, 0.13, 6.0, 0.004, 0.2), 0.08))
 	s["feed"] = _wav(_mix(_note(_hz(79), 0.5, 0.2, 5.0, 0.004, 0.2), _note(_hz(84), 0.6, 0.18, 4.5, 0.004, 0.2), 0.1))
+	# round 6: the rhythm. A green press = a soft marimba note, a gold press = a bell with a sparkle on top, a miss = a muted little "tock".
+	var ro = _mix(_note(_hz(72), 0.42, 0.34, 9.0, 0.003, 0.35), _lp(_noise(0.03, 0.12, 60.0, 0.4), 0.5))
+	ro = _mix(ro, _note(_hz(84), 0.3, 0.08, 12.0, 0.003, 0.1), 0.0)
+	s["ring_ok"] = _wav(ro)
+	var rg = _note(_hz(76), 0.7, 0.3, 5.5, 0.003, 0.3)
+	rg = _mix(rg, _note(_hz(83), 0.8, 0.26, 5.0, 0.003, 0.3), 0.045)
+	rg = _mix(rg, _note(_hz(91), 0.6, 0.12, 7.0, 0.003, 0.1), 0.09)
+	s["ring_gold"] = _wav(rg)
+	s["ring_miss"] = _wav(_mix(_note(176.0, 0.14, 0.45, 26.0, 0.002, 0.2), _lp(_noise(0.06, 0.25, 40.0, 0.25), 0.4)))
+	# the buffs: coffee a bright rising swirl, cocktail a warm sliding bubble, ice cream a sparkle run; one shared "wears off"
+	var bc = _mix(_sweep(0.5, 220.0, 740.0, 0.22, 1.3), _note(_hz(79), 0.7, 0.18, 4.0, 0.01, 0.3), 0.18)
+	bc = _mix(bc, _note(_hz(86), 0.8, 0.14, 4.0, 0.01, 0.3), 0.26)
+	s["buff_coffee"] = _wav(bc)
+	var ba = _mix(_sweep(0.6, 520.0, 260.0, 0.2, 0.9), _note(_hz(67), 0.9, 0.2, 3.0, 0.02, 0.2), 0.0)
+	ba = _mix(ba, _note(_hz(74), 0.9, 0.16, 3.0, 0.02, 0.2), 0.16)
+	for j in 3:
+		ba = _mix(ba, _sweep(0.12, 300.0 + j * 120.0, 560.0 + j * 120.0, 0.14, 0.7), 0.12 + j * 0.12)
+	s["buff_alcohol"] = _wav(ba)
+	var bi = _buf(0.1)
+	for j in 6:
+		bi = _mix(bi, _note(_hz([84, 88, 91, 96, 100, 103][j]), 0.6, 0.16, 6.0, 0.004, 0.2), j * 0.07)
+	s["buff_ice"] = _wav(bi)
+	s["buff_end"] = _wav(_mix(_note(_hz(76), 0.5, 0.22, 6.0, 0.01, 0.2), _note(_hz(69), 0.7, 0.2, 5.0, 0.01, 0.2), 0.14))
+	s["boing"] = _wav(_mix(_sweep(0.25, 180.0, 520.0, 0.35, 0.6), _note(_hz(88), 0.3, 0.12, 9.0, 0.003, 0.2), 0.04))
+	# the "you got a fry" glide: a short rising shimmer under the reward chord
+	var fg = _mix(_sweep(0.55, 360.0, 1100.0, 0.12, 1.4), _lp(_noise(0.5, 0.06, 3.0, 0.1, 0.2), 0.5))
+	s["fry_fly"] = _wav(fg)
 	# the one resolving tone: tonic (C) — only used at the ending
 	s["tonic"] = _wav(_mix(_note(_hz(72), 3.5, 0.3, 1.1, 0.03, 0.1), _note(_hz(60), 3.5, 0.25, 0.9, 0.05, 0.05)))
 

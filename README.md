@@ -2,7 +2,7 @@
 
 ## ▶ Walkthrough video (3 min)
 
-https://github.com/user-attachments/assets/c3f35bd6-2460-469f-bcd2-b76cdf8fe108
+[![Watch the walkthrough](docs/walkthrough_poster.jpg)](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)
 
 **[▶ Watch the walkthrough in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) · **[▶ Play the game in your browser](https://kouhoukou.github.io/JUST-SOME-FRIES/)**
 
@@ -25,7 +25,7 @@ A small 3D flight game made for **Tripothon**, theme *"A Gift for ____"*.
 | **Download for Windows** (the full experience) | **[Releases → JustSomeFries_Windows.zip](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest)** · [direct download](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/download/version1/JustSomeFries_Windows.zip) |
 | Source (Godot 4 project) | [`game/`](game/) in this repository |
 
-The walkthrough was recorded straight from the game with Godot's Movie Maker. A test bot flies it, so each dive starts with a cut. It shows the opening, the three tutorial fries (one ends with the gull shot down), Gull Sight, silver, gold and diamond fries, a stolen hat, the volleyball players and **the ending (spoilers)**.
+The walkthrough was recorded straight from the game with Godot's Movie Maker. A test bot flies it, so each dive starts with a cut. It shows the opening, the three tutorial fries, Gull Sight, silver, gold and diamond fries, the pool villa, the Fry Codex and **the ending (spoilers)**.
 
 ## How to play
 
@@ -41,7 +41,7 @@ The walkthrough was recorded straight from the game with Godot's Movie Maker. A 
 | A / D | bank (double-tap to roll) |
 | Space | flap |
 | Ctrl (hold) | land anywhere; resting on the ground gets your stamina back |
-| **E** | grab: press as each ring closes (green = good, gold = perfect), and again to slip away |
+| **E** | grab: press as each ring hits the green zone (gold counts double) |
 | TAB (hold) | Gull Sight: time slows, the fries worth chasing glow |
 | C | Fry Codex (right-click a wearable to put it on or take it off) |
 | F | squawk |
@@ -49,9 +49,11 @@ The walkthrough was recorded straight from the game with Godot's Movie Maker. A 
 
 ## The game
 
-You fly freely over a sunny seaside town, pier and cafe. Dive at a fry fast enough and the grab becomes a one-key rhythm: one ring for a silver fry, three for gold, five for diamond. Then slip away before the owner's swing lands. Get it wrong and you are shot down, the fry vanishes, and the owner calmly orders another.
+You fly freely over a sunny seaside town, pier and cafe. Dive at a fry fast enough and the grab becomes a one-key rhythm game: target circles appear around the fry, and every circle sends two waves of rings. Press **E** as a ring hits the green zone (green = 1 point, gold = 2, a miss = 0) until you have as many points as the fry has waves. A silver fry has 2 circles, gold 3, diamond 5 circles arranged like the Olympic rings. There is no escape check, but a missed grab costs breath, spooks the fry and the owner notices you: try again once things calm down.
 
-Seven colours of magic fry each change how you fly: top speed, acceleration, wider rings, how far you can see, stamina, rest, and how hard you get hurt. Each comes in silver, gold and diamond. Volleyball players spike the ball at you, dogs and kids chase you, and you can steal coffee, cocktails, hats and sunglasses off people.
+Seven colours of magic fry each change how you fly: top speed, acceleration, ring size, how far you can see, stamina, rest, and how hard you get hurt. Each comes in silver, gold and diamond. Volleyball players spike the ball at you, dogs and kids chase you, and you can steal hats, glasses, socks, coffee, cocktails and ice cream off people. The drinks are 20-second buffs (coffee = acceleration, cocktail = free boost, ice cream = nothing can hit you). Gull Sight (hold TAB) slows time and shows what is worth chasing, with an arrow to the nearest fry. Side quests ask you to catch a fish, a cloud and the sun.
+
+The town has a terraced hill with villas, pools and roof terraces, a marina, an ice cream shop and a fry shack, drifting low-poly clouds and a real sun.
 
 And then there is the big brother on the cafe roof, who has everything and is still hungry.
 
@@ -63,10 +65,10 @@ Godot 4.7.1 (GDScript, Compatibility renderer), Claude Code, ChatGPT. Every mode
 
 | | |
 |---|---|
-| ![world](images/01_world.jpg) | ![dusk cafe](images/02_dusk_cafe.jpg) |
-| ![the gull](images/03_the_gull.jpg) | ![gull sight](images/04_gull_sight.jpg) |
-| ![grab ring](images/05_grab_ring.jpg) | ![legendary fry](images/06_legendary_fry.jpg) |
-| ![comic reaction](images/07_comic_reaction.jpg) | ![fry codex](images/08_fry_codex.jpg) |
+| ![fry box owner](images/01_fry_box_owner.jpg) | ![pier overview](images/02_pier_overview.jpg) |
+| ![gull lock on](images/03_gull_lock_on.jpg) | ![catch the sun](images/04_catch_the_sun.jpg) |
+| ![rhythm rings](images/05_rhythm_rings.jpg) | ![pool villa grab](images/06_pool_villa_grab.jpg) |
+| ![fry codex](images/07_fry_codex.jpg) | ![sea and quest](images/08_sea_and_quest.jpg) |
 
 ## Repository
 

@@ -62,7 +62,7 @@ func setup(p_mode, style, pos, face, path, p_speed, p_player):
 		"jog":
 			rig.set_mode("jog")
 			rig.walk_rate = speed / 2.6
-		"fish", "paint", "play", "chat", "lie", "sit", "wave", "eat":
+		"fish", "paint", "play", "chat", "lie", "sit", "wave", "eat", "recline":
 			rig.set_mode(mode)
 		_:
 			rig.set_mode("idle")

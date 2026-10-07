@@ -32,8 +32,9 @@ const SPOT_NAMES = {"ferris": "THE FERRIS WHEEL", "lighthouse": "THE LIGHTHOUSE 
 	"crane_hook": "A CRANE HOOK", "containers": "A CONTAINER STACK", "buoy": "A LONELY BUOY", "islet": "THE ISLET", "lifeguard": "THE LIFEGUARD TOWER",
 	"chimney": "A HILLTOP CHIMNEY", "mast": "A MARINA MAST", "kite": "A KITE (OF ALL THINGS)", "playground_top": "THE PLAYGROUND SLIDE",
 	"windmill": "THE WINDMILL", "clock_tower": "THE CLOCK TOWER", "crane_hook2": "THE OTHER CRANE", "barn": "A BARN ROOF",
-	"bar_shelf": "THE BAR SHELF", "cafe_table": "A CAFE TABLE", "market_stall": "THE SUPERMARKET STALL", "boat_deck": "A FISHING BOAT", "roof_laundry": "A LAUNDRY ROOF"}
-const GOLD_SPOTS = ["lifeguard", "chimney", "playground_top", "barn", "containers", "buoy", "islet", "mast", "bar_shelf", "cafe_table", "market_stall", "boat_deck", "roof_laundry"]
+	"bar_shelf": "THE BAR SHELF", "cafe_table": "A CAFE TABLE", "market_stall": "THE SUPERMARKET STALL", "boat_deck": "A FISHING BOAT", "roof_laundry": "A LAUNDRY ROOF",
+	"villa_bbq": "A BARBECUE", "villa_pool": "A SWIMMING POOL", "fry_sign": "THE FRY SHACK SIGN"}
+const GOLD_SPOTS = ["lifeguard", "chimney", "playground_top", "barn", "containers", "buoy", "islet", "mast", "bar_shelf", "cafe_table", "market_stall", "boat_deck", "roof_laundry", "villa_bbq", "villa_pool", "fry_sign"]
 const DIAMOND_SPOTS = ["ferris", "lighthouse", "turbine", "church", "crane_hook", "crane_hook2", "clock_tower", "kite", "windmill"]
 const HUNGER_STEPS = [
 	[45.0, "something is still missing."],
@@ -123,6 +124,7 @@ func _ready():
 	day.lamp_mat = world["lamp_mat"]
 	day.beam_mat = world.get("beam_mat")
 	day.cloud_mat = world.get("cloud_mat")
+	day.sun_disc = world.get("sun_disc")
 	day.player = player
 	add_child(day)
 	hud = CanvasLayer.new()
@@ -189,7 +191,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -414,6 +416,11 @@ func _restore_run(d):
 	loaded_run = true
 	GS.apply_save(d)
 	GS.skip_intro = true
+	for m in get_tree().get_nodes_in_group("mischief"):
+		if is_instance_valid(m) and m.has_method("is_wearable") and m.is_wearable() and (GS.worn.has(m.kind) or GS.mischief_counts.get(m.kind, 0) > 0):
+			m.consumed = true
+			m.taken = true
+			m.queue_free()
 	for id in GS.tutorial_done:
 		var f = world["fries"].get(id, null)
 		if f != null:
@@ -498,7 +505,7 @@ func _process(delta):
 		var dir = Vector3(sin(codex_yaw) * cos(codex_pitch), sin(codex_pitch), cos(codex_yaw) * cos(codex_pitch))
 		var right = Vector3(dir.z, 0.0, -dir.x).normalized()
 		var shift = right * 1.35
-		var xf = Transform3D(Basis.IDENTITY, c + dir * 3.1 + shift).looking_at(c + shift, Vector3.UP)
+		var xf = Transform3D(Basis.IDENTITY, c + dir * 3.1 + shift + Vector3(0, -0.15, 0)).looking_at(c + shift + Vector3(0, -0.62, 0), Vector3.UP)
 		player.set_override(xf, 46.0, 1.0, 3.0)
 	if GS.sense_active:
 		# Gull Sight lasts exactly as long as TAB is held (and the gull has the breath for it)
@@ -517,6 +524,7 @@ func _process(delta):
 		_hints()
 		_hunger_tick(rdt)
 		_autosave_tick(rdt)
+		_quest_tick(rdt)
 
 func _hints():
 	if Input.is_action_pressed("move_forward"):
@@ -526,7 +534,7 @@ func _hints():
 	if post and play_t > 25.0 and GS.fry_total() < 8 and player.mode == 0 and not hud.hint_shown.has("shift"):
 		hud.hint("shift", "SHIFT - BOOST          CTRL - LAND", 4.0)
 	if post and player.snatch.hud_state == "locked":
-		hud.hint("e", "E - WHEN THE RING IS IN THE GREEN.  GOLD IS PERFECT.", 3.5)
+		hud.hint("e", "E - WHEN A WHITE RING HITS THE GREEN.  GOLD COUNTS DOUBLE.", 3.5)
 	if player.low_stamina and player.mode == 0:
 		hud.hint("rest", "CTRL - LAND AND REST", 3.0)
 	if GS.gull_sense_count >= 3 and tab_hint_t < 0.0:
@@ -557,10 +565,8 @@ func _tutorial_director():
 				prompt = ""
 			elif best.vanished:
 				prompt = "THE OLD MAN IS ORDERING A NEW ONE..."
-			elif sn.state == "flee":
-				prompt = "PRESS  E  AGAIN  -  SLIP THE SWING!"
 			elif sn.lock_fry != null:
-				prompt = "PRESS  E  WHEN THE WHITE RING IS IN THE GREEN   (GOLD = PERFECT)"
+				prompt = "PRESS  E  WHEN A WHITE RING HITS THE GREEN   (GOLD COUNTS DOUBLE)"
 			elif n == 0:
 				if player.mode == 1:
 					prompt = "SPACE  -  TAKE OFF" if play_t > 1.0 else ""
@@ -683,6 +689,41 @@ func _close_sense():
 func _close_sense_if_open():
 	_close_sense()
 	_close_codex()
+
+# ---- the side quests (fish / cloud / sun): they show up on the mission board once enough fries are in ----
+var quest_items = {}
+var quest_t = 0.0
+const CLOUD_POS = Vector3(22.0, 92.0, 74.0)
+
+func _quest_tick(rdt):
+	quest_t -= rdt
+	if quest_t > 0.0:
+		return
+	quest_t = 0.5
+	var before = {}
+	for id in GS.QUESTS:
+		before[id] = GS.quest_state(id)
+	GS.quests_refresh()
+	for id in GS.QUESTS:
+		if before[id] == "" and GS.quest_state(id) == "active":
+			hud.whisper("new on the board: %s." % GS.QUESTS[id][1].to_lower(), 4.0)
+			Sfx.play("chime", -14.0, 1.3)
+	if GS.quest_state("cloud") == "active" and not quest_items.has("cloud"):
+		var c = Node3D.new()
+		c.set_script(load("res://scripts/fries/mischief.gd"))
+		c.setup("cloud", self, CLOUD_POS)
+		quest_items["cloud"] = c
+	if GS.quest_state("sun") == "active" and not quest_items.has("sun"):
+		var s2 = Node3D.new()
+		s2.set_script(load("res://scripts/fries/mischief.gd"))
+		s2.setup("sun", self, day.sun_pos if day != null else Vector3(0, 110, 160))
+		quest_items["sun"] = s2
+	# the sun item rides along with the sun in the sky; once it is caught the sky sun is gone
+	var sun_item = quest_items.get("sun", null)
+	if sun_item != null and is_instance_valid(sun_item) and not sun_item.taken and day != null:
+		sun_item.global_position = day.sun_pos
+	if GS.quest_state("sun") == "done" and day != null:
+		day.sun_caught = true
 
 # ---- Fry Codex: key C (map + stats + fries with tiers) ----
 func _can_open_codex():

@@ -122,6 +122,9 @@ class Rival extends Node3D:
 		away = away.normalized() + Vector3(0, 0.6, 0)
 		GS.stats["rivals"] += 1
 		GS.award("TERRITORIAL")
+		if player.shield_hit("rival", global_position):
+			Sfx.play("rival_call", -8.0, 0.7)
+			return
 		GS.player_hurt.emit("swat_rival", false)
 		player.spend(4.0)
 		player.shake = max(player.shake, 0.3)

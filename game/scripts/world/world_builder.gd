@@ -13,6 +13,10 @@ const ORBIT_SCRIPT = preload("res://scripts/world/gull_orbit.gd")
 const DOG_SCRIPT = preload("res://scripts/npc/dog.gd")
 const EXTRA_SCRIPT = preload("res://scripts/world/world_extra.gd")
 const TOWN_SCRIPT = preload("res://scripts/world/world_town.gd")
+const HOMES_SCRIPT = preload("res://scripts/world/world_homes.gd")
+const FLORA_SCRIPT = preload("res://scripts/world/world_flora.gd")
+const MISCHIEF = preload("res://scripts/fries/mischief.gd")
+const SkyBuilder = preload("res://scripts/world/sky.gd")
 
 const CHALK = "E8E2D2"
 const SAGE = "879B82"
@@ -51,9 +55,44 @@ var volley = null
 var hill_flat = []          # flat roofs on the hill (laundry roofs are built on them)
 var town
 var extra
+var homes
+var sea_boats = []
+var beach_loungers = []
+var flora
+var foot = []            # footprints of buildings and yards: [Vector2 centre, half width, half depth] (flowers, trees and people keep out)
 
 func gh(x, z):
 	return Terrain.H(x, z)
+
+func add_foot(x, z, hw, hd):
+	foot.append([Vector2(x, z), hw, hd])
+
+func is_clear(x, z, margin = 0.0):
+	for f in foot:
+		if abs(x - f[0].x) < f[1] + margin and abs(z - f[0].y) < f[2] + margin:
+			return false
+	return true
+
+# a sun lounger (frame, cushion, a backrest propped up at 40 degrees). Returns where a reclining person's hips go (give that to a "recline" NPC).
+func lounger(x, y, z, yaw_deg, cushion = "F4F1E8"):
+	var basis = Basis.from_euler(Vector3(0, deg_to_rad(yaw_deg), 0))
+	var P = Vector3(x, y, z)
+	B.box(P + basis * Vector3(0, 0.26, 0.1), Vector3(0.78, 0.07, 1.2), "E8E2D2", true, Vector3(0, yaw_deg, 0))
+	B.box(P + basis * Vector3(0, 0.31, 0.1), Vector3(0.7, 0.05, 1.1), cushion, false, Vector3(0, yaw_deg, 0))
+	var hinge = Vector3(0, 0.34, -0.5)
+	B.box(P + basis * (hinge + Vector3(0, 0.3, -0.36)), Vector3(0.78, 0.07, 0.95), "E8E2D2", false, Vector3(40, yaw_deg, 0))
+	B.box(P + basis * (hinge + Vector3(0, 0.34, -0.4)), Vector3(0.7, 0.05, 0.85), cushion, false, Vector3(40, yaw_deg, 0))
+	for sx in [-0.33, 0.33]:
+		for sz in [-0.45, 0.65]:
+			B.box(P + basis * Vector3(sx, 0.11, sz), Vector3(0.06, 0.22, 0.06), "B8BEC4", false)
+	return P + basis * Vector3(0, 0.0, -0.36)
+
+# a beach towel (flat, a person may lie on it: its top is at +0.04)
+func towel(x, z, yaw_deg, col, y = -999.0):
+	if y < -900.0:
+		y = gh(x, z)
+	B.box(Vector3(x, y + 0.02, z), Vector3(1.0, 0.04, 2.0), col, false, Vector3(0, yaw_deg, 0))
+	B.box(Vector3(x, y + 0.045, z), Vector3(0.9, 0.012, 0.3), "FFFFFF", false, Vector3(0, yaw_deg, 0))
 
 func _free(x, z, r = 2.0):
 	for rv in reserved:
@@ -96,10 +135,16 @@ func build(root_node, p_player):
 	out = {"fries": {}, "npcs": [], "ordinary": null, "window_mat": win_mat, "lamp_mat": lamp_mat, "ground_h": Callable(Terrain, "H")}
 	reserved = [[Vector2(-8, 3), 5.5], [Vector2(-2.5, 5.5), 4.0], [Vector2(-9.5, -2.5), 8.0], [Vector2(-16.5, 15), 4.0],
 		[Vector2(-11, 11.5), 5.0], [Vector2(20, 19), 5.0], [Vector2(27, 14.5), 6.0], [Vector2(1.5, 66), 7.0]]
+	MISCHIEF.reset_claims()
+	foot = []
 	extra = EXTRA_SCRIPT.new()
 	extra.setup(self)
 	town = TOWN_SCRIPT.new()
 	town.setup(self)
+	homes = HOMES_SCRIPT.new()
+	homes.setup(self)
+	flora = FLORA_SCRIPT.new()
+	flora.setup(self)
 	_environment()
 	_terrain()
 	_cafe()
@@ -126,10 +171,12 @@ func build(root_node, p_player):
 	_ambient()
 	extra.build_life()
 	town.build_life()
+	homes.build_life()
 	out["fish_spots"] = extra.build_fish_spots()
 	out["volley"] = volley
 	_mischief_balls()
 	_ambient_gulls()
+	flora.build()
 	B.flush()
 	out["anchors"] = anchors
 	out["air_zones"] = zones
@@ -145,6 +192,7 @@ func _environment():
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 140.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY          # the sun in the sky is drawn by us (sky.gd): a crisp disc you can fly to
 	root.add_child(sun)
 	var sky_mat = ProceduralSkyMaterial.new()
 	sky_mat.sky_top_color = Color("4C7FB8")
@@ -175,6 +223,9 @@ func _environment():
 	out["sun"] = sun
 	out["env"] = env
 	out["sky_mat"] = sky_mat
+	var clouds = SkyBuilder.build_clouds(map, rng, [Vector3(22.0, 92.0, 74.0)])
+	out["cloud_mat"] = clouds["mat"]
+	out["sun_disc"] = SkyBuilder.build_sun(root)
 
 func _terrain():
 	var mesh = Terrain.build_mesh()
@@ -315,7 +366,35 @@ func tree(x, z, kind = 0, scale_v = 1.0):
 				B.box(Vector3(x + cos(a) * 1.2 * s, y + h2 - 0.15, z + sin(a) * 1.2 * s), Vector3(2.6 * s, 0.07, 0.55 * s), "4E8F4A" if k % 2 == 0 else "5FA050", false, Vector3(0, -rad_to_deg(a), -22))
 			B.perch_pad(Vector3(x, y + h2 + 0.3, z), 0.6)
 
-func house(x, z, w, d, h, wall, roof_col, roof_kind = "pitched"):
+const SHUTTERS = ["4F7A66", "3E6F8E", "A94F3E", "6B4E7A", "2D6F5E", "C9A24A"]
+const DOORS = ["6F5238", "A94F3E", "3E6F8E", "2D6F5E", "C9A24A", "3A3F4A"]
+
+# a windowed wall seen from the front (+Z) and the back: frame, glass, shutters, sills, sometimes a flower box
+func _facade(x, base, z, w, d, h, shutter, floors_override = -1):
+	var floors = floors_override if floors_override > 0 else max(int(h / 3.0), 1)
+	var cols = max(int(w / 3.2), 1)
+	for f in floors:
+		for c in cols:
+			var wx = x - w * 0.5 + (c + 0.5) * w / cols
+			var wy = base + 1.7 + f * 2.8
+			if wy + 0.8 > base + h:
+				continue
+			if f == 0 and abs(wx - (x - w * 0.25)) < 1.2:
+				continue            # the door is there
+			B.box(Vector3(wx, wy, z + d * 0.5 + 0.03), Vector3(0.9, 1.2, 0.08), "", false, Vector3.ZERO, 0.0, "window")
+			B.box(Vector3(wx, wy, z + d * 0.5 + 0.02), Vector3(1.2, 1.5, 0.05), CHALK, false)
+			B.box(Vector3(wx, wy - 0.78, z + d * 0.5 + 0.1), Vector3(1.4, 0.08, 0.22), CHALK, false)
+			B.box(Vector3(wx - 0.72, wy, z + d * 0.5 + 0.06), Vector3(0.28, 1.45, 0.06), shutter, false)
+			B.box(Vector3(wx + 0.72, wy, z + d * 0.5 + 0.06), Vector3(0.28, 1.45, 0.06), shutter, false)
+			if f > 0 and rng.randf() < 0.35:
+				B.box(Vector3(wx, wy - 0.95, z + d * 0.5 + 0.28), Vector3(1.2, 0.26, 0.3), TERRA, false)
+				for k in 4:
+					B.ball(Vector3(wx - 0.45 + k * 0.3, wy - 0.76, z + d * 0.5 + 0.28), 0.1, _pick(["E85745", "F1C94B", "F7C7D4", "FFFFFF"]))
+			B.box(Vector3(wx, wy, z - d * 0.5 - 0.03), Vector3(0.9, 1.2, 0.08), "", false, Vector3.ZERO, 0.0, "window")
+
+# the house. Round 6: a real roof solid (you can stand on the tiles), a chimney that grows out of the slope, shutters, sills, a door with a hood.
+# opts: {"door": colour, "shutter": colour, "floors": n, "chimney": bool}
+func house(x, z, w, d, h, wall, roof_col, roof_kind = "pitched", opts = {}):
 	var g1 = gh(x - w * 0.5, z - d * 0.5)
 	var g2 = gh(x + w * 0.5, z - d * 0.5)
 	var g3 = gh(x - w * 0.5, z + d * 0.5)
@@ -324,29 +403,44 @@ func house(x, z, w, d, h, wall, roof_col, roof_kind = "pitched"):
 	var yb = max(max(g1, g2), max(g3, g4))
 	B.box(Vector3(x, (y0 - 5.0 + yb) * 0.5, z), Vector3(w + 0.2, yb - y0 + 5.0, d + 0.2), "9A9484", true)
 	var base = yb
+	var wallc = Color(wall)
 	B.box(Vector3(x, base + h * 0.5, z), Vector3(w, h, d), wall, true)
+	B.box(Vector3(x, base + 0.3, z), Vector3(w + 0.14, 0.6, d + 0.14), wallc.darkened(0.18), false)         # a darker skirting
+	var shutter = opts.get("shutter", _pick(SHUTTERS))
+	var top = base + h
 	if roof_kind == "pitched":
-		B.prism(Vector3(x, base + h + w * 0.17, z), Vector3(w + 0.8, w * 0.34, d + 0.8), roof_col, true)
+		var along_x = w >= d
+		var span = d if along_x else w
+		var rh = min(span * 0.36, 3.4)
+		if along_x:
+			B.prism(Vector3(x, base + h + rh * 0.5, z), Vector3(w + 0.9, rh, d + 0.9), roof_col, true)
+		else:
+			B.prism(Vector3(x, base + h + rh * 0.5, z), Vector3(d + 0.9, rh, w + 0.9), roof_col, true, Vector3(0, 90, 0))
+		# the chimney: its foot is inside the roof, its top above the ridge (the roof is lower where it is further from the ridge)
+		if opts.get("chimney", rng.randf() < 0.55) and span > 5.0:
+			var off = span * 0.2 * (1.0 if rng.randf() < 0.5 else -1.0)
+			var roof_here = rh * (1.0 - abs(off) / (span * 0.5 + 0.45))
+			var ch_h = roof_here + 1.3
+			var along = (rng.randf() - 0.5) * (w if along_x else d) * 0.5
+			var cp = Vector3(x + (along if along_x else off), base + h + (ch_h - 0.6) * 0.5, z + (off if along_x else along))
+			B.box(cp, Vector3(0.7, ch_h + 0.6, 0.7), "8B6A5A", true)
+			B.box(cp + Vector3(0, (ch_h + 0.6) * 0.5 + 0.08, 0), Vector3(0.9, 0.16, 0.9), "6F5238", false)
 	else:
 		B.box(Vector3(x, base + h + 0.15, z), Vector3(w + 0.6, 0.3, d + 0.6), roof_col, true)
-	var floors = max(int(h / 3.0), 1)
-	var cols = max(int(w / 3.0), 1)
-	for f in floors:
-		for c in cols:
-			var wx = x - w * 0.5 + (c + 0.5) * w / cols
-			var wy = base + 1.6 + f * 2.8
-			if wy + 0.7 > base + h:
-				continue
-			B.box(Vector3(wx, wy, z + d * 0.5 + 0.03), Vector3(0.9, 1.2, 0.08), "", false, Vector3.ZERO, 0.0, "window")
-			B.box(Vector3(wx, wy, z + d * 0.5 + 0.02), Vector3(1.25, 1.45, 0.05), CHALK, false)
-			B.box(Vector3(wx, wy, z - d * 0.5 - 0.03), Vector3(0.9, 1.2, 0.08), "", false, Vector3.ZERO, 0.0, "window")
-	B.box(Vector3(x - w * 0.25, base + 1.05, z + d * 0.5 + 0.03), Vector3(0.95, 2.1, 0.08), DARKWOOD, false)
-	if rng.randf() < 0.5 and h > 4.5:
+		for sx in [-1.0, 1.0]:
+			B.box(Vector3(x + sx * (w * 0.5 + 0.25), base + h + 0.55, z), Vector3(0.2, 0.5, d + 0.6), wall, true)
+		for sz in [-1.0, 1.0]:
+			B.box(Vector3(x, base + h + 0.55, z + sz * (d * 0.5 + 0.25)), Vector3(w + 0.6, 0.5, 0.2), wall, true)
+		top = base + h + 0.3
+	_facade(x, base, z, w, d, h, shutter, opts.get("floors", -1))
+	var dcol = opts.get("door", _pick(DOORS))
+	B.box(Vector3(x - w * 0.25, base + 1.05, z + d * 0.5 + 0.03), Vector3(0.95, 2.1, 0.08), dcol, false)
+	B.box(Vector3(x - w * 0.25, base + 2.28, z + d * 0.5 + 0.22), Vector3(1.5, 0.12, 0.6), roof_col, false)    # a little hood over the door
+	if rng.randf() < 0.4 and h > 4.5:
 		B.box(Vector3(x + w * 0.25, base + 3.2, z + d * 0.5 + 0.6), Vector3(1.8, 0.1, 1.1), WOOD, true)
 		B.box(Vector3(x + w * 0.25, base + 3.75, z + d * 0.5 + 1.1), Vector3(1.8, 0.8, 0.05), WOOD, false)
-	if rng.randf() < 0.6:
-		B.box(Vector3(x + w * 0.3, base + h + w * 0.2 + 0.7, z - d * 0.2), Vector3(0.6, 1.4, 0.6), "8B6A5A", true)
 	return base + h
+
 
 # ====================================================================== districts
 func _cafe():
@@ -457,8 +551,9 @@ func _beach():
 		var gy = gh(p.x, p.y)
 		B.cyl(Vector3(p.x, gy + 1.1, p.y), 0.04, 2.2, WHITE, false)
 		B.cyl(Vector3(p.x, gy + 2.3, p.y), 1.5, 0.45, ucols[i % 5], true, 0.0)
-		B.box(Vector3(p.x + 0.8, gy + 0.22, p.y + 0.6), Vector3(0.6, 0.12, 1.3), WHITE, true, Vector3(0, rng.randf_range(0, 90), 0))
-		B.box(Vector3(p.x + 0.8, gy + 0.5, p.y + 1.15), Vector3(0.6, 0.6, 0.08), FADED_BLUE, false, Vector3(-25, 0, 0))
+		var hip = lounger(p.x + 0.9, gy, p.y + 0.9, 0.0, ucols[(i + 2) % 5])
+		if i % 3 == 0:
+			beach_loungers.append(hip)
 		B.box(Vector3(p.x - 0.9, gy + 0.02, p.y - 0.6), Vector3(1.8, 0.04, 0.9), _pick(ucols), false, Vector3(0, rng.randf_range(-30, 30), 0))
 	for i in 10:
 		var p2 = _free_pos(12, 76, 6, 40, 2.0)
@@ -664,77 +759,48 @@ func _marina():
 	bin(-30.0, 24.0)
 	lamp(-26.0, 25.0)
 
+const BOAT_ROOFS = ["D96D5F", "2D6F5E", "C9A24A", "3E6F8E", "A94F3E"]
+
+# a little sailing boat (bow towards +Z before the yaw): hull with a pointed bow, deck, cabin, mast, boom, sail and a flag. Returns the deck spot
+# where somebody can stand (it is solid: a gull can land on it).
 func _boat(p, yaw_deg, col, mast_anchor = false):
-	B.box(p, Vector3(2.0, 0.9, 5.2), col, false, Vector3(0, yaw_deg, 0))
-	B.prism(p + Vector3(0, 0.0, 3.1), Vector3(2.0, 0.9, 1.4), col, false, Vector3(90, yaw_deg, 0))
-	B.box(p + Vector3(0, 0.85, -0.6), Vector3(1.4, 0.9, 1.8), WHITE, false, Vector3(0, yaw_deg, 0))
-	B.cyl(p + Vector3(0, 3.0, 0.4), 0.07, 5.6, "E8E2D2", false)
-	B.box(p + Vector3(0, 3.2, 1.0), Vector3(0.04, 3.4, 1.6), WHITE, false)
-	B.perch_pad(p + Vector3(0, 5.85, 0.4), 0.3)
+	var bs = Basis.from_euler(Vector3(0, deg_to_rad(yaw_deg), 0))
+	var yw = Vector3(0, yaw_deg, 0)
+	B.box(p + bs * Vector3(0, 0, -0.3), Vector3(2.0, 0.85, 4.2), col, true, yw)
+	for s in [-1.0, 1.0]:
+		B.box(p + bs * Vector3(s * 0.5, 0, 2.15), Vector3(1.1, 0.85, 1.9), col, true, Vector3(0, yaw_deg - s * 28.0, 0))
+	B.box(p + bs * Vector3(0, 0.2, -0.3), Vector3(2.06, 0.12, 4.3), "F4F4F0", false, yw)
+	B.box(p + bs * Vector3(0, 0.46, 0.2), Vector3(1.8, 0.08, 4.8), "B8A07A", true, yw)
+	var roof = BOAT_ROOFS[int(abs(p.x * 3.0 + p.z)) % BOAT_ROOFS.size()]
+	B.box(p + bs * Vector3(0, 1.0, -1.3), Vector3(1.4, 1.0, 1.4), WHITE, true, yw)
+	B.box(p + bs * Vector3(0, 1.55, -1.3), Vector3(1.6, 0.1, 1.6), roof, true, yw)
+	B.box(p + bs * Vector3(0, 1.1, -0.58), Vector3(1.0, 0.4, 0.05), "", false, yw, 0.0, "window")
+	B.cyl(p + bs * Vector3(0, 2.9, 0.9), 0.06, 4.9, "E8E2D2", false)
+	B.box(p + bs * Vector3(0, 1.3, -0.1), Vector3(0.06, 0.06, 2.3), "E8E2D2", false, yw)
+	B.prism(p + bs * Vector3(0, 3.3, -0.1), Vector3(0.05, 3.4, 2.2), "F7F4EA", false, yw)
+	B.box(p + bs * Vector3(0, 5.2, 0.62), Vector3(0.04, 0.34, 0.5), roof, false, yw)
+	B.perch_pad(p + bs * Vector3(0, 5.42, 0.9), 0.3)
+	for s2 in [-1.0, 1.0]:
+		B.ball(p + bs * Vector3(s2 * 1.04, 0.1, -0.6), 0.14, "F4F1E8", Vector3.ONE, 0.0, false)
 	if mast_anchor:
-		anchors["mast"] = p + Vector3(0, 6.4, 0.4)
+		anchors["mast"] = p + bs * Vector3(0, 6.0, 0.9)
+	return p + bs * Vector3(0, 0.5, 0.9)
 
 func _hill():
-	var rows = [-32.0, -44.0, -56.0, -68.0]
-	for r in rows.size():
-		var x = -64.0 + rng.randf_range(0, 5)
-		while x < 64.0:
-			var w = rng.randf_range(6.0, 9.0)
-			var d = rng.randf_range(5.5, 7.0)
-			var h = rng.randf_range(4.0, 7.5)
-			var cx = x + w * 0.5
-			var cz = rows[r] + rng.randf_range(-1.5, 1.5)
-			var near_church = Vector2(cx, cz).distance_to(Vector2(-26, -50)) < 14.0
-			var near_tower = Vector2(cx, cz).distance_to(Vector2(38, -40)) < 7.0
-			var on_plaza = extra.in_plaza(cx, cz, 9.0) or (cz < -62.0 and abs(cx) < 24.0)
-			var in_farm = cx > 66.0 and cz < -48.0
-			if abs(cx) > 4.5 and Terrain.is_land(cx, cz) and gh(cx, cz) > 0.5 and not near_church and not near_tower and not on_plaza and not in_farm:
-				# round 5: fewer identical little houses. A quarter of the lots are pocket gardens; flat roofs (with washing on them) are more common
-				if rng.randf() < 0.24 and r > 0 and not (r == 1 and cx > 12 and not anchors.has("chimney")):
-					_pocket(cx, cz, w, d)
-					x += w + rng.randf_range(2.0, 4.0)
-					continue
-				var kind_flat = rng.randf() < 0.4
-				var top = house(cx, cz, w, d, h, _pick(PALETTE_WALLS), _pick(PALETTE_ROOFS), "flat" if kind_flat else "pitched")
-				if kind_flat:
-					hill_flat.append({"x": cx, "z": cz, "top": top, "w": w, "d": d})
-				var door_base = top - h
-				B.box(Vector3(cx - w * 0.25, door_base - 0.15, cz + d * 0.5 + 0.9), Vector3(1.8, 0.3, 1.5), "CFC6B0", true)
-				hill_doors.append(Vector3(cx - w * 0.25, door_base, cz + d * 0.5 + 0.9))
-				if r == 1 and cx > 12 and not anchors.has("chimney"):
-					anchors["chimney"] = Vector3(cx + w * 0.3, top + 3.2, cz + d * 0.5 + 1.5)
-			x += w + rng.randf_range(2.0, 4.0)
-	for z in range(-26, -72, -2):
-		var y = gh(0, z)
-		B.box(Vector3(0, y + 0.1, z), Vector3(4.0, 0.3, 2.1), "CFC6B0", true)
-		B.box(Vector3(-2.1, y + 0.6, z), Vector3(0.1, 1.0, 2.0), CHALK, false)
-		B.box(Vector3(2.1, y + 0.6, z), Vector3(0.1, 1.0, 2.0), CHALK, false)
-	for i in 3:
-		lamp(-2.6, -34.0 - i * 14.0)
-		lamp(2.6, -34.0 - i * 14.0)
-	for i in 4:
-		var lz = rows[i % 3] + 4.5
-		var lx0 = -40.0 + i * 22.0
-		line(Vector3(lx0, gh(lx0, lz) + 3.4, lz), Vector3(lx0 + 8.0, gh(lx0 + 8.0, lz) + 3.4, lz), "E8E2D2", true)
-		for k in 5:
-			var cxk = lx0 + 1.0 + k * 1.5
-			B.box(Vector3(cxk, gh(cxk, lz) + 3.0, lz), Vector3(0.7, 0.8, 0.03), _pick([CORAL, WHITE, FADED_BLUE, OCHRE]), false)
-	for i in 34:
+	homes.build_hill()
+	# trees on the shelves and banks, only where there is room
+	var placed = 0
+	for i in 140:
+		if placed >= 46:
+			break
 		var tx = rng.randf_range(-70, 70)
-		var tz = rng.randf_range(-85, -22)
-		if abs(tx) > 5 and Terrain.is_land(tx, tz) and gh(tx, tz) > 0.2 and not extra.in_plaza(tx, tz, 6.0) and not (tx > 66.0 and tz < -48.0):
+		var tz = rng.randf_range(-92, -24)
+		if abs(tx) > 4.5 and Terrain.is_land(tx, tz) and gh(tx, tz) > 0.2 and not extra.in_plaza(tx, tz, 6.0) and not (tx > 66.0 and tz < -48.0) and is_clear(tx, tz, 1.5):
+			if Vector2(tx, tz).distance_to(Vector2(-26, -61)) < 14.0:
+				continue
 			tree(tx, tz, 1 if rng.randf() < 0.6 else 0, rng.randf_range(0.8, 1.3))
-	var wx = 38.0
-	var wz = -40.0
-	var wy = gh(wx, wz)
-	for sx in [-1.0, 1.0]:
-		for sz in [-1.0, 1.0]:
-			B.box(Vector3(wx + sx * 1.6, wy + 5.0, wz + sz * 1.6), Vector3(0.3, 10.0, 0.3), SLATE, true)
-	B.cyl(Vector3(wx, wy + 11.5, wz), 2.6, 3.2, "B8BEC4", true)
-	B.cone(Vector3(wx, wy + 14.0, wz), 2.8, 1.6, CORAL, true)
-	B.perch_pad(Vector3(wx, wy + 14.8, wz), 0.5)
+			placed += 1
 
-# an empty lot on the hill becomes a small garden with a bench (and sometimes a fountain), not another little house
 func _pocket(cx, cz, w_, d_):
 	var y = gh(cx, cz)
 	B.box(Vector3(cx, y + 0.12, cz), Vector3(w_, 0.24, d_), "6FA04A", true)
@@ -748,11 +814,11 @@ func _pocket(cx, cz, w_, d_):
 
 func _church():
 	var cx = -26.0
-	var cz = -50.0
+	var cz = -62.0
 	var y = gh(cx, cz)
-	B.box(Vector3(cx, y - 3.0, cz), Vector3(10.0, 8.0, 18.0), "9A9484", true)
+	B.box(Vector3(cx, y - 3.0, cz + 2.0), Vector3(12.0, 8.0, 22.0), "9A9484", true)        # the plinth and forecourt
 	B.box(Vector3(cx, y + 3.0, cz + 2.0), Vector3(6.5, 6.0, 12.0), CHALK, true)
-	B.prism(Vector3(cx, y + 7.0, cz + 2.0), Vector3(7.4, 3.0, 13.0), SLATE, true)
+	B.prism(Vector3(cx, y + 6.5, cz + 2.0), Vector3(13.0, 2.8, 7.4), SLATE, true, Vector3(0, 90, 0))
 	B.box(Vector3(cx, y + 10.0, cz - 5.5), Vector3(4.6, 20.0, 4.6), CHALK, true)
 	B.box(Vector3(cx, y + 17.0, cz - 3.2), Vector3(2.4, 3.0, 0.2), "2B3A44", false)
 	B.box(Vector3(cx, y + 20.2, cz - 5.5), Vector3(5.2, 0.5, 5.2), TERRA, true)
@@ -760,7 +826,10 @@ func _church():
 	B.box(Vector3(cx, y + 22.2, cz - 5.5), Vector3(1.2, 0.25, 0.25), "30343A", false)
 	B.perch_pad(Vector3(cx + 1.8, y + 20.5, cz - 5.5 + 1.8), 0.7)
 	B.box(Vector3(cx, y + 2.0, cz + 8.05), Vector3(1.6, 3.2, 0.1), DARKWOOD, false)
+	for sx in [-1.0, 1.0]:
+		B.box(Vector3(cx + sx * 2.6, y + 3.0, cz + 8.03), Vector3(0.9, 1.6, 0.08), "", false, Vector3.ZERO, 0.0, "window")
 	anchors["church"] = Vector3(cx + 1.8, y + 22.0, cz - 3.0)
+	add_foot(cx, cz + 2.0, 7.0, 13.0)
 
 func _park():
 	var pond = MeshInstance3D.new()
@@ -944,40 +1013,19 @@ func _distant():
 	for i in 6:
 		B.cone(Vector3(-600, 40.0, 100.0 + i * 120.0), 140.0, 90.0, mc[i % 4])
 		B.cone(Vector3(600, 40.0, -80.0 + i * 120.0), 140.0, 90.0, mc[(i + 1) % 4])
-	for p in [Vector3(-90, -0.4, 150), Vector3(70, -0.4, 140), Vector3(30, -0.4, 170), Vector3(150, -0.4, 100)]:
-		_boat(p, rng.randf_range(0, 360), CHALK)
-	var g = Gradient.new()
-	g.set_color(0, Color(1, 1, 1, 0.85))
-	g.set_color(1, Color(1, 1, 1, 0.0))
-	var gt = GradientTexture2D.new()
-	gt.gradient = g
-	gt.fill = GradientTexture2D.FILL_RADIAL
-	gt.fill_from = Vector2(0.5, 0.5)
-	gt.fill_to = Vector2(1.0, 0.5)
-	gt.width = 128
-	gt.height = 128
-	var cmat = StandardMaterial3D.new()
-	cmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	cmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	cmat.albedo_texture = gt
-	cmat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	cmat.albedo_color = Color(1, 1, 1, 0.7)
-	out["cloud_mat"] = cmat
-	for i in 16:
-		var c = MeshInstance3D.new()
-		var q = QuadMesh.new()
-		var s = rng.randf_range(90, 190)
-		q.size = Vector2(s, s * 0.4)
-		c.mesh = q
-		c.material_override = cmat
-		c.position = Vector3(rng.randf_range(-500, 500), rng.randf_range(110, 200), rng.randf_range(-500, 300))
-		c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		map.add_child(c)
+	# sailing boats out on the open water, each with somebody on board (and a cup, a cone or a deck chair)
+	var cols = ["F4F1E8", "7396A8", "D96D5F", "879B82", "D9B25F"]
+	var k = 0
+	for spec in [[Vector3(-62, -0.45, 96), 20.0, "stand"], [Vector3(56, -0.45, 90), 200.0, "fish"], [Vector3(92, -0.45, 58), 110.0, "chat"], [Vector3(-34, -0.45, 128), 300.0, "stand"],
+			[Vector3(30, -0.45, 150), 160.0, "fish"], [Vector3(-98, -0.45, 112), 60.0, "paint"]]:
+		var deck = _boat(spec[0], spec[1], cols[k % 5], k == 1)
+		sea_boats.append({"deck": deck, "mode": spec[2], "yaw": spec[1], "k": k})
+		k += 1
 
 func _thermals():
 	var spots = [[Vector3(34, 0, 26), 16, 34, 4.2], [Vector3(-9.5, 0, 0), 7, 28, 3.6], [Vector3(84, 0, -24), 14, 30, 4.0],
 		[Vector3(10, 10, -52), 14, 28, 3.6], [Vector3(-84, 8, 40), 14, 30, 4.2], [Vector3(0, 0, 118), 8, 24, 3.2],
-		[Vector3(-55, 0, -10), 10, 24, 3.4]]
+		[Vector3(-55, 0, -10), 10, 24, 3.4], [Vector3(18, 0, 68), 13, 104, 4.8], [Vector3(-40, 0, 90), 12, 92, 4.6]]
 	var tmat = ShaderMaterial.new()
 	tmat.shader = load("res://shaders/thermal.gdshader")
 	for s in spots:
@@ -1094,7 +1142,7 @@ func _dogs():
 
 func _prism_anchors():
 	var list = ["ferris", "lighthouse", "turbine", "church", "crane_hook", "containers", "buoy", "islet", "lifeguard", "chimney", "mast", "kite", "playground_top",
-		"windmill", "clock_tower", "crane_hook2", "barn", "bar_shelf", "cafe_table", "market_stall", "boat_deck", "roof_laundry"]
+		"windmill", "clock_tower", "crane_hook2", "barn", "bar_shelf", "cafe_table", "market_stall", "boat_deck", "roof_laundry", "villa_bbq", "villa_pool", "fry_sign"]
 	var res = []
 	for k in list:
 		if anchors.has(k):
@@ -1125,12 +1173,24 @@ func _ambient():
 	for x in [-34, -40, -52, -58]:
 		_amb("stand", _gp(x, 19.1), Vector3(0, 0, -1), {"apron": true, "hair_style": "cap", "grumpy": true})
 	_amb("stroll", _gp(-46, 14.5), Vector3(1, 0, 0), {"backpack": true}, [_gp(-60, 14.8), _gp(-30, 14.8)], 0.8)
-	_amb("stand", _gp(-16.5, 17.2), Vector3(-1, 0, 0), {"mischief": "icecream"})
+	_amb("stand", _gp(-16.5, 17.2), Vector3(-1, 0, 0), {"item_r": "icecream"})
 	_amb("stand", _gp(-16.5, 18.6), Vector3(-1, 0, 0), {})
-	_amb("lie", _gp(20.5, 13.2) + Vector3(0, 0.05, 0), Vector3(0, 0, 1), {"hair_style": "short", "mischief": "hat"})
-	_amb("lie", _gp(60, 22) + Vector3(0, 0.05, 0), Vector3(0, 0, 1), {})
+	# the sunbathers: on the sun loungers (leaning back) or on towels (flat), never half inside a deck chair
+	var li = 0
+	for hip in beach_loungers:
+		var st = {"hair_style": ["short", "long", "bun", "beanie"][li % 4], "shirt": ["F277B5", "3FB8E0", "F1C94B", "E85745"][li % 4], "pants": ["3E6F8E", "F4F1E8", "2D6F5E"][li % 3]}
+		if li == 0:
+			st["mischief"] = "shades"
+		_amb("recline", hip, Vector3(0, 0, 1), st)
+		li += 1
+		if li >= 3:
+			break
+	towel(20.5, 13.2, 0.0, "F277B5")
+	_amb("lie", Vector3(20.5, gh(20.5, 13.2) + 0.04, 13.2), Vector3(0, 0, 1), {"hair_style": "short"})
+	towel(60.0, 22.0, 30.0, "3FB8E0")
+	_amb("lie", Vector3(60.0, gh(60.0, 22.0) + 0.04, 22.0), Vector3(sin(deg_to_rad(30.0)), 0, cos(deg_to_rad(30.0))), {})
 	_amb("stand", _gp(25, 30), Vector3(0, 0, 1), {"item_l": "kite", "item_r": "paper", "scale": 0.7, "chaser": true})
-	_amb("stroll", _gp(30, 30), Vector3(1, 0, 0), {"hair_style": "short", "mischief": "hat"}, [_gp(10, 35), _gp(70, 35)], 0.9)
+	_amb("stroll", _gp(30, 30), Vector3(1, 0, 0), {"hair_style": "short"}, [_gp(10, 35), _gp(70, 35)], 0.9)
 	_amb("stand", _gp(40, 41), Vector3(0, 0, 1), {"vest": true, "vest_color": "E8573A"})
 	_amb("stand", _gp(33, 11.5), Vector3(1, 0, 0), {"scale": 0.7, "chaser": true})
 	_amb("fish", Vector3(4.2, 0.4, 36), Vector3(1, 0, 0), {"item_r": "rod", "hair_style": "beanie"})
@@ -1145,14 +1205,49 @@ func _ambient():
 	_amb("stroll", _gp(70, -2), Vector3(1, 0, 0), {"vest": true, "vest_color": "E8A23A", "hair_style": "cap"}, [_gp(60, -2), _gp(104, -2)], 1.2)
 	_amb("stand", _gp(64, 6.5), Vector3(0, 0, -1), {"apron": true})
 	_amb("stroll", _gp(0, -36), Vector3(0, 0, -1), {}, [_gp(0, -36), _gp(0, -70)], 0.9)
-	_amb("stand", _gp(-40, -36), Vector3(0, 0, 1), {"mischief": "balloon"})
+	_amb("stand", _gp(-40, -36), Vector3(0, 0, 1), {})
 	_amb("stroll", _gp(-96, 28), Vector3(1, 0, 0), {"item_l": "ball"}, [_gp(-96, 28), _gp(-85, 40)], 0.9)
+	# the marina: one person on each of the nearest boats, the others are out sailing
+	var mi = 0
+	for spec in [[-16.0, 40.0, "fish"], [-24.0, 33.0, "stand"], [-8.0, 33.0, "chat"], [-32.0, 40.0, "paint"]]:
+		var ex = {"hair_style": ["cap", "beanie", "bun", "short"][mi % 4], "shirt": ["3E6F8E", "C65A3A", "879B82", "E2C25A"][mi % 4]}
+		if spec[2] == "fish":
+			ex["item_r"] = "rod"
+		elif spec[2] == "paint":
+			ex["item_r"] = "brush"
+		elif spec[2] == "chat":
+			ex["seated"] = true
+			ex["item_r"] = "mug"
+		_amb(spec[2], Vector3(spec[0], 0.05, spec[1] + 0.9), Vector3(1, 0, 0), ex)
+		mi += 1
+	for sb in sea_boats:
+		var ex2 = {"hair_style": ["cap", "bun", "beanie", "short", "long", "cap"][sb["k"] % 6], "shirt": ["3E6F8E", "C65A3A", "879B82", "E2C25A", "7A5A8B", "2BA7A0"][sb["k"] % 6]}
+		if sb["mode"] == "fish":
+			ex2["item_r"] = "rod"
+		elif sb["mode"] == "paint":
+			ex2["item_r"] = "brush"
+		elif sb["mode"] == "chat":
+			ex2["seated"] = true
+			ex2["item_r"] = "cup"
+		var face = Vector3(sin(deg_to_rad(sb["yaw"])), 0, cos(deg_to_rad(sb["yaw"])))
+		_amb(sb["mode"], sb["deck"] + Vector3(0, 0.06, 0), face, ex2)
+		if sb["k"] == 2:
+			# a cooler with an ice cream on the deck of this one (it comes back after a while)
+			var m = Node3D.new()
+			m.set_script(MISCHIEF)
+			m.setup("icecream", root, sb["deck"] + Vector3(0.5, 0.45, -0.6))
+			B.box(sb["deck"] + Vector3(0.5, 0.2, -0.6), Vector3(0.6, 0.4, 0.4), "3FB8E0", true)
+		elif sb["k"] == 3:
+			var m2 = Node3D.new()
+			m2.set_script(MISCHIEF)
+			m2.setup("coffee", root, sb["deck"] + Vector3(-0.4, 0.45, -0.8))
+			B.box(sb["deck"] + Vector3(-0.4, 0.2, -0.8), Vector3(0.6, 0.4, 0.4), "E8E2D2", true)
 
 func _mischief_balls():
-	for p in [Vector2(14, 20), Vector2(46, 28), Vector2(58, 16), Vector2(24, 36)]:
-		var m = Node3D.new()
-		m.set_script(preload("res://scripts/fries/mischief.gd"))
-		m.setup("ball", root, Vector3(p.x, gh(p.x, p.y) + 0.02, p.y))
+	var p = Vector2(46, 28)
+	var m = Node3D.new()
+	m.set_script(MISCHIEF)
+	m.setup("ball", root, Vector3(p.x, gh(p.x, p.y) + 0.02, p.y))
 
 func _ambient_gulls():
 	for i in 7:

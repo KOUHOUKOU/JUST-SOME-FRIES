@@ -24,6 +24,9 @@ signal player_hurt(kind, lost_fry)   # kind: swat_punch|swat_poke|swat_sweep|swa
 signal comic(id, caption, extra)      # the lower-left comic panel (see ui/comic_pop.gd); extra = {"tier": 0..3, "col": Color, "type": "red"...}
 signal fry_got(type, tier)            # a (non-plain) fry was taken: the light "got it" moment in the HUD
 signal drink_changed(kind)
+signal buff_started(kind)             # coffee | alcohol | ice
+signal buff_ended(kind)
+signal quest_done(id)                 # a side quest of the mission board was finished (the HUD goes quiet for a moment)
 
 enum Phase { TUTORIAL, SPECIAL_HUNT, STILL_HUNGRY, ENDED }
 
@@ -34,24 +37,36 @@ const MISSIONS = [3, 6, 10, 24]
 const STAR_TOTAL = 14                 # gold + diamond of every type
 const RAINBOW_MAX = 8
 const SAVE_PATH = "user://savegame.json"
-const WEARABLES = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "balloon"]
+# every kind exists ONCE in the world and can be taken ONCE (only fries, rainbow fries and the drinks come back)
+const WEARABLES = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "cloud", "sun"]
 const WEAR_NAMES = {"hat": "STRAW HAT", "sailor": "SAILOR CAP", "topper": "TOP HAT", "beret": "RED BERET", "glasses": "READING GLASSES", "shades": "SUNGLASSES", "necklace": "GOLD CHAIN",
-	"bowtie": "BOW TIE", "scarf": "RED SCARF", "pipe": "PIPE", "hawaii": "FLOWER SHIRT", "stripes": "STRIPED SHIRT", "coat": "LONG COAT", "balloon": "BALLOON"}
-const TUT_NEED = {"TUTORIAL_01": 8.0, "TUTORIAL_02": 9.0, "TUTORIAL_03": 10.0}   # m/s: the first three fries, a gentle ramp (gauge 48 / 54 / 60)
-# gauge speed needed to lock a fry of this type: [silver, gold, diamond]. Diamond ones need a faster gull than the base boost (114):
-# 126 needs SONIC silver (126), 132 / 138 need SONIC gold (138), 144 / 150 need SONIC diamond (150).
-const NEED_GAUGE = {"red": [72, 102, 126], "orange": [72, 96, 132], "green": [66, 90, 138], "cyan": [72, 108, 126],
-	"blue": [72, 102, 144], "purple": [66, 96, 132], "pink": [72, 114, 150]}
-const RAINBOW_NEED = 90.0
+	"bowtie": "BOW TIE", "scarf": "RED SCARF", "pipe": "PIPE", "hawaii": "FLOWER SHIRT", "stripes": "STRIPED SHIRT", "coat": "LONG COAT", "socks": "STRIPED SOCK", "balloon": "BALLOON",
+	"cloud": "A WHOLE CLOUD", "sun": "A LITTLE SUN"}
+const TUT_NEED = {"TUTORIAL_01": 7.5, "TUTORIAL_02": 8.5, "TUTORIAL_03": 9.5}   # m/s: the first three fries, a gentle ramp (gauge 45 / 51 / 57)
+# gauge speed needed to lock a fry of this type: [silver, gold, diamond]. The gull starts with a top speed of 90:
+# silvers need 78-84 (a boost run-up), golds need SONIC (96-114 - a silver SONIC fry gives 105, a gold one 123), diamonds need 120-138 (SONIC gold 123 / diamond 144).
+const NEED_GAUGE = {"red": [78, 102, 126], "orange": [78, 99, 132], "green": [72, 96, 138], "cyan": [78, 108, 126],
+	"blue": [78, 102, 138], "purple": [72, 99, 132], "pink": [84, 114, 144]}
+const RAINBOW_NEED = 84.0
 const DECOR_NEED = 11.0               # m/s for borrowed hats, balloons... (mischief objects set their own)
 const SPEED_UNIT = 6.0                # gauge number = m/s * SPEED_UNIT
 const RARITY_NAMES = ["COMMON", "SILVER", "GOLD", "DIAMOND", "RAINBOW"]
 const RARITY_COLORS = [Color("E8E4D4"), Color("C3CCD8"), Color("FFC83A"), Color("DDF4FF"), Color("FF8AD8")]
 const TYPE_COLORS = {"red": Color("E8453C"), "orange": Color("F28A2E"), "green": Color("4FBF5A"), "cyan": Color("33CFD6"),
 	"blue": Color("3D6FE0"), "purple": Color("9B5DE0"), "pink": Color("F277B5")}
-const BOOST_TAB = [19.0, 21.0, 23.0, 25.0]
-const ACCEL_TAB = [1.0, 1.4, 2.0, 3.0]
+const BOOST_TAB = [15.0, 17.5, 20.5, 24.0]   # gauge 90 -> 105 -> 123 -> 144
+const ACCEL_TAB = [1.0, 1.5, 2.2, 3.2]
 const STAM_TAB = [60.0, 90.0, 130.0, 190.0]
+# the three time buffs (20 s each). They burn on the stamina bar and fade quickly once the gull lands or is hit.
+const BUFF_SEC = 20.0
+const BUFF_COL = {"coffee": Color("C98A4B"), "alcohol": Color("FFD23A"), "ice": Color("FF8AD8")}
+const BUFF_NAME = {"coffee": "COFFEE", "alcohol": "COCKTAIL", "ice": "ICE CREAM"}
+# the side quests on the mission board: id -> [fries needed before it shows up, text on the board, "still hungry" line shown afterwards]
+const QUESTS = {
+	"fish": [6, "CATCH A FISH", "i caught a fish.|it was shiny, and wet, and very proud of itself.|and somehow... i'm still hungry."],
+	"cloud": [10, "CATCH A CLOUD", "i caught a cloud.|it was softer than i expected.|and somehow... i'm still hungry."],
+	"sun": [17, "CATCH THE SUN", "i caught the sun.|it was warm. something in me changed.|and somehow... i'm still hungry."],
+}
 const REGEN_GLIDE_TAB = [1.5, 2.2, 3.2, 4.5]
 const REGEN_PERCH_TAB = [1.0, 1.5, 2.2, 3.0]
 const ROLL_CD_TAB = [1.0, 0.85, 0.7, 0.5]
@@ -114,8 +129,14 @@ var run_time = 0.0
 var end_time = -1.0
 var hunger_t = 0.0                    # seconds spent STILL HUNGRY (drives the "where is it?" hints)
 var stats = {}
-var drink = ""                        # "" | "coffee" | "alcohol": a drink the gull has had (see drink_t)
-var drink_t = 0.0
+var drink = ""                        # the latest buff the gull has had ("" when none is running): "coffee" | "alcohol" | "ice"
+var drink_t = 0.0                     # seconds left of that latest buff
+var buff = {"coffee": 0.0, "alcohol": 0.0, "ice": 0.0}          # seconds left of every buff (real seconds)
+var buff_dying = {"coffee": false, "alcohol": false, "ice": false}   # landed / hit: the bar now burns away fast
+var buff_msg = ""                     # the lower-left line ("senses sharpened...") and when it appeared
+var buff_msg_t = -9.0
+var quests = {}                       # id -> "active" | "done"
+var quest_flash = ""                  # a quest that was finished a moment ago (the HUD fades out, a line fades in)
 var menu_seen = {}                    # codex items already seen (the NEW dots)
 var test_boost_bonus = 0.0            # dev tests only: extra top speed so the bot can reach diamond fries
 
@@ -173,10 +194,7 @@ func cull_tree(root, end_m, no_shadow = false):
 func _process(delta):
 	if heat > 0.0:
 		heat = max(heat - delta / 30.0, 0.0)
-	if drink != "":
-		drink_t -= delta / max(Engine.time_scale, 0.1)
-		if drink_t <= 0.0:
-			set_drink("")
+	_buff_tick(delta / max(Engine.time_scale, 0.1))
 
 func reset_stats():
 	stats = {"stolen": 0, "perfect": 0, "shot": 0, "slipped": 0, "walls": 0, "missed": 0, "swats": 0, "vision_s": 0.0, "fish": 0, "rivals": 0, "bops": 0, "scares": 0,
@@ -209,6 +227,12 @@ func reset():
 	hunger_t = 0.0
 	drink = ""
 	drink_t = 0.0
+	for k in buff:
+		buff[k] = 0.0
+		buff_dying[k] = false
+	buff_msg = ""
+	quests = {}
+	quest_flash = ""
 	menu_seen = {}
 	reset_stats()
 
@@ -283,20 +307,91 @@ func mission_target():
 func longing():
 	return max(fry_total() - 10, 0) * 0.9 + hunger_t / 40.0
 
-# ---- drinks (coffee = fast and twitchy, alcohol = slow and wobbly) ----
-func set_drink(kind, sec = 15.0):
-	if drink == kind and kind != "":
-		drink_t = sec
-		return
+# ---- the three buffs (20 s each, they stack) ----
+#   COFFEE     snappier acceleration, a higher top speed, and the world slows much more while you grab (senses sharpened: the rings are easier)
+#   COCKTAIL   a higher top speed and NO stamina cost, but the grab slow-motion is much milder (a duller gull: harder rings)
+#   ICE CREAM  nothing can hurt you (dogs, kids, walls...) and a higher top speed
+# Landing on anything, or (coffee / cocktail) being hit, makes the bar burn away fast until it is empty.
+func has_buff(kind):
+	return buff[kind] > 0.0
+
+func add_buff(kind, sec = BUFF_SEC):
+	var was = buff[kind] > 0.0
+	buff[kind] = sec
+	buff_dying[kind] = false
 	drink = kind
-	drink_t = sec if kind != "" else 0.0
+	drink_t = sec
+	if not was:
+		buff_started.emit(kind)
 	drink_changed.emit(kind)
 
+func set_drink(kind, sec = BUFF_SEC):      # kept for old call sites ("" clears everything)
+	if kind == "":
+		for k in buff:
+			if buff[k] > 0.0:
+				buff[k] = 0.0
+				buff_ended.emit(k)
+		drink = ""
+		drink_t = 0.0
+		drink_changed.emit("")
+		return
+	add_buff(kind, sec)
+
+# the gull touched something solid / the ground: every running buff starts to burn away
+func buffs_die(include_ice = true):
+	for k in buff:
+		if buff[k] > 0.0 and (include_ice or k != "ice"):
+			buff_dying[k] = true
+
+func _buff_tick(rdt):
+	var latest = ""
+	var latest_t = 0.0
+	for k in buff:
+		if buff[k] <= 0.0:
+			continue
+		buff[k] = max(buff[k] - rdt * (9.0 if buff_dying[k] else 1.0), 0.0)
+		if buff[k] <= 0.0:
+			buff_dying[k] = false
+			buff_ended.emit(k)
+		elif buff[k] >= latest_t or latest == "":
+			latest = k
+			latest_t = buff[k]
+	if latest != drink:
+		drink = latest
+		drink_changed.emit(latest)
+	drink_t = buff[latest] if latest != "" else 0.0
+
+# the lower-left one-liner ("senses sharpened...")
+func say_buff(text):
+	buff_msg = text
+	buff_msg_t = msec() / 1000.0
+
+func invincible():
+	return buff["ice"] > 0.0
+
 func drink_speed_mult():
-	return 1.22 if drink == "coffee" else (0.58 if drink == "alcohol" else 1.0)
+	return 1.0
 
 func drink_accel_mult():
-	return 2.6 if drink == "coffee" else (0.4 if drink == "alcohol" else 1.0)
+	return 2.2 if buff["coffee"] > 0.0 else 1.0
+
+# how much the grab slow-motion slows the world: coffee deeper, cocktail milder
+func slowmo_mult():
+	var m = 1.0
+	if buff["coffee"] > 0.0:
+		m *= 0.55
+	if buff["alcohol"] > 0.0:
+		m *= 1.7
+	return m
+
+# the judgement bands: coffee widens them a little (clear senses), the cocktail narrows them (a dull gull)
+func buff_window_mult():
+	var m = 1.0
+	if buff["coffee"] > 0.0:
+		m *= 1.3
+	if buff["alcohol"] > 0.0:
+		m *= 0.88
+	return m
 
 # ---- stat formulas (every number a player can feel lives here) ----
 func glide_speed():
@@ -305,13 +400,15 @@ func glide_speed():
 func cruise_speed():
 	return 11.0 * drink_speed_mult()      # fries never change this
 
-# the TOP speed: boost. Sonic fries lift it; coffee lifts it a bit more, alcohol cuts it
+# the TOP speed: boost. Sonic fries lift it; every buff lifts it a bit more
 func boost_speed():
 	var b = BOOST_TAB[lv["red"]] + 0.15 * rainbow["red"] + test_boost_bonus
-	if drink == "coffee":
-		return b + 2.5
-	if drink == "alcohol":
-		return b * 0.55
+	if buff["coffee"] > 0.0:
+		b += 2.4
+	if buff["alcohol"] > 0.0:
+		b += 3.4
+	if buff["ice"] > 0.0:
+		b += 2.0
 	return b
 
 func accel_mult():
@@ -374,6 +471,22 @@ func need_speed(f):
 	if f.utype != "" and NEED_GAUGE.has(f.utype):
 		return NEED_GAUGE[f.utype][clamp(f.tier, 1, 3) - 1] / SPEED_UNIT
 	return 11.0
+
+# ---- the side quests on the mission board (fish / cloud / sun): they appear after enough fries, finishing one is a quiet moment ----
+func quest_state(id):
+	return quests.get(id, "")
+
+func quests_refresh():
+	for id in QUESTS:
+		if quests.get(id, "") == "" and gull_sense_count >= 3 and fry_total() >= QUESTS[id][0]:
+			quests[id] = "active"
+
+func quest_finish(id):
+	if quests.get(id, "") == "done":
+		return
+	quests[id] = "done"
+	quest_flash = id
+	quest_done.emit(id)
 
 # crowd watch effects: more eyes = a thinner window (and sharper NPCs via heat)
 func heat_view_mult():
@@ -443,7 +556,7 @@ func write_save(pos, yaw):
 	var d = {"v": 1, "sense": gull_sense_count, "tut": tutorial_done.keys(), "lv": lv.duplicate(), "rb": rainbow.duplicate(), "stars": star_got.keys(),
 		"worn": worn.keys(), "eq": equipped.keys(), "mis": mischief_counts.duplicate(), "ach": achievements_done.keys(), "eaten": fries_eaten,
 		"hunger": hunger_t, "run": run_time, "stats": stats.duplicate(), "phase": int(phase), "pos": [pos.x, pos.y, pos.z], "yaw": yaw,
-		"seen": menu_seen.keys()}
+		"seen": menu_seen.keys(), "quests": quests.duplicate()}
 	var f = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		return false
@@ -484,6 +597,9 @@ func apply_save(d):
 		equipped[k] = true
 	for k in d.get("seen", []):
 		menu_seen[k] = true
+	var qs = d.get("quests", {})
+	for k in qs:
+		quests[k] = str(qs[k])
 	var m = d.get("mis", {})
 	for k in m:
 		mischief_counts[k] = int(m[k])

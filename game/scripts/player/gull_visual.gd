@@ -2,6 +2,7 @@ extends Node3D
 # Procedural gull: bent wings (shoulder + elbow), tail fan, legs. Pure visuals; gameplay never depends on it.
 # Optional: assets/models/hero_gull.glb replaces the fallback (see player).
 
+const Pattern = preload("res://scripts/world/pattern.gd")
 const WHITE = Color("F6F6F1")
 const GREY = Color("AEB8C0")
 const DARK = Color("2B2F36")
@@ -284,7 +285,7 @@ func pose(mode, flap_t, throttle, delta):
 
 # ---- wearables: every kind lives in one slot; putting something on replaces whatever sat in that slot ----
 const SLOTS = {"hat": "head", "sailor": "head", "topper": "head", "beret": "head", "glasses": "eyes", "shades": "eyes", "necklace": "neck", "bowtie": "neck",
-	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float"}
+	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float", "socks": "tail", "cloud": "cloud", "sun": "halo"}
 
 static func slot_of(kind):
 	return SLOTS.get(kind, "head")
@@ -339,7 +340,7 @@ func show_all():
 func worn_count():
 	return worn.size()
 
-func _cyl(parent, r_top, r_bot, h, pos, col, rough = 0.95):
+func _cyl(parent, r_top, r_bot, h, pos, col, rough = 0.95, pat = null):
 	var mi = MeshInstance3D.new()
 	var cm = CylinderMesh.new()
 	cm.top_radius = r_top
@@ -347,35 +348,35 @@ func _cyl(parent, r_top, r_bot, h, pos, col, rough = 0.95):
 	cm.height = h
 	cm.radial_segments = 14
 	mi.mesh = cm
-	mi.material_override = _mat(Color(col), rough)
+	mi.material_override = pat if pat != null else _mat(Color(col), rough)
 	mi.position = pos
 	parent.add_child(mi)
 	return mi
 
-func _blk(parent, size, pos, col, rough = 0.95):
+func _blk(parent, size, pos, col, rough = 0.95, pat = null):
 	var mi = MeshInstance3D.new()
 	mi.mesh = _box(size)
-	mi.material_override = _mat(Color(col), rough)
+	mi.material_override = pat if pat != null else _mat(Color(col), rough)
 	mi.position = pos
 	parent.add_child(mi)
 	return mi
 
-func _ball_(parent, r, pos, col, sc = Vector3.ONE, rough = 0.95):
+func _ball_(parent, r, pos, col, sc = Vector3.ONE, rough = 0.95, pat = null):
 	var mi = MeshInstance3D.new()
 	mi.mesh = _sph(r)
-	mi.material_override = _mat(Color(col), rough)
+	mi.material_override = pat if pat != null else _mat(Color(col), rough)
 	mi.position = pos
 	mi.scale = sc
 	parent.add_child(mi)
 	return mi
 
-func _ring_(parent, r_in, r_out, pos, col, rot = Vector3(PI / 2.0, 0, 0), rough = 0.4):
+func _ring_(parent, r_in, r_out, pos, col, rot = Vector3(PI / 2.0, 0, 0), rough = 0.4, pat = null):
 	var mi = MeshInstance3D.new()
 	var tm = TorusMesh.new()
 	tm.inner_radius = r_in
 	tm.outer_radius = r_out
 	mi.mesh = tm
-	mi.material_override = _mat(Color(col), rough)
+	mi.material_override = pat if pat != null else _mat(Color(col), rough)
 	mi.position = pos
 	mi.rotation = rot
 	parent.add_child(mi)
@@ -389,29 +390,29 @@ func _build_item(kind):
 			n.position = Vector3(0, 0.1, 0.0)
 			_cyl(n, 0.2, 0.2, 0.02, Vector3.ZERO, "F0D9A0")
 			_cyl(n, 0.1, 0.11, 0.09, Vector3(0, 0.05, 0), "F0D9A0")
-			_cyl(n, 0.112, 0.112, 0.025, Vector3(0, 0.02, 0), "D96D5F")
+			_cyl(n, 0.112, 0.112, 0.025, Vector3(0, 0.02, 0), "D96D5F", 0.95, Pattern.mat("check", "D96D5F", "FFF3E0", 6))
 		"sailor":                   # a white sailor cap with a blue band and a red pom
 			head.add_child(n)
 			n.position = Vector3(0, 0.1, 0.0)
 			_cyl(n, 0.115, 0.125, 0.06, Vector3(0, 0.03, 0), "F4F4F0")
-			_cyl(n, 0.13, 0.13, 0.02, Vector3(0, 0.0, 0), "2D4F8E")
+			_cyl(n, 0.13, 0.13, 0.02, Vector3(0, 0.0, 0), "2D4F8E", 0.95, Pattern.mat("stripes", "2D4F8E", "F4F4F0", 2))
 			_cyl(n, 0.1, 0.12, 0.012, Vector3(0, 0.065, 0), "F4F4F0")
 			_ball_(n, 0.02, Vector3(0, 0.085, 0), "D93A3A")
 		"topper":                   # a tall black top hat
 			head.add_child(n)
 			n.position = Vector3(0, 0.1, 0.0)
 			_cyl(n, 0.17, 0.17, 0.015, Vector3.ZERO, "15151A")
-			_cyl(n, 0.095, 0.1, 0.17, Vector3(0, 0.09, 0), "15151A")
+			_cyl(n, 0.095, 0.1, 0.17, Vector3(0, 0.09, 0), "15151A", 0.95, Pattern.mat("vstripes", "15151A", "2E2E3A", 5))
 			_cyl(n, 0.101, 0.101, 0.03, Vector3(0, 0.03, 0), "C9A227", 0.4)
 		"beret":                    # a red beret, slightly sideways
 			head.add_child(n)
 			n.position = Vector3(0.02, 0.105, 0.0)
-			_ball_(n, 0.13, Vector3(0, 0.0, 0), "C23B3B", Vector3(1.0, 0.32, 1.0))
+			_ball_(n, 0.13, Vector3(0, 0.0, 0), "C23B3B", Vector3(1.0, 0.32, 1.0), 0.95, Pattern.mat("dots", "C23B3B", "F6D9A8", 3))
 			_blk(n, Vector3(0.012, 0.03, 0.012), Vector3(0, 0.05, 0), "C23B3B")
 		"glasses":                  # round scholar glasses
 			head.add_child(n)
 			for sx in [-1.0, 1.0]:
-				_ring_(n, 0.026, 0.034, Vector3(0.062 * sx, 0.034, -0.1), "20202A", Vector3(PI / 2.0, 0, 0))
+				_ring_(n, 0.026, 0.034, Vector3(0.062 * sx, 0.034, -0.1), "20202A", Vector3(PI / 2.0, 0, 0), 0.4, Pattern.mat("dots", "B0702E", "3A200E", 3, 0.4))
 				_blk(n, Vector3(0.012, 0.012, 0.09), Vector3(0.108 * sx, 0.04, -0.055), "20202A")
 			_blk(n, Vector3(0.03, 0.01, 0.01), Vector3(0, 0.042, -0.108), "20202A")
 		"shades":
@@ -454,21 +455,18 @@ func _build_item(kind):
 			head.add_child(n)
 			n.position = Vector3(0, -0.075, -0.07)
 			for sx in [-1.0, 1.0]:
-				var wing = _blk(n, Vector3(0.05, 0.036, 0.012), Vector3(0.034 * sx, 0, 0), "C9202E")
+				var wing = _blk(n, Vector3(0.05, 0.036, 0.012), Vector3(0.034 * sx, 0, 0), "C9202E", 0.95, Pattern.mat("dots", "C9202E", "FFFFFF", 2, 0.7))
 				wing.rotation = Vector3(0, 0, 0.45 * sx)
 			_blk(n, Vector3(0.02, 0.02, 0.016), Vector3.ZERO, "8E1520")
 		"scarf":
 			add_child(n)
 			n.position = Vector3(0, -0.015, -0.25)
-			_ring_(n, 0.09, 0.135, Vector3.ZERO, "D9442E", Vector3(PI / 2.0, 0.0, 0.0), 0.95)
-			var st = _blk(n, Vector3(0.05, 0.012, 0.26), Vector3(0.06, -0.06, 0.12), "D9442E")
+			_ring_(n, 0.09, 0.135, Vector3.ZERO, "D9442E", Vector3(PI / 2.0, 0.0, 0.0), 0.95, Pattern.mat("vstripes", "D9442E", "FFF3E0", 7))
+			var st = _blk(n, Vector3(0.05, 0.012, 0.26), Vector3(0.06, -0.06, 0.12), "D9442E", 0.95, Pattern.mat("stripes", "D9442E", "FFF3E0", 5))
 			st.name = "ScarfTail"
 		"hawaii":                   # a loud flower shirt
 			add_child(n)
-			_ball_(n, 0.212, Vector3(0, -0.005, 0.05), "2BA7A0", Vector3(1.02, 0.9, 1.15))
-			for k in 7:
-				var a = k * 0.9
-				_ball_(n, 0.03, Vector3(sin(a) * 0.17, 0.06 + cos(a * 1.7) * 0.07, (k - 3) * 0.045), ["FF6FA8", "FFD23A", "FF8A3C"][k % 3], Vector3(1, 0.5, 1))
+			_ball_(n, 0.212, Vector3(0, -0.005, 0.05), "2BA7A0", Vector3(1.02, 0.9, 1.15), 0.95, Pattern.mat("floral", "2BA7A0", "FF6FA8", 5))
 		"stripes":                  # a sailor's striped shirt
 			add_child(n)
 			_ball_(n, 0.209, Vector3(0, -0.005, 0.05), "F4F4F0", Vector3(1.02, 0.9, 1.15))
@@ -477,7 +475,7 @@ func _build_item(kind):
 				rg.scale = Vector3(1.0, 0.9, 1.0)
 		"coat":                     # a long dark coat with gold buttons and a collar
 			add_child(n)
-			_ball_(n, 0.215, Vector3(0, -0.01, 0.06), "262B3A", Vector3(1.03, 0.92, 1.25))
+			_ball_(n, 0.215, Vector3(0, -0.01, 0.06), "262B3A", Vector3(1.03, 0.92, 1.25), 0.95, Pattern.mat("plaid", "3A4155", "C9A64A", 4))
 			_blk(n, Vector3(0.05, 0.05, 0.02), Vector3(-0.06, 0.12, -0.14), "262B3A")
 			_blk(n, Vector3(0.05, 0.05, 0.02), Vector3(0.06, 0.12, -0.14), "262B3A")
 			for k in 3:
@@ -485,8 +483,45 @@ func _build_item(kind):
 		"balloon":                  # a balloon tied to the gull, bobbing above
 			add_child(n)
 			_cyl(n, 0.004, 0.004, 0.7, Vector3(0, 0.38, 0.02), "EEEEEE")
-			var bl = _ball_(n, 0.17, Vector3(0, 0.82, 0.02), "E85745", Vector3(1, 1.15, 1), 0.3)
+			var bl = _ball_(n, 0.17, Vector3(0, 0.82, 0.02), "E85745", Vector3(1, 1.15, 1), 0.3, Pattern.mat("stripes", "E85745", "FFF3E0", 4, 0.3))
 			bl.name = "Balloon"
+		"socks":                    # a striped sock pulled over the tail feathers
+			tail.add_child(n)
+			var sm = Pattern.mat("stripes", "E85745", "FFF3E0", 6)
+			var tube = _cyl(n, 0.075, 0.062, 0.34, Vector3(0, 0, 0.1), "E85745", 0.95, sm)
+			tube.rotation = Vector3(PI / 2.0, 0, 0)
+			var cuff = _cyl(n, 0.082, 0.082, 0.05, Vector3(0, 0, -0.06), "F4F1E8")
+			cuff.rotation = Vector3(PI / 2.0, 0, 0)
+			var toe = _ball_(n, 0.062, Vector3(0, 0, 0.27), "3D8CD9")
+			toe.scale = Vector3(1, 0.9, 0.8)
+		"cloud":                    # a small cloud following the gull, just above and behind
+			add_child(n)
+			n.position = Vector3(0, 0.66, 0.1)
+			for c in [[0, 0, 0, 0.16], [0.17, -0.02, 0.02, 0.12], [-0.17, -0.03, 0.0, 0.12], [0.07, 0.07, 0, 0.1], [-0.08, 0.06, 0, 0.1]]:
+				_ball_(n, c[3], Vector3(c[0], c[1], c[2]), "FFFFFF", Vector3(1.1, 0.8, 1.0), 0.8)
+			n.name = "CloudBuddy"
+		"sun":                      # a little sun, a glowing coin behind the head
+			add_child(n)
+			n.position = Vector3(0, 0.14, 0.3)
+			_ball_(n, 0.1, Vector3.ZERO, "FFC83A", Vector3.ONE, 0.2)
+			for k in 10:
+				var a3 = k * TAU / 10.0
+				var ry = _blk(n, Vector3(0.025, 0.07, 0.02), Vector3(cos(a3) * 0.17, sin(a3) * 0.17, 0), "FFB02E")
+				ry.rotation = Vector3(0, 0, a3 + PI / 2.0)
+			var gl = MeshInstance3D.new()
+			var gq = QuadMesh.new()
+			gq.size = Vector2(0.9, 0.9)
+			gl.mesh = gq
+			var gm = StandardMaterial3D.new()
+			gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			gm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			gm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			gm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			gm.albedo_texture = soft_tex()
+			gm.albedo_color = Color(1.0, 0.8, 0.35, 0.6)
+			gl.material_override = gm
+			gl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			n.add_child(gl)
 		_:
 			add_child(n)
 	return n

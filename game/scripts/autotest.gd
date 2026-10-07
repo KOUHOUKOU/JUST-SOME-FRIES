@@ -14,7 +14,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -319,7 +319,7 @@ func mischief_test():
 		var k = m.kind
 		if done.has(k) and done[k] >= 1:
 			continue
-		var r = await attempt(m, Vector3(0, 0.3, 1), 30.0, 0.0, 16.0)
+		var r = await attempt(m, pick_dir(m, Vector3(0, 0.3, 1)), 30.0, 0.0, 16.0)
 		await get_tree().create_timer(0.5).timeout
 		say("%s -> %s taken=%s" % [k, r, m.taken if is_instance_valid(m) else "freed"])
 		done[k] = done.get(k, 0) + 1
@@ -1108,7 +1108,7 @@ func rhythm_test():
 	GS.test_boost_bonus = 8.0
 	var fr = main.world["fries"]
 	var s = p.snatch
-	# 1: silver, green centre -> ok
+	# 1: silver (2 circles, 4 waves): all in the green -> 4 points -> ok
 	var r = await attempt(fr["SPECIAL_BLUE"], Vector3(-0.6, 0, -0.8), 24.0, 0.0, -1.0, {"shot": "r1_silver"})
 	say("1 silver green -> %s commit=%s" % [r, str(s.last_commit)])
 	await get_tree().create_timer(3.0).timeout
@@ -1117,57 +1117,48 @@ func rhythm_test():
 	r = await attempt(f2, Vector3(1, 0, 0), 24.0, 0.0, -1.0, {"fail_grab": true})
 	say("2 silver early press -> %s commit=%s" % [r, str(s.last_commit)])
 	await get_tree().create_timer(3.0).timeout
-	# 3: gold fry (3 rings): all pressed -> ok; one skipped -> ok; two skipped -> missed
+	# 3: the points: a gold press pays for two. Gold fry = 3 circles, 6 waves
 	var spots = main.world["prism_spots"]
 	var gp = null
 	for sp in spots:
 		if sp["name"] == "lifeguard":
 			gp = sp["pos"]
-	for case in [["all", {"shot": "r2_gold"}], ["skip1", {"skip": [1]}], ["skip2", {"skip": [0, 2]}], ["gold", {"gold": true}]]:
+	for case in [["all green", {"shot": "r2_gold"}], ["skip one", {"skip": [1]}], ["all gold", {"gold": true}]]:
 		var g = make_star("blue", 2, gp, "STAR_T_" + case[0])
 		GS.lv["blue"] = 1
 		var rr = await attempt(g, Vector3(0, 0.3, 1), 24.0, 0.0, -1.0, case[1])
-		say("3 gold %s -> %s commit=%s" % [case[0], rr, str(s.last_commit)])
+		say("3 gold fry %s -> %s commit=%s" % [case[0], rr, str(s.last_commit)])
 		if is_instance_valid(g):
 			g.queue_free()
 		await get_tree().create_timer(2.5).timeout
-	# 4: diamond (5 rings)
+	# 4: diamond fry = 5 circles (the olympic rings), 10 waves
 	var dp = null
 	for sp in spots:
 		if sp["name"] == "ferris":
 			dp = sp["pos"]
-	for case in [["all", {"shot": "r3_diamond"}], ["skip1", {"skip": [2]}], ["skip2", {"skip": [1, 3]}], ["gold", {"gold": true}]]:
+	for case in [["all green", {"shot": "r3_diamond"}], ["skip one", {"skip": [2]}], ["all gold", {"gold": true}]]:
 		var g2 = make_star("red", 3, dp, "STAR_D_" + case[0])
 		GS.lv["red"] = 2
 		var rr2 = await attempt(g2, Vector3(0, 0.3, 1), 24.0, 0.0, -1.0, case[1])
-		say("4 diamond %s -> %s commit=%s" % [case[0], rr2, str(s.last_commit)])
+		say("4 diamond fry %s -> %s commit=%s" % [case[0], rr2, str(s.last_commit)])
 		if is_instance_valid(g2):
 			g2.queue_free()
 		await get_tree().create_timer(2.5).timeout
 	GS.test_boost_bonus = 0.0
 	get_tree().quit()
 
-# the escape check: slip it / fail it / a perfect grab skips it
 func flee_test():
+	# round 6: there is no escape check any more; this just grabs the three tutorial fries with the new two-wave rhythm
 	await get_tree().create_timer(1.0).timeout
 	var fr = main.world["fries"]
-	var r1 = await attempt(fr["TUTORIAL_01"], Vector3(1, 0.2, 0), 24.0, 0.0, 11.0)
-	say("A green grab + slip -> %s, flee_seen=%s stats=%s" % [r1, metrics["last"]["flee"], str(GS.stats)])
-	await get_tree().create_timer(2.5).timeout
-	var f2 = fr["TUTORIAL_02"]
-	var r2 = await attempt(f2, Vector3(1, 0.2, 0), 24.0, 0.0, 11.0, {"fail_flee": true})
-	say("B green grab + failed escape -> %s, fry vanished=%s visible=%s avail=%s" % [r2, f2.vanished, f2.visible, f2.available])
-	await get_tree().create_timer(1.0).timeout
-	await shot("fl_shot_down")
-	await get_tree().create_timer(12.0).timeout
-	say("   restock: vanished=%s visible=%s avail=%s" % [f2.vanished, f2.visible, f2.available])
-	var f3 = fr["TUTORIAL_03"]
-	var r3 = await attempt(f3, Vector3(0, 0.2, 1), 24.0, 0.0, 11.0, {"gold": true})
-	say("C gold grab -> %s, flee_seen=%s" % [r3, metrics["last"]["flee"]])
+	for id in ["TUTORIAL_01", "TUTORIAL_02", "TUTORIAL_03"]:
+		var d = Vector3(1, 0.2, 0) if id != "TUTORIAL_03" else Vector3(0, 0.2, 1)
+		var r = await attempt(fr[id], d, 24.0, 0.0, 11.0, {"gold": id == "TUTORIAL_03"})
+		say("%s -> %s commit=%s" % [id, r, str(main.player.snatch.last_commit)])
+		await get_tree().create_timer(2.0).timeout
 	say("done: tutorial_done=%s stats=%s" % [str(GS.tutorial_done.keys()), str(GS.stats)])
 	get_tree().quit()
 
-# the numbers of every tier, as the player will meet them
 func tiers_test():
 	await get_tree().create_timer(1.0).timeout
 	var s = main.player.snatch
@@ -1178,7 +1169,7 @@ func tiers_test():
 		for id in ["TUTORIAL_01", "TUTORIAL_02", "TUTORIAL_03", "SPECIAL_RED", "SPECIAL_BLUE", "SPECIAL_GREEN"]:
 			var f = main.world["fries"][id]
 			var q = s._seq_params(f)
-			say("  %-12s need %3d  n=%d lead=%.2f gap=%.2f gold=%3dms green=%3dms (hit window %3dms)" % [id, int(GS.need_speed(f) * 6), q["n"], q["lead"], q["gap"], int(q["gw"] * 1000), int(q["gg"] * 1000), int((q["gw"] + q["gg"]) * 1000)])
+			say("  %-12s need %3d  %d circles x %d waves lead=%.2f gap=%.2f gold=%3dms green=%3dms (hit window %3dms)" % [id, int(GS.need_speed(f) * 6), q["c"], q["w"], q["lead"], q["gap"], int(q["gw"] * 1000), int(q["gg"] * 1000), int((q["gw"] + q["gg"]) * 1000)])
 	GS.set_level("green", 0)
 	for t in GS.FRY_TYPES:
 		var line = "%-7s need:" % t
@@ -1186,12 +1177,13 @@ func tiers_test():
 			line += " %3d" % int(GS.NEED_GAUGE[t][tier - 1])
 		var f2 = make_star(t, 2, Vector3(0, 100, 0))
 		var q2 = s._seq_params(f2)
-		line += "   gold: n=%d gold=%dms green=%dms" % [q2["n"], int(q2["gw"] * 1000), int(q2["gg"] * 1000)]
-		f2.setup("STAR_X", "star", "none", GS.FRY_TYPES.find(t), 3)
-		var q3 = s._seq_params(f2)
-		line += "   diamond: n=%d gold=%dms green=%dms" % [q3["n"], int(q3["gw"] * 1000), int(q3["gg"] * 1000)]
+		line += "   gold: %dx%d gold=%dms green=%dms" % [q2["c"], q2["w"], int(q2["gw"] * 1000), int(q2["gg"] * 1000)]
+		var f3 = make_star(t, 3, Vector3(0, 100, 0))
+		var q3 = s._seq_params(f3)
+		line += "   diamond: %dx%d gold=%dms green=%dms" % [q3["c"], q3["w"], int(q3["gw"] * 1000), int(q3["gg"] * 1000)]
 		say(line)
 		f2.queue_free()
+		f3.queue_free()
 	say("boost speed by SONIC level: %s" % str([GS.BOOST_TAB[0] * 6, GS.BOOST_TAB[1] * 6, GS.BOOST_TAB[2] * 6, GS.BOOST_TAB[3] * 6]))
 	get_tree().quit()
 
@@ -1255,10 +1247,20 @@ func hud_test():
 	GS.set_level("orange", 1)
 	GS.rainbow["red"] = 2
 	main.hud._on_fry_got("blue", 2)
-	await get_tree().create_timer(0.5).timeout
-	await shot("h02_arc_mid_fly")
-	await get_tree().create_timer(1.6).timeout
-	await shot("h03_arc_tag")
+	await get_tree().create_timer(0.45).timeout
+	await shot("h02_get_rise")
+	await get_tree().create_timer(1.2).timeout
+	await shot("h03_get_hold")
+	await get_tree().create_timer(1.55).timeout
+	await shot("h03b_get_fly")
+	await get_tree().create_timer(1.2).timeout
+	GS.rainbow["red"] = 3
+	main.hud._on_fry_got("red", 4)
+	GS.quests["fish"] = "done"
+	GS.quests["cloud"] = "active"
+	await get_tree().create_timer(0.7).timeout
+	await shot("h03c_rainbow_get")
+	await get_tree().create_timer(2.0).timeout
 	for t in GS.FRY_TYPES:
 		GS.set_level(t, 3)
 	GS.rainbow["blue"] = 3
@@ -1271,7 +1273,49 @@ func hud_test():
 	await shot("h05_tach_boost")
 	Input.action_release("dash")
 	Input.action_release("move_forward")
+	# a finished quest: the UI melts away and the gull thinks out loud
+	GS.quest_finish("sun")
+	await get_tree().create_timer(2.6).timeout
+	await shot("h06_quiet_1")
+	await get_tree().create_timer(3.0).timeout
+	await shot("h07_quiet_2")
 	get_tree().quit()
+
+# the gull standing on the ground / a roof, from the side: the feet must touch it
+func stand_test():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main.player.input_locked = false
+	var spots = {"ground": Vector3(-30.0, 0.5, 8.0), "roof": Vector3(-13.5, 0.0, -43.0)}
+	for k in spots:
+		var pos = spots[k]
+		if k == "roof":
+			# land on a flat roof of the first shelf
+			pos.y = Terrain_top(pos)
+		place(pos + Vector3(0, 1.5, 0), pos + Vector3(0, 1.0, 1.0), 4.0)
+		p.mode = 0
+		Input.action_press("land")
+		var t0 = Time.get_ticks_msec()
+		while p.mode == 0 and Time.get_ticks_msec() - t0 < 8000:
+			await get_tree().physics_frame
+		Input.action_release("land")
+		await get_tree().create_timer(0.8).timeout
+		var gp = p.global_position
+		var right = p.global_transform.basis.x
+		var xf = Transform3D(Basis.IDENTITY, gp + right * 1.6 + Vector3(0, 0.25, 0.3)).looking_at(gp + Vector3(0, -0.35, 0), Vector3.UP)
+		p.set_override(xf, 40.0, 1.0, 200.0)
+		await get_tree().create_timer(0.5).timeout
+		await shot("st_" + k)
+		p.set_override(Transform3D.IDENTITY, 60.0, 0.0, 200.0)
+		say("%s: mode=%d y=%.2f" % [k, p.mode, gp.y])
+	get_tree().quit()
+
+func Terrain_top(pos):
+	var space = main.get_world_3d().direct_space_state
+	var q = PhysicsRayQueryParameters3D.create(Vector3(pos.x, 60.0, pos.z), Vector3(pos.x, -5.0, pos.z), 1)
+	var hit = space.intersect_ray(q)
+	return hit["position"].y if not hit.is_empty() else pos.y
 
 func rainbow_test():
 	await get_tree().create_timer(1.0).timeout
@@ -1335,6 +1379,13 @@ func places_test():
 		"np4_tiki": [Vector3(66, 7, 40), Vector3(66, 1.8, 28), 62.0],
 		"np5_boat": [Vector3(90, 8, 33), Vector3(101, 1.0, 19.5), 62.0],
 		"np6_beach": [Vector3(50, 6, 42), Vector3(56, 0.8, 32), 65.0],
+		"np8_icecream": [Vector3(-24, 6, 2), Vector3(-24, 1.8, -14), 62.0],
+		"np9_fry": [Vector3(3, 6, -4), Vector3(3, 2, -17), 62.0],
+		"np10_bbq": [Vector3(37, 13, -22), Vector3(36, 6.5, -36), 62.0],
+		"np11_pool": [Vector3(-38, 13, -22), Vector3(-38, 6.5, -35), 62.0],
+		"np12_sea_boat": [Vector3(56, 9, 72), Vector3(56, 0.5, 90), 62.0],
+		"np13_loungers": [Vector3(48, 4, 40), Vector3(48, 0.6, 31.5), 62.0],
+		"np14_marina": [Vector3(-16, 7, 50), Vector3(-16, 0.5, 40), 62.0],
 	}
 	var roofs = main.world.get("laundry_list", [])
 	say("laundry roofs: %d" % roofs.size())
@@ -1443,39 +1494,66 @@ func drink_test():
 	await get_tree().create_timer(1.0).timeout
 	var p = main.player
 	GS.gull_sense_count = 3
-	for d in ["", "coffee", "alcohol"]:
-		GS.set_drink(d)
+	main.hud.slots_visible = true
+	# 1) what every buff does to the flight
+	for d in ["", "coffee", "alcohol", "ice"]:
+		GS.set_drink("")
+		if d != "":
+			GS.add_buff(d)
 		place(Vector3(0, 60, 100), Vector3(0, 60, 0), 5.0)
 		Input.action_press("move_forward")
 		await get_tree().create_timer(2.5).timeout
 		var cr = p.speed
-		var yaw0 = p.yaw
+		var st0 = p.stamina
 		Input.action_press("dash")
 		var t0 = Time.get_ticks_msec()
 		var t_acc = -1.0
 		while Time.get_ticks_msec() - t0 < 3500:
 			await get_tree().physics_frame
-			if t_acc < 0.0 and p.speed >= cr + 4.0:
+			if t_acc < 0.0 and p.speed >= cr + 3.0:
 				t_acc = (Time.get_ticks_msec() - t0) / 1000.0
-		say("drink '%s': cruise %.1f  boost %.1f (gauge %d)  time to +4 m/s %.2f s  yaw drift %.1f deg" % [d, cr, p.speed, int(p.speed * 6), t_acc, rad_to_deg(angle_difference(yaw0, p.yaw))])
+		say("buff '%s': cruise %.1f  boost %.1f (gauge %d)  time to +3 m/s %.2f s  stamina used %.1f  slowmo x%.2f  window x%.2f" % [d, cr, p.speed, int(p.speed * 6), t_acc, st0 - p.stamina, GS.slowmo_mult(), GS.buff_window_mult()])
+		if d != "":
+			await shot("dr_%s_fly" % d)
 		Input.action_release("dash")
 		Input.action_release("move_forward")
-	GS.set_drink("alcohol")
-	say("drink timer %.1f" % GS.drink_t)
+	# 2) landing burns the buffs away fast
+	GS.set_drink("")
+	GS.add_buff("coffee")
+	GS.add_buff("ice")
+	say("timers coffee %.1f ice %.1f" % [GS.buff["coffee"], GS.buff["ice"]])
 	p.mode = 1
 	p.global_position = Vector3(-30.0, 0.4, 8.0)
-	await get_tree().create_timer(5.0).timeout
-	say("after 5 s on the ground: drink='%s'" % GS.drink)
-	# a real cup on the espresso terrace
-	var cups = []
-	for m in get_tree().get_nodes_in_group("mischief"):
-		if m.kind == "coffee":
-			cups.append(m)
-	say("coffee cups in the world: %d" % cups.size())
+	await get_tree().create_timer(1.0).timeout
+	say("1 s after landing: coffee %.1f ice %.1f dying=%s" % [GS.buff["coffee"], GS.buff["ice"], str(GS.buff_dying)])
+	await get_tree().create_timer(3.0).timeout
+	say("4 s after landing: coffee %.1f ice %.1f" % [GS.buff["coffee"], GS.buff["ice"]])
+	# 3) the ice cream makes the gull unhittable
+	GS.set_drink("")
+	GS.add_buff("ice")
+	place(Vector3(-10, 6, 20), Vector3(-10, 6, 0), 5.0)
+	var sw0 = GS.stats["swats"]
+	p.get_swatted(main.elder, "punch")
+	say("swatted with ice cream: swats %d -> %d mode=%d message='%s'" % [sw0, GS.stats["swats"], p.mode, GS.buff_msg])
+	await get_tree().create_timer(0.4).timeout
+	await shot("dr_shield")
+	GS.set_drink("")
+	p.get_swatted(main.elder, "punch")
+	say("swatted without: mode=%d" % p.mode)
+	await get_tree().create_timer(3.0).timeout
+	# 4) a real ice cream and a real cup
 	GS.test_boost_bonus = 0.0
-	var r = await attempt(cups[0], Vector3(0, 0.2, 1), 22.0, 0.0, 14.0)
-	await get_tree().create_timer(0.5).timeout
-	say("took a cup -> %s, drink=%s timer=%.1f" % [r, GS.drink, GS.drink_t])
+	for k in ["coffee", "icecream"]:
+		var cups = []
+		for m in get_tree().get_nodes_in_group("mischief"):
+			if m.kind == k:
+				cups.append(m)
+		say("%s in the world: %d" % [k, cups.size()])
+		if cups.size() > 0:
+			var r = await attempt(cups[0], Vector3(0, 0.2, 1), 22.0, 0.0, 14.0)
+			await get_tree().create_timer(0.5).timeout
+			say("took %s -> %s, buff=%s timer=%.1f" % [k, r, GS.drink, GS.drink_t])
+			await shot("dr_took_" + k)
 	get_tree().quit()
 
 
@@ -1561,7 +1639,7 @@ func film():
 	# the three tutorial fries: one clean, one shot down on the escape, one perfect
 	await film_steal(fr["TUTORIAL_01"], Vector3(1, 0.2, 0), 11.0)
 	await real(2.0)
-	await film_steal(fr["TUTORIAL_02"], Vector3(1, 0.2, 0), 11.0, {"fail_flee": true})
+	await film_steal(fr["TUTORIAL_02"], Vector3(1, 0.2, 0), 11.0, {})
 	await real(3.5)
 	await film_steal(fr["TUTORIAL_03"], Vector3(0, 0.2, 1), 11.0, {"gold": true})
 	await real(2.0)
@@ -1662,4 +1740,74 @@ func film():
 	clock("ending")
 	await real(62.0)
 	clock("end")
+	get_tree().quit()
+
+
+# the sky quests: a cloud and the sun appear on the board after enough fries; catching one is a single, hard wave
+func sky_test():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	GS.test_boost_bonus = 0.0
+	main.hud.slots_visible = true
+	await get_tree().create_timer(2.0).timeout
+	say("quests: %s items=%s" % [str(GS.quests), str(main.quest_items.keys())])
+	for id in ["cloud", "sun"]:
+		var it = main.quest_items.get(id, null)
+		if it == null:
+			say("%s: no item!" % id)
+			continue
+		say("%s at %s need %d gauge" % [id, str(it.global_position), int(GS.need_speed(it) * 6)])
+		var r = await attempt(it, Vector3(0, 0.1, 1), 30.0, 0.0, -1.0, {"shot": "sky_" + id})
+		say("%s -> %s quests=%s worn=%s" % [id, r, str(GS.quests), str(GS.worn.keys())])
+		await get_tree().create_timer(9.0).timeout
+	await shot("sky_after")
+	get_tree().quit()
+
+# how many of every stealable kind exist in the world (wearables exactly once, drinks a few)
+func mischief_census():
+	await get_tree().create_timer(1.0).timeout
+	var counts = {}
+	for m in get_tree().get_nodes_in_group("mischief"):
+		if is_instance_valid(m) and "kind" in m:
+			counts[m.kind] = counts.get(m.kind, 0) + 1
+	var keys = counts.keys()
+	keys.sort()
+	for k in keys:
+		say("%-10s x%d" % [k, counts[k]])
+	get_tree().quit()
+
+
+# for every kind of thing: from how many of 16 compass directions (at 14 m, 3 m up) is the line to it clear?
+func reach_test():
+	await get_tree().create_timer(1.0).timeout
+	var s = main.player.snatch
+	GS.gull_sense_count = 3
+	var done = {}
+	for m in get_tree().get_nodes_in_group("mischief"):
+		if not is_instance_valid(m) or done.has(m.kind):
+			continue
+		done[m.kind] = true
+		var tgt = m.aim_point()
+		var clear = 0
+		for k in 16:
+			var a = k * TAU / 16.0
+			var from = tgt + Vector3(cos(a) * 14.0, 4.0, sin(a) * 14.0)
+			if s._los(from, tgt):
+				clear += 1
+		say("%-9s at (%.1f, %.1f, %.1f) clear directions %d / 16  visible=%s snatchable=%s" % [m.kind, tgt.x, tgt.y, tgt.z, clear, str(m.is_visible_in_tree()), str(m.is_snatchable())])
+	get_tree().quit()
+
+
+func bank_test():
+	await get_tree().create_timer(1.0).timeout
+	main.player.input_locked = true
+	var views = {"bk1": [Vector3(-14, 14, -16), Vector3(-14, 6, -34), 60.0], "bk2": [Vector3(20, 10, -28), Vector3(10, 7, -45), 60.0], "bk3": [Vector3(0, 40, 10), Vector3(0, 6, -40), 60.0]}
+	for k in views:
+		view(views[k][0], views[k][1], views[k][2])
+		await get_tree().create_timer(0.6).timeout
+		await shot(k)
 	get_tree().quit()

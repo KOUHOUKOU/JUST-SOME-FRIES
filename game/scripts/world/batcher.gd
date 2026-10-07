@@ -138,7 +138,21 @@ func prism(pos, size, color, collide = true, rot_deg = Vector3.ZERO):
 	var s = Vector3(size.z, size.y, size.x)
 	_tool(key, c, 0.0, 0.9).append_from(unit_prism, 0, Transform3D(b * Basis.from_scale(s), pos))
 	if collide:
-		_shape_box(pos + Vector3(0, -size.y * 0.25, 0), Vector3(size.x, size.y * 0.5, size.z), rot_deg)
+		_shape_prism(pos, size, rot_deg)
+
+# the exact solid of a pitched roof (a triangular prism, ridge along local X): the gull can stand on the slope, feet on the tiles
+func _shape_prism(pos, size, rot_deg):
+	var hx = size.x * 0.5
+	var hy = size.y * 0.5
+	var hz = size.z * 0.5
+	var pts = PackedVector3Array([Vector3(-hx, -hy, -hz), Vector3(hx, -hy, -hz), Vector3(-hx, -hy, hz), Vector3(hx, -hy, hz), Vector3(-hx, hy, 0), Vector3(hx, hy, 0)])
+	var cs = CollisionShape3D.new()
+	var sh = ConvexPolygonShape3D.new()
+	sh.points = pts
+	cs.shape = sh
+	cs.transform = _xf(pos, Vector3.ONE, rot_deg)
+	body.add_child(cs)
+	shape_count += 1
 
 func perch_pad(pos, radius):
 	var cs = CollisionShape3D.new()

@@ -1,38 +1,47 @@
 extends Node
-# DIVE -> LOCK -> RHYTHM (grab) -> close-up -> RHYTHM (escape) -> yours   (docs/20, round 5)
+# DIVE -> LOCK -> RHYTHM -> close-up -> yours   (round 6: no more escape check, a much harder grab)
 #
-# One key, E, and a tiny rhythm game. White rings shrink onto a THICK green ring (good) with a THIN gold ring just inside it (perfect);
-# inside the gold ring there is nothing: a ring that has passed is a miss. The number of rings depends on the fry's rarity:
-#   common / silver / rainbow   1 ring                       (press once)
-#   gold                        3 rings (left / middle / right), one after another   (press three times, in the order they arrive)
-#   diamond                     5 rings, faster, hopping between the three places     (press five times)
-# Every E press judges the OLDEST ring that has not been judged yet. A press too early (before the green) or a ring that slips past is a miss.
-# Gold / diamond tolerate ONE miss; all-gold (or nearly) is PERFECT. The escape check (the owner's swing) is judged the same way.
-# The rings run in REAL time (the world only slows down for atmosphere); E presses are time-stamped in _input.
-# STEADY BEAK (green) fries widen the bands and slow the rings. The crowd's attention thins the bands.
-const FLEE_TS = 0.33            # bullet time during the escape check
+# One key, E, and a small rhythm game. The fry is surrounded by target CIRCLES (a thick green ring with a thin gold ring just inside it).
+# Every circle sends TWO white waves shrinking onto it, one after the other; circle after circle, quickly. Each wave is one judgement:
+#   press E when the wave is in the green band = 1 point; when it is in the gold band = 2 points; too early / too late = 0 points.
+# You need as many points as there are waves (a gold press pays for two). The number of circles depends on the rarity of the fry:
+#   tutorial / rainbow  1 circle   (2 waves)      silver (rare)    2 circles, top to bottom   (4 waves)
+#   gold (epic)         3 circles, top to bottom   (6 waves)      diamond (legendary)  5 circles like the olympic rings  (10 waves)
+#   things (hats, drinks, ice cream, fish...)  1 circle, 1 wave.
+# Every E press judges the OLDEST wave that has not been judged yet. A press too early (before the green) or a wave that slips past is a miss.
+# Enough points = the fry is yours (the rhythm ends at once). The waves run in REAL time (the world only slows down for atmosphere); presses are time-stamped.
+# STEADY BEAK (green) fries widen the bands and slow the waves. The crowd's attention thins the bands. Coffee: wider bands and a deeper slow-motion.
 const LOCK_GRACE = 0.14         # presses in the first moments of a rhythm are ignored (that E was meant for something else)
-const MISS_GRACE = 0.03         # a ring that has passed its gold by this much is a miss
+const MISS_GRACE = 0.03         # a wave that has passed its gold by this much is a miss
 const GOLD_GRACE = 0.02         # ...and a gold press may be this late
 const SEQ_TS_MIN = 0.2
 const SEQ_TS_MAX = 0.8
 const STAND_OFF = 1.7           # the guided approach stops this far from the fry; the close-up does the last bit
-# per tier: n rings, lead time of the first ring, gap between rings, gold width, green (outer) width  - all in real seconds
+const APPR = 0.56               # seconds a white wave takes to shrink onto its circle
+# per tier: circles, waves per circle, time of the first wave, gap between waves, gold width, green (outer) width  - all in real seconds
 const SEQ_TIER = {
-	0: {"n": 1, "lead": 0.95, "gap": 0.0, "gw": 0.11, "gg": 0.24},     # decorative steals
-	1: {"n": 1, "lead": 0.85, "gap": 0.0, "gw": 0.085, "gg": 0.17},    # silver
-	2: {"n": 3, "lead": 0.85, "gap": 0.42, "gw": 0.07, "gg": 0.14},    # gold
-	3: {"n": 5, "lead": 0.8, "gap": 0.30, "gw": 0.055, "gg": 0.115},   # diamond
-	4: {"n": 1, "lead": 0.8, "gap": 0.0, "gw": 0.09, "gg": 0.18},      # rainbow (repeatable, a single easy ring)
-	5: {"n": 1, "lead": 0.75, "gap": 0.0, "gw": 0.045, "gg": 0.09},    # fish: the narrowest single ring in the game
+	0: {"c": 1, "w": 1, "lead": 0.85, "gap": 0.0, "gw": 0.07, "gg": 0.13},      # things: hats, drinks, ice cream
+	1: {"c": 2, "w": 2, "lead": 0.85, "gap": 0.36, "gw": 0.05, "gg": 0.095},    # silver / rare
+	2: {"c": 3, "w": 2, "lead": 0.85, "gap": 0.33, "gw": 0.045, "gg": 0.085},   # gold / epic
+	3: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.04, "gg": 0.075},    # diamond / legendary
+	4: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.42, "gw": 0.06, "gg": 0.11},     # rainbow (repeatable, a single easy circle)
+	5: {"c": 1, "w": 1, "lead": 0.8, "gap": 0.0, "gw": 0.04, "gg": 0.07},       # fish
+	6: {"c": 1, "w": 1, "lead": 0.8, "gap": 0.0, "gw": 0.035, "gg": 0.06},      # cloud / sun: one wave, the narrowest in the game (the fall is expensive)
 }
-const TUT_SEQ = {"TUTORIAL_01": {"lead": 1.15, "gw": 0.16, "gg": 0.42}, "TUTORIAL_02": {"lead": 1.05, "gw": 0.13, "gg": 0.32},
-	"TUTORIAL_03": {"lead": 0.95, "gw": 0.11, "gg": 0.26}}
-const ARCH_MULT = {"elder": 1.0, "elder_poke": 1.0, "adult": 0.92, "parent": 0.92, "vendor": 0.92, "child": 0.8}
+const TUT_SEQ = {"TUTORIAL_01": {"c": 1, "w": 2, "lead": 1.1, "gap": 0.55, "gw": 0.09, "gg": 0.2}, "TUTORIAL_02": {"c": 1, "w": 2, "lead": 1.0, "gap": 0.5, "gw": 0.075, "gg": 0.16},
+	"TUTORIAL_03": {"c": 1, "w": 2, "lead": 0.95, "gap": 0.46, "gw": 0.065, "gg": 0.13}}
+const ARCH_MULT = {"elder": 1.0, "elder_poke": 1.0, "adult": 0.94, "parent": 0.94, "vendor": 0.94, "child": 0.85}
+# where the circles sit around the fry (x, y in units of the layout spacing)
+const LAYOUTS = {
+	1: [[0.0, 0.0]],
+	2: [[0.0, -0.5], [0.0, 0.5]],
+	3: [[0.0, -1.0], [0.0, 0.0], [0.0, 1.0]],
+	5: [[-1.0, -0.5], [0.0, -0.5], [1.0, -0.5], [-0.5, 0.5], [0.5, 0.5]],       # the olympic rings: three on top, two between them below, none touching
+}
 
 var player
-var state = "idle"        # idle | cine | flee | carry
-var hud_state = "none"    # none | slow | ok | locked | flee | eat
+var state = "idle"        # idle | cine | carry
+var hud_state = "none"    # none | slow | ok | locked | eat
 var lock_fry = null
 var seq = null            # the running rhythm (see _seq_begin) or null
 var need_speed = 10.0     # speed the gauge marks as "GRAB" for the current target
@@ -57,9 +66,6 @@ var clean_run = true
 var perfect_streak = 0
 var last_commit = {}
 var focus_owned = false
-var flee_decided = false
-var flee_ok = false
-var flee_perfect = false
 var presses = []           # real-time (usec) stamps of E presses not judged yet
 var seq_ts = 0.5           # the world speed the current rhythm wants
 var seq_from = Vector3.ZERO
@@ -92,7 +98,6 @@ func drop_carry():
 	state = "idle"
 	hud_state = "none"
 	snatch_cd = 1.5
-	flee_decided = false
 	_seq_abort()
 	if f != null and is_instance_valid(f):
 		f.fall_and_vanish(8.0 if f.id.begins_with("TUTORIAL") else 16.0)
@@ -121,9 +126,6 @@ func step(delta):
 	match state:
 		"cine":
 			_update_cine(delta / max(Engine.time_scale, 0.02))
-			return
-		"flee":
-			_update_flee(delta)
 			return
 		"carry":
 			_update_carry(delta)
@@ -167,7 +169,15 @@ func _scan(delta):
 		var d = to.length()
 		if f.ftype == "ordinary":
 			if d <= 2.6 and (fwd.dot(to / max(d, 0.01)) > 0.0 or d < 2.0):
-				eat_target = f
+				if GS.gull_sense_count < 3:
+					# the plain fry waits until the three starter fries are in: a stray E must not end the game before it began
+					if Input.is_action_just_pressed("interact") and not p.input_locked and toast_t <= 0.0:
+						player.show_toast("NOT YET", 0.9)
+						note = "three fries first. it will still be warm."
+						note_t = 3.0
+						Sfx.play("tooslow", -12.0)
+				else:
+					eat_target = f
 			continue
 		if d > 26.0 or d < 0.05:
 			continue
@@ -218,66 +228,50 @@ func _scan(delta):
 func _is_tut(f):
 	return f != null and f.id.begins_with("TUTORIAL")
 
-# 0 common (tutorial / decorative), 1 silver, 2 gold, 3 diamond, 4 rainbow, 5 fish (the hardest single check in the game)
+# 0 common (tutorial / decorative), 1 silver, 2 gold, 3 diamond, 4 rainbow, 5 fish, 6 cloud / sun (the hardest single wave in the game)
 func _tier_of(f):
 	if f.ftype == "fish":
 		return 5
-	if f.ftype == "tutorial" or f.ftype == "mischief":
+	if f.ftype == "mischief":
+		return 6 if f.kind in ["cloud", "sun"] else 0
+	if f.ftype == "tutorial":
 		return 0
 	return clamp(f.tier, 0, 4)
 
-# the numbers of one rhythm (real seconds): rings, lead, gap, gold width, green width
-func _seq_params(f, flee = false):
+# the numbers of one rhythm (real seconds): circles, waves, lead, gap, gold width, green width
+func _seq_params(f):
 	var tier = _tier_of(f)
 	var base = SEQ_TIER[tier].duplicate()
 	if f.ftype == "tutorial" and TUT_SEQ.has(f.id) and not GS.tutorial_done.has(f.id):
 		base.merge(TUT_SEQ[f.id], true)
-	var mult = GS.timing_mult()
+	var mult = GS.timing_mult() * GS.buff_window_mult()
 	var hw = GS.heat_window_mult()
 	if _is_tut(f):
 		hw = max(hw, 0.9)       # the crowd cannot thin the first lessons
 	if f.npc != null:
-		mult *= ARCH_MULT.get(f.npc.arch, 0.92)
-	if flee:
-		mult *= 0.95
+		mult *= ARCH_MULT.get(f.npc.arch, 0.94)
 	var m = mult * hw
 	var rs = GS.ring_speed_mult()
 	base["gw"] = max(base["gw"] * m, 0.026)
 	base["gg"] = max(base["gg"] * m, 0.05)
-	base["lead"] = base["lead"] * rs
+	base["appr"] = APPR * rs
+	base["lead"] = max(base["lead"] * rs, base["appr"] + 0.14)
 	base["gap"] = base["gap"] * rs
-	base["allowed"] = 0 if base["n"] <= 1 else 1
+	base["n"] = base["c"] * base["w"]
 	base["tier"] = tier
 	return base
 
-func _make_slots(n):
-	var out = []
-	if n == 1:
-		return [0]
-	if n == 3:
-		out = [-1, 0, 1]
-		out.shuffle()
-		return out
-	var last = 9
-	for i in n:
-		var s = [-1, 0, 1][randi() % 3]
-		if s == last:
-			s = [-1, 0, 1][(([-1, 0, 1].find(s)) + 1 + randi() % 2) % 3]
-		out.append(s)
-		last = s
-	return out
-
-# start a rhythm: kind "grab" or "flee", world = where the rings are drawn (the fry, or the gull)
+# start a rhythm: world = where the circles are drawn (the fry)
 func _seq_begin(kind, f, world):
-	var prm = _seq_params(f, kind == "flee")
-	var slots = _make_slots(prm["n"])
+	var prm = _seq_params(f)
+	var layout = LAYOUTS[prm["c"]]
 	var notes = []
 	for i in prm["n"]:
-		notes.append({"t": prm["lead"] + i * prm["gap"], "slot": slots[i], "res": "", "res_t": 0.0})
+		notes.append({"t": prm["lead"] + i * prm["gap"], "circle": i / prm["w"], "wave": i % prm["w"], "res": "", "res_t": 0.0})
 	var last_t = notes[notes.size() - 1]["t"]
-	seq = {"kind": kind, "t0": GS.usec(), "notes": notes, "appr": prm["lead"], "gw": prm["gw"], "gg": prm["gg"], "allowed": prm["allowed"],
-		"n": prm["n"], "tier": prm["tier"], "dur": last_t + 0.22, "misses": 0, "golds": 0, "greens": 0, "reason": "", "done": false, "ok": false, "perfect": false,
-		"world": world}
+	seq = {"kind": kind, "t0": GS.usec(), "notes": notes, "appr": prm["appr"], "gw": prm["gw"], "gg": prm["gg"], "need": prm["n"], "points": 0,
+		"n": prm["n"], "circles": prm["c"], "waves": prm["w"], "layout": layout, "tier": prm["tier"], "dur": last_t + 0.2, "misses": 0, "golds": 0, "greens": 0,
+		"reason": "", "done": false, "ok": false, "perfect": false, "world": world, "combo": 0}
 	presses.clear()
 	last_step_usec = GS.usec()
 
@@ -294,7 +288,7 @@ func _seq_abort():
 		lock_fry = null
 		player.input_locked = false
 
-# judge the E presses and the rings that slipped by. Returns true when the rhythm is over (seq["done"]).
+# judge the E presses and the waves that slipped by. Returns true when the rhythm is over (seq["done"]).
 func _seq_judge():
 	var s = seq
 	var now = seq_now()
@@ -320,7 +314,7 @@ func _seq_judge():
 		_note_result(s, idx, res, reason, tp)
 		if s["done"]:
 			return true
-	# rings that have slipped past the gold: a miss, right now
+	# waves that have slipped past the gold: a miss, right now
 	while true:
 		var j = _first_pending(s)
 		if j < 0:
@@ -343,25 +337,40 @@ func _note_result(s, idx, res, reason, tp):
 	var nt = s["notes"][idx]
 	nt["res"] = res
 	nt["res_t"] = tp
-	var combo = s["golds"] + s["greens"]
 	match res:
 		"gold":
 			s["golds"] += 1
-			Sfx.play("perfect", -12.0, 1.0 + 0.07 * combo)
+			s["points"] += 2
+			s["combo"] += 1
+			Sfx.play("ring_gold", -7.0, Sfx.PENTA[min(s["combo"] - 1, 7) % Sfx.PENTA.size()])
 		"green":
 			s["greens"] += 1
-			Sfx.play("gs_tick", -9.0, 1.15 + 0.07 * combo)
+			s["points"] += 1
+			s["combo"] += 1
+			Sfx.play("ring_ok", -8.0, Sfx.PENTA[min(s["combo"] - 1, 7) % Sfx.PENTA.size()])
 		_:
 			s["misses"] += 1
+			s["combo"] = 0
 			if s["reason"] == "":
 				s["reason"] = reason
-			Sfx.play("clack", -9.0)
-	var pending = _first_pending(s)
-	if s["misses"] > s["allowed"] or pending < 0:
+			Sfx.play("ring_miss", -9.0)
+	var remaining = 0
+	for q in s["notes"]:
+		if q["res"] == "":
+			remaining += 1
+	var judged = s["n"] - remaining
+	# enough points: it is yours (a gold press pays for two waves, so skilled players finish early)
+	if s["points"] >= s["need"]:
 		s["done"] = true
-		s["ok"] = s["misses"] <= s["allowed"]
-		var n = s["n"]
-		s["perfect"] = s["ok"] and s["misses"] == 0 and s["golds"] >= int(ceil(n * 0.8))
+		s["ok"] = true
+	elif s["points"] + 2 * remaining < s["need"]:
+		s["done"] = true          # even all golds could not save it any more
+		s["ok"] = false
+	elif remaining == 0:
+		s["done"] = true
+		s["ok"] = false
+	if s["done"]:
+		s["perfect"] = s["ok"] and s["misses"] == 0 and s["golds"] >= int(ceil(judged * 0.7))
 
 # ------------------------------------------------------------------ lock: the guided last metres + the grab rhythm
 func _lock_on(f):
@@ -375,7 +384,7 @@ func _lock_on(f):
 	seq_from = p.global_position
 	seq_to = tgt - dir * min(STAND_OFF, max(dist - 0.5, 0.0))
 	var v = max(p.speed, 6.0)
-	seq_ts = clamp(seq_from.distance_to(seq_to) / (seq["dur"] * v), SEQ_TS_MIN, SEQ_TS_MAX)
+	seq_ts = clamp(clamp(seq_from.distance_to(seq_to) / (seq["dur"] * v), SEQ_TS_MIN, SEQ_TS_MAX) * GS.slowmo_mult(), 0.1, 1.0)
 	p.input_locked = true
 	Sfx.play("alert", -16.0, 1.5)
 
@@ -432,8 +441,6 @@ func _focus_time(delta):
 		want = seq_ts
 		if tut_assist:
 			want *= 0.85
-	elif state == "flee":
-		want = FLEE_TS
 	if want > 0.0:
 		if not focus_owned:
 			focus_owned = true
@@ -451,7 +458,8 @@ func _commit(f, success, perfect, reason):
 	state = "cine"
 	var sq = seq
 	last_commit = {"ok": success, "perfect": perfect, "reason": reason, "id": f.id, "n": sq["n"] if sq != null else 1,
-		"golds": sq["golds"] if sq != null else 0, "greens": sq["greens"] if sq != null else 0, "misses": sq["misses"] if sq != null else 0}
+		"golds": sq["golds"] if sq != null else 0, "greens": sq["greens"] if sq != null else 0, "misses": sq["misses"] if sq != null else 0,
+		"points": sq["points"] if sq != null else 0, "need": sq["need"] if sq != null else 1}
 	seq = null
 	lock_fry = null
 	cine = {"fry": f, "ok": success, "perfect": perfect, "t": 0.0, "dur": 0.8 + (0.3 if perfect else 0.0),
@@ -584,13 +592,8 @@ func _end_cine():
 		var n = f.npc
 		if n != null:
 			n.on_snatched()
-		var owned = n != null and not n.gone and not n.leaving
-		if owned and not perfect:
-			_begin_flee(f)
-		else:
-			# a perfect grab (or nobody to swing at us): the gull is simply gone
-			state = "carry"
-			carry_need = 1.0 if perfect else 0.6
+		state = "carry"
+		carry_need = 0.55 if perfect else 0.4
 	else:
 		state = "idle"
 		flash = -1
@@ -619,77 +622,6 @@ func _end_cine():
 
 func _pick(arr):
 	return arr[randi() % arr.size()]
-
-# ------------------------------------------------------------------ escape check (stage 2): the same rhythm against the owner's swing
-func _begin_flee(f):
-	var n = f.npc
-	state = "flee"
-	flee_decided = false
-	flee_ok = false
-	flee_perfect = false
-	presses.clear()
-	n.begin_scripted_swat()
-	_seq_begin("flee", f, player.beak_socket.global_position)
-	# the swing comes down exactly when the last ring has been judged
-	n.scripted_tele = seq["dur"] * FLEE_TS + 0.12
-	player.speed = min(player.speed, 2.5)      # the grab costs all the speed: the owner has the gull in reach
-	player.show_toast("NOW!", 0.6)
-
-# the gull hangs in the owner's reach until the verdict: a failed escape is a swing that really connects
-func _pin_to_swing(n, delta):
-	var c = n._swat_center()
-	player.global_position = player.global_position.move_toward(c, 7.0 * delta)
-	player.velocity = Vector3.ZERO
-	player.speed = min(player.speed, 2.0)
-
-# the verdict is in and it is a failure: the swing comes down now (no waiting around with a failed gull)
-func _flee_fail(n, msg):
-	flee_decided = true
-	flee_ok = false
-	n.scripted = "hit"
-	n.swat_t = max(n.swat_t, n._tele() * 0.82)
-	player.show_toast(msg, 0.8)
-
-func _update_flee(delta):
-	var f = carry_fry
-	if f == null or not is_instance_valid(f) or f.npc == null:
-		carry_fry = null
-		state = "idle"
-		seq = null
-		return
-	var n = f.npc
-	hud_state = "flee"
-	ring_world = player.beak_socket.global_position
-	if seq != null:
-		seq["world"] = ring_world
-	if not flee_decided and seq != null:
-		_pin_to_swing(n, delta)
-		if _seq_judge():
-			var sq = seq
-			if sq["ok"]:
-				flee_decided = true
-				flee_ok = true
-				flee_perfect = sq["perfect"]
-				n.scripted = "whiff"
-				player.dodge_flourish()
-				player.speed = 8.0
-				player.show_toast("PERFECT SLIP!" if flee_perfect else "SLIPPED!", 0.8)
-				GS.stats["slipped"] += 1
-				if flee_perfect:
-					GS.award("SLIPPERY")
-			else:
-				_flee_fail(n, "TOO EARLY" if sq["reason"] == "early" else "TOO LATE")
-	elif flee_decided and not flee_ok:
-		_pin_to_swing(n, delta)
-	# verdict is in: wait for the swing to play out. If it landed, on_hit() has already ended this state.
-	if flee_decided and (n.swat_phase == 3 or n.swat_phase == 0):
-		carry_t = 0.0
-		carry_need = 0.35
-		carry_perfect = flee_perfect
-		seq = null
-		state = "carry"
-	elif not flee_decided and n.swat_phase >= 2:
-		_flee_fail(n, "TOO LATE")
 
 func _update_carry(delta):
 	carry_t += delta

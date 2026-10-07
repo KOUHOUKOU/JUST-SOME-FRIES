@@ -206,9 +206,8 @@ func _farm():
 	B.ball(Vector3(sx0, sy0 + 2.05, sz0), 0.2, "E8D8A8")
 	for sx in [-1.0, 1.0]:
 		B.box(Vector3(sx0 + sx * 0.85, sy0 + 1.4, sz0), Vector3(0.3, 0.5, 0.1), "7A6A52", false)
-	var hat = Node3D.new()
-	hat.set_script(MISCHIEF)
-	hat.setup("hat", w.root, Vector3(sx0, sy0 + 2.25, sz0))
+	B.cyl(Vector3(sx0, sy0 + 2.22, sz0), 0.4, 0.03, "E8D8A0", false)
+	B.cyl(Vector3(sx0, sy0 + 2.3, sz0), 0.2, 0.14, "E8D8A0", false)
 	# a hay maze of bales near the barn gives gulls somewhere to land
 	for k in 3:
 		B.cyl(Vector3(bx - 4.0 + k * 1.2, by + 0.5, bz + 8.6), 0.55, 1.0, "D9B25F", true, -1.0, 0.0, Vector3(0, 0, 90))
@@ -295,15 +294,16 @@ func build_life():
 		_amb(m, d, Vector3(0.0, 0, 1.0), ex)
 		made += 1
 	# --- church steps: a priest, a wedding party (the groom's bow tie is for the taking)
-	var cy = w.gh(-26.0, -50.0) + 1.0
-	_amb("stand", Vector3(-26.0, cy, -41.2), Vector3(0, 0, 1), {"hair_style": "bald", "shirt": "2B2F36", "pants": "2B2F36"})
-	_amb("chat", Vector3(-22.4, cy, -41.2), Vector3(0.5, 0, 0.9), {"mischief": "bowtie", "shirt": "2B2F36", "pants": "2B2F36"})
-	_amb("chat", Vector3(-21.4, cy, -41.2), Vector3(-0.5, 0, 0.9), {"shirt": "F4F1E8", "hair_style": "long"})
-	_amb("stand", Vector3(-29.5, cy, -41.2), Vector3(0, 0, 1), {"hair_style": "bun", "shirt": "7A5A8B", "item_r": "paper"})
+	var cy = w.gh(-26.0, -62.0) + 1.0
+	_amb("stand", Vector3(-26.0, cy, -52.4), Vector3(0, 0, 1), {"hair_style": "bald", "shirt": "2B2F36", "pants": "2B2F36"})
+	_amb("chat", Vector3(-22.4, cy, -52.4), Vector3(0.5, 0, 0.9), {"mischief": "bowtie", "shirt": "2B2F36", "pants": "2B2F36"})
+	_amb("chat", Vector3(-21.4, cy, -52.4), Vector3(-0.5, 0, 0.9), {"shirt": "F4F1E8", "hair_style": "long"})
+	_amb("stand", Vector3(-29.5, cy, -52.4), Vector3(0, 0, 1), {"hair_style": "bun", "shirt": "7A5A8B", "item_r": "paper"})
 	# --- beach huts
 	_amb("stand", _g(22.0, 8.6), Vector3(0, 0, 1), {"vest": true, "vest_color": "E8573A", "hair_style": "cap"})
-	_amb("stand", _g(31.0, 8.6), Vector3(0, 0, 1), {"apron": true, "mischief": "icecream"})
-	_amb("lie", _g(40.0, 10.4) + Vector3(0, 0.05, 0), Vector3(0, 0, 1), {"mischief": "shades", "hair_style": "short"})
+	_amb("stand", _g(31.0, 8.6), Vector3(0, 0, 1), {"apron": true, "item_r": "icecream"})
+	w.towel(40.0, 10.4, 0.0, "FF8A3C")
+	_amb("lie", _g(40.0, 10.4) + Vector3(0, 0.04, 0), Vector3(0, 0, 1), {"hair_style": "short"})
 	_amb("play", _g(48.5, 9.5), Vector3(0, 0, 1), {"scale": 0.7, "chaser": true})
 	_amb("play", _g(58.0, 9.2), Vector3(0, 0, 1), {"item_l": "guitar", "hair_style": "beanie"})
 	# --- harbour: dock workers, lunch break, stall vendors who hate gulls
@@ -348,7 +348,8 @@ func _volleyball():
 		var n = _amb("play", _g(spec[0], spec[1]), Vector3(spec[2], 0, 0), {"hair_style": ["short", "bun", "cap", "long"][ppl.size()]})
 		ppl.append(n)
 	_amb("stand", _g(nx, 12.3), Vector3(0, 0, 1), {"vest": true, "vest_color": "E8573A"})
-	_amb("lie", _g(nx + 4.5, 26.0) + Vector3(0, 0.05, 0), Vector3(0, 0, 1), {})
+	w.towel(nx + 4.5, 26.0, 0.0, "3D8CD9")
+	_amb("lie", _g(nx + 4.5, 26.0) + Vector3(0, 0.04, 0), Vector3(0, 0, 1), {})
 	var v = Node3D.new()
 	v.set_script(VOLLEY)
 	v.setup(w.player, ppl, nx)

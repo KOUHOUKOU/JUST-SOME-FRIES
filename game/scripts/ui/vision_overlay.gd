@@ -203,18 +203,158 @@ func draw_glows(ci):
 				ci.draw_string(font, pos - dir * 34.0 * u + Vector2(-60, 14 * u), lines2[1], HORIZONTAL_ALIGNMENT_CENTER, 120, int(12 * u), lc)
 				n_labels += 1
 		else:
-			# a prop / drink / fish: a small grey mark with its number, only when it is on screen and there is room
-			if onscreen and n_labels < 18 and d < 90.0:
-				var gc = Color(0.75, 0.8, 0.88, 0.7 * a) if reachable else Color(0.6, 0.55, 0.55, 0.55 * a)
-				if f.ftype == "fish":
-					gc = Color(0.4, 0.8, 1.0, 0.8 * a)
-				ci.draw_circle(sp, 5.0 * u, gc)
-				ci.draw_arc(sp, 9.0 * u, 0, TAU, 20, Color(gc.r, gc.g, gc.b, gc.a * 0.7), 1.5, true)
-				ci.draw_string(font, sp + Vector2(-30, 24 * u), "%d" % int(round(need)), HORIZONTAL_ALIGNMENT_CENTER, 60, int(11 * u), Color(gc.r, gc.g, gc.b, gc.a + 0.1))
+			# a thing (a drink, an ice cream, something to wear, a fish, a cloud...): a small picture of what it is, so the gull can decide whether it wants it
+			if (onscreen and n_labels < 22 and d < 110.0) or f.ftype == "mischief" and f.kind in ["cloud", "sun"] and onscreen:
+				var kind = f.kind if "kind" in f else f.ftype
+				var tint = _tint_of(kind)
+				var tag = _tag_of(kind)
+				var s = (9.0 + 8.0 / (1.0 + d / 30.0)) * u
+				if not reachable:
+					tint = tint.lerp(Color(0.6, 0.55, 0.55), 0.55)
+				ci.draw_circle(sp, s * 1.35, Color(0.02, 0.03, 0.07, 0.55 * a))
+				ci.draw_arc(sp, s * 1.35, 0, TAU, 24, Color(tint.r, tint.g, tint.b, 0.85 * a), 1.6, true)
+				_icon(ci, kind, sp, s, Color(tint.r, tint.g, tint.b, a))
+				ci.draw_string(font, sp + Vector2(-50, s * 1.35 + 13 * u), tag, HORIZONTAL_ALIGNMENT_CENTER, 100, int(11 * u), Color(1, 1, 1, 0.8 * a))
+				ci.draw_string(font, sp + Vector2(-50, s * 1.35 + 25 * u), "%d" % int(round(need)), HORIZONTAL_ALIGNMENT_CENTER, 100, int(10 * u), Color(1.0, 0.9, 0.6, 0.75 * a) if reachable else Color(1.0, 0.5, 0.45, 0.8 * a))
 				n_labels += 1
+	# when no fry is inside the circle of sight, the nearest fry in the whole town is still pointed out: there is always something to fly to
+	var have_fry = false
+	for it2 in items_:
+		if it2["f"].is_fry_like() and it2["f"].vision_info() != null:
+			have_fry = true
+	if not have_fry and pl != null:
+		_nearest_pointer(ci, cam, font, u, rect, pl)
 	if items_.is_empty():
-		ci.draw_string(font, Vector2(0, size.y * 0.5), "nothing to snatch in range", HORIZONTAL_ALIGNMENT_CENTER, size.x, int(16 * u), Color(1, 1, 1, 0.3 * a))
+		ci.draw_string(font, Vector2(0, size.y * 0.5 + 40 * u), "nothing in range - but there is one out there:", HORIZONTAL_ALIGNMENT_CENTER, size.x, int(14 * u), Color(1, 1, 1, 0.34 * a))
 	_unused(seen_labels, my_max)
 
 func _unused(_a, _b):
 	pass
+
+# the nearest fry anywhere (not the plain one: it never glows), as an arrow on the edge of the view with its distance
+func _nearest_pointer(ci, cam, font, u, rect, pl):
+	var best = null
+	var bd = 1e9
+	for f in get_tree().get_nodes_in_group("fries"):
+		if not is_instance_valid(f) or f.ftype == "ordinary":
+			continue
+		if f.vision_info() == null:
+			continue
+		var d = pl.global_position.distance_to(f.global_position)
+		if d < bd:
+			bd = d
+			best = f
+	if best == null:
+		return
+	var info = best.vision_info()
+	var col = info["col"]
+	var wp = info["pos"]
+	var behind = cam.is_position_behind(wp)
+	var sp = cam.unproject_position(wp)
+	var onscreen = (not behind) and rect.has_point(sp)
+	var label = "NEAREST FRY   %d m" % int(bd)
+	var pulse = 1.0 + 0.12 * sin(t * 5.0)
+	if onscreen:
+		var r = 30.0 * pulse * u
+		ci.draw_arc(sp, r, 0, TAU, 36, Color(col.r, col.g, col.b, 0.95 * a), 3.0, true)
+		ci.draw_circle(sp, r * 0.4, Color(info["core"].r, info["core"].g, info["core"].b, 0.85 * a))
+		ci.draw_string(font, sp + Vector2(-90, r + 18 * u), label, HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(1, 1, 1, 0.9 * a))
+		return
+	var dir = sp - size * 0.5
+	if behind:
+		dir = -dir
+	if dir.length() < 1.0:
+		dir = Vector2(0, 1)
+	dir = dir.normalized()
+	var half = rect.size * 0.5
+	var kx = half.x / max(abs(dir.x), 0.001)
+	var ky = half.y / max(abs(dir.y), 0.001)
+	var pos = rect.position + half + dir * min(kx, ky)
+	var nrm = Vector2(-dir.y, dir.x)
+	ci.draw_circle(pos, 30.0 * pulse * u, Color(col.r, col.g, col.b, 0.22 * a))
+	ci.draw_colored_polygon(PackedVector2Array([pos + dir * 22.0 * pulse * u, pos - dir * 11.0 * u + nrm * 15.0 * u, pos - dir * 11.0 * u - nrm * 15.0 * u]), Color(col.r, col.g, col.b, 0.97 * a))
+	ci.draw_string(font, pos - dir * 40.0 * u + Vector2(-90, 0), label, HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(1, 1, 1, 0.92 * a))
+
+# ---------------------------------------------------------------- the pictures of the things
+const KIND_TAG = {"coffee": "COFFEE", "alcohol": "COCKTAIL", "icecream": "ICE CREAM", "hawaii": "SHIRT", "stripes": "SHIRT", "coat": "COAT", "socks": "SOCK", "hat": "HAT", "sailor": "HAT",
+	"topper": "HAT", "beret": "HAT", "glasses": "GLASSES", "shades": "SHADES", "necklace": "CHAIN", "bowtie": "BOW TIE", "scarf": "SCARF", "pipe": "PIPE", "balloon": "BALLOON",
+	"ball": "BALL", "fish": "FISH", "cloud": "CLOUD", "sun": "THE SUN"}
+
+func _tag_of(kind):
+	return KIND_TAG.get(kind, "THING")
+
+func _tint_of(kind):
+	match kind:
+		"coffee":
+			return Color("D9A066")
+		"alcohol":
+			return Color("FF9A5A")
+		"icecream":
+			return Color.from_hsv(fmod(t * 0.4, 1.0), 0.45, 1.0)
+		"fish":
+			return Color("5FC8F5")
+		"cloud":
+			return Color("FFFFFF")
+		"sun":
+			return Color("FFC83A")
+	return Color("D8E2EE")
+
+func _icon(ci, kind, c, s, col):
+	var lw = max(s * 0.18, 1.5)
+	match kind:
+		"coffee":
+			ci.draw_rect(Rect2(c + Vector2(-s * 0.55, -s * 0.3), Vector2(s * 1.0, s * 0.85)), col)
+			ci.draw_arc(c + Vector2(s * 0.5, s * 0.1), s * 0.3, -PI / 2, PI / 2, 8, col, lw, true)
+			ci.draw_line(c + Vector2(-s * 0.2, -s * 0.55), c + Vector2(-s * 0.1, -s * 0.85), Color(1, 1, 1, col.a * 0.7), lw)
+			ci.draw_line(c + Vector2(s * 0.15, -s * 0.55), c + Vector2(s * 0.25, -s * 0.85), Color(1, 1, 1, col.a * 0.7), lw)
+		"alcohol":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.7, -s * 0.7), c + Vector2(s * 0.7, -s * 0.7), c + Vector2(0, s * 0.1)]), col)
+			ci.draw_line(c + Vector2(0, s * 0.1), c + Vector2(0, s * 0.75), col, lw)
+			ci.draw_line(c + Vector2(-s * 0.4, s * 0.78), c + Vector2(s * 0.4, s * 0.78), col, lw)
+		"icecream":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.4, -s * 0.1), c + Vector2(s * 0.4, -s * 0.1), c + Vector2(0, s * 0.9)]), Color(0.85, 0.65, 0.25, col.a))
+			ci.draw_circle(c + Vector2(0, -s * 0.3), s * 0.5, col)
+			ci.draw_circle(c + Vector2(0, -s * 0.75), s * 0.35, col.lightened(0.3))
+		"hawaii", "stripes", "coat":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.4, -s * 0.7), c + Vector2(s * 0.4, -s * 0.7), c + Vector2(s * 0.9, -s * 0.3), c + Vector2(s * 0.6, 0.0),
+				c + Vector2(s * 0.4, -s * 0.15), c + Vector2(s * 0.4, s * 0.75), c + Vector2(-s * 0.4, s * 0.75), c + Vector2(-s * 0.4, -s * 0.15), c + Vector2(-s * 0.6, 0.0), c + Vector2(-s * 0.9, -s * 0.3)]), col)
+		"socks":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.3, -s * 0.8), c + Vector2(s * 0.3, -s * 0.8), c + Vector2(s * 0.3, s * 0.2), c + Vector2(s * 0.85, s * 0.3), c + Vector2(s * 0.85, s * 0.8), c + Vector2(-s * 0.3, s * 0.8)]), col)
+		"hat", "sailor", "topper", "beret":
+			ci.draw_rect(Rect2(c + Vector2(-s * 0.45, -s * 0.7), Vector2(s * 0.9, s * 0.8)), col)
+			ci.draw_rect(Rect2(c + Vector2(-s * 0.9, s * 0.05), Vector2(s * 1.8, s * 0.3)), col)
+		"glasses", "shades":
+			ci.draw_arc(c + Vector2(-s * 0.45, 0), s * 0.4, 0, TAU, 14, col, lw, true)
+			ci.draw_arc(c + Vector2(s * 0.45, 0), s * 0.4, 0, TAU, 14, col, lw, true)
+			ci.draw_line(c + Vector2(-s * 0.05, 0), c + Vector2(s * 0.05, 0), col, lw)
+		"necklace":
+			ci.draw_arc(c + Vector2(0, -s * 0.4), s * 0.85, deg_to_rad(20), deg_to_rad(160), 12, col, lw, true)
+		"bowtie":
+			ci.draw_colored_polygon(PackedVector2Array([c, c + Vector2(-s * 0.9, -s * 0.45), c + Vector2(-s * 0.9, s * 0.45)]), col)
+			ci.draw_colored_polygon(PackedVector2Array([c, c + Vector2(s * 0.9, -s * 0.45), c + Vector2(s * 0.9, s * 0.45)]), col)
+		"scarf":
+			ci.draw_arc(c + Vector2(0, -s * 0.2), s * 0.7, deg_to_rad(10), deg_to_rad(170), 10, col, lw * 2.0, true)
+			ci.draw_rect(Rect2(c + Vector2(s * 0.2, 0), Vector2(s * 0.3, s * 0.8)), col)
+		"pipe":
+			ci.draw_line(c + Vector2(-s * 0.8, s * 0.2), c + Vector2(s * 0.2, s * 0.2), col, lw * 1.4)
+			ci.draw_rect(Rect2(c + Vector2(s * 0.1, -s * 0.4), Vector2(s * 0.5, s * 0.7)), col)
+		"balloon":
+			ci.draw_circle(c + Vector2(0, -s * 0.25), s * 0.6, col)
+			ci.draw_line(c + Vector2(0, s * 0.35), c + Vector2(s * 0.1, s * 0.9), col, lw * 0.7)
+		"ball":
+			ci.draw_circle(c, s * 0.7, col)
+			ci.draw_line(c + Vector2(-s * 0.7, 0), c + Vector2(s * 0.7, 0), Color(0, 0, 0, col.a * 0.5), lw * 0.7)
+		"fish":
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.9, 0), c + Vector2(-s * 0.1, -s * 0.5), c + Vector2(s * 0.5, 0), c + Vector2(-s * 0.1, s * 0.5)]), col)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(s * 0.4, 0), c + Vector2(s * 0.95, -s * 0.45), c + Vector2(s * 0.95, s * 0.45)]), col)
+		"cloud":
+			ci.draw_circle(c + Vector2(-s * 0.4, s * 0.1), s * 0.45, col)
+			ci.draw_circle(c + Vector2(s * 0.1, -s * 0.15), s * 0.55, col)
+			ci.draw_circle(c + Vector2(s * 0.5, s * 0.15), s * 0.4, col)
+		"sun":
+			ci.draw_circle(c, s * 0.5, col)
+			for k in 8:
+				var a2 = k * TAU / 8.0
+				ci.draw_line(c + Vector2(cos(a2), sin(a2)) * s * 0.7, c + Vector2(cos(a2), sin(a2)) * s * 1.05, col, lw)
+		_:
+			ci.draw_circle(c, s * 0.4, col)

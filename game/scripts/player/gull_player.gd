@@ -35,6 +35,12 @@ var boosting = false
 var landing = false             # Ctrl held: come down now
 var drunk_t = 0.0
 var ground_drink_t = 0.0
+var stuck_t = 0.0
+var last_free_pos = Vector3.ZERO
+var aura
+var aura_light
+var aura_fx
+var aura_t = 0.0
 var scripted_move = false      # an ending cutscene moves the gull: no flight code, no collisions
 var drunk_dir = 0.0
 var throttling = false
@@ -160,8 +166,11 @@ func _ready():
 	drip.gravity = Vector3(0, -6, 0)
 	drip.local_coords = false
 	add_child(drip)
+	_make_aura()
 	stamina = GS.stamina_max()
 	GS.special_collected.connect(func(_k): gull.apply_growth())
+	GS.buff_started.connect(_on_buff_started)
+	GS.buff_ended.connect(_on_buff_ended)
 	update_camera(0.0, true)
 
 func _make_particles(col, size, amount, life):
@@ -197,6 +206,135 @@ func _input(event):
 	if event is InputEventMouseMotion and active and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		mouse_accum += event.relative
 
+# ------------------------------------------------------------------ buffs: the glow around the gull and the lower-left lines
+const BUFF_LINES = {
+	"coffee": ["SENSES SHARPENED. THE WORLD SLOWS DOWN.", "EVERYTHING IS CRISP. SO IS YOUR BEAK.", "YOU CAN HEAR THE FRIES SIZZLE."],
+	"alcohol": ["YOU FEEL LIKE A GUST OF WIND.", "NO BRAKES. NO BREATH NEEDED.", "FEATHERS FULL OF SUNSHINE."],
+	"ice": ["YOU FEEL UNBREAKABLE. AND STICKY.", "NOTHING CAN HURT YOU. PROBABLY.", "SWEET, COLD AND INVINCIBLE."],
+}
+const END_LINES = {"coffee": "THE COFFEE WORE OFF.", "alcohol": "THE COCKTAIL WORE OFF.", "ice": "THE ICE CREAM MELTED."}
+
+func _on_buff_started(kind):
+	var l = BUFF_LINES[kind]
+	GS.say_buff(l[randi() % l.size()])
+	Sfx.play("buff_" + kind, -5.0)
+	fov_kick = 4.0
+	shake = max(shake, 0.12)
+
+func _on_buff_ended(kind):
+	GS.say_buff(END_LINES[kind])
+	Sfx.play("buff_end", -10.0)
+
+func _make_aura():
+	aura = MeshInstance3D.new()
+	var q = QuadMesh.new()
+	q.size = Vector2(3.6, 3.6)
+	aura.mesh = q
+	var m = StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.albedo_texture = VisualScript.soft_tex()
+	m.albedo_color = Color(1, 1, 1, 0)
+	m.no_depth_test = false
+	aura.material_override = m
+	aura.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	aura.visible = false
+	visual_root.add_child(aura)
+	aura_light = OmniLight3D.new()
+	aura_light.omni_range = 7.0
+	aura_light.light_energy = 0.0
+	aura_light.shadow_enabled = false
+	visual_root.add_child(aura_light)
+	aura_fx = _make_particles(Color(1, 1, 1, 0.9), 0.14, 26, 0.9)
+	aura_fx.local_coords = false
+	aura_fx.direction = Vector3.UP
+	aura_fx.spread = 180.0
+	aura_fx.initial_velocity_min = 0.4
+	aura_fx.initial_velocity_max = 1.4
+	aura_fx.gravity = Vector3(0, 0.8, 0)
+	aura_fx.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	aura_fx.emission_sphere_radius = 0.5
+	visual_root.add_child(aura_fx)
+
+# the colour of what the gull is on right now: coffee brown, cocktail yellow, ice cream every colour (several at once cycle)
+func buff_color(t):
+	var act = []
+	for k in ["coffee", "alcohol", "ice"]:
+		if GS.buff[k] > 0.0:
+			act.append(k)
+	if act.is_empty():
+		return null
+	var k2 = act[int(t * 1.3) % act.size()]
+	if k2 == "ice":
+		return Color.from_hsv(fmod(t * 0.5, 1.0), 0.5, 1.0)
+	return GS.BUFF_COL[k2]
+
+func _update_aura(delta):
+	aura_t += delta
+	var c = buff_color(aura_t)
+	var strong = 0.0
+	for k in GS.buff:
+		strong = max(strong, min(GS.buff[k] / 3.0, 1.0) if not GS.buff_dying[k] else min(GS.buff[k] / 2.0, 1.0))
+	if c == null or strong <= 0.0:
+		aura.visible = false
+		aura_light.light_energy = 0.0
+		aura_fx.emitting = false
+		return
+	var flick = 1.0
+	for k in GS.buff:
+		if GS.buff[k] > 0.0 and GS.buff[k] < 3.5 and not GS.buff_dying[k]:
+			flick = 0.65 + 0.35 * sin(aura_t * 16.0)
+	aura.visible = true
+	var pulse = (0.5 + 0.12 * sin(aura_t * 7.0)) * strong * flick
+	aura.material_override.albedo_color = Color(c.r, c.g, c.b, pulse)
+	aura.scale = Vector3.ONE * (0.85 + 0.08 * sin(aura_t * 5.0))
+	aura_light.light_color = c
+	aura_light.light_energy = 1.1 * strong * flick
+	aura_fx.emitting = true
+	aura_fx.mesh.material.albedo_color = Color(c.r, c.g, c.b, 0.85)
+
+# a gull wedged into a crack between walls (or inside a roof) wriggles free: pop up to the nearest open air
+func _check_stuck(delta):
+	var want = (speed > 3.5) and not input_locked
+	var moved = get_real_velocity().length()
+	if want and get_slide_collision_count() > 0 and moved < 1.0:
+		stuck_t += delta
+	else:
+		stuck_t = max(stuck_t - delta * 2.0, 0.0)
+	if stuck_t > 1.1:
+		stuck_t = 0.0
+		_unstick()
+
+func _free_spot(p):
+	var sh = SphereShape3D.new()
+	sh.radius = 0.5
+	var q = PhysicsShapeQueryParameters3D.new()
+	q.shape = sh
+	q.transform = Transform3D(Basis.IDENTITY, p)
+	q.collision_mask = 1
+	return get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
+
+func _unstick():
+	var base = global_position
+	var push = Vector3.ZERO
+	for i in get_slide_collision_count():
+		push += get_slide_collision(i).get_normal()
+	push.y = 0.0
+	push = push.normalized() if push.length() > 0.05 else Vector3.ZERO
+	for k in range(1, 60):
+		var cand = base + Vector3(0, 0.5 * k, 0) + push * min(0.2 * k, 2.5)
+		if _free_spot(cand):
+			global_position = cand
+			vert_boost = 5.0
+			speed = max(speed, 6.0)
+			pitch = 0.2
+			aim_pitch = 0.2
+			show_toast("WRIGGLED FREE", 1.0)
+			Sfx.play("flap", -6.0)
+			return
+
 # ------------------------------------------------------------------ public helpers
 func refill():
 	stamina = GS.stamina_max()
@@ -221,7 +359,38 @@ func dodge_flourish():
 	fov_kick = 5.0
 	Sfx.play("roll", -6.0)
 
+# ICE CREAM: nothing can hurt the gull. Returns true when the hit was shrugged off (and says so in the lower-left corner).
+const SHIELD_LINES = {
+	"lunge": ["THE DOG BOUNCES OFF. YOU'RE FINE.", "A DOG TRIED. THE ICE CREAM SAID NO."],
+	"grump": ["A SWAT. YOU FELT A BREEZE.", "THEY HIT YOU. IT TICKLED."],
+	"squirt": ["A WATER GUN. YOU'RE ALREADY COLD.", "SPLASH. MOSTLY DELICIOUS."],
+	"boo": ["A KID SHOUTED BOO. YOU SHRUGGED.", "BOO? YOU'RE MADE OF SPRINKLES."],
+	"ball": ["THE BALL BOUNCED OFF YOU.", "SPIKED. NOTHING HAPPENED."],
+	"rival": ["A RIVAL GULL BOUNCED OFF.", "RIVAL GULLS HATE THIS TRICK."],
+	"crash": ["THE WALL BOUNCED OFF YOU.", "YOU HIT A WALL. THE WALL FEELS WORSE."],
+	"swat": ["YOU DID NOT FEEL THAT.", "NO DAMAGE. JUST VIBES."],
+}
+var shield_cd = 0.0
+
+func shield_hit(kind, from_pos = Vector3.ZERO):
+	if not GS.invincible():
+		return false
+	if shield_cd <= 0.0:
+		shield_cd = 1.6
+		var lines = SHIELD_LINES.get(kind, SHIELD_LINES["swat"])
+		GS.say_buff(lines[randi() % lines.size()])
+		Sfx.play("boing", -8.0, randf_range(0.9, 1.2))
+		fov_kick = 3.0
+		if from_pos != Vector3.ZERO:
+			var away = global_position - from_pos
+			away.y = 0.0
+			if away.length() > 0.05:
+				knock += away.normalized() * 4.0
+	return true
+
 func get_swatted(from_npc, kind = "punch"):
+	if shield_hit(kind, from_npc.global_position if from_npc != null else Vector3.ZERO):
+		return
 	if invuln_t > 0.0:
 		GS.award("DODGE")
 		GS.stats["slipped"] += 1
@@ -244,6 +413,8 @@ func get_swatted(from_npc, kind = "punch"):
 
 # a fright that is not a hit: a kid yelling "BOO", a gull-sized dog bark... the gull hops into the air and loses a little breath
 func startle(from_pos, amount = 6.0):
+	if shield_hit("boo", from_pos):
+		return
 	if invuln_t > 0.0 or mode == M.TUMBLE:
 		return
 	GS.stats["scares"] += 1
@@ -266,6 +437,7 @@ func startle(from_pos, amount = 6.0):
 func start_tumble(kick, dmg, dur):
 	if mode == M.TUMBLE:
 		return
+	GS.buffs_die(false)       # a hit burns coffee and cocktail away (ice cream makes the gull unhittable, so it never gets here with ice)
 	mode = M.TUMBLE
 	tumble_t = dur
 	velocity = kick
@@ -302,13 +474,14 @@ func _physics_process(delta):
 	invuln_t = max(invuln_t - delta, 0.0)
 	soaked_t = max(soaked_t - delta, 0.0)
 	splash_cd = max(splash_cd - delta, 0.0)
+	shield_cd = max(shield_cd - delta, 0.0)
 	swat_window = max(swat_window - delta, 0.0)
 	since_spend += delta
 	GS.dash_cooldown_changed.emit(1.0 - roll_cd / 1.0)
 	if GS.sense_active:
 		# Gull Sight costs stamina per REAL second (the world is slowed down while it is held)
 		var real_dt = delta / max(Engine.time_scale, 0.05)
-		var cost = GS.vision_cost() if mode == M.FLY else 0.0
+		var cost = GS.vision_cost() if (mode == M.FLY and not GS.has_buff("alcohol")) else 0.0
 		GS.stats["vision_s"] += real_dt
 		if cost > 0.0:
 			stamina = max(stamina - cost * real_dt, 0.0)
@@ -329,6 +502,10 @@ func _physics_process(delta):
 	carry_fry = snatch.carry_fry
 	snatch.step(delta)
 	knock = knock.move_toward(Vector3.ZERO, 14.0 * delta)
+	if mode == M.FLY:
+		_check_stuck(delta)
+	else:
+		stuck_t = 0.0
 	_safety()
 
 func _interp(table, x, col):
@@ -373,6 +550,8 @@ func _fly(delta, mouse):
 		drain = 18.0
 	elif throttling:
 		drain = 3.0
+	if GS.buff["alcohol"] > 0.0:
+		drain = 0.0           # the cocktail: flying costs nothing
 	if drain > 0.0:
 		stamina = max(stamina - drain * delta, 0.0)
 		since_spend = 0.0
@@ -380,14 +559,6 @@ func _fly(delta, mouse):
 			boost_locked = true
 	# aiming: the target heading follows the mouse; the bird follows it at a speed-limited rate
 	aim_yaw += -mouse.x * sens - bank * 2.0 * delta
-	if GS.drink == "alcohol" and not input_locked:
-		# a slow, wide sway (not a random jerk): the gull cannot quite hold a line
-		drunk_t += delta
-		aim_yaw += (sin(drunk_t * 1.1) * 0.5 + sin(drunk_t * 2.3 + 1.3) * 0.28) * delta
-		aim_pitch += sin(drunk_t * 0.9 + 0.6) * 0.12 * delta
-	elif GS.drink == "coffee" and not input_locked:
-		drunk_t += delta
-		aim_yaw += sin(drunk_t * 17.0) * 0.012
 	aim_pitch = clamp(aim_pitch - mouse.y * sens * (-1.0 if GS.invert_y else 1.0), deg_to_rad(-60.0), deg_to_rad(45.0))
 	var rate = _interp(TURN_TABLE, speed, 1) * max(lerp(1.0, 2.8, focus), lerp(1.0, 3.2, vision))
 	var dyaw_goal = clamp(angle_difference(yaw, aim_yaw), -1.3, 1.3)
@@ -421,7 +592,7 @@ func _fly(delta, mouse):
 	var dive = 0.0
 	if sp < 0.0 and not braking and not boosting:
 		dive = -sp
-		target = min(target + dive * 9.0, max(target, 16.0))
+		target = min(target + dive * 9.0, max(target, 14.0))
 	elif sp > 0.0:
 		target = max(target - sp * 3.5, 2.5)
 	if soaked_t > 0.0:
@@ -431,11 +602,11 @@ func _fly(delta, mouse):
 	speed_target = target
 	var speed_before = speed
 	if speed < target:
-		var acc = 3.0
+		var acc = 2.4
 		if boosting:
-			acc = 8.0
+			acc = 3.6
 		elif throttling:
-			acc = 4.0
+			acc = 3.0
 		# TAILWIND fries change only THIS: a long runway at first, a snappy start once maxed. Top speeds never change.
 		acc *= GS.accel_mult() * (1.0 + dive * 1.5)
 		speed = move_toward(speed, target, acc * delta)
@@ -444,8 +615,9 @@ func _fly(delta, mouse):
 	accel_now = lerp(accel_now, (speed - speed_before) / max(delta, 0.0001), 1.0 - exp(-10.0 * delta))
 	# flap
 	if not input_locked and Input.is_action_just_pressed("flap"):
-		if flap_cd <= 0.0 and stamina >= 6.0:
-			spend(6.0)
+		if flap_cd <= 0.0 and (stamina >= 6.0 or GS.has_buff("alcohol")):
+			if not GS.has_buff("alcohol"):
+				spend(6.0)
 			flap_cd = 0.3
 			flap_anim = 0.4
 			vert_boost = max(vert_boost, 0.0) + 6.5
@@ -483,7 +655,11 @@ func _fly(delta, mouse):
 			if imp > worst:
 				worst = imp
 				wn = n
-	if worst > 9.0:
+	if worst > 9.0 and shield_hit("crash", global_position - wn):
+		knock += wn * 5.0       # ice cream: the wall is the one that gets hurt
+		speed = min(speed, 6.0)
+		shake = max(shake, 0.3)
+	elif worst > 9.0:
 		GS.award("WALL KISS")
 		GS.stats["walls"] += 1
 		Sfx.play("thud")
@@ -516,12 +692,14 @@ func _start_roll(dir):
 	roll_dir = dir
 	invuln_t = 0.45
 	roll_cd = GS.roll_cooldown()
-	spend(10.0)
+	if not GS.has_buff("alcohol"):
+		spend(10.0)
 	var right = Vector3(cos(yaw), 0, -sin(yaw))
 	knock += right * dir * 7.0
 	Sfx.play("roll", -6.0)
 
 func _land():
+	GS.buffs_die()
 	mode = M.GROUND
 	var high = global_position.y >= 4.0
 	perch_high = high
@@ -580,17 +758,8 @@ func _ground(delta, mouse):
 			aim_pitch = 0.0
 			aim_yaw = yaw
 			return
-	# a drink wears off once the gull has been standing on the ground for a few seconds (it shakes its feathers)
-	if GS.drink != "":
-		ground_drink_t += delta
-		if ground_drink_t > 3.0:
-			ground_drink_t = 0.0
-			GS.set_drink("")
-			flap_anim = 0.4
-			Sfx.play("shake", -6.0)
-			show_toast("SHOOK IT OFF", 0.9)
-	else:
-		ground_drink_t = 0.0
+	# standing on anything: every buff starts to burn away fast
+	GS.buffs_die()
 	# perch recovery: standing anywhere refills stamina; higher is faster
 	stamina += GS.regen_perch(perch_high) * (0.5 if soaked_t > 0.0 else 1.0) * delta
 	regen_active = true
@@ -697,7 +866,7 @@ func _safety():
 		global_position = Vector3(p.x, 2.0, p.z)
 		velocity = Vector3.ZERO
 		soaked_t = 15.0
-	if abs(p.x) > 230.0 or p.z > 230.0 or p.z < -170.0 or p.y > 140.0:
+	if abs(p.x) > 270.0 or p.z > 270.0 or p.z < -190.0 or p.y > 260.0:
 		GS.award("SOMEWHERE ELSE")
 		global_position = respawn_point
 		yaw = PI
@@ -735,7 +904,11 @@ func _process(delta):
 	if mode == M.TUMBLE:
 		extra = GS.msec() * 0.012
 	visual_root.rotation = Vector3(0, 0, roll + extra)
-	visual_root.position.y = abs(sin(walk_t)) * 0.05 if mode == M.GROUND else 0.0
+	# standing: the feet touch the ground (the collision sphere is smaller than the gull, so the visual is lifted by exactly the difference)
+	var feet = 0.40 * gull.scale.x * visual_root.scale.x
+	var vy = (feet - 0.38 + abs(sin(walk_t)) * 0.04) if mode == M.GROUND else 0.0
+	visual_root.position.y = lerp(visual_root.position.y, vy, 1.0 - exp(-14.0 * delta))
+	_update_aura(delta)
 	Sfx.set_wind(speed / 24.0 if mode != M.GROUND else 0.0, boosting)
 	Sfx.set_calm(calm)
 	update_camera(delta, false)

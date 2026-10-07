@@ -7,6 +7,7 @@ static var _mats = {}
 var style = {}
 var root
 var torso
+var upper                  # everything above the hips (torso, arms, head): it can lean back (reclining) or forward (jogging)
 var head
 var eye_l
 var eye_r
@@ -29,6 +30,7 @@ var override_arm_r_z = 0.0
 var emote_t = 0.0
 var scale_f = 1.0
 var seed_off = 0.0
+var recline_hip = 0.46        # how high the hips sit above the NPC's origin when reclining on a lounger
 var item_node_r = null
 var item_node_l = null
 
@@ -92,9 +94,11 @@ func build(st):
 	var shirt = Color(st.get("shirt", "8C8F96"))
 	var pants = Color(st.get("pants", "4B5566"))
 	var fat = st.get("fat", 1.0)
+	upper = Node3D.new()
+	upper.position = Vector3(0, 0.85, 0)
+	root.add_child(upper)
 	torso = Node3D.new()
-	torso.position = Vector3(0, 0.85, 0)
-	root.add_child(torso)
+	upper.add_child(torso)
 	var body = MeshInstance3D.new()
 	var cm = CapsuleMesh.new()
 	cm.radius = 0.27
@@ -127,8 +131,8 @@ func build(st):
 	hand_r = arm_r.get_node("Hand")
 	# head
 	head = Node3D.new()
-	head.position = Vector3(0, 1.62, 0)
-	root.add_child(head)
+	head.position = Vector3(0, 0.77, 0)
+	upper.add_child(head)
 	_sph(head, Vector3(0, 0.16, 0), 0.165, skin, Vector3(1.0, 1.06, 1.0))
 	eye_l = _sph(head, Vector3(-0.06, 0.2, 0.15), 0.022, "20202A")
 	eye_r = _sph(head, Vector3(0.06, 0.2, 0.15), 0.022, "20202A")
@@ -147,9 +151,8 @@ func build(st):
 
 func _make_arm(side, shirt, skin):
 	var a = Node3D.new()
-	a.position = Vector3(0.35 * side, 1.4 * 1.0 - 0.0, 0)
-	a.position.y = 0.85 + 0.55
-	root.add_child(a)
+	a.position = Vector3(0.35 * side, 0.55, 0)
+	upper.add_child(a)
 	_box(a, Vector3(0, -0.28, 0), Vector3(0.1, 0.56, 0.1), shirt)
 	_sph(a, Vector3(0, -0.58, 0), 0.065, skin)
 	var h = Node3D.new()
@@ -227,7 +230,7 @@ func _make_item(kind, hand):
 		"cup":
 			_cyl(n, Vector3(0, 0.05, 0.05), 0.05, 0.13, "F4F1E8", 0.04)
 		"icecream":
-			_cyl(n, Vector3(0, 0.1, 0.05), 0.05, 0.2, "D9A441", 0.0)
+			_cyl(n, Vector3(0, 0.1, 0.05), 0.0, 0.2, "D9A441", 0.05)
 			_sph(n, Vector3(0, 0.24, 0.05), 0.07, "F7C7D4")
 			_sph(n, Vector3(0, 0.32, 0.05), 0.06, "FFF1C7")
 		"paper":
@@ -342,6 +345,11 @@ func _process(delta):
 			arm_l_x = -0.5
 		"lie":
 			pass
+		"recline":
+			seat = true
+			leg_x = -1.52
+			arm_r_x = -0.75 + sin(t * 0.7 + seed_off) * 0.05
+			arm_l_x = -0.45
 		"idle":
 			arm_l_x = sin(t * 1.2 + seed_off) * 0.04
 			arm_r_x = -sin(t * 1.2 + seed_off) * 0.04
@@ -361,13 +369,24 @@ func _process(delta):
 	arm_r.rotation.z = lerp(arm_r.rotation.z, arm_r_z, k)
 	leg_l.rotation.x = lerp(leg_l.rotation.x, leg_x, k)
 	leg_r.rotation.x = lerp(leg_r.rotation.x, -leg_x if not seat else leg_x, k)
+	var lean = tilt
+	var head_x = 0.0
+	if mode == "recline":
+		lean = -0.9                 # leaning back against the raised backrest
+		head_x = 0.55               # ...but the head looks up and out at the sea
 	root.position.y = lerp(root.position.y, root_y - (0.42 * scale_f if seat else 0.0), k)
-	torso.rotation.x = lerp(torso.rotation.x, tilt, k)
+	if mode == "recline":
+		root.position.y = lerp(root.position.y, (recline_hip - 0.85) * scale_f, k)
+	upper.rotation.x = lerp(upper.rotation.x, lean, k)
+	head.rotation.x = lerp(head.rotation.x, head_x, k)
 	if mode == "lie":
+		# flat on the back, the body centred on the NPC's position (so a towel under that spot is under the person)
 		root.rotation.x = lerp(root.rotation.x, -PI / 2.0, k)
-		root.position.y = lerp(root.position.y, 0.22, k)
+		root.position.y = lerp(root.position.y, 0.3 * scale_f, k)
+		root.position.z = lerp(root.position.z, 0.85 * scale_f, k)
 	else:
 		root.rotation.x = lerp(root.rotation.x, 0.0, k)
+		root.position.z = lerp(root.position.z, 0.0, k)
 	# held fry follows the left hand but stays upright
 	hand_anchor.global_position = hand_l.global_position + Vector3(0, 0.02, 0)
 	hand_anchor.global_rotation = Vector3(0, global_rotation.y, 0)

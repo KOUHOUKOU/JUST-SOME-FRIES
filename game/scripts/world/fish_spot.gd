@@ -12,7 +12,7 @@ class Fish extends Node3D:
 	var id = "FISH"
 	var kind = "fish"
 	var tier = 4
-	var min_speed = 16.0
+	var min_speed = 14.0
 	var utype = ""
 	var revealed = true
 	var carried = false
@@ -113,6 +113,7 @@ class Fish extends Node3D:
 		remove_from_group("mischief")
 		GS.stats["fish"] += 1
 		GS.award("GONE FISHING")
+		GS.quest_finish("fish")
 		if GS.stats["fish"] >= 3:
 			GS.award("SEA DOG")
 		player.refill()

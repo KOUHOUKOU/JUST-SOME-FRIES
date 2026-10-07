@@ -73,8 +73,12 @@ var prompt_text = ""
 var comic
 var vision
 var last_comic = {"id": "", "t": -9.0}
-var gains = []                  # fries flying into the rainbow: {type, tier, t}
-var plate = null                # the small name tag: {type, tier, t}
+var gains = []                  # the "you got a fry" moments: {type, tier, t, slot, name, line, rarity, dur}
+var banner
+var quiet_t = 0.0
+var quiet_bar = 0.0              # a finished quest: every bit of UI fades away for a few seconds (and the black bars come in)
+var quiet_label
+var quiet_lines = []
 
 # ---------------------------------------------------------------- inner draw classes
 class HC extends Control:
@@ -105,9 +109,9 @@ class Reticle extends HC:
 				_brackets(s, Color(1.0, 0.82, 0.35, 0.95), "")
 			"eat":
 				shadow(font, c + Vector2(-20, 46 * u), "EAT", int(18 * u), Color(1, 0.9, 0.6, 0.95), HORIZONTAL_ALIGNMENT_CENTER, 40)
-			"locked", "flee":
+			"locked":
 				_rhythm(s)
-		if s.flash != 0 and s.hud_state != "locked" and s.hud_state != "flee":
+		if s.flash != 0 and s.hud_state != "locked":
 			var fc = Color(0.5, 1.0, 0.5, 0.9) if s.flash > 0 else Color(1.0, 0.35, 0.3, 0.9)
 			draw_arc(c, 32.0 * u, 0, TAU, 40, fc, 3.0, true)
 		if s.toast_t > 0.0 and s.toast != "":
@@ -143,8 +147,9 @@ class Reticle extends HC:
 				draw_line(corner, corner + Vector2(0, -l * sy), col, 2.5)
 		if label != "":
 			shadow(ThemeDB.fallback_font, sp + Vector2(-60, r + 20), label, 14, col, HORIZONTAL_ALIGNMENT_CENTER, 120)
-	# THE RHYTHM. Each note is a white ring that shrinks through a THICK green ring (good) and then a THIN gold ring (perfect); inside
-	# the gold ring there is nothing. Press E when the white ring is in a band. Gold = three places; diamond = five notes hopping between them.
+	# THE RHYTHM. Target circles (a THICK green ring with a THIN gold ring just inside it) sit around the fry: one, two stacked, three stacked or five
+	# in the shape of the olympic rings. Every circle sends two white waves shrinking onto it, circle after circle. Press E when a wave is in the
+	# green band (1 point) or the gold band (2 points); you need as many points as there are waves.
 	func _rhythm(s):
 		var sq = s.seq
 		if sq == null:
@@ -157,18 +162,40 @@ class Reticle extends HC:
 		var fc = size * 0.5
 		if not cam.is_position_behind(wp):
 			fc = cam.unproject_position(wp)
-		fc = Vector2(clamp(fc.x, 230.0 * u, size.x - 230.0 * u), clamp(fc.y, 150.0 * u, size.y - 190.0 * u))
+		fc = Vector2(clamp(fc.x, 270.0 * u, size.x - 270.0 * u), clamp(fc.y, 210.0 * u, size.y - 230.0 * u))
 		var font = ThemeDB.fallback_font
-		var flee = sq["kind"] == "flee"
 		var now = s.seq_now()
 		var t = GS.msec() * 0.001
-		var r_ge = 30.0 * u                                  # the ring's radius when the gold band ends
-		var r_start = 108.0 * u
-		var vpx = (r_start - r_ge) / max(sq["appr"], 0.2)    # pixels per second the white ring shrinks
-		var sep = 152.0 * u
-		var multi = sq["n"] > 1
+		var layout = sq["layout"]
+		var multi = layout.size() > 1
+		var r_ge = (17.0 if multi else 22.0) * u              # the radius where the gold band ends
+		var r_start = (64.0 if multi else 84.0) * u
+		var vpx = (r_start - r_ge) / max(sq["appr"], 0.2)    # pixels per second a wave shrinks
+		var sep = 150.0 * u
 		var gold_px = max(sq["gw"] * vpx, 3.0)
 		var green_px = max(sq["gg"] * vpx, 5.0)
+		var r_gold_out = r_ge + gold_px
+		var r_green_out = r_gold_out + green_px
+		var g_mid = (r_gold_out + r_green_out) * 0.5
+		var o_mid = (r_ge + r_gold_out) * 0.5
+		var next_i = s._first_pending(sq)
+		# the target circles
+		for ci in layout.size():
+			var c = fc + Vector2(layout[ci][0], layout[ci][1]) * sep
+			var live = false
+			var pending = false
+			for nt0 in sq["notes"]:
+				if nt0["circle"] == ci and nt0["res"] == "":
+					pending = true
+					if now >= nt0["t"] - sq["appr"] - 0.05:
+						live = true
+			var base_a = 1.0 if live else (0.4 if pending else 0.22)
+			draw_arc(c, r_ge * 0.5, 0, TAU, 20, Color(1, 1, 1, 0.3 * base_a), 2.0, true)
+			draw_arc(c, g_mid, 0, TAU, 72, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.12 * base_a), green_px + 8.0, true)
+			draw_arc(c, g_mid, 0, TAU, 72, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.82 * base_a), green_px, true)
+			draw_arc(c, o_mid, 0, TAU, 72, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, 0.25 * base_a), gold_px + 6.0, true)
+			draw_arc(c, o_mid, 0, TAU, 72, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, base_a), gold_px, true)
+		# the waves
 		for i in sq["notes"].size():
 			var nt = sq["notes"][i]
 			var spawn = nt["t"] - sq["appr"]
@@ -178,30 +205,18 @@ class Reticle extends HC:
 			var age = now - nt["res_t"] if done else 0.0
 			if done and age > 0.5:
 				continue
-			var c = fc + Vector2(nt["slot"] * sep, 0.0) if multi else fc
-			var fade = clamp((now - spawn) / 0.12, 0.0, 1.0)
+			var lay = layout[nt["circle"]]
+			var c2 = fc + Vector2(lay[0], lay[1]) * sep
+			var fade = clamp((now - spawn) / 0.1, 0.0, 1.0)
 			if done:
 				fade *= clamp(1.0 - age / 0.5, 0.0, 1.0)
-			var r_gold_in = r_ge
-			var r_gold_out = r_ge + gold_px
-			var r_green_out = r_gold_out + green_px
-			var g_mid = (r_gold_out + r_green_out) * 0.5
-			var o_mid = (r_gold_in + r_gold_out) * 0.5
-			# the fry / gull marker
-			draw_arc(c, r_ge * 0.55, 0, TAU, 24, Color(1, 1, 1, 0.35 * fade), 2.0, true)
-			# THICK green ring, THIN gold ring just inside it. Nothing inside.
-			draw_arc(c, g_mid, 0, TAU, 96, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.14 * fade), green_px + 8.0, true)
-			draw_arc(c, g_mid, 0, TAU, 96, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.82 * fade), green_px, true)
-			draw_arc(c, o_mid, 0, TAU, 96, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, 0.25 * fade), gold_px + 6.0, true)
-			draw_arc(c, o_mid, 0, TAU, 96, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, fade), gold_px, true)
-			# the shrinking white ring
 			var tt = nt["res_t"] if done else now
 			var r = r_ge + (nt["t"] - tt) * vpx
 			if done:
 				var rc2 = {"gold": RING_GOLD, "green": RING_GREEN, "miss": Color(1.0, 0.35, 0.3)}[nt["res"]]
-				draw_arc(c, max(r, 4.0) + age * 60.0 * u, 0, TAU, 64, Color(rc2.r, rc2.g, rc2.b, fade), 4.0, true)
+				draw_arc(c2, max(r, 4.0) + age * 60.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, fade), 4.0, true)
 				if nt["res"] != "miss":
-					draw_arc(c, r_green_out + age * 120.0 * u, 0, TAU, 64, Color(rc2.r, rc2.g, rc2.b, 0.6 * fade), 3.0, true)
+					draw_arc(c2, r_green_out + age * 110.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, 0.6 * fade), 3.0, true)
 				continue
 			var dt = now - nt["t"]
 			var zone = "none"
@@ -209,41 +224,45 @@ class Reticle extends HC:
 				zone = "gold"
 			elif dt >= -(sq["gw"] + sq["gg"]) and dt < -sq["gw"]:
 				zone = "green"
-			var rc = Color(1, 1, 1, 0.95 * fade)
-			var rw = 3.0 * u
+			var is_next = i == next_i
+			var rc = Color(1, 1, 1, (0.95 if is_next else 0.6) * fade)
+			var rw = (3.4 if is_next else 2.4) * u
 			if zone == "gold":
 				rc = Color(1, 1, 1, 1.0).lerp(RING_GOLD, 0.5 + 0.5 * sin(t * 26.0))
 				rw = 5.0 * u
 			elif zone == "green":
 				rw = 4.0 * u
-				draw_arc(c, max(r, 4.0), 0, TAU, 72, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.28 * fade), 11.0 * u, true)
+				draw_arc(c2, max(r, 4.0), 0, TAU, 60, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.28 * fade), 11.0 * u, true)
 			elif dt > 0.02:
 				rc = Color(1.0, 0.45, 0.4, 0.8 * fade)
-			draw_arc(c, max(r, 4.0), 0, TAU, 72, rc, rw, true)
-		# the note pips (what is already judged) + the key cap
-		var top_y = fc.y - (r_start + 22.0 * u)
+			draw_arc(c2, max(r, 4.0), 0, TAU, 60, rc, rw, true)
+		# the little scoreboard: one pip per wave (green / gold / red) and the points you still need
 		var n = sq["n"]
+		var half_h = 0.0
+		for lay2 in layout:
+			half_h = max(half_h, abs(lay2[1]) * sep)
+		var top_y = fc.y - half_h - r_start - 22.0 * u
+		for i in n:
+			var res = sq["notes"][i]["res"]
+			var pc = Color(1, 1, 1, 0.25)
+			if res == "gold":
+				pc = RING_GOLD
+			elif res == "green":
+				pc = RING_GREEN
+			elif res == "miss":
+				pc = Color(1.0, 0.35, 0.3)
+			var px = fc.x + (i - (n - 1) * 0.5) * 16.0 * u
+			draw_circle(Vector2(px, top_y), 5.0 * u, pc)
+			draw_arc(Vector2(px, top_y), 5.0 * u, 0, TAU, 16, Color(0, 0, 0, 0.5), 1.5)
 		if n > 1:
-			for i in n:
-				var res = sq["notes"][i]["res"]
-				var pc = Color(1, 1, 1, 0.25)
-				if res == "gold":
-					pc = RING_GOLD
-				elif res == "green":
-					pc = RING_GREEN
-				elif res == "miss":
-					pc = Color(1.0, 0.35, 0.3)
-				var px = fc.x + (i - (n - 1) * 0.5) * 22.0 * u
-				draw_circle(Vector2(px, top_y), 6.0 * u, pc)
-				draw_arc(Vector2(px, top_y), 6.0 * u, 0, TAU, 16, Color(0, 0, 0, 0.5), 1.5)
-		if flee:
-			shadow(font, Vector2(fc.x - 140, top_y - 12.0 * u), "SLIP THE SWING!", int(22 * u), Color(1.0, 0.55, 0.45, 0.65 + 0.35 * sin(t * 12.0)), HORIZONTAL_ALIGNMENT_CENTER, 280)
-		var kc = Vector2(fc.x, min(fc.y + r_start + 30.0 * u, size.y - 56.0 * u))
+			shadow(font, Vector2(fc.x - 70.0 * u, top_y - 10.0 * u), "%d / %d" % [min(sq["points"], sq["need"]), sq["need"]], int(14 * u), Color(1, 1, 1, 0.75), HORIZONTAL_ALIGNMENT_CENTER, 140.0 * u)
+		var kc = Vector2(fc.x, min(fc.y + half_h + r_start + 30.0 * u, size.y - 56.0 * u))
 		var cap_col = Color(0.1, 0.1, 0.14, 0.78)
 		var cap_txt = Color(1, 1, 1, 0.9)
 		draw_rect(Rect2(kc + Vector2(-17, -17) * u, Vector2(34, 34) * u), cap_col)
 		draw_rect(Rect2(kc + Vector2(-17, -17) * u, Vector2(34, 34) * u), Color(1, 1, 1, 0.9), false, 2.0)
 		draw_string(font, kc + Vector2(-17 * u, 9.0 * u), "E", HORIZONTAL_ALIGNMENT_CENTER, 34 * u, int(24 * u), cap_txt)
+
 
 # TOP-RIGHT under the stamina bar: a racing tachometer. Segments climb from low yellow ones to tall red ones; the speed in big numbers below.
 # A white tick marks the top speed you can reach right now (red fries move it), a small caret marks the speed the fry in view needs.
@@ -377,12 +396,22 @@ class Guide extends HC:
 
 class Status extends HC:
 	var hud
+	func _flames(x0, y, w, col, u, t, lift):
+		# a row of little flames standing on the top edge of the bar (the stamina "burns" while a buff runs)
+		var n = int(w / (6.0 * u))
+		for i in n:
+			var x = x0 + (i + 0.5) * 6.0 * u
+			var h = (5.0 + 8.0 * abs(sin(t * 9.0 + i * 0.9)) + 4.0 * sin(t * 17.0 + i * 1.7)) * u * lift
+			var wd = 6.0 * u
+			draw_colored_polygon(PackedVector2Array([Vector2(x - wd * 0.5, y), Vector2(x + sin(t * 8.0 + i) * 1.5 * u, y - h), Vector2(x + wd * 0.5, y)]), Color(col.r, col.g, col.b, 0.85))
+			draw_colored_polygon(PackedVector2Array([Vector2(x - wd * 0.25, y), Vector2(x, y - h * 0.55), Vector2(x + wd * 0.25, y)]), Color(1.0, 0.95, 0.7, 0.8))
 	func _draw():
 		var p = hud.player
 		if p == null:
 			return
 		var font = ThemeDB.fallback_font
 		var w = size.x
+		var t = GS.msec() * 0.001
 		var ic = Vector2(w - 28, 28)
 		draw_circle(ic, 11, Color(0.95, 0.95, 0.92, 0.95))
 		draw_colored_polygon(PackedVector2Array([ic + Vector2(-10, 1), ic + Vector2(-20, 4), ic + Vector2(-10, 6)]), Color("F2A22E"))
@@ -406,7 +435,28 @@ class Status extends HC:
 		if p.low_stamina:
 			var pl = 0.5 + 0.5 * sin(GS.msec() * 0.008)
 			col = Color(1.0, 0.55 + 0.2 * pl, 0.3, 0.7 + 0.3 * pl)
-		draw_rect(Rect2(bx, 20, bar_w * p.stamina / smax, 12), col)
+		# a running buff sets the bar on fire: coffee red, cocktail yellow, ice cream every colour
+		var act = []
+		for k in ["coffee", "alcohol", "ice"]:
+			if GS.buff[k] > 0.0:
+				act.append(k)
+		var filled_w = bar_w * p.stamina / smax
+		if act.is_empty():
+			draw_rect(Rect2(bx, 20, filled_w, 12), col)
+		else:
+			var kind = act[int(t * 1.3) % act.size()]
+			var fc2 = {"coffee": Color(1.0, 0.2, 0.1), "alcohol": Color(1.0, 0.8, 0.12), "ice": Color(1, 0.6, 0.9)}[kind]
+			if kind == "ice":
+				var segs = max(int(filled_w / 5.0), 1)
+				for i in segs:
+					var sx = bx + i * 5.0
+					var cw2 = min(5.0, filled_w - i * 5.0)
+					draw_rect(Rect2(sx, 20, cw2, 12), Color.from_hsv(fmod(float(i) / 18.0 + t * 0.6, 1.0), 0.55, 1.0))
+				fc2 = Color.from_hsv(fmod(t * 0.7, 1.0), 0.5, 1.0)
+			else:
+				draw_rect(Rect2(bx, 20, filled_w, 12), fc2.lerp(Color(1, 0.55, 0.2) if kind == "coffee" else Color(1, 0.95, 0.5), 0.35 + 0.25 * sin(t * 12.0)))
+			_flames(bx, 20.0, filled_w, fc2, 1.0, t, 1.0)
+			draw_rect(Rect2(bx, 20, filled_w, 12), Color(1, 1, 1, 0.08 + 0.06 * sin(t * 20.0)))
 		if p.boost_locked:
 			draw_rect(Rect2(bx, 20, bar_w * 15.0 / smax, 12), Color(1, 0.3, 0.2, 0.25))
 		# CROWD WATCH: how closely the people around you are looking. More eyes = thinner timing bands.
@@ -427,44 +477,147 @@ class Status extends HC:
 			if pa > 0.0:
 				draw_rect(Rect2(pr.position, Vector2(10 * pa, 10)), wc)
 		shadow(font, Vector2(bx + 158, 50), GS.watch_label(), 12, Color(wc.r, wc.g, wc.b, 0.95))
-		# a drink in effect: a little bar that runs down
-		if GS.drink != "":
-			var dc = Color("F0A040") if GS.drink == "coffee" else Color("C86AE0")
-			var nm = "COFFEE  -  FAST" if GS.drink == "coffee" else "DIZZY  -  SLOW"
-			shadow(font, Vector2(bx, 72), nm, 13, dc)
-			draw_rect(Rect2(bx + 120, 62, 70, 8), Color(0, 0, 0, 0.4))
-			draw_rect(Rect2(bx + 120, 62, 70.0 * clamp(GS.drink_t / 15.0, 0.0, 1.0), 8), dc)
-		elif GS.has["blue"]:
+		# the buff timers: a little bar that runs down (and rushes down once the gull has landed or been hit)
+		var ry = 64.0
+		for k in act:
+			var dc = GS.BUFF_COL[k]
+			if k == "ice":
+				dc = Color.from_hsv(fmod(t * 0.6, 1.0), 0.5, 1.0)
+			var dying = GS.buff_dying[k]
+			var blink = 1.0 if not dying else 0.5 + 0.5 * sin(t * 24.0)
+			shadow(font, Vector2(bx, ry + 9), GS.BUFF_NAME[k], 12, Color(dc.r, dc.g, dc.b, blink))
+			draw_rect(Rect2(bx + 92, ry, 110, 8), Color(0, 0, 0, 0.4))
+			draw_rect(Rect2(bx + 92, ry, 110.0 * clamp(GS.buff[k] / GS.BUFF_SEC, 0.0, 1.0), 8), Color(dc.r, dc.g, dc.b, blink))
+			ry += 15.0
+		if act.is_empty() and GS.has["blue"]:
 			shadow(font, Vector2(bx, 70), "ALT %d" % int(p.global_position.y), 13, Color(1, 1, 1, 0.75))
+		elif not act.is_empty():
+			shadow(font, Vector2(bx + 150, 50 + 0), "", 1, Color(1, 1, 1, 0))
 
-# TOP-LEFT: the half-rainbow of fries. Eight bands around the top-left corner: the three yellow starter fries, then one band per colour
-# (silver / gold / diamond fill it, a third each). Each band is a row of little fries standing on the arc. Below it, the tiny mission board.
-class Arc extends HC:
+# LOWER-LEFT: one short line when a buff starts / ends / shrugs something off (and the faint "tab" prompts live elsewhere)
+class Banner extends HC:
+	var hud
+	func _draw():
+		var age = GS.msec() / 1000.0 - GS.buff_msg_t
+		if GS.buff_msg == "" or age > 3.6 or age < 0.0:
+			return
+		var u = size.y / 720.0
+		var a = clamp(min(age / 0.18, (3.6 - age) / 0.5), 0.0, 1.0)
+		var font = ThemeDB.fallback_font
+		var y = size.y - 34.0 * u
+		if hud.comic != null and hud.comic.slide > 0.05:
+			y = size.y - 250.0 * u
+		var txt = GS.buff_msg
+		var wtxt = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * u)).x
+		var x = 22.0 * u + (1.0 - a) * -24.0 * u
+		var col = Color(1, 0.96, 0.8)
+		if GS.drink != "":
+			col = GS.BUFF_COL[GS.drink].lightened(0.35)
+			if GS.drink == "ice":
+				col = Color.from_hsv(fmod(GS.msec() * 0.0005, 1.0), 0.3, 1.0)
+		draw_rect(Rect2(Vector2(x - 10.0 * u, y - 19.0 * u), Vector2(wtxt + 24.0 * u, 28.0 * u)), Color(0.04, 0.05, 0.09, 0.62 * a))
+		draw_rect(Rect2(Vector2(x - 10.0 * u, y - 19.0 * u), Vector2(4.0 * u, 28.0 * u)), Color(col.r, col.g, col.b, a))
+		shadow(font, Vector2(x + 4.0 * u, y), txt, int(16 * u), Color(col.r, col.g, col.b, a))
+
+# TOP-LEFT: the box of fries. Eight little cartons in two rows (the three starter fries, then one per colour), each with four small squares
+# under it: silver / gold / diamond / rainbow (the rainbow one is a bar that gets longer with every extra fry; press C for the exact numbers).
+# A new fry flies into its square and lights it. Below the boxes: the mission board.
+class FryGrid extends HC:
 	var hud
 	var lit_t = {}
 	var was = {}
-	const STICKS = 12
-	func _band_tiers(i):
+	var vtex
+	const COLS = 4
+	func _ready():
+		var g = Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 0))
+		g.add_point(0.55, Color(1, 1, 1, 0.0))
+		g.set_color(2, Color(1, 1, 1, 0.8))
+		vtex = GradientTexture2D.new()
+		vtex.gradient = g
+		vtex.fill = GradientTexture2D.FILL_RADIAL
+		vtex.fill_from = Vector2(0.5, 0.5)
+		vtex.fill_to = Vector2(1.08, 0.5)
+		vtex.width = 256
+		vtex.height = 256
+	func cell_size(u):
+		return Vector2(72.0 * u, 76.0 * u)
+	func cell_pos(i, u):
+		var cs = cell_size(u)
+		return Vector2(16.0 * u + (i % COLS) * cs.x, 12.0 * u + (i / COLS) * cs.y)
+	# the centre of one of the four squares under cell i
+	func square_pos(i, sq, u):
+		var cp = cell_pos(i, u)
+		return cp + Vector2((6.0 + sq * 10.5 + 4.0) * u, 58.0 * u)
+	func _tiers(i):
 		if i == 0:
 			return [min(GS.gull_sense_count, 3), Color("F1C94B")]
 		var k = GS.FRY_TYPES[i - 1]
 		return [GS.lv[k], GS.TYPE_COLORS[k]]
-	func band_pos(i, frac, u):
-		var r = (60.0 + i * 19.0) * u
-		var a = deg_to_rad(8.0 + 74.0 * frac)
-		return Vector2(cos(a), sin(a)) * r
+	# a carton of fries: `sticks` 0..6 standing in it, tinted body
+	func carton(c, w, col, sticks, a, glow = 0.0):
+		var h = w * 1.05
+		var top = c.y - h * 0.18
+		var bot = c.y + h * 0.5
+		if glow > 0.0:
+			draw_circle(c, w * 0.95, Color(col.r, col.g, col.b, 0.16 * glow))
+			draw_circle(c, w * 0.62, Color(col.r, col.g, col.b, 0.22 * glow))
+		for k in 6:
+			if k >= sticks:
+				continue
+			var sx = c.x - w * 0.34 + k * w * 0.136
+			var sh = w * (0.46 + 0.1 * float((k * 5) % 3))
+			draw_rect(Rect2(Vector2(sx, top - sh), Vector2(w * 0.11, sh + 2.0)), Color(0.96, 0.78, 0.33, a))
+			draw_rect(Rect2(Vector2(sx, top - sh), Vector2(w * 0.11, w * 0.08)), Color(1.0, 0.94, 0.7, a))
+		var pts = PackedVector2Array([Vector2(c.x - w * 0.5, top), Vector2(c.x + w * 0.5, top), Vector2(c.x + w * 0.38, bot), Vector2(c.x - w * 0.38, bot)])
+		draw_colored_polygon(pts, Color(col.r, col.g, col.b, a * (1.0 if sticks > 0 else 0.55)))
+		draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[0]]), Color(1, 1, 1, 0.85 * a), 1.6, true)
+		draw_rect(Rect2(Vector2(c.x - w * 0.22, c.y + h * 0.05), Vector2(w * 0.44, h * 0.22)), Color(1, 0.96, 0.84, 0.9 * a))
+	func _square(c, s, col, lit, flash):
+		var r = Rect2(c - Vector2(s, s) * 0.5, Vector2(s, s))
+		draw_rect(r, Color(col.r, col.g, col.b, 0.95 if lit else 0.14))
+		draw_rect(r, Color(1, 1, 1, 0.85 if lit else 0.3), false, 1.2)
+		if flash > 0.0:
+			draw_arc(c, s * (0.7 + 2.2 * (1.0 - flash)), 0, TAU, 20, Color(1, 1, 1, flash), 2.0, true)
+	func _bar(c0, s, count, flash):
+		# the rainbow bar: one segment per extra fry, every segment its own hue
+		var wmax = s + max(count, 0) * 3.0
+		var r = Rect2(c0 - Vector2(s * 0.5, s * 0.5), Vector2(wmax, s))
+		draw_rect(r, Color(1, 1, 1, 0.12))
+		for q in max(count, 1):
+			var seg = Rect2(r.position + Vector2(q * 3.0 + (0.0 if count > 0 else 0.0), 0), Vector2(s if q == 0 else 3.0, s))
+			if q == 0:
+				seg.size.x = s
+			draw_rect(seg, Color.from_hsv(float(q) / 8.0, 0.55, 1.0, 0.95 if count > 0 else 0.0))
+		draw_rect(r, Color(1, 1, 1, 0.85 if count > 0 else 0.3), false, 1.2)
+		if flash > 0.0:
+			draw_arc(r.position + Vector2(wmax, s) * 0.5, s * (0.8 + 2.0 * (1.0 - flash)), 0, TAU, 20, Color(1, 0.8, 1, flash), 2.0, true)
+	func _spaced(font, pos, text, sz, col, gap):
+		# letter-spaced text, centred on pos
+		var total = 0.0
+		for ch in text:
+			total += font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x + gap
+		var x = pos.x - total * 0.5
+		for ch in text:
+			draw_string(font, Vector2(x + 1.5, pos.y + 1.5), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(0, 0, 0, col.a * 0.7))
+			draw_string(font, Vector2(x, pos.y), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, col)
+			x += font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x + gap
 	func _draw():
 		var p = hud.player
 		if p == null:
 			return
 		var u = size.y / 720.0
 		var font = ThemeDB.fallback_font
-		var rows = 8 if hud.slots_visible else 1
+		var t = GS.msec() * 0.001
 		var dt = get_process_delta_time() / max(Engine.time_scale, 0.1)
+		var unlocked = hud.slots_visible
+		var rows = 8 if unlocked else 1
+		# ---- the boxes
 		for i in rows:
-			var bt = _band_tiers(i)
+			var bt = _tiers(i)
 			var n = bt[0]
 			var col = bt[1]
+			var cp = cell_pos(i, u)
 			var key = "b%d" % i
 			if n > was.get(key, 0):
 				lit_t[key] = 0.0
@@ -472,69 +625,95 @@ class Arc extends HC:
 			if lit_t.has(key):
 				lit_t[key] += dt
 			var fl = clamp(1.0 - lit_t.get(key, 9.0) / 0.9, 0.0, 1.0)
-			var r = (60.0 + i * 19.0) * u
-			var lit_n = int(round(float(n) / 3.0 * STICKS))
-			for j in STICKS:
-				var a = deg_to_rad(8.0 + 74.0 * (float(j) + 0.5) / STICKS)
-				var d = Vector2(cos(a), sin(a))
-				var c0 = d * r
-				var lit = j < lit_n
-				var cc = col if lit else Color(col.r, col.g, col.b, 0.2)
-				if lit:
-					cc = cc.lerp(Color(1, 1, 1), 0.35 * fl)
-				# a fry: a short thick stick standing along the radius, a lighter tip
-				draw_line(c0 - d * 8.5 * u, c0 + d * 8.5 * u, Color(0, 0, 0, 0.45 if lit else 0.25), 7.5 * u)
-				draw_line(c0 - d * 8.0 * u, c0 + d * 8.0 * u, cc, 6.0 * u)
-				if lit:
-					draw_line(c0 + d * 4.0 * u, c0 + d * 8.0 * u, Color(1, 0.96, 0.8, 0.9), 6.0 * u)
-			# the rainbow count: a tiny "+3" at the top-edge end
-			if i > 0 and GS.rainbow[GS.FRY_TYPES[i - 1]] > 0:
-				var rb_ = GS.rainbow[GS.FRY_TYPES[i - 1]]
-				var tp = Vector2(r + 11.0 * u, 12.0 * u)
-				shadow(font, tp, "+%d" % rb_, int(10 * u), Color(1.0, 0.7, 0.95, 0.95))
-		# the fries flying into their bands
+			var have = n >= 1 if i > 0 else n >= 3
+			var sticks = 6 if have else (min(n * 2, 5) if i == 0 else 0)
+			carton(cp + Vector2(36.0 * u, 26.0 * u), 30.0 * u, col, sticks, 1.0 if (have or i == 0) else 0.45, 1.0 if have else 0.0)
+			if fl > 0.0:
+				draw_arc(cp + Vector2(36.0 * u, 26.0 * u), (22.0 + 26.0 * (1.0 - fl)) * u, 0, TAU, 28, Color(1, 1, 1, fl), 2.5, true)
+			# the squares
+			if i == 0:
+				for q in 3:
+					_square(square_pos(i, q, u), 8.0 * u, Color("F1E6B0"), n > q, 0.0)
+			else:
+				var k2 = GS.FRY_TYPES[i - 1]
+				for q in 3:
+					var qk = "s%d_%d" % [i, q]
+					var lit = n > q
+					if lit and not was.get(qk, false):
+						lit_t[qk] = 0.0
+					was[qk] = lit
+					if lit_t.has(qk):
+						lit_t[qk] += dt
+					_square(square_pos(i, q, u), 8.0 * u, GS.RARITY_COLORS[q + 1], lit, clamp(1.0 - lit_t.get(qk, 9.0) / 0.7, 0.0, 1.0))
+				var rb = GS.rainbow[k2]
+				var rk = "r%d" % i
+				if rb > was.get(rk, 0):
+					lit_t[rk] = 0.0
+				was[rk] = rb
+				if lit_t.has(rk):
+					lit_t[rk] += dt
+				_bar(square_pos(i, 3, u), 8.0 * u, rb, clamp(1.0 - lit_t.get(rk, 9.0) / 0.7, 0.0, 1.0))
+		# ---- the "you got a fry" moment: nothing pauses, nothing covers the middle of the screen
 		var i2 = 0
+		var center = Vector2(size.x * 0.5, size.y * 0.7)
 		while i2 < hud.gains.size():
 			var g = hud.gains[i2]
 			g["t"] += dt
-			var u2 = clamp(g["t"] / 0.8, 0.0, 1.0)
-			var band = 0 if g["type"] == "tutorial" else GS.FRY_TYPES.find(g["type"]) + 1
-			var frac = clamp(float(g.get("slot", 0)) / 3.0 + 0.16, 0.0, 1.0)
-			var target = band_pos(band, frac, u)
-			var from = size * 0.5
-			var e = u2 * u2 * (3.0 - 2.0 * u2)
-			var mid = from.lerp(target, 0.5) + Vector2(60.0 * u, 90.0 * u)
-			var pos = from.lerp(mid, e).lerp(mid.lerp(target, e), e)
-			var col2 = Color("F1C94B") if g["type"] == "tutorial" else GS.TYPE_COLORS[g["type"]]
-			var rs = (1.0 - e * 0.5) * 11.0 * u
-			draw_circle(pos, rs * 1.8, Color(col2.r, col2.g, col2.b, 0.25 * (1.0 - u2)))
-			draw_line(pos - Vector2(0, rs), pos + Vector2(0, rs), col2, 6.0 * u)
-			draw_line(pos + Vector2(0, rs * 0.3), pos + Vector2(0, rs), Color(1, 0.96, 0.8), 6.0 * u)
-			if g["t"] > 1.0:
+			var gt = g["t"]
+			var dur = g["dur"]
+			var fly0 = dur - 0.85
+			var type = g["type"]
+			var tier = g["tier"]
+			var rc = GS.RARITY_COLORS[clamp(tier, 0, 4)]
+			if tier >= 4:
+				rc = Color.from_hsv(fmod(t * 0.6, 1.0), 0.45, 1.0)
+			var col2 = Color("F1C94B") if type == "tutorial" else GS.TYPE_COLORS[type]
+			var cell = 0 if type == "tutorial" else GS.FRY_TYPES.find(type) + 1
+			var sqi = g["slot"]
+			var target = square_pos(cell, sqi, u) if sqi < 3 else square_pos(cell, 3, u) + Vector2((8.0 + GS.rainbow.get(type, 0) * 3.0) * u, 0)
+			var edge = clamp(min(gt / 0.25, (fly0 + 0.3 - gt) / 0.7), 0.0, 1.0)
+			if edge > 0.0:
+				draw_texture_rect(vtex, Rect2(Vector2.ZERO, size), false, Color(rc.r, rc.g, rc.b, 0.5 * edge * (0.7 if tier <= 1 else 1.0)))
+			var pos = center
+			var sc = 1.0
+			var ta = 1.0
+			if gt < 0.35:
+				var e0 = gt / 0.35
+				pos = center + Vector2(0, (1.0 - e0) * 40.0 * u)
+				sc = 0.5 + 0.5 * e0 + 0.15 * sin(e0 * PI)
+				ta = e0
+			elif gt > fly0:
+				var e1 = clamp((gt - fly0) / 0.8, 0.0, 1.0)
+				var ee = e1 * e1 * (3.0 - 2.0 * e1)
+				var mid = center.lerp(target, 0.5) + Vector2(80.0 * u, -90.0 * u)
+				pos = center.lerp(mid, ee).lerp(mid.lerp(target, ee), ee)
+				sc = lerp(1.0, 0.28, ee)
+				ta = clamp(1.0 - (gt - fly0) / 0.35, 0.0, 1.0)
+			var w0 = 62.0 * u * sc
+			# a ring that opens outwards once, and a slow pulse of light
+			if gt < 0.9:
+				var k3 = gt / 0.9
+				draw_arc(pos, (30.0 + 150.0 * k3) * u, 0, TAU, 56, Color(rc.r, rc.g, rc.b, (1.0 - k3) * 0.8), 3.0 * u, true)
+			carton(pos, w0, col2, 6, 1.0, 1.0 + 0.2 * sin(gt * 6.0))
+			if tier >= 2 and tier <= 3 and gt < fly0:
+				for q in 8:
+					var a2 = gt * 1.6 + q * TAU / 8.0
+					draw_circle(pos + Vector2(cos(a2), sin(a2)) * w0 * (0.9 + 0.12 * sin(gt * 5.0 + q)), 2.6 * u, Color(rc.r, rc.g, rc.b, 0.9 * ta))
+			if ta > 0.01:
+				var ly = pos.y + 52.0 * u
+				var lw = 240.0 * u * clamp(gt / 0.5, 0.0, 1.0)
+				draw_line(Vector2(pos.x - lw * 0.5, ly - 22.0 * u), Vector2(pos.x + lw * 0.5, ly - 22.0 * u), Color(rc.r, rc.g, rc.b, 0.7 * ta), 1.5)
+				_spaced(font, Vector2(pos.x, ly - 5.0 * u), g["rarity"], int(13 * u), Color(rc.r, rc.g, rc.b, ta), 5.0 * u)
+				_spaced(font, Vector2(pos.x, ly + 20.0 * u), g["name"], int(22 * u), Color(1, 0.98, 0.92, ta), 1.5 * u)
+				shadow(font, Vector2(pos.x - 220.0 * u, ly + 40.0 * u), g["line"], int(13 * u), Color(1, 1, 1, 0.78 * ta), HORIZONTAL_ALIGNMENT_CENTER, 440.0 * u)
+			if gt > dur:
 				hud.gains.remove_at(i2)
+				hud.fry_arrived(g)
 			else:
 				i2 += 1
-		# the little name tag
-		var pl = hud.plate
-		if pl != null:
-			pl["t"] += dt
-			var a2 = clamp(min(pl["t"] / 0.25, (2.8 - pl["t"]) / 0.5), 0.0, 1.0)
-			if pl["t"] > 2.8:
-				hud.plate = null
-			else:
-				var col3 = Color("F1C94B") if pl["type"] == "tutorial" else GS.TYPE_COLORS[pl["type"]]
-				var rc = GS.RARITY_COLORS[clamp(pl["tier"], 0, 4)]
-				var px = 14.0 * u + (1.0 - a2) * -30.0 * u
-				var py = 214.0 * u
-				draw_rect(Rect2(px, py, 250.0 * u, 40.0 * u), Color(0.04, 0.05, 0.09, 0.68 * a2))
-				draw_rect(Rect2(px, py, 5.0 * u, 40.0 * u), Color(col3.r, col3.g, col3.b, a2))
-				shadow(font, Vector2(px + 12.0 * u, py + 17.0 * u), pl["name"], int(15 * u), Color(1, 1, 1, a2))
-				shadow(font, Vector2(px + 12.0 * u, py + 33.0 * u), pl["line"], int(11 * u), Color(rc.r, rc.g, rc.b, 0.95 * a2))
-				if pl["tier"] >= 1:
-					shadow(font, Vector2(px + 148.0 * u, py + 17.0 * u), GS.RARITY_NAMES[clamp(pl["tier"], 0, 4)], int(12 * u), Color(rc.r, rc.g, rc.b, a2), HORIZONTAL_ALIGNMENT_RIGHT, 90.0 * u)
-		# the mission board: small, faint, two lines and a hint
-		var my = 268.0 * u if hud.plate != null else 224.0 * u
-		var mx = 16.0 * u
+		# ---- the mission board: small, faint
+		var my = 12.0 * u + 2.0 * 76.0 * u + 18.0 * u if unlocked else 12.0 * u + 76.0 * u + 18.0 * u
+		var mx = 20.0 * u
 		var tgt = GS.mission_target()
 		var tot = GS.fry_total()
 		var line1 = ""
@@ -545,14 +724,33 @@ class Arc extends HC:
 		else:
 			line1 = "GET %d FRIES   %d / %d" % [tgt, tot, tgt]
 		var c1 = Color(0.75, 1.0, 0.75, 0.8) if tgt < 0 else Color(1, 0.96, 0.82, 0.8)
-		draw_rect(Rect2(mx - 6.0 * u, my - 14.0 * u, 3.0 * u, 34.0 * u), Color(1, 1, 1, 0.2))
+		var qn = 0
+		for id in GS.QUESTS:
+			if GS.quest_state(id) != "":
+				qn += 1
+		draw_rect(Rect2(mx - 7.0 * u, my - 14.0 * u, 3.0 * u, (34.0 + 16.0 * qn) * u), Color(1, 1, 1, 0.2))
 		shadow(font, Vector2(mx, my), line1, int(13 * u), c1)
-		shadow(font, Vector2(mx, my + 17.0 * u), "NO LONGER HUNGRY   0 / 1", int(13 * u), Color(1.0, 0.82, 0.7, 0.72))
+		var yy = my + 17.0 * u
+		for id in GS.QUESTS:
+			var st = GS.quest_state(id)
+			if st == "":
+				continue
+			var done = st == "done"
+			var qa = 0.45 if done else (0.8 + 0.12 * sin(t * 3.0))
+			var qc = Color(0.7, 1.0, 0.8, qa) if done else Color(1.0, 0.92, 0.6, qa)
+			draw_rect(Rect2(mx, yy - 10.0 * u, 10.0 * u, 10.0 * u), Color(qc.r, qc.g, qc.b, 0.25 * qa), true)
+			draw_rect(Rect2(mx, yy - 10.0 * u, 10.0 * u, 10.0 * u), qc, false, 1.3)
+			if done:
+				draw_line(Vector2(mx + 2.0 * u, yy - 5.0 * u), Vector2(mx + 4.5 * u, yy - 2.0 * u), qc, 1.6)
+				draw_line(Vector2(mx + 4.5 * u, yy - 2.0 * u), Vector2(mx + 9.0 * u, yy - 9.0 * u), qc, 1.6)
+			shadow(font, Vector2(mx + 16.0 * u, yy), GS.QUESTS[id][1], int(13 * u), qc)
+			yy += 16.0 * u
+		shadow(font, Vector2(mx, yy), "NO LONGER HUNGRY   0 / 1", int(13 * u), Color(1.0, 0.82, 0.7, 0.72))
 		var hint = ""
-		for h in MISSION_HINTS:
+		for h in hud.MISSION_HINTS:
 			if tot >= h[0]:
 				hint = h[1]
-		shadow(font, Vector2(mx, my + 34.0 * u), hint, int(11 * u), Color(1, 1, 1, 0.42))
+		shadow(font, Vector2(mx, yy + 17.0 * u), hint, int(11 * u), Color(1, 1, 1, 0.42))
 
 class Streaks extends Control:
 	var hud
@@ -650,10 +848,14 @@ func _ready():
 	objective_count = _lbl("", 24, GOLD)
 	top.add_child(objective_title)
 	top.add_child(objective_count)
-	arc = Arc.new()
+	arc = FryGrid.new()
 	arc.hud = self
 	_full(arc)
 	ui_root.add_child(arc)
+	banner = Banner.new()
+	banner.hud = self
+	_full(banner)
+	ui_root.add_child(banner)
 	status = Status.new()
 	status.hud = self
 	status.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -749,14 +951,26 @@ func _ready():
 	GS.achievement.connect(_on_achievement)
 	GS.player_hurt.connect(_on_hurt)
 	GS.fry_got.connect(_on_fry_got)
+	GS.quest_done.connect(_on_quest_done)
 	GS.comic.connect(func(cid, cap, extra): show_comic(cid, cap, 2.8, extra))
+	quiet_label = VBoxContainer.new()
+	quiet_label.anchor_left = 0.0
+	quiet_label.anchor_right = 1.0
+	quiet_label.anchor_top = 0.4
+	quiet_label.anchor_bottom = 0.4
+	quiet_label.add_theme_constant_override("separation", 14)
+	quiet_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for i in 3:
+		var ql = _lbl("", 30 if i == 0 else 24, Color(1, 0.97, 0.88), 8)
+		ql.modulate.a = 0.0
+		quiet_label.add_child(ql)
+	add_child(quiet_label)
 	reset_ui()
 
 func reset_ui():
 	collected = {}
 	slots_visible = false
 	gains = []
-	plate = null
 	objective_title.text = ""
 	objective_count.text = ""
 
@@ -766,15 +980,16 @@ func _process(delta):
 	if reticle.pulse_t > 0.0:
 		reticle.pulse_t = max(reticle.pulse_t - delta, 0.0)
 	var real_dt = delta / max(Engine.time_scale, 0.05)
-	lb = lerp(lb, player.snatch.letterbox, 1.0 - exp(-14.0 * real_dt))
-	var focusing = (player.snatch.lock_fry != null and player.snatch.state == "idle") or player.snatch.state == "cine" or player.snatch.state == "flee"
+	lb = lerp(lb, max(player.snatch.letterbox, quiet_bar), 1.0 - exp(-14.0 * real_dt))
+	var focusing = (player.snatch.lock_fry != null and player.snatch.state == "idle") or player.snatch.state == "cine"
 	focus_a = move_toward(focus_a, 1.0 if focusing else 0.0, 5.0 * real_dt)
+	banner.queue_redraw()
 	var pa = 1.0 if prompt_text != "" else 0.0
 	prompt_label.modulate.a = move_toward(prompt_label.modulate.a, pa, 4.0 * real_dt)
 	if prompt_text != "" and prompt_label.text != prompt_text:
 		prompt_label.text = prompt_text
 	# during focus the middle of the screen is busy: the instruction moves up under the title
-	var ay = 0.21 if (player.snatch.lock_fry != null or player.snatch.state == "flee") else 0.82
+	var ay = 0.14 if player.snatch.lock_fry != null else 0.82
 	if abs(prompt_label.anchor_top - ay) > 0.001:
 		prompt_label.anchor_top = ay
 		prompt_label.anchor_bottom = ay
@@ -887,7 +1102,8 @@ func still_hungry():
 		objective_title.modulate.a = 1.0
 		objective_title.add_theme_font_size_override("font_size", 30))
 
-# the light "you got a fry" moment (never pauses): the fry flies into its slot of the rainbow, a small tag fades in
+# the "you got a fry" moment (never pauses, never covers the middle of the screen): the fry rises from the lower middle with its rarity in
+# light and one line of what it does, then flies into its square of the top-left box and lights it (see FryGrid)
 func _on_fry_got(type, tier):
 	var slot = 0
 	if type == "tutorial":
@@ -895,20 +1111,53 @@ func _on_fry_got(type, tier):
 	elif tier >= 1 and tier <= 3:
 		slot = tier - 1
 	elif tier >= 4:
-		slot = 2
-	gains.append({"type": type, "tier": tier, "t": 0.0, "slot": slot})
+		slot = 3
 	var nm = ""
 	var ln = ""
+	var rar = ""
 	if type == "tutorial":
 		nm = ["CORNER TABLE FRY", "SEASIDE PLATE FRY", "HOT HANDHELD FRY"][clamp(GS.gull_sense_count - 1, 0, 2)]
 		ln = "VISION FRY   %d / 3" % GS.gull_sense_count
+		rar = "COMMON"
 	elif tier >= 4:
 		nm = GS.fry_name(type, 4)
 		ln = GS.rainbow_text(type)
+		rar = "RAINBOW"
 	else:
 		nm = GS.fry_name(type, tier)
 		ln = GS.STAT_NAMES[type] + "   " + GS.ability_text(type, tier).split("   -   ")[0]
-	plate = {"type": type, "tier": tier, "name": nm, "line": ln, "t": 0.0}
+		rar = GS.RARITY_NAMES[clamp(tier, 0, 4)]
+	var dur = 3.2
+	if tier >= 4:
+		dur = 2.0
+	elif type == "tutorial":
+		dur = 2.6
+	gains.append({"type": type, "tier": tier, "t": 0.0, "slot": slot, "name": nm, "line": ln, "rarity": rar, "dur": dur})
+	Sfx.play("fry_fly", -10.0)
+
+# the fry reached its square
+func fry_arrived(g):
+	Sfx.play("equip", -14.0, 1.4)
+
+# a side quest is finished (fish / cloud / sun): all the UI melts away, the bars come in, and the gull thinks out loud:
+# "i caught the sun... and somehow i'm still hungry." Then everything returns. It is a moment of quiet, not a prize screen.
+func _on_quest_done(id):
+	var lines = GS.QUESTS[id][2].split("|")
+	var tw = create_tween().set_ignore_time_scale(true)
+	for i in 3:
+		quiet_label.get_child(i).text = lines[i] if i < lines.size() else ""
+		quiet_label.get_child(i).modulate.a = 0.0
+	tw.tween_property(ui_root, "modulate:a", 0.0, 0.7)
+	tw.parallel().tween_property(self, "quiet_bar", 0.55, 0.9)
+	tw.tween_interval(0.5)
+	for i in 3:
+		tw.tween_property(quiet_label.get_child(i), "modulate:a", 1.0, 0.9)
+		tw.tween_interval(1.5 if i < 2 else 2.8)
+	tw.tween_callback(func(): Sfx.schedule_growl(0.2))
+	for i in 3:
+		tw.tween_property(quiet_label.get_child(i), "modulate:a", 0.0, 0.9).set_delay(0.0 if i > 0 else 0.0)
+	tw.tween_property(ui_root, "modulate:a", 1.0, 1.0)
+	tw.parallel().tween_property(self, "quiet_bar", 0.0, 1.0)
 
 func collect_special(key):
 	collected[key] = true

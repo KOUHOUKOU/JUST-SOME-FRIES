@@ -99,6 +99,17 @@ class Pane extends Control:
 			draw_arc(c + Vector2(-s * 0.1, -s * 0.5), s * 0.15, 0, PI, 8, Color(1, 1, 1, 0.7), 2.0, true)
 			draw_arc(c + Vector2(s * 0.15, -s * 0.5), s * 0.15, PI, TAU, 8, Color(1, 1, 1, 0.7), 2.0, true)
 
+	func _cone(c, s):
+		draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.4, -s * 0.15), c + Vector2(s * 0.4, -s * 0.15), c + Vector2(0, s * 0.85)]), Color(0.86, 0.66, 0.26))
+		draw_line(c + Vector2(-s * 0.3, -s * 0.0), c + Vector2(s * 0.1, s * 0.7), Color(0.6, 0.4, 0.12), 1.5)
+		draw_circle(c + Vector2(0, -s * 0.35), s * 0.5, Color(0.97, 0.78, 0.84))
+		draw_circle(c + Vector2(0, -s * 0.8), s * 0.36, Color(0.75, 0.92, 0.82))
+		draw_circle(c + Vector2(s * 0.05, -s * 1.12), s * 0.12, Color(0.88, 0.23, 0.33))
+
+	func _shield(c, s, col):
+		draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.5, -s * 0.5), c + Vector2(s * 0.5, -s * 0.5), c + Vector2(s * 0.45, s * 0.15), c + Vector2(0, s * 0.7), c + Vector2(-s * 0.45, s * 0.15)]), col)
+		draw_line(c + Vector2(0, -s * 0.35), c + Vector2(0, s * 0.45), Color(1, 1, 1, 0.7), 2.0)
+
 	func _cocktail(c, s):
 		draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.55, -s * 0.5), c + Vector2(s * 0.55, -s * 0.5), c + Vector2(0, s * 0.15)]), Color(1.0, 0.48, 0.3))
 		draw_line(c + Vector2(0, s * 0.15), c + Vector2(0, s * 0.7), Color(0.86, 0.9, 0.93), 3.0)
@@ -113,17 +124,25 @@ class Pane extends Control:
 				draw_colored_polygon(PackedVector2Array([c + Vector2(-s, s * 0.25), c + Vector2(s, s * 0.25), c + Vector2(s * 0.5, s * 0.1), c + Vector2(-s * 0.5, s * 0.1)]), col)
 				draw_rect(Rect2(c + Vector2(-s * 0.45, -s * 0.5), Vector2(s * 0.9, s * 0.62)), col)
 				draw_rect(Rect2(c + Vector2(-s * 0.45, -s * 0.05), Vector2(s * 0.9, s * 0.14)), Color(0.85, 0.35, 0.3, col.a))
+				for q in 6:
+					draw_rect(Rect2(c + Vector2(-s * 0.45 + q * s * 0.15, -s * 0.05 + (q % 2) * s * 0.07), Vector2(s * 0.075, s * 0.07)), Color(1, 0.95, 0.85, col.a))
 			"sailor":
 				draw_rect(Rect2(c + Vector2(-s * 0.6, -s * 0.15), Vector2(s * 1.2, s * 0.5)), col)
 				draw_rect(Rect2(c + Vector2(-s * 0.7, s * 0.2), Vector2(s * 1.4, s * 0.2)), Color(0.18, 0.31, 0.56, col.a))
+				for q in 4:
+					draw_rect(Rect2(c + Vector2(-s * 0.7 + q * s * 0.36, s * 0.2), Vector2(s * 0.14, s * 0.2)), Color(1, 1, 1, col.a))
 				draw_circle(c + Vector2(0, -s * 0.28), s * 0.12, Color(0.85, 0.2, 0.2, col.a))
 			"topper":
 				draw_rect(Rect2(c + Vector2(-s * 0.4, -s * 0.8), Vector2(s * 0.8, s * 1.05)), col)
 				draw_rect(Rect2(c + Vector2(-s * 0.85, s * 0.2), Vector2(s * 1.7, s * 0.22)), col)
 				draw_rect(Rect2(c + Vector2(-s * 0.4, -s * 0.1), Vector2(s * 0.8, s * 0.18)), Color(0.9, 0.75, 0.2, col.a))
+				for q in 3:
+					draw_line(c + Vector2(-s * 0.2 + q * s * 0.2, -s * 0.7), c + Vector2(-s * 0.2 + q * s * 0.2, -s * 0.15), Color(1, 1, 1, col.a * 0.28), 1.5)
 			"beret":
 				draw_circle(c, s * 0.8, col)
 				draw_line(c + Vector2(0, -s * 0.8), c + Vector2(0, -s * 1.05), col, 3.0)
+				for q in 5:
+					draw_circle(c + Vector2(cos(q * 1.26) * s * 0.4, sin(q * 1.26) * s * 0.4), s * 0.1, Color(1, 0.9, 0.7, col.a))
 			"glasses":
 				draw_arc(c + Vector2(-s * 0.5, 0), s * 0.38, 0, TAU, 16, col, 3.0, true)
 				draw_arc(c + Vector2(s * 0.5, 0), s * 0.38, 0, TAU, 16, col, 3.0, true)
@@ -139,9 +158,13 @@ class Pane extends Control:
 				draw_colored_polygon(PackedVector2Array([c, c + Vector2(-s * 0.9, -s * 0.45), c + Vector2(-s * 0.9, s * 0.45)]), col)
 				draw_colored_polygon(PackedVector2Array([c, c + Vector2(s * 0.9, -s * 0.45), c + Vector2(s * 0.9, s * 0.45)]), col)
 				draw_circle(c, s * 0.2, Color(0.55, 0.08, 0.12, col.a))
+				for q in 4:
+					draw_circle(c + Vector2((q - 1.5) * s * 0.4, (q % 2) * s * 0.2 - s * 0.1), s * 0.07, Color(1, 1, 1, col.a))
 			"scarf":
 				draw_arc(c + Vector2(0, -s * 0.2), s * 0.8, deg_to_rad(10), deg_to_rad(170), 14, col, 7.0, true)
 				draw_rect(Rect2(c + Vector2(s * 0.3, s * 0.1), Vector2(s * 0.3, s * 0.85)), col)
+				for q in 5:
+					draw_line(c + Vector2(-s * 0.7 + q * s * 0.32, -s * 0.4), c + Vector2(-s * 0.7 + q * s * 0.32, s * 0.05), Color(1, 0.95, 0.85, col.a * 0.8), 2.0)
 			"pipe":
 				draw_line(c + Vector2(-s * 0.85, s * 0.2), c + Vector2(s * 0.2, s * 0.2), Color(0.35, 0.22, 0.12, col.a), 5.0)
 				draw_rect(Rect2(c + Vector2(s * 0.1, -s * 0.35), Vector2(s * 0.5, s * 0.65)), Color(0.24, 0.14, 0.07, col.a))
@@ -160,6 +183,22 @@ class Pane extends Control:
 			"balloon":
 				draw_circle(c + Vector2(0, -s * 0.2), s * 0.6, col)
 				draw_line(c + Vector2(0, s * 0.4), c + Vector2(s * 0.1, s * 0.95), Color(1, 1, 1, 0.6 * col.a), 1.5)
+				for q in 3:
+					draw_arc(c + Vector2(0, -s * 0.2), s * (0.15 + q * 0.2), 0, TAU, 14, Color(1, 1, 1, 0.5 * col.a), 1.5, true)
+			"socks":
+				draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.35, -s * 0.8), c + Vector2(s * 0.3, -s * 0.8), c + Vector2(s * 0.3, s * 0.15), c + Vector2(s * 0.9, s * 0.25), c + Vector2(s * 0.9, s * 0.8), c + Vector2(-s * 0.35, s * 0.8)]), col)
+				for q in 4:
+					draw_line(c + Vector2(-s * 0.35, -s * 0.6 + q * s * 0.3), c + Vector2(s * 0.3, -s * 0.6 + q * s * 0.3), Color(1, 0.96, 0.88, col.a), 3.0)
+			"cloud":
+				draw_circle(c + Vector2(-s * 0.5, s * 0.15), s * 0.5, col)
+				draw_circle(c + Vector2(s * 0.1, -s * 0.2), s * 0.65, col)
+				draw_circle(c + Vector2(s * 0.65, s * 0.2), s * 0.45, col)
+				draw_rect(Rect2(c + Vector2(-s * 0.5, s * 0.15), Vector2(s * 1.15, s * 0.5)), col)
+			"sun":
+				draw_circle(c, s * 0.5, col)
+				for q in 10:
+					var a3 = q * TAU / 10.0
+					draw_line(c + Vector2(cos(a3), sin(a3)) * s * 0.7, c + Vector2(cos(a3), sin(a3)) * s * 1.05, col, 3.0)
 
 	func _w2m(x, z, r):
 		return Vector2(r.position.x + (x - ui.MAP_X0) / (ui.MAP_X1 - ui.MAP_X0) * r.size.x,
@@ -192,7 +231,7 @@ class Pane extends Control:
 		hit.clear()
 		# soft dark panels (the world stays visible around the gull)
 		draw_rect(Rect2(Vector2(size.x * 0.5, 0), Vector2(size.x * 0.5, size.y)), Color(0.02, 0.03, 0.06, 0.66))
-		draw_rect(Rect2(Vector2(0, size.y * 0.74), Vector2(size.x * 0.5, size.y * 0.26)), Color(0.02, 0.03, 0.06, 0.5))
+		draw_rect(Rect2(Vector2(0, size.y * 0.66), Vector2(size.x * 0.5, size.y * 0.34)), Color(0.02, 0.03, 0.06, 0.5))
 		# ---- header: the stat strip (pictures + numbers)
 		var x0 = size.x * 0.5 + 24.0 * u
 		var stats = [
@@ -238,38 +277,43 @@ class Pane extends Control:
 				draw_arc(Vector2(rx, y + 40.0 * u), (16.0 - q * 2.2) * u, PI, TAU, 14, rc, 2.5, true)
 			draw_string(font, Vector2(rx + 22.0 * u, y + 42.0 * u), "x%d" % rb, HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.8, 0.95, 1.0 if rb > 0 else 0.3))
 			y += rh
-		# ---- the menu: coffee and the cocktail
+		# ---- the menu: coffee, the cocktail and ice cream, with the number you have had
 		var my = y + 8.0 * u
-		for i in 2:
-			var key = "coffee" if i == 0 else "alcohol"
+		for i in 3:
+			var key = ["coffee", "alcohol", "icecream"][i]
 			var n = GS.mischief_counts.get(key, 0)
-			var cx2 = x0 + 54.0 * u + i * 230.0 * u
-			draw_rect(Rect2(Vector2(cx2 - 46.0 * u, my), Vector2(212.0 * u, 62.0 * u)), Color(1, 1, 1, 0.07 if n == 0 else 0.15))
+			var cx2 = x0 + 52.0 * u + i * 168.0 * u
+			draw_rect(Rect2(Vector2(cx2 - 46.0 * u, my), Vector2(158.0 * u, 62.0 * u)), Color(1, 1, 1, 0.07 if n == 0 else 0.15))
 			if i == 0:
-				_cup(Vector2(cx2, my + 34.0 * u), 24.0 * u, n > 0)
+				_cup(Vector2(cx2, my + 34.0 * u), 22.0 * u, n > 0)
+			elif i == 1:
+				_cocktail(Vector2(cx2, my + 34.0 * u), 20.0 * u)
 			else:
-				_cocktail(Vector2(cx2, my + 34.0 * u), 22.0 * u)
+				_cone(Vector2(cx2, my + 32.0 * u), 21.0 * u)
 			if n == 0:
 				draw_rect(Rect2(Vector2(cx2 - 30.0 * u, my + 4.0 * u), Vector2(60.0 * u, 54.0 * u)), Color(0.02, 0.03, 0.06, 0.62))
-			# up arrows = fast, down arrows = slow
-			var ac = Color(1.0, 0.75, 0.3) if i == 0 else Color(0.8, 0.5, 1.0)
-			var ax = cx2 + 52.0 * u
+			# what it does: coffee = faster (arrows up), cocktail = free flight (a battery), ice cream = a shield
+			var ac = [Color(1.0, 0.6, 0.25), Color(1.0, 0.85, 0.2), Color(1.0, 0.55, 0.85)][i]
+			var ax = cx2 + 46.0 * u
 			if i == 0:
 				draw_polyline(PackedVector2Array([Vector2(ax - 8, my + 40.0 * u), Vector2(ax, my + 28.0 * u), Vector2(ax + 8, my + 40.0 * u)]), ac, 3.0, true)
 				draw_polyline(PackedVector2Array([Vector2(ax - 8, my + 52.0 * u), Vector2(ax, my + 40.0 * u), Vector2(ax + 8, my + 52.0 * u)]), ac, 3.0, true)
+			elif i == 1:
+				draw_rect(Rect2(Vector2(ax - 11.0 * u, my + 30.0 * u), Vector2(22.0 * u, 14.0 * u)), ac, false, 2.5)
+				draw_rect(Rect2(Vector2(ax - 8.0 * u, my + 33.0 * u), Vector2(16.0 * u, 8.0 * u)), ac)
+				draw_polyline(PackedVector2Array([Vector2(ax - 8, my + 50.0 * u), Vector2(ax, my + 46.0 * u), Vector2(ax + 8, my + 50.0 * u)]), ac, 2.5, true)
 			else:
-				draw_polyline(PackedVector2Array([Vector2(ax - 8, my + 28.0 * u), Vector2(ax, my + 40.0 * u), Vector2(ax + 8, my + 28.0 * u)]), ac, 3.0, true)
-				draw_polyline(PackedVector2Array([Vector2(ax - 8, my + 40.0 * u), Vector2(ax, my + 52.0 * u), Vector2(ax + 8, my + 40.0 * u)]), ac, 3.0, true)
-			draw_string(font, Vector2(cx2 + 76.0 * u, my + 42.0 * u), "x%d" % n, HORIZONTAL_ALIGNMENT_LEFT, -1, int(22 * u), Color(1, 0.97, 0.88, 1.0 if n > 0 else 0.35))
+				_shield(Vector2(ax, my + 38.0 * u), 15.0 * u, ac)
+			draw_string(font, Vector2(cx2 + 62.0 * u, my + 42.0 * u), "x%d" % n, HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.97, 0.88, 1.0 if n > 0 else 0.35))
 		# ---- the wardrobe (under the gull)
-		var wx = 26.0 * u
-		var wy = size.y * 0.77
-		var tw = 82.0 * u
+		var wx = 22.0 * u
+		var wy = size.y * 0.695
+		var tw = 62.0 * u
 		var kinds = GS.WEARABLES
 		for i in kinds.size():
 			var k3 = kinds[i]
-			var col2 = i % 7
-			var row = i / 7
+			var col2 = i % 6
+			var row = i / 6
 			var r = Rect2(Vector2(wx + col2 * (tw + 6.0 * u), wy + row * (tw * 0.9 + 6.0 * u)), Vector2(tw, tw * 0.9))
 			hit[k3] = r
 			var owned = GS.worn.has(k3)
@@ -279,18 +323,20 @@ class Pane extends Control:
 				draw_rect(r, Color(1.0, 0.85, 0.35, 0.95), false, 3.0)
 			var base = {"hat": Color("F0D9A0"), "sailor": Color("F4F4F0"), "topper": Color("2A2D36"), "beret": Color("C23B3B"), "glasses": Color("DDE3EA"), "shades": Color("15151A"),
 				"necklace": Color("F2B53A"), "bowtie": Color("C9202E"), "scarf": Color("D9442E"), "pipe": Color("5A3A1E"), "hawaii": Color("2BA7A0"), "stripes": Color("F4F4F0"),
-				"coat": Color("3A4155"), "balloon": Color("E85745")}[k3]
+				"coat": Color("3A4155"), "balloon": Color("E85745"), "socks": Color("E85745"), "cloud": Color("FFFFFF"), "sun": Color("FFC83A")}[k3]
 			var pc = base if owned else Color(0.4, 0.42, 0.5, 0.35)
 			if owned and k3 in ["topper", "shades", "pipe", "coat"]:
 				draw_rect(Rect2(r.position + Vector2(5, 5), r.size - Vector2(10, 10)), Color(0.8, 0.82, 0.9, 0.22))
 			_wear_icon(k3, r.position + r.size * 0.5 + Vector2(0, -2.0 * u), tw * 0.26, pc)
+			if not owned:
+				draw_string(font, r.position + Vector2(0, r.size.y * 0.72), "?", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(18 * u), Color(1, 1, 1, 0.22))
 			var cnt = GS.mischief_counts.get(k3, 0)
 			if owned:
-				draw_string(font, r.position + Vector2(r.size.x - 30.0 * u, r.size.y - 6.0 * u), "x%d" % max(cnt, 1), HORIZONTAL_ALIGNMENT_RIGHT, 26.0 * u, int(14 * u), Color(1, 0.95, 0.8))
+				draw_string(font, r.position + Vector2(r.size.x - 30.0 * u, r.size.y - 5.0 * u), "x%d" % max(cnt, 1), HORIZONTAL_ALIGNMENT_RIGHT, 26.0 * u, int(12 * u), Color(1, 0.95, 0.8))
 				if not GS.menu_seen.has("w_" + k3):
 					draw_circle(r.position + Vector2(r.size.x - 8.0 * u, 9.0 * u), 5.0 * u, Color(1.0, 0.3, 0.3))
 		# the mouse hint: a little mouse with the right button lit
-		var mx = wx + 7.0 * (tw + 6.0 * u) + 8.0 * u
+		var mx = wx + 6.0 * (tw + 6.0 * u) + 8.0 * u
 		var my2 = wy + 4.0 * u
 		draw_rect(Rect2(Vector2(mx, my2), Vector2(26.0 * u, 38.0 * u)), Color(1, 1, 1, 0.5), false, 2.0)
 		draw_rect(Rect2(Vector2(mx + 13.0 * u, my2), Vector2(13.0 * u, 16.0 * u)), Color(1.0, 0.85, 0.35, 0.9))
