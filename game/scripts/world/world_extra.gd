@@ -238,7 +238,7 @@ func _small_props():
 func owner_defs():
 	var defs = []
 	var y = py
-	defs.append({"id": "SPECIAL_ORANGE", "type": "orange", "arch": "vendor", "carrier": "hand", "behavior": "patrol",
+	defs.append({"id": "SPECIAL_ORANGE", "type": "pink", "arch": "vendor", "carrier": "hand", "behavior": "patrol",
 		"pos": Vector3(3.5, y, -81.7), "face": Vector3(0, 0, 1), "speed": 0.9,
 		"path": [Vector3(3.5, y, -81.7), Vector3(10.5, y, -81.7)],
 		"alts": [{"pos": Vector3(-9.0, y, -76.5), "face": Vector3(1, 0, 0)}, {"pos": Vector3(11.0, y, -74.0), "face": Vector3(-1, 0, 0)}],
@@ -359,11 +359,19 @@ func _volleyball():
 
 func build_fish_spots():
 	var spots = []
-	# bubbling water: both sides of the pier, the marina, the open sea, the harbour mouth and the park pond
-	for sp in [[-9.0, 56.0, -0.75], [13.0, 60.0, -0.75], [-20.0, 50.0, -0.75], [-34.0, 66.0, -0.75], [24.0, 56.0, -0.75], [125.0, -18.0, -0.75], [-58.0, -10.0, 0.04], [-4.0, 100.0, -0.75]]:
+	# the water that a leaping fish must never touch: the pier with its wheel, the marina, the harbour boats, the sailing boats out at sea
+	FISH_SPOT.live = 0
+	FISH_SPOT.avoid_rects = [[-12.0, 16.0, 20.0, 78.0], [-36.0, -6.0, 24.0, 46.0], [108.0, 120.0, -30.0, -4.0], [92.0, 112.0, 14.0, 26.0]]
+	FISH_SPOT.avoid_discs = [[Vector3(16.0, 0.0, 74.0), 3.5]]
+	for sb in w.sea_boats:
+		FISH_SPOT.avoid_discs.append([sb["deck"], 7.5])
+	# open water on every side of the town: both sides of the pier, the marina's mouth, the bay, the harbour, the open sea (round 7: many more of them)
+	for sp in [[-22.0, 60.0, 7.0], [26.0, 62.0, 8.0], [-24.0, 74.0, 8.0], [-34.0, 70.0, 9.0], [28.0, 50.0, 7.0], [42.0, 66.0, 10.0], [-54.0, 62.0, 10.0],
+			[58.0, 52.0, 9.0], [82.0, 42.0, 10.0], [124.0, -16.0, 6.0], [8.0, 92.0, 11.0], [-30.0, 98.0, 10.0], [30.0, 102.0, 10.0], [-4.0, 136.0, 9.0],
+			[64.0, 84.0, 10.0], [-70.0, 86.0, 10.0], [100.0, 60.0, 10.0], [-120.0, 90.0, 10.0]]:
 		var f = Node3D.new()
 		f.set_script(FISH_SPOT)
 		w.root.add_child(f)
-		f.setup(w.player, Vector3(sp[0], 0, sp[1]), sp[2])
+		f.setup(w.player, Vector3(sp[0], 0, sp[1]), -0.75, sp[2])
 		spots.append(f)
 	return spots

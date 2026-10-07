@@ -107,10 +107,15 @@ func cone(pos, radius, height, color, collide = false):
 	var key = _key(c, 0.0, 0.9, "")
 	_tool(key, c, 0.0, 0.9).append_from(unit_cone, 0, _xf(pos, Vector3(radius * 2.0, height, radius * 2.0), Vector3.ZERO))
 	if collide:
+		# the real cone (round 7): a gull can stand on the slope of a pine or a spire
+		var pts = PackedVector3Array()
+		for k in 10:
+			var a = TAU * k / 10.0
+			pts.append(Vector3(cos(a) * radius * 0.95, -height * 0.5, sin(a) * radius * 0.95))
+		pts.append(Vector3(0, height * 0.5, 0))
 		var cs = CollisionShape3D.new()
-		var sh = CylinderShape3D.new()
-		sh.radius = radius * 0.5
-		sh.height = height
+		var sh = ConvexPolygonShape3D.new()
+		sh.points = pts
 		cs.shape = sh
 		cs.position = pos
 		body.add_child(cs)
@@ -121,13 +126,8 @@ func ball(pos, radius, color, scale_v = Vector3.ONE, emit = 0.0, collide = false
 	var key = _key(c, emit, 0.9, mat_key)
 	_tool(key, c, emit, 0.9).append_from(unit_sph, 0, _xf(pos, Vector3(radius * 2.0, radius * 2.0, radius * 2.0) * scale_v, Vector3.ZERO))
 	if collide:
-		var cs = CollisionShape3D.new()
-		var sh = SphereShape3D.new()
-		sh.radius = radius * max(scale_v.x, scale_v.z)
-		cs.shape = sh
-		cs.position = pos
-		body.add_child(cs)
-		shape_count += 1
+		# round 7: the exact solid of the (squashed) ball, as a convex hull a few percent inside the mesh, so a gull can stand on a tree top / a bush without sinking in
+		_shape_ellipsoid(pos, Vector3(radius, radius, radius) * scale_v * 0.96)
 
 # triangular prism, ridge along local X (pitched roof): size = (length, height, depth)
 func prism(pos, size, color, collide = true, rot_deg = Vector3.ZERO):
@@ -151,6 +151,23 @@ func _shape_prism(pos, size, rot_deg):
 	sh.points = pts
 	cs.shape = sh
 	cs.transform = _xf(pos, Vector3.ONE, rot_deg)
+	body.add_child(cs)
+	shape_count += 1
+
+func _shape_ellipsoid(pos, radii):
+	var pts = PackedVector3Array()
+	for i in range(1, 6):
+		var phi = PI * i / 6.0
+		for j in 10:
+			var th = TAU * j / 10.0
+			pts.append(Vector3(sin(phi) * cos(th) * radii.x, cos(phi) * radii.y, sin(phi) * sin(th) * radii.z))
+	pts.append(Vector3(0, radii.y, 0))
+	pts.append(Vector3(0, -radii.y, 0))
+	var cs = CollisionShape3D.new()
+	var sh = ConvexPolygonShape3D.new()
+	sh.points = pts
+	cs.shape = sh
+	cs.position = pos
 	body.add_child(cs)
 	shape_count += 1
 

@@ -8,9 +8,10 @@ extends CanvasLayer
 # Mouse: drag with the left button to turn the gull around.
 
 const Terrain = preload("res://scripts/world/terrain.gd")
+const FishArt = preload("res://scripts/ui/fish_art.gd")
 
-const SPECIAL_MARKERS = {"red": Vector3(1.5, 0, 70), "blue": Vector3(20, 0, 19), "purple": Vector3(-11, 0, 11.5), "green": Vector3(27, 0, 14.5), "pink": Vector3(-45, 0, -1.5),
-	"orange": Vector3(7, 0, -82), "cyan": Vector3(-92, 0, 44)}
+const SPECIAL_MARKERS = {"red": Vector3(-11, 0, 11.5), "blue": Vector3(20, 0, 19), "purple": Vector3(1.5, 0, 70), "green": Vector3(27, 0, 14.5), "orange": Vector3(-45, 0, -1.5),
+	"pink": Vector3(7, 0, -82), "cyan": Vector3(-92, 0, 44)}
 const MAP_X0 = -135.0
 const MAP_X1 = 125.0
 const MAP_Z0 = -95.0
@@ -21,6 +22,7 @@ var player = null
 var panel
 var map_tex
 var seen_t = 0.0
+var page = 0                     # 0 = fries and wardrobe, 1 = the fish book (click the tabs, or press LEFT / RIGHT)
 
 signal wear_toggled(kind)
 
@@ -29,7 +31,17 @@ class Pane extends Control:
 	var hit = {}            # kind -> Rect2 (the wardrobe tiles, in control coordinates)
 	var u = 1.0
 
+	var tabs = {}               # page -> Rect2
+
 	func _gui_input(event):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			for pg in tabs:
+				if tabs[pg].has_point(event.position):
+					if ui.page != pg:
+						ui.page = pg
+						Sfx.play("equip", -12.0, 1.3)
+					accept_event()
+					return
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 			for k in hit:
 				if hit[k].has_point(event.position) and GS.worn.has(k):
@@ -199,6 +211,13 @@ class Pane extends Control:
 				for q in 10:
 					var a3 = q * TAU / 10.0
 					draw_line(c + Vector2(cos(a3), sin(a3)) * s * 0.7, c + Vector2(cos(a3), sin(a3)) * s * 1.05, col, 3.0)
+			"meteor":
+				# a four-pointed star with a tail
+				var sc2 = c + Vector2(s * 0.35, -s * 0.35)
+				draw_colored_polygon(PackedVector2Array([sc2 + Vector2(0, -s * 0.55), sc2 + Vector2(s * 0.14, -s * 0.14), sc2 + Vector2(s * 0.55, 0), sc2 + Vector2(s * 0.14, s * 0.14),
+					sc2 + Vector2(0, s * 0.55), sc2 + Vector2(-s * 0.14, s * 0.14), sc2 + Vector2(-s * 0.55, 0), sc2 + Vector2(-s * 0.14, -s * 0.14)]), col)
+				for q in 3:
+					draw_line(sc2 + Vector2(-s * 0.2, s * 0.2) * (1.0 + q * 0.2), c + Vector2(-s * (0.9 - q * 0.12), s * (0.9 - q * 0.2)), Color(col.r, col.g, col.b, col.a * (0.8 - q * 0.22)), 3.0 - q)
 
 	func _w2m(x, z, r):
 		return Vector2(r.position.x + (x - ui.MAP_X0) / (ui.MAP_X1 - ui.MAP_X0) * r.size.x,
@@ -245,7 +264,23 @@ class Pane extends Control:
 			var k = stats[i][0]
 			_stat_icon(k, Vector2(cx, 40.0 * u), 15.0 * u, GS.TYPE_COLORS[k])
 			draw_string(font, Vector2(cx + 28.0 * u, 48.0 * u), stats[i][1], HORIZONTAL_ALIGNMENT_LEFT, -1, int(24 * u), Color(1, 0.97, 0.88))
-		# ---- the seven fry rows
+		# ---- the two tabs
+		tabs.clear()
+		for pg in 2:
+			var tr = Rect2(Vector2(size.x - 24.0 * u - 108.0 * u * (2 - pg), 56.0 * u), Vector2(104.0 * u, 26.0 * u))
+			tabs[pg] = tr
+			var on = ui.page == pg
+			draw_rect(tr, Color(1, 1, 1, 0.2 if on else 0.07))
+			if on:
+				draw_rect(Rect2(tr.position + Vector2(0, tr.size.y - 3.0), Vector2(tr.size.x, 3.0)), Color(1.0, 0.85, 0.35))
+			draw_string(font, tr.position + Vector2(0, 18.0 * u), ["FRIES", "FISH BOOK"][pg], HORIZONTAL_ALIGNMENT_CENTER, tr.size.x, int(13 * u), Color(1, 1, 1, 1.0 if on else 0.6))
+		if ui.page == 1:
+			_fish_page(x0, font, u, t)
+		else:
+			_fries_page(x0, font, u, t)
+		_left_side(x0, font, u, t)
+
+	func _fries_page(x0, font, u, t):
 		var y = 84.0 * u
 		var rh = 68.0 * u
 		for i in GS.FRY_TYPES.size():
@@ -305,6 +340,41 @@ class Pane extends Control:
 			else:
 				_shield(Vector2(ax, my + 38.0 * u), 15.0 * u, ac)
 			draw_string(font, Vector2(cx2 + 62.0 * u, my + 42.0 * u), "x%d" % n, HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.97, 0.88, 1.0 if n > 0 else 0.35))
+
+	# ---- the fish book: nine kinds in three rarities; the longest and the heaviest of each that the gull ever caught
+	func _fish_page(x0, font, u, t):
+		var y = 90.0 * u
+		var caught = GS.fish_book.size()
+		draw_string(font, Vector2(x0, y + 12.0 * u), "THE FISH BOOK     %d / %d" % [caught, GS.FISH_ORDER.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.97, 0.88))
+		y += 26.0 * u
+		var cw = (size.x * 0.5 - 40.0 * u) / 3.0
+		for rar in 3:
+			var rc = GS.FISH_RARITY_COLORS[rar]
+			draw_rect(Rect2(Vector2(x0 - 8.0 * u, y), Vector2(size.x * 0.5 - 40.0 * u, 20.0 * u)), Color(rc.r, rc.g, rc.b, 0.22))
+			draw_string(font, Vector2(x0, y + 15.0 * u), "%s    %d BEATS TO CATCH    NEED %d" % [GS.FISH_RARITY_NAMES[rar], GS.FISH_JUDGE[rar], int(GS.FISH_NEED[rar])], HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(rc.r, rc.g, rc.b, 1.0))
+			y += 24.0 * u
+			var col = 0
+			for sp in GS.FISH_ORDER:
+				if GS.FISH_SPECIES[sp][1] != rar:
+					continue
+				var e = GS.fish_book.get(sp, null)
+				var have = e != null
+				var r = Rect2(Vector2(x0 - 8.0 * u + col * cw, y), Vector2(cw - 8.0 * u, 118.0 * u))
+				draw_rect(r, Color(rc.r, rc.g, rc.b, 0.16 if have else 0.05))
+				draw_rect(Rect2(r.position, Vector2(r.size.x, 3.0 * u)), Color(rc.r, rc.g, rc.b, 0.9 if have else 0.25))
+				FishArt.draw(self, r.position + Vector2(r.size.x * 0.46, 40.0 * u), min(cw * 0.26, 44.0 * u), sp, 1.0, have)
+				if have:
+					draw_string(font, r.position + Vector2(0, 80.0 * u), GS.FISH_SPECIES[sp][0], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(13 * u), Color(1, 0.97, 0.88))
+					draw_string(font, r.position + Vector2(0, 98.0 * u), "%s    %s" % [GS.fish_cm_text(e["cm"]), GS.fish_kg_text(e["kg"])], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(13 * u), Color(1.0, 0.86, 0.5))
+					draw_string(font, r.position + Vector2(0, 113.0 * u), "BEST   -   CAUGHT x%d" % e["n"], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(10 * u), Color(1, 1, 1, 0.55))
+				else:
+					draw_string(font, r.position + Vector2(0, 85.0 * u), "?", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(26 * u), Color(1, 1, 1, 0.3))
+					draw_string(font, r.position + Vector2(0, 108.0 * u), "NOT CAUGHT YET", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(10 * u), Color(1, 1, 1, 0.35))
+				col += 1
+			y += 124.0 * u
+		draw_string(font, Vector2(x0, size.y - 20.0 * u), "fish leap where the water bubbles.   Gull Sight shows where, 5 seconds ahead.", HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(1, 1, 1, 0.42))
+
+	func _left_side(x0, font, u, t):
 		# ---- the wardrobe (under the gull)
 		var wx = 22.0 * u
 		var wy = size.y * 0.695
@@ -323,7 +393,7 @@ class Pane extends Control:
 				draw_rect(r, Color(1.0, 0.85, 0.35, 0.95), false, 3.0)
 			var base = {"hat": Color("F0D9A0"), "sailor": Color("F4F4F0"), "topper": Color("2A2D36"), "beret": Color("C23B3B"), "glasses": Color("DDE3EA"), "shades": Color("15151A"),
 				"necklace": Color("F2B53A"), "bowtie": Color("C9202E"), "scarf": Color("D9442E"), "pipe": Color("5A3A1E"), "hawaii": Color("2BA7A0"), "stripes": Color("F4F4F0"),
-				"coat": Color("3A4155"), "balloon": Color("E85745"), "socks": Color("E85745"), "cloud": Color("FFFFFF"), "sun": Color("FFC83A")}[k3]
+				"coat": Color("3A4155"), "balloon": Color("E85745"), "socks": Color("E85745"), "cloud": Color("FFFFFF"), "sun": Color("FFC83A"), "meteor": Color("FFE08A")}[k3]
 			var pc = base if owned else Color(0.4, 0.42, 0.5, 0.35)
 			if owned and k3 in ["topper", "shades", "pipe", "coat"]:
 				draw_rect(Rect2(r.position + Vector2(5, 5), r.size - Vector2(10, 10)), Color(0.8, 0.82, 0.9, 0.22))

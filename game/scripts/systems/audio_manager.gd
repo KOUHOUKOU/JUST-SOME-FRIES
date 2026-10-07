@@ -1,14 +1,20 @@
 extends Node
-# Procedural, warm and gentle placeholder audio (no asset files needed).
-# Real files can replace these later: assets/audio/{music,ambience,sfx}/...
-# Everything is generated on a worker thread at startup and passed through soft low-pass filters
-# so nothing is shrill. Music harmony loops IV-vi-ii-V and never lands on the tonic (docs/18 §11.6);
-# only the ending bell resolves it.
+# The sound of the game (round 7). Everything is rendered offline by tools/audio (numpy): ~100 sound effects made of feathers, air, taps, wood and water,
+# and nine pieces of music (arrangements in the spirit of famous public-domain works: Satie, Pachelbel, Bach, Debussy, Grieg, Rossini...).
+# At run time the game only LOADS .ogg files (no synthesis at start-up: the browser version used to freeze for seconds). If a file is missing the old
+# procedural generator (below, "generation") fills in, so the game never goes silent.
+#   music: one piece per part of the island, cross-faded when the gull flies from one to the next (zones are decided in main.gd);
+#          STARLIGHT has its own piece; the title and the ending have theirs.
 
+const Names = preload("res://scripts/systems/audio_names.gd")
 const RATE = 22050
 const MRATE = 11025
 # the pitch ladder of a streak of good presses (a major pentatonic climb)
 const PENTA = [1.0, 1.1225, 1.2599, 1.4983, 1.6818, 2.0, 2.2449, 2.5198]
+# how loud each piece plays (dB): they are all normalised to the same loudness, so this is only taste
+const MUSIC_DB = {"title": -7.0, "boardwalk": -9.5, "beach": -10.0, "hill": -9.0, "sea": -9.0, "summit": -9.5, "sky": -10.0, "star": -9.5, "ending": -7.0,
+	"cine_joy": -9.0, "cine_wish": -8.0, "cine_home": -8.0}
+const ALT = {"flap": ["flap", "flap2"]}
 
 var sounds = {}
 var pool = []
@@ -16,10 +22,10 @@ var pool_i = 0
 var wind
 var waves
 var murmur
-var music = []
-var thread
+var music = []                 # (legacy name) the two cross-fading players
+var music_streams = {}
+var thread = null
 var ready_ok = false
-var music_target = [-80.0, -80.0, -80.0]
 var music_master = 1.0
 var lowpass
 var gull_timer = 6.0
@@ -34,24 +40,76 @@ var theme_player
 var theme_want = ""
 var theme_loop = false
 var themes = {}
+var zone = ""                  # the piece that is playing in the world right now
+var world_zone = "boardwalk"
+var star_on = false
+var cur = 0
+var zone_tw = []
+var hush = false
+var hush_db = 0.0
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	for i in 14:
+	for i in 18:
 		var p = AudioStreamPlayer.new()
 		add_child(p)
 		pool.append(p)
 	wind = _loop_player(-80.0)
 	waves = _loop_player(-80.0)
 	murmur = _loop_player(-80.0)
-	for i in 3:
+	for i in 2:
 		music.append(_loop_player(-80.0))
+		zone_tw.append(null)
 	theme_player = _loop_player(-80.0)
 	lowpass = AudioEffectLowPassFilter.new()
 	lowpass.cutoff_hz = 20500.0
 	AudioServer.add_bus_effect(0, lowpass)
-	thread = Thread.new()
-	thread.start(_generate_all)
+	if _load_assets():
+		_finish_loading()
+	else:
+		# something is missing: the old generator makes up for it (on a thread; the browser build has no threads and then simply runs without)
+		thread = Thread.new()
+		thread.start(_generate_all)
+
+func _load_assets():
+	var ok = true
+	for n in Names.SFX:
+		var path = "res://assets/audio/sfx/%s.wav" % n
+		if ResourceLoader.exists(path):
+			sounds[n] = load(path)
+		else:
+			ok = false
+	for n in Names.MUSIC:
+		var path = "res://assets/audio/music/%s.ogg" % n
+		if ResourceLoader.exists(path):
+			var st = load(path)
+			if st != null and "loop" in st:
+				st.loop = n != "ending"
+			music_streams[n] = st
+		else:
+			ok = false
+	for n in ["wind", "waves", "murmur"]:
+		if sounds.has(n) and sounds[n] is AudioStreamWAV:
+			sounds[n].loop_mode = AudioStreamWAV.LOOP_FORWARD
+			sounds[n].loop_begin = 0
+			sounds[n].loop_end = sounds[n].data.size() / 2
+	return ok and sounds.has("wind") and music_streams.has("title")
+
+func _finish_loading():
+	wind.stream = sounds.get("wind")
+	waves.stream = sounds.get("waves")
+	murmur.stream = sounds.get("murmur")
+	waves.volume_db = -14.0
+	wind.volume_db = -40.0
+	murmur.volume_db = -30.0
+	waves.play()
+	wind.play()
+	murmur.play()
+	ready_ok = true
+	if theme_want != "":
+		play_theme(theme_want, theme_loop)
+	if music_wanted:
+		_zone_changed(true)
 
 func _loop_player(db):
 	var p = AudioStreamPlayer.new()
@@ -63,33 +121,29 @@ func _process(delta):
 	if thread != null and not thread.is_alive():
 		var r = thread.wait_to_finish()
 		thread = null
-		sounds = r["sounds"]
-		wind.stream = r["wind"]
-		waves.stream = r["waves"]
-		murmur.stream = r["murmur"]
-		for i in 3:
-			music[i].stream = r["music"][i]
-		themes = r["themes"]
-		if theme_want != "":
-			play_theme(theme_want, theme_loop)
-		waves.volume_db = -14.0
-		wind.volume_db = -40.0
-		murmur.volume_db = -30.0
-		waves.play()
-		wind.play()
-		murmur.play()
-		ready_ok = true
-		print("[AUDIO] all sounds ready after %.1f s" % (Time.get_ticks_msec() / 1000.0))
-		if music_wanted:
-			_start_music_players()
+		if r != null:
+			sounds = r["sounds"]
+			wind.stream = r["wind"]
+			waves.stream = r["waves"]
+			murmur.stream = r["murmur"]
+			themes = r["themes"]
+			for n in Names.MUSIC:
+				if not music_streams.has(n):
+					music_streams[n] = r["music"][0] if r["music"].size() > 0 else null
+			waves.volume_db = -14.0
+			wind.volume_db = -40.0
+			murmur.volume_db = -30.0
+			waves.play()
+			wind.play()
+			murmur.play()
+			ready_ok = true
+			if theme_want != "":
+				play_theme(theme_want, theme_loop)
+			if music_wanted:
+				_zone_changed(true)
 	if not ready_ok:
 		return
-	# music layers follow targets smoothly
-	for i in 3:
-		var tgt = music_target[i] if music_fade > 0.001 else -80.0
-		if music_fade < 1.0 and music_fade > 0.001:
-			tgt = lerp(-80.0, music_target[i], music_fade)
-		music[i].volume_db = move_toward(music[i].volume_db, tgt, 30.0 * delta)
+	hush_db = move_toward(hush_db, -26.0 if hush else 0.0, 30.0 * delta)
 	# distant gulls
 	gull_timer -= delta
 	if gull_timer <= 0.0:
@@ -103,8 +157,18 @@ func _process(delta):
 			growl_timer = -1.0
 	murmur.volume_db = lerp(murmur.volume_db, -30.0 + 6.0 * calm, 1.0 - exp(-2.0 * delta))
 	waves.volume_db = lerp(waves.volume_db, -14.0 + 3.0 * calm, 1.0 - exp(-2.0 * delta))
+	# the music follows the hush and the fade-out of the ending
+	var active = music[cur]
+	if active.playing:
+		var target = MUSIC_DB.get(zone, -10.0) + hush_db
+		if music_fade < 1.0:
+			target = lerp(-80.0, target, music_fade)
+		if zone_tw[cur] == null or not zone_tw[cur].is_running():
+			active.volume_db = move_toward(active.volume_db, target, 24.0 * delta)
 
 func play(sound_name, vol_db = 0.0, pitch = 1.0):
+	if ALT.has(sound_name):
+		sound_name = ALT[sound_name][randi() % ALT[sound_name].size()]
 	if not sounds.has(sound_name):
 		return
 	var p = pool[pool_i]
@@ -134,37 +198,70 @@ func muffle(on, sec = 0.2, cutoff = 1100.0):
 	muffle_tw = create_tween().set_ignore_time_scale(true)
 	muffle_tw.tween_property(lowpass, "cutoff_hz", cutoff if on else 20500.0, sec)
 
+# ---------------------------------------------------------------- the music
 func start_music():
 	ending = false
 	music_wanted = true
 	music_fade = 1.0
 	if ready_ok:
-		_start_music_players()
-
-func _start_music_players():
-	for p in music:
-		if not p.playing:
-			p.play()
-	set_music_level(music_level)
+		_zone_changed(true)
 
 func set_music_level(level):
-	music_level = level
-	music_target = [-15.0, -80.0, -80.0]
-	if level >= 1:
-		music_target[1] = -19.0
-	if level >= 2:
-		music_target[2] = -22.0
+	music_level = level         # (legacy: the music now follows the place, not the progress)
 
-# the title theme (loops) and the ending theme (plays once). Separate from the layered in-game music.
-func play_theme(theme_name, loop = true, vol = -9.0):
+# main.gd tells where the gull is (a piece of the island); STARLIGHT overrides it
+func set_world_zone(z):
+	if z == world_zone:
+		return
+	world_zone = z
+	if music_wanted and not star_on:
+		_zone_changed(false)
+
+func set_star(on):
+	if on == star_on:
+		return
+	star_on = on
+	if music_wanted:
+		_zone_changed(false)
+
+func _zone_changed(first):
+	var want = "star" if star_on else world_zone
+	if not music_streams.has(want) or music_streams[want] == null:
+		return
+	if want == zone and music[cur].playing and not first:
+		return
+	zone = want
+	var old = music[cur]
+	cur = 1 - cur
+	var nw = music[cur]
+	nw.stream = music_streams[want]
+	nw.volume_db = -60.0
+	nw.play()
+	var target = MUSIC_DB.get(want, -10.0) + hush_db
+	var sec = 2.4 if want == "star" else 3.8
+	if zone_tw[cur] != null:
+		zone_tw[cur].kill()
+	zone_tw[cur] = create_tween().set_ignore_time_scale(true)
+	zone_tw[cur].tween_property(nw, "volume_db", target, sec)
+	var other = 1 - cur
+	if zone_tw[other] != null:
+		zone_tw[other].kill()
+	zone_tw[other] = create_tween().set_ignore_time_scale(true)
+	zone_tw[other].tween_property(old, "volume_db", -60.0, sec)
+	zone_tw[other].tween_callback(old.stop)
+
+# the title theme (loops) and the ending theme (plays once). Separate from the zone music.
+func play_theme(theme_name, loop = true, vol = -7.0):
 	theme_want = theme_name
 	theme_loop = loop
-	if not ready_ok or not themes.has(theme_name):
+	if not ready_ok:
 		return
-	var st = themes[theme_name]
-	st.loop_mode = AudioStreamWAV.LOOP_FORWARD if loop else AudioStreamWAV.LOOP_DISABLED
-	st.loop_begin = 0
-	st.loop_end = int(st.data.size() / 2)
+	var key = {"theme_open": "title", "theme_end": "ending"}.get(theme_name, theme_name)
+	if not music_streams.has(key) or music_streams[key] == null:
+		return
+	var st = music_streams[key]
+	if "loop" in st:
+		st.loop = loop
 	theme_player.stream = st
 	theme_player.volume_db = vol
 	theme_player.play()
@@ -176,6 +273,21 @@ func stop_theme(sec = 1.5):
 	var tw = create_tween().set_ignore_time_scale(true)
 	tw.tween_property(theme_player, "volume_db", -60.0, sec)
 	tw.tween_callback(theme_player.stop)
+
+# a short piece for a cinematic moment (round 8): the world's music ducks under it and comes back when it is over
+func cine_music(piece, vol = -9.0):
+	hush = true
+	play_theme(piece, false, vol)
+
+func cine_music_end(sec = 2.0):
+	hush = false
+	stop_theme(sec)
+
+# a hush: the music drops far down for a moment (the silence before JUST) and comes back
+func hush_music(on):
+	hush = on
+	var tw = create_tween().set_ignore_time_scale(true)
+	tw.tween_property(theme_player, "volume_db", -34.0 if on else -7.0, 0.8 if on else 1.4)
 
 func fade_music(sec):
 	var tw = create_tween().set_ignore_time_scale(true)

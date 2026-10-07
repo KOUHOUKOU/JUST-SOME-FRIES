@@ -34,6 +34,15 @@ var chase_cd = 6.0
 var landed_t = 0.0
 var wave_cd = 12.0
 var bang = null
+# round 7: KIND CHILDREN. A heart (not an exclamation mark) floats over their heads. Land near one and it runs over to feed you a rainbow fry.
+var kind_kid = false
+var kk_state = ""            # "" | run | give | home
+var kk_t = 0.0
+var kk_cd = 0.0
+var kk_heart = null
+var kk_fry = null
+var kk_from = Vector3.ZERO
+var carried_fry = null       # a rainbow fry in this person's hand (a passer-by who can be robbed)
 
 func setup(p_mode, style, pos, face, path, p_speed, p_player):
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
@@ -47,6 +56,7 @@ func setup(p_mode, style, pos, face, path, p_speed, p_player):
 	phase = randf() * 6.0
 	grumpy = style.get("grumpy", false)
 	chaser = style.get("chaser", false)
+	kind_kid = style.get("kind_kid", false)
 	home_pos = pos
 	rig = Node3D.new()
 	rig.set_script(HumanRig)
@@ -69,6 +79,8 @@ func setup(p_mode, style, pos, face, path, p_speed, p_player):
 	add_to_group("ambient")
 	if style.has("mischief"):
 		_add_mischief(style["mischief"])
+	if kind_kid:
+		_make_heart()
 
 func _process(delta):
 	if player == null:
@@ -77,7 +89,7 @@ func _process(delta):
 	if vis_t <= 0.0:
 		vis_t = 0.4 + randf() * 0.2
 		var d = global_position.distance_to(player.global_position)
-		active = d < 130.0
+		active = d < (75.0 if GS.web else 130.0)
 		visible = active
 	if not active:
 		return
@@ -97,6 +109,7 @@ func _process(delta):
 	_cower()
 	_grump(delta)
 	_chase(delta)
+	_kind(delta)
 	_friendly(delta)
 
 func _restore_mode():
@@ -266,6 +279,132 @@ func _grump(delta):
 				swing_state = ""
 				swing_cd = 8.0
 				_bang(false)
+
+# ---- the kind children: a heart, a run, a rainbow fry ----
+const RestEvents = preload("res://scripts/world/rest_events.gd")
+const FryScript = preload("res://scripts/fries/fry.gd")
+
+func _make_heart():
+	kk_heart = Sprite3D.new()
+	kk_heart.texture = RestEvents.heart_tex()
+	kk_heart.pixel_size = 0.014
+	kk_heart.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	kk_heart.no_depth_test = true
+	kk_heart.shaded = false
+	kk_heart.position = Vector3(0, 1.75, 0)
+	add_child(kk_heart)
+
+# the colour of the gift: one that is complete, otherwise any colour the gull already has
+static func gift_type():
+	var done = []
+	var some = []
+	for k in GS.FRY_TYPES:
+		if GS.lv[k] >= 3:
+			done.append(k)
+		elif GS.lv[k] >= 1:
+			some.append(k)
+	if not done.is_empty():
+		return done[randi() % done.size()]
+	if not some.is_empty():
+		return some[randi() % some.size()]
+	return GS.FRY_TYPES[randi() % GS.FRY_TYPES.size()]
+
+func _kind(delta):
+	if not kind_kid:
+		return
+	kk_cd = max(kk_cd - delta, 0.0)
+	var pl = player
+	var t = GS.msec() * 0.001
+	if kk_heart != null:
+		kk_heart.visible = kk_state == "" and kk_cd <= 0.0 and GS.gull_sense_count >= 3
+		kk_heart.position.y = 1.75 + sin(t * 3.0 + phase) * 0.06
+		kk_heart.scale = Vector3.ONE * (1.0 + 0.12 * sin(t * 5.0 + phase))
+	var flat = Vector2(pl.global_position.x - global_position.x, pl.global_position.z - global_position.z)
+	match kk_state:
+		"":
+			if kk_cd <= 0.0 and GS.gull_sense_count >= 3 and pl.mode == 1 and pl.still_t > 0.5 and flat.length() < 22.0 and alarm_t <= 0.0 					and abs(pl.global_position.y - global_position.y) < 4.5 and Terrain.H(pl.global_position.x, pl.global_position.z) > -0.25 and not GS.codex_open:
+				kk_state = "run"
+				kk_t = 0.0
+				rig.set_mode("jog")
+				rig.walk_rate = 1.6
+				Sfx.play("oh", -12.0, 1.5)
+		"run":
+			kk_t += delta
+			if pl.mode != 1 and flat.length() > 10.0 or kk_t > 14.0:
+				kk_state = "home"
+				kk_t = 0.0
+				rig.set_mode("walk")
+				return
+			var dir = Vector3(flat.x, 0, flat.y).normalized()
+			position += dir * 3.6 * delta
+			position.y = home_pos.y + (Terrain.H(position.x, position.z) - Terrain.H(home_pos.x, home_pos.z))
+			rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 8.0 * delta)
+			if flat.length() < 2.2:
+				kk_state = "give"
+				kk_t = 0.0
+				rig.set_mode("idle")
+				rig.override_arm_r = -1.7
+				var f = Node3D.new()
+				f.set_script(FryScript)
+				get_tree().current_scene.add_child(f)
+				f.setup("GIFT_FRY", gift_type(), "box", 0, 4)
+				for gname in ["fries", "special_fries", "star_fries"]:
+					if f.is_in_group(gname):
+						f.remove_from_group(gname)
+				f.revealed = true
+				f.visible = true
+				f.scale = Vector3.ONE * 0.7
+				f.global_position = global_position + Vector3(0, 1.0, 0) + Vector3(sin(rotation.y), 0, cos(rotation.y)) * 0.5
+				kk_fry = f
+				kk_from = f.global_position
+				Sfx.play("feed", -8.0)
+		"give":
+			kk_t += delta
+			_face_player(delta)
+			if kk_fry == null or not is_instance_valid(kk_fry):
+				kk_state = "home"
+				return
+			var u = clamp((kk_t - 0.35) / 0.6, 0.0, 1.0)
+			var p = kk_from.lerp(pl.beak_socket.global_position, u)
+			p.y += sin(u * PI) * 0.6
+			kk_fry.global_position = p
+			kk_fry.rotation.y += 6.0 * delta
+			if u >= 1.0:
+				var type = kk_fry.utype
+				var old_max = GS.stamina_max()
+				GS.add_rainbow(type)
+				if type == "blue":
+					pl.stamina += GS.stamina_max() - old_max
+				GS.stats["fed"] += 1
+				GS.fry_got.emit(type, 4)
+				GS.award("A KIND CHILD")
+				GS.quests_check()
+				Sfx.play("reward_1", -8.0, 1.4)
+				Sfx.play("heart", -8.0, 1.2)
+				pl.fov_kick = 3.0
+				kk_fry.queue_free()
+				kk_fry = null
+				rig.override_arm_r = null
+				rig.set_mode("wave")
+				kk_state = "home"
+				kk_t = 0.0
+				kk_cd = 150.0
+		"home":
+			kk_t += delta
+			if kk_t > 1.6:
+				rig.set_mode("walk")
+			var back = home_pos - position
+			back.y = 0.0
+			if back.length() < 0.4 or kk_t > 16.0:
+				kk_state = ""
+				rig.set_mode(mode if mode != "stand" else "idle")
+				rotation.y = base_yaw
+				return
+			if kk_t > 1.6:
+				var dir2 = back.normalized()
+				position += dir2 * 2.6 * delta
+				position.y = home_pos.y + (Terrain.H(position.x, position.z) - Terrain.H(home_pos.x, home_pos.z))
+				rotation.y = lerp_angle(rotation.y, atan2(dir2.x, dir2.z), 6.0 * delta)
 
 # kids: a gull that sits down nearby is an invitation
 func _chase(delta):

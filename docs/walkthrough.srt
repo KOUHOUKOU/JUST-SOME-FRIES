@@ -1,116 +1,64 @@
 1
-00:00:01,000 --> 00:00:03,021
-You are a seagull.
+00:00:00,300 --> 00:00:02,272
+Just Some Fries.
 
 2
-00:00:03,172 --> 00:00:05,194
-You are hungry.
+00:00:02,421 --> 00:00:05,353
+A game about one very hungry seagull.
 
 3
-00:00:05,344 --> 00:00:08,541
-That is, mostly, the entire plot.
+00:00:05,854 --> 00:00:08,666
+It begins with a fry that nobody notices.
 
 4
-00:00:09,400 --> 00:00:12,022
-Meet the big brother on the cafe roof.
+00:00:13,454 --> 00:00:17,034
+And a big brother who has everything... and is still hungry.
 
 5
-00:00:12,172 --> 00:00:15,346
-He has the hat, the coat, the shades.
+00:00:20,954 --> 00:00:23,886
+Dive. Lock on. Find the rhythm.
 
 6
-00:00:15,495 --> 00:00:17,517
-So why does he look so hungry?
+00:00:24,036 --> 00:00:26,560
+Every fry is a tiny rhythm game.
 
 7
-00:00:18,800 --> 00:00:22,789
-Down below, a man is holding a fresh carton of fries.
+00:00:31,754 --> 00:00:35,118
+Hold Tab, and the island shows you what it hides.
 
 8
-00:00:22,939 --> 00:00:25,393
-You have wings. He does not.
+00:00:35,268 --> 00:00:38,655
+Silver. Gold. Diamond. Rainbow.
 
 9
-00:00:25,543 --> 00:00:27,565
-Seems fair.
+00:00:39,156 --> 00:00:42,088
+Coffee. A cocktail. Ice cream.
 
 10
-00:00:28,365 --> 00:00:32,908
-Fly fast at a fry, and the grab turns into a little rhythm game.
+00:00:42,237 --> 00:00:46,130
+Drink all three at once... and the gull can see the wind.
 
 11
-00:00:33,057 --> 00:00:37,624
-Rings close in around the fry. Hit the green as each one lands.
+00:00:51,156 --> 00:00:54,544
+In STARLIGHT, even falling stars can be caught.
 
 12
-00:00:37,774 --> 00:00:39,292
-Gold counts double.
+00:00:54,694 --> 00:00:56,738
+And a caught star never leaves.
 
 13
-00:00:44,365 --> 00:00:47,371
-Three fries in, you unlock Gull Sight.
+00:01:07,656 --> 00:01:10,756
+Fish. Clouds. The sun itself.
 
 14
-00:00:47,521 --> 00:00:51,391
-Time slows down, and the fries worth chasing light up.
+00:01:10,906 --> 00:01:14,581
+But in the end... only one fry was ever the point.
 
 15
-00:00:52,365 --> 00:00:56,835
-Seven colours of magic fry, and each one changes how you fly.
+00:01:54,456 --> 00:01:56,427
+Just Some Fries.
 
 16
-00:00:56,986 --> 00:00:59,752
-Faster. Calmer. Tougher.
-
-17
-00:01:02,365 --> 00:01:07,676
-Fries hide everywhere. Pool decks. Barbecues. Rooftop terraces.
-
-18
-00:01:07,826 --> 00:01:10,232
-So fly low, and look around.
-
-19
-00:01:10,932 --> 00:01:14,898
-Steal a hat, a cocktail, even somebody's socks.
-
-20
-00:01:15,048 --> 00:01:18,894
-The Fry Codex keeps track of every silly thing you wear.
-
-21
-00:01:19,594 --> 00:01:22,120
-Gold fries need three targets.
-
-22
-00:01:22,270 --> 00:01:26,356
-Diamond ones need five, arranged like the Olympic rings.
-
-23
-00:01:26,506 --> 00:01:28,528
-Good luck.
-
-24
-00:01:29,594 --> 00:01:31,616
-There are quests, too.
-
-25
-00:01:31,766 --> 00:01:34,220
-Catch a fish. Catch a cloud.
-
-26
-00:01:34,370 --> 00:01:36,392
-Catch the sun.
-
-27
-00:01:37,694 --> 00:01:43,004
-Collect every magic fry in town, and you will be the fastest gull alive.
-
-28
-00:01:43,154 --> 00:01:45,920
-And somehow... you will still be hungry.
-
-29
-00:01:46,070 --> 00:01:49,076
-Why? That part, we will not spoil.
+00:01:56,578 --> 00:01:59,846
+Play it in your browser, or download it for Windows.
 

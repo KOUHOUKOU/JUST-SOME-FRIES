@@ -14,7 +14,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -522,17 +522,47 @@ func credits_test():
 
 # one fry, verbose: `--one --id=SPECIAL_ROSE`
 
+func key(code):
+	var ev = InputEventKey.new()
+	ev.keycode = code
+	ev.physical_keycode = code
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	var ev2 = InputEventKey.new()
+	ev2.keycode = code
+	ev2.physical_keycode = code
+	ev2.pressed = false
+	Input.parse_input_event(ev2)
+
+# the real START path: the cover, then the comic-page opening (a key finishes a sentence, nothing is ever skipped), then HOLD E
 func menu_test():
-	await get_tree().create_timer(1.0).timeout
-	await shot("mn_menu")
-	main.menus.start_pressed.emit()
-	for t in [2.0, 4.0, 6.5, 8.5, 10.5, 13.0, 16.0, 19.0, 22.0, 25.0, 28.0, 31.0, 34.0]:
-		await get_tree().create_timer(t - metrics.get("tt", 0.0)).timeout
-		metrics["tt"] = t
-		await shot("mn_%02d" % int(t))
-		if int(t) % 6 == 0:
-			say("t=%.1f intro=%s phase=%s active=%s hud=%s" % [t, main.intro_active, main.intro_phase, main.player.active, main.hud.visible])
-	say("end: intro=%s locked=%s hud=%s" % [main.intro_active, main.player.input_locked, main.hud.visible])
+	await get_tree().create_timer(1.2).timeout
+	await shot("mn_cover_a")
+	await get_tree().create_timer(2.5).timeout
+	await shot("mn_cover_b")
+	var fast = "--fastkeys" in OS.get_cmdline_user_args()
+	main.menus.cover._pick(0)
+	var t0 = Time.get_ticks_msec()
+	var n = 0
+	var held = false
+	while Time.get_ticks_msec() - t0 < 170000 and not main.player.active:
+		await get_tree().create_timer(1.0).timeout
+		n += 1
+		if n % 2 == 0 or n < 4:
+			await shot("mn_%03d" % n)
+		var st = main.story
+		if fast and not st.hold["on"]:
+			key(KEY_SPACE)
+		if st.hold["on"] and not held:
+			held = true
+			say("HOLD E hint is up at t=%.1fs (caption=%s)" % [(Time.get_ticks_msec() - t0) / 1000.0, str(st.cap != null)])
+			await shot("mn_hold")
+			Input.action_press("interact")
+			await get_tree().create_timer(1.3).timeout
+			Input.action_release("interact")
+	say("opening over after %.1fs active=%s hud=%s" % [(Time.get_ticks_msec() - t0) / 1000.0, main.player.active, main.hud.visible])
+	await get_tree().create_timer(2.5).timeout
+	await shot("mn_game")
 	get_tree().quit()
 
 func vp_screen(name_):
@@ -772,21 +802,26 @@ func ending_test():
 	main.autotest = false
 	main.showcase.fast = true
 	GS.gull_sense_count = 3
-	for k in ["hawaii", "sailor", "glasses", "necklace", "pipe"]:
+	for k in ["hawaii", "sailor", "glasses", "necklace", "pipe", "topper"]:
 		main.player.gull.wear(k)
 	GS.stats.merge({"stolen": 12, "perfect": 4, "shot": 3, "slipped": 6, "walls": 2, "missed": 5, "swats": 4, "vision_s": 63.0, "fish": 1, "rivals": 2, "bops": 1, "scares": 2}, true)
 	var o = main.ordinary
+	o.visible = true
 	main.player.mode = 0
 	main.player.global_position = o.global_position + Vector3(0, 0.6, 1.4)
 	main.player.speed = 3.0
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	await press("interact")
-	for t in [1.5, 3.0, 4.6, 6.0, 7.5, 9.0, 10.5, 12.0, 14.0, 17.0, 21.0, 25.0, 29.0, 33.0, 38.0, 44.0, 52.0]:
-		await get_tree().create_timer(t - metrics.get("tt", 0.0)).timeout
-		metrics["tt"] = t
-		await shot("en_%02d" % int(t))
-	say("title mode=%s credits visible=%s" % [main.title.mode, main.title.visible])
+	var t0 = Time.get_ticks_msec()
+	var n = 0
+	while Time.get_ticks_msec() - t0 < 150000 and not (main.title.mode == "credits" and main.title.can_input):
+		await get_tree().create_timer(1.0).timeout
+		n += 1
+		if n % 2 == 0:
+			await shot("en_%03d" % n)
+	say("ending over after %.1fs; title mode=%s" % [(Time.get_ticks_msec() - t0) / 1000.0, main.title.mode])
+	await shot("en_credits_end")
 	get_tree().quit()
 
 
@@ -858,8 +893,8 @@ func attempt(f, from_dir, dist = 24.0, offset = 0.0, spd = 11.0, opts = {}):
 	if spd < 0.0:
 		spd = GS.need_speed(f) + 1.3
 	var p = main.player
-	if f.ftype == "star":
-		from_dir = pick_dir(f, from_dir)
+	if f.ftype == "star" or (f.ftype in GS.FRY_TYPES):
+		from_dir = pick_dir(f, from_dir)         # trees are solid now: come in along a free line
 	var s = p.snatch
 	var tgt = f.aim_point()
 	var start = tgt + from_dir.normalized() * dist + Vector3(0, 2.0, 0)
@@ -1032,17 +1067,15 @@ func run():
 	GS.test_boost_bonus = 0.0
 	say("all stars: queue=%d lv=%s total=%d/24 mission=%d" % [main.star_queue.size(), str(GS.lv), GS.fry_total(), GS.mission_target()])
 	await shot("a06_all24")
-	# --- a rainbow fry: the owner of a finished colour reorders one
-	main.rb_t = 0.0
-	var npc_r = null
-	for n in main.world["npcs"]:
-		if n.enc.get("id", "") == "SPECIAL_BLUE":
-			npc_r = n
-	p.global_position = Vector3(0, 60, 200)
-	await get_tree().create_timer(6.0).timeout
-	var rf = main.world["fries"]["SPECIAL_BLUE"]
-	say("rainbow restock: fry=%s tier=%s id=%s" % [str(is_instance_valid(rf)), str(rf.tier) if is_instance_valid(rf) else "-", rf.id if is_instance_valid(rf) else "-"])
-	if is_instance_valid(rf) and rf.tier == 4:
+	# --- rainbow fries: passers-by far from the start hold one of every finished colour
+	for i in 5:
+		main.rb_t = 0.0
+		main.rb_wait = 0.0
+		main._rainbow_tick(3.0)
+	say("rainbow holders: %d" % main.rb_holders.size())
+	if not main.rb_holders.is_empty():
+		var rf = main.rb_holders[0]["fry"]
+		p.global_position = rf.global_position + Vector3(0, 8, 20)
 		var rr2 = await attempt(rf, Vector3(0, 0.3, 1), 24.0, 0.0, -1.0)
 		say("rainbow grab -> %s rainbow=%s stamina_max=%.0f" % [rr2, str(GS.rainbow), GS.stamina_max()])
 	GS.hunger_t = 400.0
@@ -1485,6 +1518,11 @@ func codex_test():
 	await get_tree().create_timer(0.3).timeout
 	say("after right-click: shades equipped=%s owned=%s on gull=%s" % [GS.equipped.has("shades"), GS.worn.has("shades"), p.gull.is_on("shades")])
 	await shot("cx_codex2")
+	# the fish book
+	GS.fish_book = {"sardine": {"n": 4, "kg": 0.09, "cm": 19.0}, "bass": {"n": 1, "kg": 4.2, "cm": 71.0}, "marlin": {"n": 1, "kg": 133.0, "cm": 281.0}, "mullet": {"n": 2, "kg": 0.4, "cm": 31.0}}
+	main.sense.page = 1
+	await get_tree().create_timer(0.5).timeout
+	await shot("cx_fishbook")
 	main._close_codex()
 	get_tree().quit()
 
@@ -1612,7 +1650,7 @@ func film_steal(f, dir, spd = -1.0, opts = {}):
 		await real(1.5)
 	return "?"
 
-func film():
+func film_old():
 	film_t0 = Time.get_ticks_msec()
 	film_f0 = Engine.get_frames_drawn()
 	var p = main.player
@@ -1743,6 +1781,239 @@ func film():
 	get_tree().quit()
 
 
+
+# ------------------------------------------------------------------ the 2-minute promotional video (round 8): four segments recorded one by one, joined by tools/film/make_promo.py
+#   --film --seg=1  the cover, the real opening (a key press every half second), HOLD E, the first seconds of flight
+#   --film --seg=2  free flight, two tutorial fries (one PERFECT), Gull Sight with the four rarities
+#   --film --seg=3  the three drinks -> STARLIGHT (the real cinematic moment), a shooting star chased and caught, the new tail
+#   --film --seg=4  the real ending: the bite, the memories, the big brother, "just some fries."
+# Record: godot --path game --write-movie out.avi --fixed-fps 30 -- --film --seg=N --movie-fps=30
+func fkey():
+	var ev = InputEventKey.new()
+	ev.keycode = KEY_SPACE
+	ev.physical_keycode = KEY_SPACE
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	var ev2 = InputEventKey.new()
+	ev2.keycode = KEY_SPACE
+	ev2.physical_keycode = KEY_SPACE
+	ev2.pressed = false
+	Input.parse_input_event(ev2)
+
+func film():
+	film_t0 = Time.get_ticks_msec()
+	film_f0 = Engine.get_frames_drawn()
+	var seg = 1
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--seg="):
+			seg = int(a.substr(6))
+	say("[film] segment %d" % seg)
+	match seg:
+		1:
+			await film_seg1()
+		2:
+			await film_seg2()
+		3:
+			await film_seg3()
+		4:
+			await film_seg4()
+	clock("segment %d done" % seg)
+	get_tree().quit()
+
+func film_start_game():
+	# straight into the game (no cover, no opening): for the segments after the first
+	GS.skip_intro = true
+	main.menus.start_pressed.emit()
+	await real(1.0)
+
+func film_seg1():
+	var p = main.player
+	await real(3.6)
+	clock("cover")
+	main.menus.start_pressed.emit()
+	var t0 = GS.msec()
+	var k = 0
+	while GS.msec() - t0 < 140000:
+		await real(0.5)
+		k += 1
+		if main.story.hold["on"]:
+			await real(0.6)
+			Input.action_press("interact")
+			await real(1.4)
+			Input.action_release("interact")
+			break
+		if k % 2 == 0:
+			fkey()
+	clock("opening done")
+	await real(4.5)
+
+func film_seg2():
+	var p = main.player
+	await film_start_game()
+	Engine.max_fps = 30
+	clock("start")
+	Input.action_press("move_forward")
+	await real(1.5)
+	Input.action_press("dash")
+	await real(2.0)
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+	var fr = main.world["fries"]
+	await film_steal(fr["TUTORIAL_01"], Vector3(1, 0.2, 0), 11.0)
+	await real(1.5)
+	await film_steal(fr["TUTORIAL_03"], Vector3(0, 0.2, 1), 11.0, {"gold": true})
+	await real(1.2)
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	clock("tutorials")
+	# Gull Sight: the four rarities side by side
+	var base = Vector3(8.0, 36.0, 40.0)
+	var types = ["red", "orange", "green", "cyan"]
+	var made = []
+	for i in 4:
+		made.append(make_star(types[i], i + 1 if i < 3 else 3, base + Vector3(-9.0 + i * 5.6, 0.5 + 0.6 * (i % 2), -18.0), "STAR_FILM_%d" % i))
+	var rb = make_star("pink", 4, base + Vector3(13.0, 0.5, -18.0), "STAR_FILM_RB")
+	rb.revealed = true
+	rb.visible = true
+	rb.tier = 4
+	place(base, base + Vector3(0, 0, -20), 3.0)
+	p.input_locked = false
+	await real(1.2)
+	Input.action_press("gull_sense")
+	main._open_sense()
+	for i in 90:
+		p.yaw += 0.004
+		p.aim_yaw = p.yaw
+		await real(1.0 / 30.0)
+	Input.action_release("gull_sense")
+	main._close_sense()
+	await real(1.5)
+
+func film_seg3():
+	var p = main.player
+	await film_start_game()
+	Engine.max_fps = 30
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	for id in ["drink_coffee", "drink_alcohol", "drink_ice", "meteor", "fish"]:
+		GS.cine_seen[id] = true
+	place(Vector3(30.0, 34.0, 60.0), Vector3(30.0, 30.0, 20.0), 14.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	await real(2.0)
+	Input.action_release("move_forward")
+	# a coffee, a cocktail, an ice cream
+	GS.add_buff("coffee")
+	await real(0.4)
+	GS.add_buff("alcohol")
+	await real(0.4)
+	GS.add_buff("ice")
+	clock("three drinks")
+	# the real cinematic moment (a key press every 0.7 s, the sentences go on a little faster)
+	var t0 = GS.msec()
+	var k = 0
+	while GS.msec() - t0 < 90000:
+		await real(0.5)
+		if main.scenes.cine_busy:
+			k += 1
+			if k % 3 == 0:
+				fkey()
+		elif k > 4:
+			break
+	clock("starlight cinematic done")
+	# STARLIGHT: out over the open sea (nothing else to lock on to), then a shooting star comes by
+	place(Vector3(60.0, 80.0, 110.0), Vector3(60.0, 80.0, 40.0), 30.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var star = null
+	var t1 = GS.msec()
+	while GS.msec() - t1 < 22000:
+		await real(0.1)
+		p.aim_yaw += 0.01
+		if main.meteors.star != null and is_instance_valid(main.meteors.star) and main.meteors.star.age > 1.0:
+			star = main.meteors.star
+			break
+	say("[film] star=%s" % str(star))
+	if star != null:
+		var d = star.vel.normalized()
+		var start = star.global_position - d * 34.0
+		start.y = max(start.y, 30.0)
+		place(start, star.global_position, GS.need_speed(star) + 1.0)
+		say("[film] chase start %s star %s need %.1f speed %.1f" % [str(start), str(star.global_position), GS.need_speed(star), p.speed])
+		Input.action_press("move_forward")
+		Input.action_press("dash")
+		for i in 1500:
+			await get_tree().process_frame
+			if not is_instance_valid(star) or star.taken:
+				break
+			if p.snatch.state == "idle" and p.snatch.lock_fry == null:
+				aim_at(p, star.global_position)
+				p.stamina = 60.0
+			var sq = p.snatch.seq
+			if sq != null:
+				var idx = p.snatch._first_pending(sq)
+				if idx >= 0:
+					var nt = sq["notes"][idx]
+					var now = p.snatch.seq_now()
+					if now >= nt["t"] - sq["gw"] - sq["gg"] * 0.55 and not sq.has("p%d" % idx):
+						sq["p%d" % idx] = true
+						tap("interact")
+	Input.action_release("dash")
+	say("[film] commit %s state=%s" % [str(p.snatch.last_commit), p.snatch.state])
+	await real(1.0)
+	say("[film] meteor caught=%s worn=%s" % [str(GS.stats["meteors"]), str(GS.worn.has("meteor"))])
+	# the new tail, in the open sky
+	Input.action_press("dash")
+	for i in 120:
+		p.aim_yaw += 0.012
+		p.aim_pitch = 0.05
+		await real(1.0 / 30.0)
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+	await real(1.0)
+
+func film_seg4():
+	var p = main.player
+	await film_start_game()
+	Engine.max_fps = 30
+	GS.gull_sense_count = 3
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	var ids = ["fry1", "coffee", "alcohol", "ice", "starlight", "cloud", "sun", "meteor", "friend"]
+	for i in ids.size():
+		GS.memories[ids[i]] = {"t": 100.0 + i * 40.0}
+	GS.memories["fish"] = {"t": 340.0, "sp": "mackerel", "len": 31.0, "kg": 0.4}
+	GS.fish_book = {"mackerel": {"n": 2, "kg": 0.6, "cm": 36.0}, "tuna": {"n": 1, "kg": 40.0, "cm": 150.0}}
+	for kk in ["hat", "scarf", "necklace", "meteor"]:
+		p.gull.wear(kk)
+	var WB = preload("res://scripts/world/world_builder.gd")
+	main.ordinary.visible = true
+	place(WB.ORDINARY_POS + Vector3(0.3, 0.6, 0.3), WB.ORDINARY_POS, 3.0)
+	await real(1.5)
+	clock("ending start")
+	p.mode = 1
+	p.global_position = WB.ORDINARY_POS + Vector3(0.3, 0.45, 0.3)
+	await real(0.5)
+	await press("interact")
+	var t0 = GS.msec()
+	var k = 0
+	while GS.msec() - t0 < 260000:
+		await real(0.5)
+		k += 1
+		# the talking part goes a little faster: a press every 1.5 s once the big brother has landed
+		if main.story.vn != null and k % 3 == 0:
+			fkey()
+		if k > 40 and not main.scenes.cine_busy and not main.title.visible:
+			break
+	clock("ending talk done")
+	await real(9.0)
+
+
 # the sky quests: a cloud and the sun appear on the board after enough fries; catching one is a single, hard wave
 func sky_test():
 	await get_tree().create_timer(1.0).timeout
@@ -1810,4 +2081,516 @@ func bank_test():
 		view(views[k][0], views[k][1], views[k][2])
 		await get_tree().create_timer(0.6).timeout
 		await shot(k)
+	get_tree().quit()
+
+
+# the comic-panel camera shots, read from shots/cams.json: [[name, px, py, pz, lx, ly, lz, fov], ...] (dev: tune the opening / ending shots without touching code)
+func cams_test():
+	await get_tree().create_timer(1.0).timeout
+	var txt = FileAccess.get_file_as_string(shots + "cams.json")
+	var list = JSON.parse_string(txt)
+	main.player.input_locked = true
+	main.story.begin(main.player)
+	main.story.frame = 1.0
+	main.hud.visible = false
+	main.bro.look_at_player = true
+	for c in list:
+		if str(c[0]).begins_with("e"):
+			main.player.global_position = Vector3(-8.15, 5.22, -1.2)
+			main.player.yaw = atan2(-1.0, 0.0)
+			main.player.rotation = Vector3(0, main.player.yaw, 0)
+			main.bro.look_at_player = false
+			main.bro._face(Vector3(-8.15, 5.22, -1.2), 1.0)
+		view(Vector3(c[1], c[2], c[3]), Vector3(c[4], c[5], c[6]), c[7])
+		await get_tree().create_timer(0.6).timeout
+		await shot("cam_" + str(c[0]))
+	get_tree().quit()
+
+
+# round 7: everything new, one check at a time ("[R7] ... PASS/FAIL")
+func chk(name_, ok, extra = ""):
+	say("[R7] %s %s %s" % ["PASS" if ok else "FAIL", name_, extra])
+
+func round7_test():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	var o = main.ordinary
+	# --- A: the plain fry lies there from the start (round 8) but is inert (no glow, no prompt) until the three starter fries are in
+	chk("plain fry lies on the floor at the start", o.visible and o.halo_alpha <= 0.01, "visible=%s halo=%s" % [o.visible, o.halo_alpha])
+	place(o.global_position + Vector3(0, 0.6, 1.4), o.global_position, 3.0)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	tap("interact")
+	await get_tree().create_timer(0.5).timeout
+	chk("no prompt / toast near the plain fry before the starters", p.snatch.hud_state != "eat" and p.snatch.toast_t <= 0.0 and not GS.ordinary_eaten, "hud=%s toast=%s" % [p.snatch.hud_state, p.snatch.toast])
+	# --- B: drinks stack their time, fill the breath, no burning on the ground; three of them = STARLIGHT
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	place(Vector3(-9.5, 30.0, 20.0), Vector3(-9.5, 30.0, 90.0), 8.0)
+	p.stamina = 10.0
+	GS.add_buff("coffee")
+	GS.add_buff("coffee")
+	chk("two coffees stack time", GS.buff["coffee"] > 39.0, "t=%.1f" % GS.buff["coffee"])
+	chk("a cup refills the breath", p.stamina >= GS.stamina_max() - 0.5, "stamina=%.0f/%.0f" % [p.stamina, GS.stamina_max()])
+	chk("top speed with one coffee", abs(GS.boost_speed() - (15.0 + 4.2)) < 0.01, "%.1f m/s = %d" % [GS.boost_speed(), int(GS.boost_speed() * 6)])
+	GS.add_buff("alcohol")
+	chk("no star with two kinds", not GS.star_active())
+	GS.add_buff("ice")
+	chk("three kinds start STARLIGHT", GS.star_active() and abs(GS.star_t - 30.0) < 0.5, "star_t=%.1f" % GS.star_t)
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	await get_tree().create_timer(2.5).timeout
+	await shot("r7_star_a")
+	chk("STARLIGHT: flying costs nothing", p.stamina >= GS.stamina_max() - 1.0, "stamina=%.0f" % p.stamina)
+	chk("STARLIGHT: speed is high", p.speed > 28.0, "speed=%.1f m/s (%d)" % [p.speed, int(p.speed * 6)])
+	chk("STARLIGHT: unhittable", GS.invincible())
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+	await get_tree().create_timer(1.0).timeout
+	await shot("r7_star_b")
+	# land: nothing burns away
+	var c0 = GS.buff["coffee"]
+	place(Vector3(-9.5, 5.22, -0.8), Vector3(-9.5, 5.22, 20.0), 1.0)
+	p.mode = 1
+	await get_tree().create_timer(3.0).timeout
+	chk("buffs keep running on the ground", GS.buff["coffee"] > c0 - 5.0, "before=%.1f after=%.1f" % [c0, GS.buff["coffee"]])
+	GS.star_t = 0.4
+	await get_tree().create_timer(1.0).timeout
+	chk("STARLIGHT ends", not GS.star_active())
+	GS.set_drink("")
+	# --- C: a round tree crown is solid: land on it
+	var trees = main.world.get("trees", [])
+	var landed_ok = 0
+	var tested = 0
+	for tr in trees:
+		if tr["kind"] != 0 or tested >= 3:
+			continue
+		tested += 1
+		place(tr["top"] + Vector3(0, 2.5, 0), tr["top"], 3.0)
+		p.mode = 0
+		Input.action_press("land")
+		var t0 = Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < 3500 and p.mode != 1:
+			await get_tree().physics_frame
+		Input.action_release("land")
+		var dy = p.global_position.y - tr["top"].y
+		say("   tree at %s top %.1f: mode=%d y=%.2f (dy %.2f)" % [str(tr["pos"]), tr["top"].y, p.mode, p.global_position.y, dy])
+		if p.mode == 1 and dy > -1.5 and dy < 1.5:
+			landed_ok += 1
+		if tested == 1:
+			await shot("r7_tree")
+	chk("a gull can stand on a tree crown", landed_ok >= 2, "%d of %d" % [landed_ok, tested])
+	# --- D: quests of the board
+	GS.quests_refresh()
+	say("   board: %s" % str(GS.quests_shown()))
+	chk("quests show up after the tutorial", GS.quests_shown().size() >= 3)
+	GS.add_buff("coffee")
+	GS.stats["drinks"] += 1
+	GS.quests_check()
+	chk("GET A DRINK is ticked off", GS.quest_state("drink") == "done")
+	# --- E: the nearest fry that the gull can really lock
+	var nf = GS.nearest_fry(Vector3(-9.5, 5.2, -0.8))
+	chk("nearest reachable fry exists and is reachable", nf != null and GS.reachable(nf), "%s need=%d boost=%d" % [str(nf.id) if nf != null else "-", int(GS.need_speed(nf) * 6) if nf != null else -1, int(GS.boost_speed() * 6)])
+	# --- F: top speed ladder
+	GS.set_drink("")
+	GS.set_level("red", 1)
+	chk("red silver covers every gold fry (114)", GS.boost_speed() * 6.0 >= 114.0, "%d" % int(GS.boost_speed() * 6))
+	GS.set_level("red", 2)
+	chk("red gold covers every diamond fry (144)", GS.boost_speed() * 6.0 >= 144.0, "%d" % int(GS.boost_speed() * 6))
+	GS.set_level("red", 1)
+	GS.add_buff("coffee")
+	chk("red silver + coffee reaches a diamond fry", GS.boost_speed() * 6.0 >= 144.0, "%d" % int(GS.boost_speed() * 6))
+	GS.set_drink("")
+	GS.set_level("red", 0)
+	# --- G: the early SONIC gold
+	GS.set_level("red", 1)
+	main._early_sonic()
+	var gold = null
+	for f in main.star_active:
+		if is_instance_valid(f) and f.utype == "red" and f.tier == 2:
+			gold = f
+	chk("the SONIC gold fry hangs near the start", gold != null and gold.get_meta("spot") == "lifeguard", str(gold.get_meta("spot")) if gold != null else "none")
+	GS.set_level("red", 0)
+	# --- H: rainbow fries in the hands of passers-by
+	for k in GS.FRY_TYPES:
+		GS.set_level(k, 3)
+	for i in 6:
+		main.rb_t = 0.0
+		main.rb_wait = 0.0
+		main._rainbow_tick(3.0)
+	var edge_ok = true
+	for h in main.rb_holders:
+		var hp = h["npc"].home_pos
+		say("   rainbow holder at (%.0f, %.0f) type %s" % [hp.x, hp.z, h["fry"].utype])
+		if Vector2(hp.x, hp.z).distance_to(Vector2(-9, 0)) < 40.0:
+			edge_ok = false
+	chk("rainbow fries are held by passers-by far from the start", main.rb_holders.size() >= 3 and edge_ok, "%d holders" % main.rb_holders.size())
+	for k in GS.FRY_TYPES:
+		GS.set_level(k, 0)
+	# --- I: fish (forecast 5 s ahead, three rarities, a column free of the pier)
+	p.mode = 0
+	var spot = main.world["fish_spots"][1]
+	spot.wait = 0.1
+	say("   fish spot %s r=%.0f state=%s live=%d" % [str(spot.center), spot.region_r, spot.state, spot.get_script().live])
+	spot.state = "idle"
+	spot.get_script().live = 0
+	place(Vector3(spot.center.x + 10.0, 12.0, spot.center.z + 20.0), spot.center, 8.0)
+	var t1 = Time.get_ticks_msec()
+	while spot.state == "idle" and Time.get_ticks_msec() - t1 < 20000:
+		await get_tree().physics_frame
+	var si = spot.sight_info()
+	chk("a fish is announced before it jumps", si != null, "state=%s %s" % [spot.state, str(si)])
+	if si != null:
+		say("   forecast: %.1f s ahead, rarity %d (need %d)" % [si["t"], si["rarity"], int(si["need"])])
+		Input.action_press("gull_sense")
+		main._open_sense()
+		place(spot.global_position + Vector3(8, 6, 16), spot.global_position, 4.0)
+		await get_tree().create_timer(0.9).timeout
+		await shot("r7_forecast")
+		Input.action_release("gull_sense")
+		main._close_sense()
+		main.player.set_override(Transform3D.IDENTITY, 60.0, 0.0, 20.0)
+	while spot.state != "leap" and Time.get_ticks_msec() - t1 < 20000:
+		await get_tree().physics_frame
+	var fish = spot.fish
+	chk("the fish leaps", fish != null)
+	if fish != null:
+		say("   fish: %s  %s  %s  rarity %d  need %d" % [fish.species, GS.fish_cm_text(fish.len_cm), GS.fish_kg_text(fish.kg), fish.rarity, int(GS.need_speed(fish) * 6)])
+		GS.test_boost_bonus = 12.0
+		var res = await attempt(fish, Vector3(0.6, 0.15, 1.0), 24.0, 0.0, -1.0)
+		GS.test_boost_bonus = 0.0
+		chk("the fish can be caught", GS.stats["fish"] >= 1 and not GS.fish_book.is_empty(), "res=%s book=%s" % [res, str(GS.fish_book)])
+		await get_tree().create_timer(1.2).timeout
+		await shot("r7_fishcard")
+	# --- J: every fish spot: is its leap column free (the pier, the marina, the boats)?
+	var bad = 0
+	var planned = 0
+	for sp in main.world["fish_spots"]:
+		for k in 6:
+			if sp._plan_leap():
+				planned += 1
+				var a = sp.leap_from
+				var b = sp.leap_to
+				if sp._in_avoid(a.x, a.z, 1.0) or sp._in_avoid(b.x, b.z, 1.0):
+					bad += 1
+	chk("planned leaps stay off the pier, marina and boats", bad == 0 and planned > 30, "planned=%d bad=%d" % [planned, bad])
+	# --- K: the flight record
+	p.mode = 0
+	GS.flight_begin()
+	GS.flight["max"] = 120.0
+	GS.flight["t"] = 12.0
+	GS.flight["loot"] = 2
+	await get_tree().create_timer(0.3).timeout
+	await shot("r7_flightlog")
+	get_tree().quit()
+
+
+# friends on a tree crown and a roof, and the kind children with a heart
+func round7b_test():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	for k in ["red", "orange", "green", "cyan"]:
+		GS.set_level(k, 3)
+	var r = main.rest
+	var tr = null
+	for t in main.world["trees"]:
+		if t["kind"] == 0:
+			tr = t
+			break
+	var places = [["tree crown", tr["top"] + Vector3(0, 0.6, 0)], ["roof of the cafe", Vector3(-9.5, 5.3, -0.8)]]
+	for pl in places:
+		p.mode = 0
+		place(pl[1] + Vector3(0, 1.5, 0), pl[1], 3.0)
+		Input.action_press("land")
+		var t0 = Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < 4000 and p.mode != 1:
+			await get_tree().physics_frame
+		Input.action_release("land")
+		r.force_kind = "buddy"
+		r.cd = 0.0
+		r.gift_cd = 0.0
+		p.still_t = 3.0
+		var rb0 = GS.stats["rainbow"]
+		var gf0 = GS.stats.get("gifts", 0)
+		var shot_done = false
+		t0 = Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < 14000:
+			await get_tree().physics_frame
+			if p.mode == 1:
+				p.still_t = max(p.still_t, 2.0)
+			if r.ev != null and not shot_done and r.ev.get("t", 0.0) > 1.0 and r.ev.get("phase", "") == "sit":
+				shot_done = true
+				view(p.global_position + Vector3(-2.4, 1.4, 3.6), p.global_position + Vector3(0.6, 0.4, 0), 55.0)
+				await get_tree().create_timer(0.3).timeout
+				await shot("r7b_buddy_" + pl[0].replace(" ", "_"))
+				p.set_override(Transform3D.IDENTITY, 60.0, 0.0, 20.0)
+			if r.ev == null and shot_done:
+				break
+		say("[R7B] %s: friend visited=%s gifts %d -> %d rainbow %d -> %d mode=%d y=%.1f" % [pl[0], shot_done, gf0, GS.stats.get("gifts", 0), rb0, GS.stats["rainbow"], p.mode, p.global_position.y])
+		await get_tree().create_timer(3.0).timeout
+	r.force_kind = ""
+	# a kind child
+	var kid = null
+	for a in get_tree().get_nodes_in_group("ambient"):
+		if a.kind_kid:
+			kid = a
+			break
+	say("[R7B] kind children in the world: %d" % get_tree().get_nodes_in_group("ambient").filter(func(a): return a.kind_kid).size())
+	if kid != null:
+		p.mode = 1
+		var kp = kid.global_position + Vector3(6.0, 0.4, 0.0)
+		p.global_position = kp
+		p.velocity = Vector3.ZERO
+		p.still_t = 3.0
+		var fed0 = GS.stats["fed"]
+		var t1 = Time.get_ticks_msec()
+		var shot2 = false
+		while Time.get_ticks_msec() - t1 < 14000:
+			await get_tree().physics_frame
+			p.still_t = max(p.still_t, 2.0)
+			p.mode = 1 if p.mode != 0 else 0
+			if not shot2:
+				shot2 = true
+				view(kid.global_position + Vector3(3.0, 1.8, 5.0), kid.global_position + Vector3(0, 1.2, 0), 55.0)
+				await get_tree().create_timer(0.4).timeout
+				await shot("r7b_kid_heart")
+				p.set_override(Transform3D.IDENTITY, 60.0, 0.0, 20.0)
+			if GS.stats["fed"] > fed0:
+				break
+		say("[R7B] kind child state=%s fed %d -> %d" % [kid.kk_state, fed0, GS.stats["fed"]])
+	get_tree().quit()
+
+
+# ---------------------------------------------------------------- round 8
+# --r8c: the real opening, a contact sheet of screenshots every 2.5 s (the VN box, the portraits, the old man's fry)
+func r8open():
+	await get_tree().create_timer(1.0).timeout
+	main.scenes.opening()
+	for i in 44:
+		await real(2.5)
+		await shot("r8o_%02d" % i)
+		if main.story.hold["on"]:
+			Input.action_press("interact")
+	Input.action_release("interact")
+	await real(2.0)
+	await shot("r8o_end")
+	get_tree().quit()
+
+# --r8b: the four cinematic moments, shots while they play
+func r8cine():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	var which = "all"
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--only="):
+			which = a.substr(7)
+	var ids = ["drinks3", "fish", "meteor", "all24"]
+	if which != "all":
+		ids = which.split(",")
+	for id in ids:
+		place(Vector3(-4.0, 40.0, 30.0), Vector3(-4.0, 40.0, 0.0), 6.0)
+		p.mode = 0
+		await real(0.5)
+		GS.cine_seen.erase(id)
+		GS.cine_seen[id] = true
+		main.scenes.cinema(id, {"sp": "mackerel", "len": 31.0, "kg": 0.41})
+		var t0 = GS.msec()
+		var k = 0
+		while main.scenes.cine_busy or GS.msec() - t0 < 1500:
+			await real(1.6)
+			await shot("r8c_%s_%02d" % [id, k])
+			k += 1
+			if k > 30:
+				break
+		say("[R8] cinematic %s finished after %d shots busy=%s" % [id, k, str(main.scenes.cine_busy)])
+		await real(1.0)
+	get_tree().quit()
+
+# --r8t: Gull Sight emblems of every rarity, side by side
+func r8tab():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	var base = Vector3(-4.0, 40.0, 30.0)
+	var types = ["red", "orange", "green", "cyan"]
+	var made = []
+	for i in 4:
+		var f = make_star(types[i], i + 1 if i < 3 else 3, base + Vector3(-8.0 + i * 5.0, 1.0, -14.0), "STAR_EMB_%d" % i)
+		made.append(f)
+	var rb = make_star("pink", 4, base + Vector3(12.0, 1.0, -14.0), "STAR_EMB_RB")
+	rb.revealed = true
+	rb.visible = true
+	rb.tier = 4
+	place(base, base + Vector3(0, 0, -20), 4.0)
+	p.input_locked = false
+	await real(1.0)
+	Input.action_press("gull_sense")
+	main._open_sense()
+	await real(1.2)
+	await shot("r8t_tab")
+	Input.action_release("gull_sense")
+	main._close_sense()
+	await real(0.8)
+	await shot("r8t_world")
+	# a shooting star: forecast, then flight, seen through Gull Sight and with the naked eye
+	for f in made:
+		f.consume()
+	rb.consume()
+	place(Vector3(-4.0, 70.0, 30.0), Vector3(-4.0, 70.0, 0.0), 4.0)
+	main.meteors.star_pending = -1.0
+	main.meteors._plan_star()
+	await real(1.0)
+	Input.action_press("gull_sense")
+	main._open_sense()
+	await real(1.0)
+	await shot("r8t_meteor_forecast")
+	await real(4.5)
+	await shot("r8t_meteor_flight")
+	Input.action_release("gull_sense")
+	main._close_sense()
+	await real(1.5)
+	await shot("r8t_meteor_eye")
+	get_tree().quit()
+
+func round8_test():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	main.autotest_no_cine = true
+	# 1 the rainbow fry: five judgements and the speed to match
+	var rb = make_star("green", 4, Vector3(-4.0, 40.0, -20.0), "STAR_RB_T")
+	rb.tier = 4
+	chk("rainbow needs 150", abs(GS.need_speed(rb) * GS.SPEED_UNIT - 150.0) < 0.1, str(GS.need_speed(rb) * GS.SPEED_UNIT))
+	var prm = p.snatch._seq_params(rb)
+	chk("rainbow = 5 judgements", prm["n"] == 5 and prm["c"] == 5, str(prm["n"]))
+	# 2 the plain fry lies on the table, visible, with no glow, and is not eatable before the 3 starters
+	GS.gull_sense_count = 0
+	main.ordinary.visible = true
+	chk("plain fry visible from the start", main.ordinary.visible)
+	chk("plain fry has no halo", main.ordinary.halo_alpha <= 0.01)
+	GS.gull_sense_count = 3
+	# 3 the meteor: forecast, flight, trajectory, catch
+	var mg = main.meteors
+	mg._plan_star()
+	var inf = mg.sight_info()
+	chk("meteor forecast exists", inf != null and inf["t"] > 4.0, str(inf))
+	await real(5.4)
+	chk("meteor flies", mg.star != null and is_instance_valid(mg.star))
+	var star = mg.star
+	chk("meteor asks 190", abs(GS.need_speed(star) * GS.SPEED_UNIT - 190.0) < 0.1)
+	var prm2 = p.snatch._seq_params(star)
+	chk("meteor = 5 judgements", prm2["n"] == 5, str(prm2["n"]))
+	GS.test_boost_bonus = 30.0
+	var q0 = GS.quest_state("meteor")
+	# chase it: start behind it on its own line
+	var d = star.vel.normalized()
+	var start = star.global_position - d * 26.0
+	place(start, star.global_position, GS.need_speed(star) + 1.0)
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var got = false
+	for i in 1500:
+		await get_tree().process_frame
+		if not is_instance_valid(star) or star.taken:
+			got = star.taken if is_instance_valid(star) else GS.stats["meteors"] > 0
+			break
+		if i % 30 == 0:
+			say("   i=%d state=%s hud=%s lock=%s spd=%.1f d=%.1f ts=%.2f snatchable=%s vanished=%s" % [i, p.snatch.state, p.snatch.hud_state, str(p.snatch.lock_fry != null), p.speed, p.global_position.distance_to(star.global_position), Engine.time_scale, str(star.is_snatchable()), str(star.vanished)])
+		if p.snatch.state == "idle" and p.snatch.lock_fry == null:
+			aim_at(p, star.global_position)
+			p.stamina = 60.0
+		var sq = p.snatch.seq
+		if sq != null:
+			var idx = p.snatch._first_pending(sq)
+			if idx >= 0:
+				var nt = sq["notes"][idx]
+				var now = p.snatch.seq_now()
+				if now >= nt["t"] - sq["gw"] * 0.5 and not sq.has("p%d" % idx):
+					sq["p%d" % idx] = true
+					tap("interact")
+	Input.action_release("move_forward")
+	Input.action_release("dash")
+	chk("meteor caught", GS.stats["meteors"] > 0, "state=%s" % GS.quest_state("meteor"))
+	chk("meteor quest done", GS.quest_state("meteor") == "done")
+	# the first star is a cinematic moment of its own: the star stays in the beak, then it becomes the gull's tail
+	main.autotest_no_cine = false
+	if not main.scenes.cine_busy and not GS.cine_seen.has("meteor"):
+		main.queue_cine("meteor")
+	var tq = GS.msec()
+	while GS.msec() - tq < 6000 and not main.scenes.cine_busy:
+		await get_tree().process_frame
+	chk("meteor cinematic started", main.scenes.cine_busy)
+	var tm = GS.msec()
+	while main.scenes.cine_busy and GS.msec() - tm < 90000:
+		await real(0.5)
+		fkey()
+	chk("meteor cinematic ended and the star is worn", (not main.scenes.cine_busy) and GS.worn.has("meteor") and p.gull.is_on("meteor"))
+	get_tree().quit()
+
+# --r8e: the new ending, played for real with a plausible run behind it
+func r8end():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	for id in ["fry1", "coffee", "alcohol", "ice", "starlight", "cloud", "sun", "meteor", "friend"]:
+		GS.memories[id] = {"t": 100.0 + GS.memories.size() * 40.0}
+	GS.memories["fish"] = {"t": 300.0, "sp": "mackerel", "len": 31.0, "kg": 0.4}
+	GS.fish_book = {"mackerel": {"n": 2, "kg": 0.6, "cm": 36.0}, "tuna": {"n": 1, "kg": 40.0, "cm": 150.0}}
+	for k in ["topper", "shades", "necklace", "meteor"]:
+		p.gull.wear(k)
+	var WB = preload("res://scripts/world/world_builder.gd")
+	say("[R8] elder at %s, fry at %s, bro at %s" % [str(main.elder.global_position), str(WB.ORDINARY_POS), str(main.bro.global_position)])
+	main.ordinary.visible = true
+	place(WB.ORDINARY_POS + Vector3(0.3, 0.6, 0.3), WB.ORDINARY_POS, 3.0)
+	await real(1.0)
+	main.autotest = false
+	main._on_ate_ordinary(main.ordinary)
+	var t0 = Time.get_ticks_msec()
+	var k = 0
+	while Time.get_ticks_msec() - t0 < 300000:
+		await real(2.0)
+		await shot("r8e_%03d" % k)
+		k += 1
+		if k > 20 and not main.scenes.cine_busy:
+			break
+	say("[R8] ending finished after %d shots" % k)
+	for i in 6:
+		await real(2.0)
+		await shot("r8e_%03d" % k)
+		k += 1
+	get_tree().quit()
+
+# --r8m: the big brother's three talks on the roof
+func r8bro():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	p.gull.wear("hat")
+	for n in [3, 10, 18]:
+		GS.cine_seen.erase("chat%d" % [1 if n == 3 else (2 if n == 10 else 3)])
+	for id in ["chat1"]:
+		GS.cine_seen.erase(id)
+		main.bro.near_t = 0.0
+		p.mode = 1
+		p.global_position = Vector3(-7.0, 5.4, -0.3)
+		p.velocity = Vector3.ZERO
+		say("[R8] bro talk %s" % id)
+		main.scenes.bro_chat(id)
+		var k = 0
+		while main.scenes.cine_busy and k < 20:
+			await real(1.5)
+			await shot("r8m_%s_%02d" % [id, k])
+			k += 1
 	get_tree().quit()

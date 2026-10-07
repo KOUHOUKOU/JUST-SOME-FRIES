@@ -364,6 +364,7 @@ func stolen(player):
 	if owner_amb != null and is_instance_valid(owner_amb):
 		owner_amb.theft_reaction()
 	GS.add_heat(0.3)
+	GS.flight_loot()
 	GS.mischief_counts[kind] = GS.mischief_counts.get(kind, 0) + 1
 	if is_wearable():
 		player.gull.wear(kind)
@@ -399,16 +400,24 @@ func stolen(player):
 			GS.comic.emit("cool", "FULLY ARMED. STILL HUNGRY.", {"tier": 3, "col": GS.RARITY_COLORS[3]})
 	if GS.mischief_counts.size() >= 3:
 		GS.award("TROUBLEMAKER")
+	GS.quests_check()
 	if not (kind in ["coffee", "alcohol", "icecream"]):
 		Sfx.play("equip" if is_wearable() else "happy", -6.0, 1.0)
 	if respawn_sec > 0.0 and home_parent != null and is_instance_valid(home_parent):
 		player.get_tree().create_timer(respawn_sec).timeout.connect(Callable(load("res://scripts/fries/mischief.gd"), "respawn_static").bind(home_parent, home_pos, kind))
 	get_tree().create_timer(2.5 if kind == "icecream" else 0.2).timeout.connect(queue_free)
 
+var hard_done = false
+
 func _process(delta):
 	t += delta
 	if taken:
 		return
+	# round 7: clothes and hats that sit high up (roof terraces, the church, the hill) ask for a little more speed than the ones within easy reach
+	if not hard_done:
+		hard_done = true
+		if kind in GS.WEARABLES and not quest_item:
+			min_speed += clamp((global_position.y - 5.0) / 12.0, 0.0, 1.0) * 1.8
 	if kind == "balloon":
 		visual.rotation.z = sin(t * 1.5) * 0.08
 	elif kind == "ball":

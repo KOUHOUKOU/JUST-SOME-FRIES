@@ -25,8 +25,12 @@ const SEQ_TIER = {
 	2: {"c": 3, "w": 2, "lead": 0.85, "gap": 0.33, "gw": 0.045, "gg": 0.085},   # gold / epic
 	3: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.04, "gg": 0.075},    # diamond / legendary
 	4: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.42, "gw": 0.06, "gg": 0.11},     # rainbow (repeatable, a single easy circle)
-	5: {"c": 1, "w": 1, "lead": 0.8, "gap": 0.0, "gw": 0.04, "gg": 0.07},       # fish
+	5: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.48, "gw": 0.05, "gg": 0.10},     # fish, common: 2 judgements
 	6: {"c": 1, "w": 1, "lead": 0.8, "gap": 0.0, "gw": 0.035, "gg": 0.06},      # cloud / sun: one wave, the narrowest in the game (the fall is expensive)
+	7: {"c": 3, "w": 1, "lead": 0.85, "gap": 0.40, "gw": 0.045, "gg": 0.09},    # fish, rare: 3 judgements
+	8: {"c": 5, "w": 1, "lead": 0.85, "gap": 0.32, "gw": 0.04, "gg": 0.08},     # fish, legendary: 5 judgements (the olympic rings)
+	9: {"c": 5, "w": 1, "lead": 0.85, "gap": 0.31, "gw": 0.038, "gg": 0.075},   # RAINBOW fry (round 8): five judgements, and the speed to match
+	10: {"c": 5, "w": 1, "lead": 0.8, "gap": 0.29, "gw": 0.034, "gg": 0.068},   # a shooting star: five judgements, the narrowest of them all (STARLIGHT widens the bands x1.5)
 }
 const TUT_SEQ = {"TUTORIAL_01": {"c": 1, "w": 2, "lead": 1.1, "gap": 0.55, "gw": 0.09, "gg": 0.2}, "TUTORIAL_02": {"c": 1, "w": 2, "lead": 1.0, "gap": 0.5, "gw": 0.075, "gg": 0.16},
 	"TUTORIAL_03": {"c": 1, "w": 2, "lead": 0.95, "gap": 0.46, "gw": 0.065, "gg": 0.13}}
@@ -131,6 +135,22 @@ func step(delta):
 			_update_carry(delta)
 			return
 	_scan(delta)
+	_sniff()
+
+# E with nothing to aim at: the gull sniffs out the nearest fry that its top speed can actually lock, and points at it for a few seconds
+func _sniff():
+	if state != "idle" or lock_fry != null or near_target != null or player.input_locked or GS.sense_active:
+		return
+	if not Input.is_action_just_pressed("interact") or GS.gull_sense_count < 3 or player.mode == 2:
+		return
+	var f = GS.nearest_fry(player.global_position)
+	if f == null:
+		player.show_toast("NOTHING IN REACH YET", 1.0)
+		Sfx.play("tooslow", -12.0)
+		return
+	GS.sniff_node = f
+	GS.sniff_until = GS.msec() / 1000.0 + 5.0
+	Sfx.play("chime", -14.0, 1.5)
 
 func _fail_note():
 	if GS.watch_high():
@@ -168,16 +188,12 @@ func _scan(delta):
 		var to = f.aim_point() - origin
 		var d = to.length()
 		if f.ftype == "ordinary":
-			if d <= 2.6 and (fwd.dot(to / max(d, 0.01)) > 0.0 or d < 2.0):
-				if GS.gull_sense_count < 3:
-					# the plain fry waits until the three starter fries are in: a stray E must not end the game before it began
-					if Input.is_action_just_pressed("interact") and not p.input_locked and toast_t <= 0.0:
-						player.show_toast("NOT YET", 0.9)
-						note = "three fries first. it will still be warm."
-						note_t = 3.0
-						Sfx.play("tooslow", -12.0)
-				else:
-					eat_target = f
+			# the plain fry lies on the table from the very first minute, but it is out of the game (no glow, no prompt, no reaction) until the three starter fries are in
+			if GS.gull_sense_count >= 3 and d <= 2.6 and (fwd.dot(to / max(d, 0.01)) > 0.0 or d < 2.0):
+				eat_target = f
+			elif GS.gull_sense_count < 3 and d <= 2.4 and note_t <= 0.0 and p.mode != 0:
+				note = "later. it will keep."
+				note_t = 2.6
 			continue
 		if d > 26.0 or d < 0.05:
 			continue
@@ -228,15 +244,20 @@ func _scan(delta):
 func _is_tut(f):
 	return f != null and f.id.begins_with("TUTORIAL")
 
-# 0 common (tutorial / decorative), 1 silver, 2 gold, 3 diamond, 4 rainbow, 5 fish, 6 cloud / sun (the hardest single wave in the game)
+# 0 common (tutorial / decorative), 1 silver, 2 gold, 3 diamond, 4 (old rainbow), 5 fish, 6 cloud / sun (the hardest single wave in the game), 7-8 rare / legendary fish,
+# 9 rainbow fry, 10 shooting star
 func _tier_of(f):
 	if f.ftype == "fish":
-		return 5
+		return [5, 7, 8][clamp(f.rarity, 0, 2)]
 	if f.ftype == "mischief":
+		if f.kind == "meteor":
+			return 10
 		return 6 if f.kind in ["cloud", "sun"] else 0
 	if f.ftype == "tutorial":
 		return 0
-	return clamp(f.tier, 0, 4)
+	if f.tier >= 4:
+		return 9
+	return clamp(f.tier, 0, 3)
 
 # the numbers of one rhythm (real seconds): circles, waves, lead, gap, gold width, green width
 func _seq_params(f):
@@ -646,6 +667,7 @@ func _finish_snatch(f):
 	if n != null:
 		n.on_escaped()
 	GS.stats["stolen"] += 1
+	GS.flight_loot()
 	GS.add_heat(0.3)
 	player.escaped.emit(f)
 	if clean and f.ftype != "mischief":

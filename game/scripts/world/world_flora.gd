@@ -61,6 +61,9 @@ func _pebble_mesh():
 	return sm
 
 func _spawn(mesh, count, vis_end, fn):
+	if GS.web:
+		count = int(count * 0.4)
+		vis_end *= 0.6
 	var mm = MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_colors = true

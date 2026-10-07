@@ -13,6 +13,8 @@ const SHOWCASE_SCRIPT = preload("res://scripts/ui/fry_showcase.gd")
 const TITLE_SCRIPT = preload("res://scripts/ui/title_cards.gd")
 const RIVAL_SCRIPT = preload("res://scripts/world/rival_gulls.gd")
 const MENU_CAM_SCRIPT = preload("res://scripts/ui/menu_cam.gd")
+const STORY_SCRIPT = preload("res://scripts/ui/story.gd")
+const SCENES_SCRIPT = preload("res://scripts/ui/story_scenes.gd")
 
 const VISION_TS = 0.3          # world speed while Gull Sight is held
 
@@ -26,8 +28,8 @@ const SHOW_TUTORIAL = [
 	{"name": "HOT HANDHELD FRY", "category": "COMMON FRY  -  THIRD", "carrier": "hand", "source": "STOLEN FROM: A MAN WITH A CARTON",
 		"desc": "Still moving, still warm.\nSo are you.", "ability_title": "UNLOCKED", "ability": "GULL SIGHT   -   HOLD TAB"},
 ]
-const TIER1_SOURCE = {"red": "STOLEN FROM: A PIER WANDERER", "blue": "STOLEN FROM: A PICNIC PARENT", "purple": "STOLEN FROM: A MARKET VENDOR",
-	"green": "STOLEN FROM: A VERY FAST KID", "pink": "STOLEN FROM: A BIRDWATCHER", "orange": "STOLEN FROM: A BAKER", "cyan": "STOLEN FROM: A LIGHTHOUSE KEEPER"}
+const TIER1_SOURCE = {"red": "STOLEN FROM: A BOARDWALK VENDOR", "blue": "STOLEN FROM: A PICNIC PARENT", "purple": "STOLEN FROM: A PIER WANDERER",
+	"green": "STOLEN FROM: A VERY FAST KID", "pink": "STOLEN FROM: A BAKER", "orange": "STOLEN FROM: A BIRDWATCHER", "cyan": "STOLEN FROM: A LIGHTHOUSE KEEPER"}
 const SPOT_NAMES = {"ferris": "THE FERRIS WHEEL", "lighthouse": "THE LIGHTHOUSE LAMP", "turbine": "A WIND TURBINE", "church": "THE CHURCH SPIRE",
 	"crane_hook": "A CRANE HOOK", "containers": "A CONTAINER STACK", "buoy": "A LONELY BUOY", "islet": "THE ISLET", "lifeguard": "THE LIFEGUARD TOWER",
 	"chimney": "A HILLTOP CHIMNEY", "mast": "A MARINA MAST", "kite": "A KITE (OF ALL THINGS)", "playground_top": "THE PLAYGROUND SLIDE",
@@ -36,21 +38,26 @@ const SPOT_NAMES = {"ferris": "THE FERRIS WHEEL", "lighthouse": "THE LIGHTHOUSE 
 	"villa_bbq": "A BARBECUE", "villa_pool": "A SWIMMING POOL", "fry_sign": "THE FRY SHACK SIGN"}
 const GOLD_SPOTS = ["lifeguard", "chimney", "playground_top", "barn", "containers", "buoy", "islet", "mast", "bar_shelf", "cafe_table", "market_stall", "boat_deck", "roof_laundry", "villa_bbq", "villa_pool", "fry_sign"]
 const DIAMOND_SPOTS = ["ferris", "lighthouse", "turbine", "church", "crane_hook", "crane_hook2", "clock_tower", "kite", "windmill"]
+# round 7: where the gold (tier 2) and diamond (tier 3) fry of every colour hangs. The more useful the colour, the nearer to the start (beach and boardwalk);
+# the least useful ones sit at the edges of the map. The first free preferred spot wins, otherwise any spot of the right height.
+const PREF_GOLD = {"red": ["lifeguard"], "orange": ["cafe_table", "market_stall"], "green": ["bar_shelf", "fry_sign"], "blue": ["playground_top", "boat_deck"],
+	"cyan": ["roof_laundry", "villa_bbq", "villa_pool"], "purple": ["chimney", "mast", "containers"], "pink": ["barn", "islet", "buoy"]}
+const PREF_DIAMOND = {"red": ["ferris"], "orange": ["clock_tower", "church"], "green": ["crane_hook", "kite"], "blue": ["crane_hook2", "lighthouse"],
+	"cyan": ["turbine"], "purple": ["windmill"], "pink": ["lighthouse", "turbine"]}
 const HUNGER_STEPS = [
 	[45.0, "something is still missing."],
 	[110.0, "none of these was the one you wanted."],
-	[190.0, "it doesn't glow. it never did."],
-	[270.0, "think back. it was there from the very start."],
+	[190.0, "full of magic. and it is not the right kind."],
+	[270.0, "warm. i remember warm."],
 ]
 # ...and the same story told by how many fries you have already eaten: every few strong fries the gull remembers a little more
 const HUNGER_COUNT_STEPS = [
 	[10, "stronger. faster. still hungry."],
 	[13, "none of these taste like what you remember."],
-	[16, "what did you want, that very first morning?"],
-	[19, "it did not glow. it was only warm."],
-	[21, "a table. a lamp. the smell of salt."],
-	[23, "an old man. a corner. one plain fry."],
-	[24, "you flew right past it. it waited."],
+	[16, "what did you want, before all of this?"],
+	[19, "it wasn't magic. i'm almost sure of that."],
+	[21, "salt. warmth. a quiet morning."],
+	[23, "so small. i must have flown right past it."],
 ]
 
 var player
@@ -75,6 +82,8 @@ var intro_t = 0.0
 var intro_clock = 0.0
 var intro_phase = "bro"
 var dialogue
+var story
+var scenes
 var bro
 var intro_dropped = false
 var autotest = false
@@ -97,6 +106,10 @@ var ending_started = false
 var rb_t = 0.0
 var rb_last = {}
 var rb_n = 0
+var rb_holders = []
+var meteors
+var cine_queue = []
+var cine_wait = 0.0
 
 func _ready():
 	GS.reset()
@@ -111,6 +124,7 @@ func _ready():
 	var wb = WB.new()
 	world = wb.build(self, player)
 	player.ground_h = world["ground_h"]
+	player.trees = world.get("trees", [])
 	player.air_zones = world["air_zones"]
 	player.respawn_point = WB.SPAWN_POS + Vector3(0, 6, 0)
 	ordinary = world["ordinary"]
@@ -145,9 +159,17 @@ func _ready():
 	dialogue = CanvasLayer.new()
 	dialogue.set_script(load("res://scripts/ui/dialogue_ui.gd"))
 	add_child(dialogue)
+	story = CanvasLayer.new()
+	story.set_script(STORY_SCRIPT)
+	add_child(story)
+	scenes = Node.new()
+	scenes.set_script(SCENES_SCRIPT)
+	scenes.main = self
+	add_child(scenes)
 	bro = Node3D.new()
 	bro.set_script(load("res://scripts/world/big_bro.gd"))
 	add_child(bro)
+	bro.main = self
 	bro.setup(player, Vector3(-6.2, 5.4, -1.3), Vector3(-9.5, 5.4, -0.8))
 	title.restart_requested.connect(func(): _reload(true))
 	title.menu_requested.connect(func(): _reload(false))
@@ -162,10 +184,20 @@ func _ready():
 	rivals.player = player
 	rivals.spots = world.get("fish_spots", [])
 	add_child(rivals)
+	var gov = Node.new()
+	gov.set_script(load("res://scripts/systems/perf_governor.gd"))
+	gov.main = self
+	add_child(gov)
 	rest = Node.new()
 	rest.set_script(load("res://scripts/world/rest_events.gd"))
 	rest.player = player
 	add_child(rest)
+	meteors = Node.new()
+	meteors.set_script(load("res://scripts/world/meteors.gd"))
+	meteors.player = player
+	meteors.main = self
+	meteors.day = day
+	add_child(meteors)
 	var mcam = Node.new()
 	mcam.set_script(MENU_CAM_SCRIPT)
 	mcam.player = player
@@ -179,6 +211,15 @@ func _ready():
 	player.escaped.connect(_on_escaped)
 	player.ate_ordinary.connect(_on_ate_ordinary)
 	GS.gull_sense_complete.connect(_reveal_specials)
+	GS.star_started.connect(func():
+		if GS.cine_seen.has("drinks3"):
+			Sfx.set_star(true)          # (the first time, the cinematic moment hands over to the STARLIGHT music itself)
+			Sfx.play("star_riser", -9.0)
+		queue_cine("drinks3"))
+	GS.fish_caught.connect(func(info): queue_cine("fish", info))
+	GS.buff_started.connect(func(kind): queue_cine("drink_" + kind))
+	GS.meteor_caught.connect(func(): queue_cine("meteor"))
+	GS.star_ended.connect(func(): Sfx.set_star(false))
 	GS.still_hungry_started.connect(_begin_star_phase)
 	player.update_camera(0.0, true)
 	Sfx.set_music_level(0)
@@ -191,13 +232,14 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
 			is_dev = true
 	if is_dev:
 		autotest = true
+		autotest_no_cine = true          # the bots must not be frozen by the cinematic moments (the --r8 modes call them by hand)
 		GS.no_focus_pause = true
 		showcase.fast = true
 		GS.skip_intro = not ("--intro" in args)
@@ -261,8 +303,15 @@ func _on_start_pressed():
 		return
 	get_tree().paused = false
 	menus.begin_game()
-	title.finished.connect(_start_game, CONNECT_ONE_SHOT)
-	title.play_opening()
+	scenes.opening()
+
+# the last beat of the opening (HOLD E) is over: the page frame opens up and the gull is yours
+func start_after_opening():
+	GS.skip_intro = true
+	story.cam = null
+	story.frame_out(0.9)
+	_start_game()
+	get_tree().create_timer(1.0, true, false, true).timeout.connect(story.finish)
 
 func _start_game():
 	get_tree().paused = false
@@ -271,6 +320,7 @@ func _start_game():
 	player.active = true
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	Sfx.stop_theme(2.5)
+	Sfx.world_zone = _zone_of(player.global_position)
 	Sfx.start_music()
 	if GS.skip_intro:
 		_finish_intro()
@@ -309,6 +359,7 @@ func _finish_intro():
 	dialogue.hide_all()
 	if not loaded_run:
 		_face_first_fry()
+	# the plain fry has been lying on the table since the old man dropped it in the opening: no glow, no prompt, no reaction until the three starter fries are in
 	ordinary.visible = true
 	ordinary.global_position = WB.ORDINARY_POS
 	ordinary.rotation = Vector3.ZERO
@@ -480,6 +531,42 @@ func _restore_run(d):
 	GS.progress_changed.emit(GS.progress_value(), GS.TOTAL_BASE)
 	save_sig = _sig()
 
+# ------------------------------------------------------------------ the cinematic moments (story_scenes.gd `cinema`): queued, then shown when the gull is free
+func queue_cine(id, extra = {}):
+	if GS.cine_seen.has(id) or autotest_no_cine or ending_started or GS.ordinary_eaten:
+		return
+	for e in cine_queue:
+		if e[0] == id:
+			return
+	cine_queue.append([id, extra])
+	cine_wait = 0.9
+
+func _cine_tick(rdt):
+	if cine_queue.is_empty() or scenes.cine_busy:
+		return
+	var sn = player.snatch
+	if sn.state != "idle" or sn.lock_fry != null or sn.carry_fry != null or showcase.active or codex_open or intro_active or player.mode == 2 or ending_started:
+		return
+	cine_wait -= rdt
+	if cine_wait > 0.0:
+		return
+	var e = cine_queue.pop_front()
+	if GS.cine_seen.has(e[0]):
+		return
+	if e[0].begins_with("drink_"):
+		# the very first sip of one kind: a small moment of its own, unless the third drink just made STARLIGHT (that one is bigger)
+		var star_next = false
+		for q in cine_queue:
+			if q[0] == "drinks3":
+				star_next = true
+		if star_next or GS.star_t > 0.0:
+			GS.cine_seen[e[0]] = true
+			return
+	GS.cine_seen[e[0]] = true
+	scenes.cinema(e[0], e[1])
+
+var autotest_no_cine = false
+
 # ------------------------------------------------------------------ per-frame
 func _perf_log():
 	# one line every 10 s into godot.log (user://logs) - makes "it froze after a while" reports diagnosable
@@ -522,9 +609,47 @@ func _process(delta):
 		if not GS.ordinary_eaten and not intro_active:
 			GS.run_time += rdt
 		_hints()
+		_zone_tick(rdt)
 		_hunger_tick(rdt)
 		_autosave_tick(rdt)
 		_quest_tick(rdt)
+		_cine_tick(rdt)
+
+# which piece of the island the gull is over decides which piece of music plays (they cross-fade, with a little stubbornness so that a quick dip
+# across a border does not change the tune)
+var zone_cand = ""
+var zone_t = 0.0
+var zone_check = 0.0
+
+func _zone_of(p):
+	if p.y > 40.0:
+		return "sky"
+	if p.z < -70.0 or (p.x > 60.0 and p.z < -44.0):
+		return "summit"
+	if p.z < -26.0 and p.x < 62.0:
+		return "hill"
+	if WB.Terrain.H(p.x, p.z) < -0.4 or (p.z > 24.0 and p.x > -12.0 and p.x < 16.0):
+		return "sea"
+	if p.x > 22.0 and p.z > -50.0:
+		return "beach"
+	return "boardwalk"
+
+func _zone_tick(rdt):
+	zone_check -= rdt
+	if zone_check > 0.0:
+		return
+	zone_check = 0.4
+	var z = _zone_of(player.global_position)
+	if z == Sfx.world_zone:
+		zone_cand = ""
+		zone_t = 0.0
+		return
+	if z != zone_cand:
+		zone_cand = z
+		zone_t = 0.0
+	zone_t += 0.4
+	if zone_t >= 2.4:
+		Sfx.set_world_zone(z)
 
 func _hints():
 	if Input.is_action_pressed("move_forward"):
@@ -541,6 +666,8 @@ func _hints():
 		tab_hint_t = play_t + 5.0
 	if tab_hint_t > 0.0 and play_t > tab_hint_t:
 		hud.hint("tab", "HOLD TAB - LOOK AROUND          C - CODEX", 4.0)
+	if tab_hint_t > 0.0 and play_t > tab_hint_t + 12.0 and player.mode == 0:
+		hud.hint("sniff", "E WHILE FLYING - POINTS TO THE NEAREST FRY YOU CAN CATCH", 4.5)
 
 # Guides the first three (tutorial) fries: a marker you cannot lose + one persistent instruction at a time.
 func _tutorial_director():
@@ -639,6 +766,9 @@ func _unhandled_input(event):
 	elif event.is_action_released("gull_sense"):
 		GS.vision_tired = false
 		_close_sense()
+	if codex_open and event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_LEFT, KEY_RIGHT]:
+		sense.page = 1 - sense.page
+		Sfx.play("equip", -12.0, 1.3)
 	if event.is_action_pressed("codex"):
 		if codex_open:
 			_close_codex()
@@ -704,10 +834,16 @@ func _quest_tick(rdt):
 	for id in GS.QUESTS:
 		before[id] = GS.quest_state(id)
 	GS.quests_refresh()
+	var fresh = []
 	for id in GS.QUESTS:
 		if before[id] == "" and GS.quest_state(id) == "active":
-			hud.whisper("new on the board: %s." % GS.QUESTS[id][1].to_lower(), 4.0)
-			Sfx.play("chime", -14.0, 1.3)
+			fresh.append(id)
+	if fresh.size() > 3:
+		hud.whisper("new tasks on the board. the gull is never idle.", 4.0)
+		Sfx.play("chime", -14.0, 1.3)
+	elif fresh.size() > 0:
+		hud.whisper("new on the board: %s." % GS.QUESTS[fresh[0]][1].to_lower(), 4.0)
+		Sfx.play("chime", -14.0, 1.3)
 	if GS.quest_state("cloud") == "active" and not quest_items.has("cloud"):
 		var c = Node3D.new()
 		c.set_script(load("res://scripts/fries/mischief.gd"))
@@ -774,7 +910,7 @@ func _show_fry(key, n, done, extra = {}):
 			info["min_t"] = 1.0
 		"ordinary":
 			info = {"name": "FRY", "category": "ORDINARY FRY", "ftype": "ordinary", "color": Color("E3A93A"),
-				"source": "A GIFT FROM: THE OLD MAN", "desc": "Just a fry.\nWarm, salty, and right where you started.",
+				"source": "A GIFT FROM: THE OLD MAN", "desc": "Just a fry.\nWarm and salty.",
 				"ability_title": "ABILITY", "ability": "NONE.   IT'S JUST A FRY.", "min_t": 2.2, "auto_t": 14.0, "tier": 0}
 		"star":
 			var type = extra["type"]
@@ -798,6 +934,8 @@ func _on_escaped(f):
 			GS.tutorial_done[f.id] = true
 			GS.gull_sense_count += 1
 			var n = GS.gull_sense_count
+			if n == 1:
+				GS.remember("fry1")
 			_burst(player.global_position, Color(1.0, 0.9, 0.55), 22 if n < 3 else 60, 4.0 if n < 3 else 7.0)
 			Sfx.play("reward_1", -6.0, 1.0 + 0.12 * n)
 			GS.fry_got.emit("tutorial", 0)
@@ -807,6 +945,7 @@ func _on_escaped(f):
 				if n == 3:
 					player.fov_kick = 5.0
 					GS.phase = GS.Phase.SPECIAL_HUNT
+					ordinary.visible = true          # now it is there: it was on the table all along
 					Sfx.set_music_level(1)
 					Sfx.play("gs_complete", -6.0)
 					get_tree().create_timer(1.4, true, false, true).timeout.connect(func():
@@ -822,6 +961,8 @@ func _on_escaped(f):
 			if kind == "blue":
 				player.stamina += GS.stamina_max() - old_max
 			_upgrade_juice(kind, 1)
+			if kind == "red":
+				_early_sonic()
 			GS.fry_got.emit(kind, 1)
 			Sfx.schedule_growl(4.5)
 			hud.collect_special(kind)
@@ -934,11 +1075,21 @@ func _spawn_star():
 	if pool.is_empty():
 		return
 	var e2 = pool[randi() % pool.size()]
-	var allowed = GOLD_SPOTS if e2["tier"] == 2 else DIAMOND_SPOTS
-	var tier_free = free.filter(func(sp): return allowed.has(sp["name"]))
+	_place_star(e2["type"], e2["tier"], free)
+
+# hang one star fry (type, tier) on a free anchor: the preferred ones of its colour first (round 7: the useful colours near the start)
+func _place_star(type, tier, free):
+	var allowed = GOLD_SPOTS if tier == 2 else DIAMOND_SPOTS
+	var pref = (PREF_GOLD if tier == 2 else PREF_DIAMOND).get(type, [])
+	var tier_free = free.filter(func(sp): return pref.has(sp["name"]))
+	if tier_free.is_empty():
+		tier_free = free.filter(func(sp): return allowed.has(sp["name"]))
 	if tier_free.is_empty():
 		tier_free = free
+	if tier_free.is_empty():
+		return null
 	var s2 = tier_free[randi() % tier_free.size()]
+	var e2 = {"type": type, "tier": tier}
 	var f2 = Node3D.new()
 	f2.set_script(FRY_SCRIPT)
 	f2.position = s2["pos"]
@@ -948,6 +1099,24 @@ func _spawn_star():
 	f2.home_parent = self
 	f2.home_pos = s2["pos"]
 	star_active.append(f2)
+	return f2
+
+# the SONIC (red) gold fry does not wait for STILL HUNGRY: the moment the silver one is yours, the gold one hangs over the beach (round 7: speed first)
+func _early_sonic():
+	if GS.lv["red"] != 1 or GS.star_got.has("red_2"):
+		return
+	for f in star_active:
+		if is_instance_valid(f) and not f.consumed and f.utype == "red" and f.tier == 2:
+			return
+	var used = []
+	for f in star_active:
+		if is_instance_valid(f):
+			used.append(f.get_meta("spot"))
+	var free = []
+	for s in world["prism_spots"]:
+		if not used.has(s["name"]):
+			free.append(s)
+	_place_star("red", 2, free)
 
 func _star_collected(f):
 	var type = f.utype
@@ -972,57 +1141,71 @@ func _star_collected(f):
 		hud.whisper("%s complete. the next ones are rainbow." % GS.STAT_NAMES[type].to_lower(), 4.0)
 	if GS.fry_total() >= GS.FRY_CAP:
 		GS.award("ALL 24")
-		hud.whisper("every fry. and still... hungry?", 5.0)
+		queue_cine("all24")
 	star_timer = 3.0
 
-# repeatable fries: once a colour is complete its owner reorders a fresh fry, now a rainbow one
+# RAINBOW FRIES (round 7). Once a colour is complete, a passer-by somewhere out at the edges of the map is holding a rainbow fry of that colour in one
+# hand. More colours complete = more of them out there; a new one appears a while after one was taken. (Children with a heart and friendly gulls
+# hand them out too: see ambient_npc.gd `_kind` and rest_events.gd.)
+const RB_MODES = ["stand", "chat", "stroll", "play", "sit", "fish", "paint", "eat", "jog", "wave"]
+var rb_wait = 0.0
+
 func _rainbow_tick(rdt):
-	if GS.phase != GS.Phase.STILL_HUNGRY or GS.ordinary_eaten:
+	if GS.ordinary_eaten or GS.gull_sense_count < 3:
 		return
 	rb_t -= rdt
 	if rb_t > 0.0:
 		return
-	rb_t = 4.0
-	var now = GS.msec() / 1000.0
-	for n in world["npcs"]:
-		var e = n.enc
-		var type = e.get("type", "")
-		if not GS.FRY_TYPES.has(type) or not GS.type_complete(type):
+	rb_t = 3.0
+	rb_holders = rb_holders.filter(func(h): return is_instance_valid(h["fry"]) and not h["fry"].consumed and is_instance_valid(h["npc"]))
+	var done = []
+	for k in GS.FRY_TYPES:
+		if GS.type_complete(k):
+			done.append(k)
+	if done.is_empty():
+		return
+	var target = min(2 + done.size() * 2, 14)
+	if rb_holders.size() >= target:
+		return
+	rb_wait -= 3.0
+	if rb_wait > 0.0:
+		return
+	var held = []
+	for h in rb_holders:
+		held.append(h["npc"])
+	var pp = player.global_position
+	var pick = null
+	for tries in 40:
+		var cands = get_tree().get_nodes_in_group("ambient")
+		var a = cands[randi() % cands.size()]
+		if not is_instance_valid(a) or held.has(a) or a.carried_fry != null or a.mischief_item != null or a.kind_kid or a.grumpy:
 			continue
-		if n.gone or n.leaving:
+		if not (a.mode in RB_MODES) or a.rig == null or a.rig.hand_l == null or a.alarm_t > 0.0:
 			continue
-		if n.fry != null and is_instance_valid(n.fry) and not n.fry.consumed:
+		var home = Vector2(a.home_pos.x, a.home_pos.z)
+		var edge = home.distance_to(Vector2(-9.0, 0.0))
+		if edge < 62.0 or a.global_position.distance_to(pp) < 45.0:
 			continue
-		if now - rb_last.get(e["id"], -999.0) < 70.0:
+		# the further out, the likelier
+		if randf() > clamp((edge - 62.0) / 70.0 + 0.12, 0.0, 1.0):
 			continue
-		if n.global_position.distance_to(player.global_position) < 20.0:
-			continue
-		_restock_rainbow(n, type)
-		rb_last[e["id"]] = now
-
-func _restock_rainbow(n, type):
-	var holder = n.get_parent()
+		pick = a
+		break
+	if pick == null:
+		return
+	var type = done[randi() % done.size()]
 	var fry = Node3D.new()
 	fry.set_script(FRY_SCRIPT)
-	holder.add_child(fry)
+	pick.rig.hand_l.add_child(fry)
 	rb_n += 1
-	var carrier = n.enc.get("base_carrier", "hand")
-	fry.setup("RB_%s_%d" % [type, rb_n], type, carrier, 0, 4)
-	fry.set_meta("rb_id", n.enc["id"])
-	fry.npc = n
-	n.fry = fry
-	if carrier == "hand":
-		fry.reparent(n.hand_anchor, false)
-		fry.position = Vector3.ZERO
-		fry.home_parent = n.hand_anchor
-		n.rig.holding = true
-	else:
-		var f2 = Vector3(sin(n.rotation.y), 0, cos(n.rotation.y))
-		fry.global_position = n.global_position + f2 * n.enc.get("tdist", 1.2) + Vector3(0, 0.81, 0)
-		fry.home_parent = holder
-		fry.home_pos = fry.global_position
-	world["fries"][n.enc["id"]] = fry
-	Sfx.play("chime", -22.0, 1.7)
+	fry.setup("RB_%s_%d" % [type, rb_n], type, "hand", 0, 4)
+	fry.position = Vector3(0, 0.0, 0.05)
+	fry.home_parent = pick.rig.hand_l
+	fry.owner_amb = pick
+	pick.carried_fry = fry
+	rb_holders.append({"npc": pick, "fry": fry})
+	rb_wait = randf_range(14.0, 30.0)
+	Sfx.play("chime", -26.0, 1.7)
 
 # ------------------------------------------------------------------ "where is it?": guidance towards the plain fry
 func _hunger_tick(rdt):
@@ -1048,10 +1231,8 @@ func _hunger_tick(rdt):
 	if steam_t <= 0.0:
 		steam_t = 1.0
 		ordinary.set_steam(clamp(GS.longing() / 14.0, 0.0, 1.0))
-	if GS.hunger_t >= 330.0 or GS.fry_total() >= 20:
-		hud.hint_pos = WB.ORDINARY_POS + Vector3(0, 0.6, 0)
-		hud.hint_text = "THE CORNER TABLE?"
-		# the old man, who has been sitting there all this time, waves
+	if GS.hunger_t >= 330.0 or GS.fry_total() >= 22:
+		# the old man, who has been sitting there all this time, waves (no marker, no words)
 		var near = elder.global_position.distance_to(player.global_position)
 		if near < 90.0 and near > 6.0 and not elder_waving:
 			elder_waving = true
@@ -1092,7 +1273,7 @@ func _on_ate_ordinary(f):
 	if autotest:
 		hud.ending_sequence()
 	else:
-		_ending_cinematic(f)
+		scenes.ending(f)
 
 func _flight_cam(target, side):
 	var p = target.global_position
@@ -1236,5 +1417,6 @@ func _ending_cafe():
 			fry.consume()
 		await get_tree().process_frame
 	gull_vis.head_lunge = 0.0
+	story.finish()
 	title.finished.connect(func(): title.play_credits(), CONNECT_ONE_SHOT)
 	title.play_ending()

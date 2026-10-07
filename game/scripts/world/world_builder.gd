@@ -175,6 +175,7 @@ func build(root_node, p_player):
 	out["fish_spots"] = extra.build_fish_spots()
 	out["volley"] = volley
 	_mischief_balls()
+	_kind_kids()
 	_ambient_gulls()
 	flora.build()
 	B.flush()
@@ -343,20 +344,24 @@ func line(a, b, col = "D8D2C0", collide = true, flags = false):
 func tree(x, z, kind = 0, scale_v = 1.0):
 	var y = gh(x, z)
 	var s = scale_v
+	if not out.has("trees"):
+		out["trees"] = []
+	out["trees"].append({"kind": kind, "pos": Vector3(x, y, z), "top": Vector3(x, y + 5.5 * s + 1.2 * s + 2.3 * 0.85 * s * 0.96, z) if kind == 0 else Vector3(x, y, z)})
 	match kind:
 		0:
 			var h = 5.5 * s
 			B.cyl(Vector3(x, y + h * 0.5, z), 0.28 * s, h, "6B4E33", true)
 			var gcol = _pick(["4F8A45", "5F9A4F", "447F3E"])
-			B.ball(Vector3(x, y + h + 1.2 * s, z), 2.3 * s, gcol, Vector3(1, 0.85, 1))
-			B.ball(Vector3(x + 1.4 * s, y + h + 0.4 * s, z + 0.5 * s), 1.6 * s, gcol)
-			B.ball(Vector3(x - 1.2 * s, y + h + 0.6 * s, z - 0.8 * s), 1.5 * s, gcol)
+			# the leafy crown is solid now (round 7): a gull can land and walk on it
+			B.ball(Vector3(x, y + h + 1.2 * s, z), 2.3 * s, gcol, Vector3(1, 0.85, 1), 0.0, true)
+			B.ball(Vector3(x + 1.4 * s, y + h + 0.4 * s, z + 0.5 * s), 1.6 * s, gcol, Vector3.ONE, 0.0, true)
+			B.ball(Vector3(x - 1.2 * s, y + h + 0.6 * s, z - 0.8 * s), 1.5 * s, gcol, Vector3.ONE, 0.0, true)
 			B.perch_pad(Vector3(x, y + h + 2.6 * s, z), 0.7)
 		1:
 			var h1 = 9.0 * s
 			B.cyl(Vector3(x, y + h1 * 0.4, z), 0.25 * s, h1 * 0.8, "5A4332", true)
 			for k in 4:
-				B.cone(Vector3(x, y + 2.5 * s + k * 2.0 * s, z), (2.6 - k * 0.5) * s, 3.0 * s, "3F7A4A")
+				B.cone(Vector3(x, y + 2.5 * s + k * 2.0 * s, z), (2.6 - k * 0.5) * s, 3.0 * s, "3F7A4A", true)
 			B.perch_pad(Vector3(x, y + 9.4 * s, z), 0.4)
 		_:
 			var h2 = 7.5 * s
@@ -1059,7 +1064,7 @@ func _encounters():
 		{"id": "TUTORIAL_03", "type": "tutorial", "arch": "adult", "carrier": "hand", "behavior": "stand",
 			"pos": Vector3(-16.5, 0, 15), "face": Vector3(0, 0, -1),
 			"style": {"shirt": "D96D5F", "hair": "4A3426", "hair_style": "cap", "hat": "3E6F8E", "item_r": "cup"}},
-		{"id": "SPECIAL_RED", "type": "red", "arch": "adult", "carrier": "hand", "behavior": "patrol",
+		{"id": "SPECIAL_RED", "type": "purple", "arch": "adult", "carrier": "hand", "behavior": "patrol",
 			"pos": Vector3(1.5, 0.4, 70), "face": Vector3(0, 0, -1), "speed": 1.1,
 			"path": [Vector3(-1.2, 0.4, 72), Vector3(3.2, 0.4, 72), Vector3(3.2, 0.4, 66), Vector3(-1.2, 0.4, 66)],
 			"alts": [{"pos": Vector3(1.5, 0.4, 40), "face": Vector3(0, 0, -1)}, {"pos": Vector3(0, 0.4, 32), "face": Vector3(0, 0, -1)}],
@@ -1068,7 +1073,7 @@ func _encounters():
 			"pos": Vector3(20, 0, 19), "face": Vector3(-0.6, 0, -0.8), "tdist": 1.1, "seated": true,
 			"alts": [{"pos": Vector3(36, 0, 26), "face": Vector3(-0.6, 0, -0.8), "table": Vector3(35.3, 0, 25.1)}, {"pos": Vector3(14, 0, 28), "face": Vector3(0.6, 0, -0.8), "table": Vector3(14.7, 0, 27.1)}],
 			"style": {"shirt": "E2C25A", "hair": "6B4A2B", "hair_style": "sunhat", "hat": "F0D9A0", "item_r": "umbrella"}},
-		{"id": "SPECIAL_YELLOW", "type": "purple", "arch": "vendor", "carrier": "hand", "behavior": "patrol",
+		{"id": "SPECIAL_YELLOW", "type": "red", "arch": "vendor", "carrier": "hand", "behavior": "patrol",
 			"pos": Vector3(-11, 0, 11.5), "face": Vector3(0.8, 0, 0.2), "speed": 1.0,
 			"path": [Vector3(-14.5, 0, 11.8), Vector3(-7.5, 0, 11.8)],
 			"alts": [{"pos": Vector3(-30, 0, 12.0), "face": Vector3(1, 0, 0)}, {"pos": Vector3(-2, 0, 12.0), "face": Vector3(1, 0, 0)}],
@@ -1078,7 +1083,7 @@ func _encounters():
 			"path": [Vector3(31, 0, 14.5), Vector3(29.5, 0, 18), Vector3(26, 0, 19), Vector3(23, 0, 16), Vector3(23.5, 0, 12), Vector3(27, 0, 10.5), Vector3(30.5, 0, 11.5)],
 			"alts": [{"pos": Vector3(46, 0, 22), "face": Vector3(-1, 0, 0)}, {"pos": Vector3(20, 0, 34), "face": Vector3(0, 0, -1)}],
 			"style": {"shirt": "E8573A", "hair": "7A4B22", "hair_style": "cap", "hat": "3D8CD9", "item_r": "watergun"}},
-		{"id": "SPECIAL_ROSE", "type": "pink", "arch": "adult", "carrier": "hand", "behavior": "patrol",
+		{"id": "SPECIAL_ROSE", "type": "orange", "arch": "adult", "carrier": "hand", "behavior": "patrol",
 			"pos": Vector3(-41, 0, -1.5), "face": Vector3(-1, 0, 0), "speed": 0.9,
 			"path": [Vector3(-39.5, 0, -1.5), Vector3(-50.5, 0, -1.5)],
 			"alts": [{"pos": Vector3(-62, 0, -4), "face": Vector3(1, 0, 0)}, {"pos": Vector3(-30, 0, -9), "face": Vector3(1, 0, 0)}],
@@ -1150,11 +1155,27 @@ func _prism_anchors():
 	out["prism_spots"] = res
 
 # ====================================================================== ambient life
+# round 7: a cup, a mug, a cocktail or an ice cream in somebody's hand is a REAL drink (the gull can take it) - all over the hill, now and then elsewhere
+const DRINK_OF = {"cup": "coffee", "mug": "coffee", "cocktail": "alcohol", "icecream": "icecream"}
+
+func _drink_swap(st, pos):
+	if st.has("mischief"):
+		return
+	var ir = st.get("item_r", "")
+	if not DRINK_OF.has(ir):
+		return
+	var roll = fmod(abs(pos.x * 12.9898 + pos.z * 78.233), 1.0)       # a deterministic coin (the world builder's own random numbers must not shift)
+	var chance = 1.0 if pos.z < -22.0 else 0.45
+	if roll <= chance:
+		st["mischief"] = DRINK_OF[ir]
+		st.erase("item_r")
+
 func _amb(mode, pos, face, extra = {}, path = [], speed = 1.1):
 	var n = Node3D.new()
 	n.set_script(AMBIENT_SCRIPT)
 	root.add_child(n)
 	var st = rand_style(extra)
+	_drink_swap(st, pos)
 	n.setup(mode, st, pos, face.normalized(), path, speed, player)
 	return n
 
@@ -1243,6 +1264,18 @@ func _ambient():
 			m2.setup("coffee", root, sb["deck"] + Vector3(-0.4, 0.45, -0.8))
 			B.box(sb["deck"] + Vector3(-0.4, 0.2, -0.8), Vector3(0.6, 0.4, 0.4), "E8E2D2", true)
 
+# round 7: the kind children, out at the edges of the map (a heart over their heads): land near one and a rainbow fry is yours
+func _kind_kids():
+	var spots = [[-90.0, 32.0], [92.0, -70.0], [103.0, -14.0], [-64.0, -4.0], [64.0, -86.0], [-4.0, 112.0], [46.0, -6.0], [-24.0, -56.0], [84.0, 30.0], [-110.0, 62.0]]
+	var hair = ["cap", "bun", "beanie", "short", "long"]
+	var n = 0
+	for sp in spots:
+		var h = gh(sp[0], sp[1])
+		if h < 0.4 or not is_clear(sp[0], sp[1], 0.5):
+			continue
+		_amb("play", Vector3(sp[0], h, sp[1]), Vector3(0, 0, 1), {"scale": 0.7, "kind_kid": true, "hair_style": hair[n % hair.size()], "shirt": ["F277B5", "3FB8E0", "F1C94B", "4FB56D", "E85745"][n % 5]})
+		n += 1
+
 func _mischief_balls():
 	var p = Vector2(46, 28)
 	var m = Node3D.new()
@@ -1255,6 +1288,7 @@ func _ambient_gulls():
 		g.set_script(GullVisual)
 		root.add_child(g)
 		g.build()
+		g.tint_pale(GullVisual.pale_color(i))
 		var tick = Node.new()
 		tick.set_script(ORBIT_SCRIPT)
 		tick.gull = g

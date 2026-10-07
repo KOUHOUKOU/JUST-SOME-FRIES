@@ -14,6 +14,8 @@ var near_t = 0.0
 var t = 0.0
 var look_at_player = true
 var puff_t = 4.0
+var main = null
+var pose_mode = "ground"      # "throttle" while he flies down to the cafe in the ending
 
 const OUTFIT = ["topper", "shades", "necklace", "pipe", "coat"]
 
@@ -56,7 +58,7 @@ func _process(delta):
 	t += delta
 	if gull == null:
 		return
-	gull.pose("ground", 0.0, false, delta)
+	gull.pose(pose_mode, 0.0, pose_mode == "throttle", delta)
 	# idle life: a slow head turn, now and then a puff on the pipe
 	gull.head.rotation.y = sin(t * 0.4) * 0.35
 	gull.head.rotation.x = sin(t * 0.23) * 0.06
@@ -73,6 +75,20 @@ func _process(delta):
 	# a hint, now and then, when the gull comes close: the big brother knows where this is going
 	line_cd = max(line_cd - delta, 0.0)
 	near_t = near_t + delta if d < 7.0 else 0.0
+	# a little talk the first time the gull sits next to him after three / ten / eighteen fries (round 8: he is part of the story, not a prop)
+	if near_t > 1.0 and player.mode == 1 and main != null and not main.autotest and not GS.showcase_active and not main.scenes.cine_busy and GS.gull_sense_count >= 3 and not GS.ordinary_eaten:
+		var n0 = GS.fry_total()
+		var cid = ""
+		if n0 >= 18 and not GS.cine_seen.has("chat3"):
+			cid = "chat3"
+		elif n0 >= 10 and not GS.cine_seen.has("chat2"):
+			cid = "chat2"
+		elif n0 >= 3 and not GS.cine_seen.has("chat1"):
+			cid = "chat1"
+		if cid != "":
+			GS.cine_seen[cid] = true
+			main.scenes.bro_chat(cid)
+			return
 	if near_t > 1.2 and line_cd <= 0.0 and not GS.ordinary_eaten and player.mode == 1 and GS.gull_sense_count >= 3:
 		line_cd = 40.0
 		var n = GS.fry_total()
@@ -81,4 +97,4 @@ func _process(delta):
 		elif n < 20:
 			speak("I have everything. Still hungry.", 3.6)
 		else:
-			speak("Look where you started.", 3.6)
+			speak("...you too?", 3.0)

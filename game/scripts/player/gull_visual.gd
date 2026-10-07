@@ -30,6 +30,8 @@ var worn = {}                  # slot nodes of what this gull has ON right now: 
 var plain = false              # not the player: no growth looks
 var tracked = false            # the player gull: wearing changes the game state (GS.worn = owned, GS.equipped = on)
 var body_mi
+var white_mat
+var comet_k = 0.5               # how hard the star's tail blows: it grows with the speed
 
 func _mat(c, rough = 0.95):
 	var m = StandardMaterial3D.new()
@@ -60,6 +62,7 @@ func _sph(r, h = -1.0):
 
 func build():
 	var white = _mat(WHITE)
+	white_mat = white
 	chest_mat = _mat(WHITE)
 	var body = _mesh(self, _sph(0.2), Vector3(0, 0, 0), white)
 	body.scale = Vector3(1.0, 0.9, 1.9)
@@ -121,6 +124,19 @@ func build():
 	trail_l.position = Vector3(-0.5, 0, 0.1)
 	trail_r.position = Vector3(0.5, 0, 0.1)
 	apply_growth()
+
+# the other gulls of the island wear a faint colour (round 8): butter, blush, sky, mint, lilac, peach - pale enough to stay gull-white at a glance
+const PALE = [Color("F4E7A0"), Color("F5C3D6"), Color("B9D8F2"), Color("C3E8CF"), Color("D9CBF0"), Color("F7D0B0")]
+
+static func pale_color(i):
+	return PALE[abs(int(i)) % PALE.size()]
+
+func tint_pale(c):
+	white_mat.albedo_color = WHITE.lerp(c, 0.62)
+	chest_mat.albedo_color = WHITE.lerp(c, 0.45)
+	for m in wing_mats:
+		m.albedo_color = GREY.lerp(c, 0.5)
+	tail_mat.albedo_color = GREY.lerp(c, 0.5)
 
 func _make_trail():
 	var p = CPUParticles3D.new()
@@ -230,6 +246,22 @@ static func soft_tex():
 		_soft = gt
 	return _soft
 
+static var _star = null
+
+# a four-pointed sparkle (STARLIGHT)
+static func star_tex():
+	if _star == null:
+		var img = Image.create(64, 64, false, Image.FORMAT_RGBA8)
+		for y in 64:
+			for x in 64:
+				var dx = abs(x - 31.5) / 32.0
+				var dy = abs(y - 31.5) / 32.0
+				var arm = clamp(1.0 - (min(dx, dy) * 9.0 + max(dx, dy) * 0.9), 0.0, 1.0)
+				var core = clamp(1.0 - Vector2(dx, dy).length() * 3.2, 0.0, 1.0)
+				img.set_pixel(x, y, Color(1, 1, 1, clamp(arm + core, 0.0, 1.0)))
+		_star = ImageTexture.create_from_image(img)
+	return _star
+
 func set_trails(on):
 	for tr in [trail_l, trail_r]:
 		tr.emitting = on
@@ -282,10 +314,35 @@ func pose(mode, flap_t, throttle, delta):
 	legs.visible = cur["legs"] > 0.3
 	tail.rotation.x = -0.1 * cur["legs"]
 	head.position.z = -0.36 - head_lunge
+	if worn.has("meteor") and is_instance_valid(worn["meteor"]):
+		_comet_tick(mode, delta)
+
+func _comet_tick(mode, delta):
+	var goal = {"boost": 1.0, "throttle": 0.85, "glide": 0.55, "brake": 0.3, "ground": 0.0, "tumble": 0.35}.get(mode, 0.5)
+	if GS.star_active():
+		goal = 1.0
+	comet_k = lerp(comet_k, goal, 1.0 - exp(-4.0 * max(delta, 0.0001)))
+	var n = worn["meteor"]
+	var tl = n.get_node_or_null("Tail")
+	if tl != null:
+		tl.scale = Vector3(1.0, 1.0, 0.35 + 0.65 * comet_k)
+		tl.material_override.set_shader_parameter("strength", 0.15 + 0.85 * comet_k)
+		tl.visible = comet_k > 0.04
+	var co = n.get_node_or_null("Core")
+	if co != null:
+		co.scale = Vector3(1.0, 1.0, 0.4 + 0.6 * comet_k)
+		co.material_override.set_shader_parameter("strength", 0.1 + 0.9 * comet_k)
+		co.visible = comet_k > 0.04
+	var sp = n.get_node_or_null("Sparks")
+	if sp != null:
+		sp.emitting = comet_k > 0.3
+	var spin = n.get_node_or_null("Spin")
+	if spin != null:
+		spin.rotation.z += delta * 2.0
 
 # ---- wearables: every kind lives in one slot; putting something on replaces whatever sat in that slot ----
 const SLOTS = {"hat": "head", "sailor": "head", "topper": "head", "beret": "head", "glasses": "eyes", "shades": "eyes", "necklace": "neck", "bowtie": "neck",
-	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float", "socks": "tail", "cloud": "cloud", "sun": "halo"}
+	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float", "socks": "tail", "cloud": "cloud", "sun": "halo", "meteor": "comet"}
 
 static func slot_of(kind):
 	return SLOTS.get(kind, "head")
@@ -301,6 +358,16 @@ func wear(kind, silent = false):
 	if tracked and not silent:
 		GS.worn[kind] = true
 		GS.equipped[kind] = true
+
+# take a worn thing off WITHOUT destroying it (the ending lets it fall): returns its node
+func shed(kind):
+	if not worn.has(kind):
+		return null
+	var n = worn[kind]
+	worn.erase(kind)
+	if tracked:
+		GS.equipped.erase(kind)
+	return n
 
 func _remove(kind):
 	if worn.has(kind):
@@ -522,6 +589,53 @@ func _build_item(kind):
 			gl.material_override = gm
 			gl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			n.add_child(gl)
+		"meteor":                   # a shooting star that has decided to stay: it hangs behind the gull and trails a long glittering tail while it flies
+			add_child(n)
+			n.position = Vector3(0, 0.02, 0.36)
+			var fx = preload("res://scripts/world/meteor_fx.gd")
+			var head_g = fx.billboard(0.5, soft_tex(), Color(1.0, 0.9, 0.62, 0.8))
+			n.add_child(head_g)
+			var head_s = fx.billboard(0.3, star_tex(), Color(1, 1, 1, 1))
+			head_s.name = "Spin"
+			n.add_child(head_s)
+			var tl = MeshInstance3D.new()
+			tl.name = "Tail"
+			tl.mesh = fx.tail_mesh(9.0, 0.34)
+			var tmat = fx.tail_material().duplicate()
+			tmat.set_shader_parameter("power", 1.3)
+			tl.material_override = tmat
+			tl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			n.add_child(tl)
+			var core = MeshInstance3D.new()
+			core.name = "Core"
+			core.mesh = fx.tail_mesh(5.0, 0.12)
+			var cmat = fx.tail_material().duplicate()
+			cmat.set_shader_parameter("col_tail", Color(1, 0.95, 0.8, 1))
+			cmat.set_shader_parameter("power", 1.2)
+			core.material_override = cmat
+			core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			n.add_child(core)
+			var sp = CPUParticles3D.new()
+			sp.name = "Sparks"
+			sp.amount = 30
+			sp.lifetime = 1.6
+			sp.local_coords = false
+			sp.direction = Vector3(0, 0, 1)
+			sp.spread = 40.0
+			sp.initial_velocity_min = 0.2
+			sp.initial_velocity_max = 1.2
+			sp.gravity = Vector3(0, -0.5, 0)
+			sp.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+			sp.emission_sphere_radius = 0.25
+			var pq = QuadMesh.new()
+			pq.size = Vector2(0.28, 0.28)
+			pq.material = fx.glow_mat(star_tex(), Color(1.0, 0.93, 0.72, 0.95))
+			sp.mesh = pq
+			sp.scale_amount_min = 0.5
+			sp.scale_amount_max = 1.4
+			sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			n.add_child(sp)
+			sp.emitting = true
 		_:
 			add_child(n)
 	return n

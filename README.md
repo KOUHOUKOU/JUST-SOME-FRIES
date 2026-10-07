@@ -1,6 +1,6 @@
 # JUST SOME FRIES
 
-## ▶ Walkthrough video (under 2 min, narrated)
+## ▶ Walkthrough video (2 min, narrated)
 
 [![Watch the walkthrough](docs/walkthrough_poster.jpg)](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)
 
@@ -20,12 +20,12 @@ A small 3D flight game made for **Tripothon**, theme *"A Gift for ____"*.
 
 | | Link |
 |---|---|
-| **Walkthrough video** (under 2 min, English narration + subtitles) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
+| **Walkthrough video** (2 min, English narration + subtitles) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
 | **Play in the browser** (no install) | **[kouhoukou.github.io/JUST-SOME-FRIES](https://kouhoukou.github.io/JUST-SOME-FRIES/)** |
 | **Download for Windows** (the full experience) | **[Releases → JustSomeFries_Windows.zip](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest)** · [direct download](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/download/version1/JustSomeFries_Windows.zip) |
 | Source (Godot 4 project) | [`game/`](game/) in this repository |
 
-The walkthrough was recorded straight from the game with Godot's Movie Maker (a test bot does the flying), then cut with an English voice-over. The narration is AI-generated (Microsoft Edge neural text-to-speech, voice *Andrew*) and the subtitles are burned in; the script is in [`docs/walkthrough.srt`](docs/walkthrough.srt). It shows the opening, the three tutorial fries, Gull Sight, silver, gold and diamond fries, the pool villa, the Fry Codex, and ends on a question the video will not answer (no ending spoilers).
+The walkthrough (2 minutes) was recorded straight from the game with Godot's Movie Maker (a test bot does the flying), then cut with an English voice-over. The narration is AI-generated (Microsoft Edge neural text-to-speech, voice *Andrew*) and the subtitles are burned in; the script is in [`docs/walkthrough.srt`](docs/walkthrough.srt). It shows the opening, the first rhythm grabs, Gull Sight, the first time all three drinks make STARLIGHT, a shooting star being caught, and a glimpse of the ending (its last scene is not shown).
 
 ## How to play
 
@@ -42,24 +42,24 @@ The walkthrough was recorded straight from the game with Godot's Movie Maker (a 
 | Space | flap |
 | Ctrl (hold) | land anywhere; resting on the ground gets your stamina back |
 | **E** | grab: press as each ring hits the green zone (gold counts double) |
-| TAB (hold) | Gull Sight: time slows, the fries worth chasing glow |
+| TAB (hold) | Gull Sight: time slows, every fry shows its rarity and the speed it needs; high in the sky it also draws the orbit of a shooting star |
 | C | Fry Codex (right-click a wearable to put it on or take it off) |
 | F | squawk |
 | Esc | pause |
 
 ## The game
 
-You fly freely over a sunny seaside town, pier and cafe. Dive at a fry fast enough and the grab becomes a one-key rhythm game: target circles appear around the fry, and every circle sends two waves of rings. Press **E** as a ring hits the green zone (green = 1 point, gold = 2, a miss = 0) until you have as many points as the fry has waves. A silver fry has 2 circles, gold 3, diamond 5 circles arranged like the Olympic rings. There is no escape check, but a missed grab costs breath, spooks the fry and the owner notices you: try again once things calm down.
+You fly freely over a sunny seaside town, pier and cafe. Dive at a fry fast enough and the grab becomes a one-key rhythm game: target circles appear around the fry, and every circle sends waves of rings. Press **E** as a ring hits the green zone (green = 1 point, gold = 2, a miss = 0) until you have as many points as the fry has waves. A silver fry has 2 circles, gold 3, diamond and rainbow fries 5 circles arranged like the Olympic rings. A missed grab costs breath, spooks the fry and the owner notices you: try again once things calm down.
 
-Seven colours of magic fry each change how you fly: top speed, acceleration, ring size, how far you can see, stamina, rest, and how hard you get hurt. Each comes in silver, gold and diamond. Volleyball players spike the ball at you, dogs and kids chase you, and you can steal hats, glasses, socks, coffee, cocktails and ice cream off people. The drinks are 20-second buffs (coffee = acceleration, cocktail = free boost, ice cream = nothing can hit you). Gull Sight (hold TAB) slows time and shows what is worth chasing, with an arrow to the nearest fry. Side quests ask you to catch a fish, a cloud and the sun.
+Seven colours of magic fry each change how you fly: top speed, acceleration, ring size, how far you can see, stamina, rest, and how hard you get hurt. Each comes in silver, gold and diamond (and, once a colour is complete, rainbow). Volleyball players spike the ball at you, dogs and kids chase you, and you can steal hats, glasses, socks, coffee, cocktails and ice cream off people. Each drink changes how you feel (sharper senses, easy flight, nothing can hurt you), and **all three at once is STARLIGHT**: thirty seconds of the best flying there is, with a piece of classical music of its own. Hold TAB for Gull Sight: time slows and every fry becomes a slim emblem: a hexagon for silver, a star for gold, a cut gem for diamond, a ring of colours for rainbow.
 
-The town has a terraced hill with villas, pools and roof terraces, a marina, an ice cream shop and a fry shack, drifting low-poly clouds and a real sun.
+The island is full of small adventures: fish that leap where the water bubbles (nine kinds, a fish book), a cloud and the sun you can catch and wear, **shooting stars** that need the fastest flying in the game (five judgements, and a caught star stays with you as a tail of light), friendly gulls in faint pastel colours who bring you gifts, kind children, and a task board.
 
-And then there is the big brother on the cafe roof, who has everything and is still hungry.
+At key moments the game becomes a film: the first coffee, cocktail and ice cream, the first fish, the first star, all three drinks at once, and the day the gull has every kind of magic there is and is still hungry. And then there is the big brother on the cafe roof, who has everything and is still hungry. You can sit next to him and talk.
 
 ## Made with
 
-Godot 4.7.1 (GDScript, Compatibility renderer), Claude Code, ChatGPT. Every model, texture, sound and the music is generated by code; there are no external art or audio assets.
+Godot 4.7.1 (GDScript, Compatibility renderer), Claude Code, ChatGPT. Every model, texture, sound and the music is generated by code (`tools/audio` renders the sounds and the music offline with numpy); there are no external art or audio assets.
 
 ## Screenshots
 
@@ -69,10 +69,14 @@ Godot 4.7.1 (GDScript, Compatibility renderer), Claude Code, ChatGPT. Every mode
 | ![gull lock on](images/03_gull_lock_on.jpg) | ![catch the sun](images/04_catch_the_sun.jpg) |
 | ![rhythm rings](images/05_rhythm_rings.jpg) | ![pool villa grab](images/06_pool_villa_grab.jpg) |
 | ![fry codex](images/07_fry_codex.jpg) | ![sea and quest](images/08_sea_and_quest.jpg) |
+| ![the first fry](images/09_the_first_fry.jpg) | ![big brother](images/10_big_bro_visual_novel.jpg) |
+| ![starlight and a shooting star](images/11_starlight_moment.jpg) | ![memories](images/12_memories.jpg) |
+| ![gull sight emblems](images/13_gull_sight_emblems.jpg) | |
 
 ## Repository
 
 - `game/`: the Godot project. Open `game/project.godot` with Godot 4.7, or run `godot --path game`.
 - `docs/`: the web build served by GitHub Pages, plus the walkthrough video.
-- `design/`: design documents, change logs and tuning notes.
+- `design/`: design documents, change logs (`28_ROUND8_CHANGES.md` is the latest) and tuning notes.
+- `tools/`: `audio/` renders every sound and piece of music offline; `film/make_promo.py` cuts the walkthrough video.
 - `images/`: cover and screenshots.

@@ -14,7 +14,7 @@ const PAPER = Color(0.96, 0.93, 0.86)
 # all the words of a card sit on ONE page: each line fades in under the last one, nothing fades out in between
 const OPENING = ["THIS IS AN AGE OF MAGIC.", "THE WIND LISTENS TO CERTAIN FRIES.", "BREATH IS SOLD BY THE CARTON.", "AND SOMEWHERE ON A PIER,", "A SEAGULL IS HUNGRY."]
 const OPENING_Y = [0.10, 0.21, 0.32, 0.45, 0.52]
-const ENDING = ["THIS WAS AN AGE OF MAGIC.", "THE WIND STILL LISTENS TO CERTAIN FRIES.", "BREATH IS STILL SOLD BY THE CARTON.", "AND ON A PIER,", "A SEAGULL ATE ONE PLAIN FRY."]
+const ENDING = ["THIS WAS AN AGE OF MAGIC.", "THE WIND STILL LISTENS TO CERTAIN FRIES.", "BREATH IS STILL SOLD BY THE CARTON.", "AND ON A PIER,", "TWO SEAGULLS SHARED ONE PLAIN FRY."]
 const ENDING_Y = [0.10, 0.21, 0.32, 0.45, 0.52]
 
 class Portrait extends Control:
@@ -83,6 +83,9 @@ var scroll
 var skipping = false
 var mode = ""
 var can_input = false
+var poster = null
+var dimmer = null
+var hold_p = 0.0
 
 func _ready():
 	layer = 40
@@ -96,6 +99,21 @@ func _ready():
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(bg)
+	poster = TextureRect.new()
+	poster.set_anchors_preset(Control.PRESET_FULL_RECT)
+	poster.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	poster.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	poster.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	if ResourceLoader.exists("res://assets/ui/cover.jpg"):
+		poster.texture = load("res://assets/ui/cover.jpg")
+	poster.modulate.a = 0.0
+	root.add_child(poster)
+	dimmer = ColorRect.new()
+	dimmer.color = Color(0.02, 0.03, 0.08, 1.0)
+	dimmer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dimmer.modulate.a = 0.0
+	root.add_child(dimmer)
 	art = EndArt.new()
 	art.set_anchors_preset(Control.PRESET_FULL_RECT)
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -156,6 +174,19 @@ func _fade(node, to, sec):
 	tw.tween_property(node, "modulate:a", to, sec)
 	await tw.finished
 
+func _process(delta):
+	# credits are over: hold E to fly again (a stray tap does nothing)
+	if mode == "credits" and can_input and visible:
+		if Input.is_action_pressed("interact"):
+			hold_p += delta / 0.9
+			if hold_p >= 1.0:
+				mode = ""
+				hold_p = 0.0
+				restart_requested.emit()
+		else:
+			hold_p = max(hold_p - delta * 2.4, 0.0)
+		hintl.add_theme_color_override("font_color", Color(1, 0.9 + 0.1 * hold_p, 0.6 + 0.4 * hold_p, 0.5 + 0.5 * hold_p))
+
 func _input(event):
 	if not visible:
 		return
@@ -171,13 +202,15 @@ func _input(event):
 			if event.keycode == KEY_ESCAPE:
 				mode = ""
 				menu_requested.emit()
-			elif event.keycode in [KEY_E, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
-				mode = ""
-				restart_requested.emit()
+			elif false:
+				pass
 		elif press and event.keycode == KEY_ENTER:
 			skipping = true
 
 # ------------------------------------------------------------------ one page of words, then the little portrait in the corner
+func pivot_poster():
+	poster.pivot_offset = get_viewport().get_visible_rect().size * 0.5
+
 func _reset_page():
 	for pl in page:
 		pl.modulate.a = 0.0
@@ -268,6 +301,16 @@ func play_ending():
 		_fade(pl, 0.0, 1.0)
 	_fade(portrait, 0.0, 1.2)
 	await _fade(art, 0.0, 1.4)
+	# and then the picture that was waiting for this: the cover, with the gull and its fry. The name of the game is the answer.
+	if poster.texture != null:
+		pivot_poster()
+		poster.scale = Vector2(1.0, 1.0)
+		Sfx.play("reward_3", -9.0, 0.8)
+		var tz = create_tween().set_ignore_time_scale(true)
+		tz.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tz.tween_property(poster, "scale", Vector2(1.07, 1.07), 22.0)
+		await _fade(poster, 1.0, 2.6)
+		await _wait(4.2)
 	mode = ""
 	skipping = false
 	keep_black = true
@@ -279,7 +322,7 @@ func _lines():
 	var st = GS.stats
 	var powered = GS.fry_total()
 	var out = [
-		["JUST SOME FRIES", 78, GOLD],
+		["", 150, PAPER],
 		["a game about one gull, one pier and one fry", 20, Color(0.8, 0.78, 0.7)],
 		["", 56, PAPER],
 		["STARRING", 16, Color(0.7, 0.7, 0.75)],
@@ -330,8 +373,11 @@ func play_credits():
 	lbl.modulate.a = 0.0
 	sub.modulate.a = 0.0
 	hintl.text = ""
+	hold_p = 0.0
 	if not keep_black:
 		await _fade(bg, 1.0, 1.6)
+	if poster.modulate.a > 0.1:
+		_fade(dimmer, 0.66, 1.6)
 	keep_black = false
 	for c in scroll.get_children():
 		c.queue_free()
@@ -367,7 +413,7 @@ func play_credits():
 	scroll.position.y = vp.y * 0.5 - h + 40.0
 	skipping = false
 	can_input = true
-	hintl.text = "E  -  fly again          ESC  -  menu"
+	hintl.text = "HOLD  E  -  fly again          ESC  -  menu"
 	hintl.modulate.a = 0.0
 	hintl.anchor_top = 0.9
 	hintl.anchor_bottom = 0.9

@@ -14,7 +14,7 @@ const SPECIAL_TYPES = ["red", "orange", "green", "cyan", "blue", "purple", "pink
 
 static var _halo_tex = null
 static var _ring_tex = null
-static var _rim_tex = null
+static var _rim_tex = {}
 static var _mats = {}
 
 var id = ""
@@ -24,6 +24,7 @@ var kind = 0
 var tier = 0                 # 0 common (tutorial), 1 rare, 2 epic, 3 legendary
 var utype = ""               # which stat a star fry raises
 var npc = null
+var owner_amb = null         # a passer-by who holds this (rainbow) fry
 var available = true
 var consumed = false
 var carried = false
@@ -324,19 +325,43 @@ static func _glow_tex():
 		_halo_tex = gt
 	return _halo_tex
 
-# crisp ring + soft inner disc: the "rarity badge" that hangs behind a fry
-static func _rim_texture():
-	if _rim_tex == null:
-		var img = Image.create(128, 128, false, Image.FORMAT_RGBA8)
-		for y in 128:
-			for x in 128:
-				var d = Vector2(x - 63.5, y - 63.5).length() / 64.0
-				var ring = clamp(1.0 - abs(d - 0.8) / 0.06, 0.0, 1.0)
-				var disc = clamp(1.0 - d, 0.0, 1.0) * 0.25
-				var edge = clamp((1.0 - d) * 8.0, 0.0, 1.0)
-				img.set_pixel(x, y, Color(1, 1, 1, clamp(max(ring, disc) * edge, 0.0, 1.0)))
-		_rim_tex = ImageTexture.create_from_image(img)
-	return _rim_tex
+# the rarity badge that hangs behind a fry (round 8: slim and crisp, a different SHAPE per rarity so that they can be told apart at a glance):
+#   silver  a thin ring                                 gold    a ring with eight ticks
+#   diamond a ring with a four-pointed sparkle          rainbow two rings
+static func _rim_texture(tier = 1):
+	if _rim_tex == null or typeof(_rim_tex) != TYPE_DICTIONARY:
+		_rim_tex = {}
+	var key = clamp(tier, 1, 4)
+	if _rim_tex.has(key):
+		return _rim_tex[key]
+	var N = 160
+	var img = Image.create(N, N, false, Image.FORMAT_RGBA8)
+	var c = (N - 1) * 0.5
+	for y in N:
+		for x in N:
+			var dx = (x - c) / c
+			var dy = (y - c) / c
+			var d = sqrt(dx * dx + dy * dy)
+			var ang = atan2(dy, dx)
+			var a = clamp(1.0 - abs(d - 0.8) / 0.028, 0.0, 1.0)             # the ring
+			a = max(a, clamp(1.0 - d, 0.0, 1.0) * 0.07)                    # a trace of disc
+			if key == 2:
+				var m = abs(fposmod(ang + PI / 8.0, PI / 4.0) - PI / 8.0)
+				var tick = clamp(1.0 - m / 0.07, 0.0, 1.0) * clamp(1.0 - abs(d - 0.93) / 0.07, 0.0, 1.0)
+				a = max(a, tick)
+			elif key == 3:
+				var ax = abs(dx)
+				var ay = abs(dy)
+				var cross = max(clamp(1.0 - ay / (0.012 + 0.05 * (1.0 - d)), 0.0, 1.0) * clamp(1.0 - ax, 0.0, 1.0),
+					clamp(1.0 - ax / (0.012 + 0.05 * (1.0 - d)), 0.0, 1.0) * clamp(1.0 - ay, 0.0, 1.0))
+				a = max(a, cross * 0.9)
+			elif key == 4:
+				a = max(a, clamp(1.0 - abs(d - 0.64) / 0.022, 0.0, 1.0) * 0.8)
+			var edge = clamp((1.0 - d) * 12.0, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1, 1, 1, clamp(a * edge, 0.0, 1.0)))
+	var tx = ImageTexture.create_from_image(img)
+	_rim_tex[key] = tx
+	return tx
 
 func _build_halo():
 	var tex = _glow_tex()
@@ -367,9 +392,9 @@ func _build_halo():
 			halo_base = 0.5
 		_:
 			halo_color = rarity_color()
-			var sz = [0.0, 3.4, 4.0, 4.8, 5.0][clamp(tier, 1, 4)]
+			var sz = [0.0, 1.5, 1.8, 2.1, 2.2][clamp(tier, 1, 4)]
 			halo.scale = Vector3(sz, sz, sz)
-			halo_base = 0.95
+			halo_base = 0.42
 	halo_alpha = halo_base
 	_apply_halo()
 	# the rarity rim: a crisp ring behind the fry (not for the plain fry or the common tutorial fries)
@@ -383,12 +408,12 @@ func _build_halo():
 		rm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		rm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		rm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		rm.albedo_texture = _rim_texture()
+		rm.albedo_texture = _rim_texture(tier)
 		rm.albedo_color = Color(halo_color.r, halo_color.g, halo_color.b, 0.9)
 		rm.disable_receive_shadows = true
 		rim.material_override = rm
 		rim.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var rs = [0.0, 1.7, 2.1, 2.6, 2.8][clamp(tier, 1, 4)]
+		var rs = [0.0, 1.05, 1.25, 1.5, 1.6][clamp(tier, 1, 4)]
 		rim.scale = Vector3(rs, rs, rs)
 		rim.position = Vector3(0, 0.3, 0)
 		add_child(rim)
@@ -476,7 +501,7 @@ func _process(delta):
 			rim.material_override.albedo_color = Color(halo_color.r, halo_color.g, halo_color.b, 0.9)
 	if rim != null:
 		var pulse = 1.0 + 0.05 * sin(t * 2.4 + float(hash(id) % 7))
-		var rs = [0.0, 1.7, 2.1, 2.6, 2.8][clamp(tier, 1, 4)] * pulse
+		var rs = [0.0, 1.05, 1.25, 1.5, 1.6][clamp(tier, 1, 4)] * pulse
 		rim.scale = Vector3(rs, rs, rs)
 	if (is_special() or ftype == "star") and not carried:
 		visual.rotation.y += delta * 1.2
@@ -486,7 +511,9 @@ func _process(delta):
 	if not available and not carried and not consumed and ftype != "ordinary":
 		halo.visible = int(t * 10.0) % 2 == 0
 	elif not carried:
-		halo.visible = halo_alpha > 0.01
+		halo.visible = halo_alpha > 0.01 and not GS.sense_active
+	if rim != null and not carried and not plain:
+		rim.material_override.albedo_color.a = 0.45 if GS.sense_active else 0.9
 	if glints != null:
 		glints.emitting = (not carried) and revealed and (not consumed)
 
@@ -651,6 +678,9 @@ func guard(sec):
 			available = true)
 
 func consume():
+	if owner_amb != null and is_instance_valid(owner_amb):
+		owner_amb.carried_fry = null
+		owner_amb.theft_reaction()
 	consumed = true
 	available = false
 	visible = false

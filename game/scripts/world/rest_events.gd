@@ -63,6 +63,7 @@ func _process(delta):
 		return
 	var dt = delta / max(Engine.time_scale, 0.1)
 	cd = max(cd - dt, 0.0)
+	gift_cd = max(gift_cd - dt, 0.0)
 	kid_cd = max(kid_cd - dt, 0.0)
 	var resting = player.mode == 1 and player.still_t > 0.8 and not player.input_locked and GS.gull_sense_count >= 3 and not GS.ordinary_eaten \
 		and not GS.codex_open and player.snatch.state == "idle"
@@ -77,8 +78,8 @@ func _start():
 	var kinds = ["buddy", "buddy", "kid", "kid", "dog"]
 	if kid_cd > 0.0 or GS.fry_total() < 4:
 		kinds = ["buddy", "buddy", "dog"]
-	if GS.watch_high():
-		kinds = ["buddy"]
+	if GS.watch_high() or player.perch_high:
+		kinds = ["buddy"]          # on a roof or a tree top only another gull can come to visit
 	var kind = kinds[randi() % kinds.size()]
 	if force_kind != "":
 		kind = force_kind
@@ -100,19 +101,63 @@ func _end(cool):
 # ------------------------------------------------------------------ the friendly gull
 func _start_buddy():
 	var spot = _pick_spot(1.6)
+	var hover = false
+	var pp0 = player.global_position
 	if spot == null:
-		return
+		# nowhere flat to land next to the gull (a tree top, a narrow roof ridge): the friend hovers beside it instead
+		var right = Vector3(cos(player.yaw), 0, -sin(player.yaw))
+		spot = pp0 + right * 1.9 + Vector3(0, 0.55, 0)
+		if not _free_air(spot):
+			spot = pp0 - right * 1.9 + Vector3(0, 0.55, 0)
+			if not _free_air(spot):
+				return
+		hover = true
+	var gift = null
+	if GS.fry_total() >= 3 and ((gift_cd <= 0.0 and randf() < (0.55 if (player.perch_high or hover) else 0.3)) or force_kind != ""):
+		gift = true
 	var g = Node3D.new()
 	g.set_script(GullVisual)
 	g.plain = true
 	get_tree().current_scene.add_child(g)
 	g.build()
+	g.tint_pale(GullVisual.pale_color(randi()))
 	g.scale = Vector3.ONE * 1.25
 	var ang = randf() * TAU
 	var from = spot + Vector3(cos(ang) * 38.0, 14.0, sin(ang) * 38.0)
 	g.global_position = from
-	ev = {"kind": "buddy", "t": 0.0, "g": g, "from": from, "to": spot + Vector3(0, 0.4, 0), "hearts": 0, "phase": "fly"}
+	ev = {"kind": "buddy", "t": 0.0, "g": g, "from": from, "to": spot + (Vector3.ZERO if hover else Vector3(0, 0.4, 0)), "hearts": 0, "phase": "fly",
+		"hover": hover, "gift": null, "given": false, "give_t": 0.0}
+	if gift != null:
+		# the friend arrives with a rainbow fry in its beak
+		var f = Node3D.new()
+		f.set_script(FRY)
+		get_tree().current_scene.add_child(f)
+		f.setup("GIFT_FRY", load("res://scripts/npc/ambient_npc.gd").gift_type(), "box", 0, 4)
+		for gname in ["fries", "special_fries", "star_fries"]:
+			if f.is_in_group(gname):
+				f.remove_from_group(gname)
+		f.revealed = true
+		f.visible = true
+		f.carried = true
+		f.reparent(g.beak_socket, false)
+		f.position = Vector3(0, -0.06, -0.04)
+		f.scale = Vector3(0.42, 0.42, 0.42)
+		f.halo.visible = false
+		if f.rim != null:
+			f.rim.visible = false
+		ev["gift"] = f
 	Sfx.play("gull_far", -10.0, 1.2)
+
+var gift_cd = 20.0
+
+func _free_air(p):
+	var sh = SphereShape3D.new()
+	sh.radius = 0.55
+	var q = PhysicsShapeQueryParameters3D.new()
+	q.shape = sh
+	q.transform = Transform3D(Basis.IDENTITY, p)
+	q.collision_mask = 1
+	return player.get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
 
 func _heart(pos):
 	var s = Sprite3D.new()
@@ -158,15 +203,50 @@ func _step_buddy(dt):
 				ev["phase"] = "leave"
 				ev["t"] = 0.0
 		"sit":
-			g.pose("ground", 0.0, false, dt)
+			if ev["hover"]:
+				g.pose("throttle", 0.0, true, dt)
+				g.global_position = ev["to"] + Vector3(0, sin(ev["t"] * 4.0) * 0.08, 0)
+			else:
+				g.pose("ground", 0.0, false, dt)
+				g.global_position = ev["to"] + Vector3(0, sin(ev["t"] * 6.0) * 0.015, 0)
 			g.look_at(Vector3(pp.x, g.global_position.y, pp.z), Vector3.UP)
-			g.global_position = ev["to"] + Vector3(0, sin(ev["t"] * 6.0) * 0.015, 0)
+			# the gift: the fry leaves the friend's beak and flies into the gull's
+			var gf = ev["gift"]
+			if gf != null and is_instance_valid(gf) and ev["t"] > 1.1:
+				if not ev["given"]:
+					ev["given"] = true
+					gf.reparent(get_tree().current_scene, true)
+					gf.scale = Vector3.ONE * 0.7
+					ev["gfrom"] = gf.global_position
+					Sfx.play("feed", -8.0)
+				ev["give_t"] += dt
+				var gu = clamp(ev["give_t"] / 0.6, 0.0, 1.0)
+				var gp = ev["gfrom"].lerp(player.beak_socket.global_position, gu)
+				gp.y += sin(gu * PI) * 0.5
+				gf.global_position = gp
+				gf.rotation.y += 6.0 * dt
+				if gu >= 1.0:
+					var gtype = gf.utype
+					var gold_max = GS.stamina_max()
+					GS.add_rainbow(gtype)
+					if gtype == "blue":
+						player.stamina += GS.stamina_max() - gold_max
+					GS.stats["fed"] += 1
+					GS.stats["gifts"] = GS.stats.get("gifts", 0) + 1
+					GS.fry_got.emit(gtype, 4)
+					GS.award("A FRIEND WHO SHARES")
+					GS.quests_check()
+					Sfx.play("reward_1", -8.0, 1.4)
+					player.fov_kick = 3.0
+					gf.queue_free()
+					ev["gift"] = null
+					gift_cd = 60.0
 			# a little courtship bob, and the hearts
 			g.head.rotation.x = sin(ev["t"] * 5.0) * 0.25
 			if ev["hearts"] < 6 and ev["t"] > 0.5 + ev["hearts"] * 0.5:
 				ev["hearts"] += 1
 				_heart((pp + g.global_position) * 0.5 + Vector3(0, 0.7, 0))
-			if player.mode != 1 or ev["t"] > 4.4:
+			if player.mode != 1 or ev["t"] > (4.4 if ev["gift"] == null else 5.4):
 				ev["phase"] = "leave"
 				ev["t"] = 0.0
 				if player.mode == 1:
@@ -200,7 +280,15 @@ func _start_kid():
 	rig.set_mode("jog")
 	rig.walk_rate = 1.6
 	kid.global_position = spot
-	var type = GS.FRY_TYPES[randi() % GS.FRY_TYPES.size()]
+	var hs = Sprite3D.new()          # a heart over the head: this one comes to feed the gull
+	hs.texture = heart_tex()
+	hs.pixel_size = 0.014
+	hs.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	hs.no_depth_test = true
+	hs.shaded = false
+	hs.position = Vector3(0, 1.75, 0)
+	kid.add_child(hs)
+	var type = load("res://scripts/npc/ambient_npc.gd").gift_type()
 	ev = {"kind": "kid", "t": 0.0, "kid": kid, "rig": rig, "phase": "run", "type": type, "fry": null, "from": Vector3.ZERO}
 	Sfx.play("oh", -12.0, 1.5)
 

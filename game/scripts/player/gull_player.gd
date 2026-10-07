@@ -8,13 +8,14 @@ signal ate_ordinary(fry)
 signal tumbled
 signal landed(high)
 
+const Terrain = preload("res://scripts/world/terrain.gd")
 const SnatchScript = preload("res://scripts/player/snatch_controller.gd")
 const VisualScript = preload("res://scripts/player/gull_visual.gd")
 
 const WATER_Y = -0.75
 const GROUND_SPEED = 2.2
-const CAM_TABLE = [[2.5, 62.0, 3.6], [5.0, 66.0, 4.0], [11.0, 74.0, 5.2], [19.0, 92.0, 7.5], [25.0, 104.0, 9.4], [30.0, 110.0, 10.5]]
-const TURN_TABLE = [[2.5, 8.0], [5.0, 7.0], [11.0, 4.5], [19.0, 2.0], [25.0, 1.6], [30.0, 1.4]]
+const CAM_TABLE = [[2.5, 62.0, 3.6], [5.0, 66.0, 4.0], [11.0, 74.0, 5.2], [19.0, 92.0, 7.5], [25.0, 104.0, 9.4], [30.0, 112.0, 10.8], [38.0, 122.0, 12.5]]
+const TURN_TABLE = [[2.5, 8.0], [5.0, 7.0], [11.0, 4.5], [19.0, 2.0], [25.0, 1.7], [30.0, 1.5], [38.0, 1.4]]
 
 enum M { FLY, GROUND, TUMBLE }
 
@@ -35,6 +36,13 @@ var boosting = false
 var landing = false             # Ctrl held: come down now
 var drunk_t = 0.0
 var ground_drink_t = 0.0
+var star_fx
+var star_t_vis = 0.0         # 0..1 blend of the STARLIGHT look (camera, trails, glow)
+var star_hue = 0.0
+var was_ground = true
+var ride = 0.0               # wind-riding sway of the camera
+var trees = []               # the round trees of the world (main.gd fills this in: their crowns are a "grass" surface for the footsteps)
+var last_step = 0
 var stuck_t = 0.0
 var last_free_pos = Vector3.ZERO
 var aura
@@ -171,6 +179,9 @@ func _ready():
 	GS.special_collected.connect(func(_k): gull.apply_growth())
 	GS.buff_started.connect(_on_buff_started)
 	GS.buff_ended.connect(_on_buff_ended)
+	GS.buff_added.connect(_on_buff_added)
+	GS.star_started.connect(_on_star_started)
+	GS.star_ended.connect(_on_star_ended)
 	update_camera(0.0, true)
 
 func _make_particles(col, size, amount, life):
@@ -220,6 +231,45 @@ func _on_buff_started(kind):
 	Sfx.play("buff_" + kind, -5.0)
 	fov_kick = 4.0
 	shake = max(shake, 0.12)
+
+# every cup (also a second one of a kind) puts the breath back at once: a drink is never a reason to go and stand on the ground
+func _on_buff_added(kind, stacked):
+	refill()
+	if stacked:
+		GS.say_buff(["ANOTHER ONE. THE TIMER JUST GREW.", "MORE OF THE SAME. NO COMPLAINTS.", "TOPPED UP."][randi() % 3])
+		Sfx.play("buff_" + kind, -9.0, 1.15)
+		fov_kick = 3.0
+	_burst_ring(BUFF_COL_FX[kind])
+
+const BUFF_COL_FX = {"coffee": Color("C98A4B"), "alcohol": Color("FFD23A"), "ice": Color("FF8AD8")}
+
+func _burst_ring(col):
+	var p = _make_particles(Color(col.r, col.g, col.b, 0.95), 0.16, 26, 0.8)
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.direction = Vector3.UP
+	p.spread = 180.0
+	p.initial_velocity_min = 1.5
+	p.initial_velocity_max = 4.0
+	p.gravity = Vector3.ZERO
+	p.top_level = true
+	add_child(p)
+	p.global_position = global_position
+	p.emitting = true
+	get_tree().create_timer(1.2).timeout.connect(p.queue_free)
+
+func _on_star_started():
+	refill()
+	GS.say_buff("STARLIGHT.   NOTHING COSTS ANYTHING. NOTHING CAN HURT YOU.")
+	Sfx.play("star_on", -3.0)
+	fov_kick = 10.0
+	shake = max(shake, 0.4)
+	invuln_t = max(invuln_t, 1.0)
+	boost_locked = false
+
+func _on_star_ended():
+	GS.say_buff("THE STARS WENT BACK TO THE SKY. YOU KEPT THE VIEW.")
+	Sfx.play("star_off", -6.0)
 
 func _on_buff_ended(kind):
 	GS.say_buff(END_LINES[kind])
@@ -276,7 +326,10 @@ func _update_aura(delta):
 	var c = buff_color(aura_t)
 	var strong = 0.0
 	for k in GS.buff:
-		strong = max(strong, min(GS.buff[k] / 3.0, 1.0) if not GS.buff_dying[k] else min(GS.buff[k] / 2.0, 1.0))
+		strong = max(strong, min(GS.buff[k] / 3.0, 1.0))
+	if GS.star_active():
+		c = Color.from_hsv(star_hue, 0.4, 1.0)
+		strong = 1.0
 	if c == null or strong <= 0.0:
 		aura.visible = false
 		aura_light.light_energy = 0.0
@@ -284,14 +337,14 @@ func _update_aura(delta):
 		return
 	var flick = 1.0
 	for k in GS.buff:
-		if GS.buff[k] > 0.0 and GS.buff[k] < 3.5 and not GS.buff_dying[k]:
+		if GS.buff[k] > 0.0 and GS.buff[k] < 3.5:
 			flick = 0.65 + 0.35 * sin(aura_t * 16.0)
 	aura.visible = true
 	var pulse = (0.5 + 0.12 * sin(aura_t * 7.0)) * strong * flick
 	aura.material_override.albedo_color = Color(c.r, c.g, c.b, pulse)
-	aura.scale = Vector3.ONE * (0.85 + 0.08 * sin(aura_t * 5.0))
+	aura.scale = Vector3.ONE * (0.85 + 0.08 * sin(aura_t * 5.0)) * (1.0 + 0.9 * star_t_vis)
 	aura_light.light_color = c
-	aura_light.light_energy = 1.1 * strong * flick
+	aura_light.light_energy = (1.1 + 1.6 * star_t_vis) * strong * flick
 	aura_fx.emitting = true
 	aura_fx.mesh.material.albedo_color = Color(c.r, c.g, c.b, 0.85)
 
@@ -437,7 +490,6 @@ func startle(from_pos, amount = 6.0):
 func start_tumble(kick, dmg, dur):
 	if mode == M.TUMBLE:
 		return
-	GS.buffs_die(false)       # a hit burns coffee and cocktail away (ice cream makes the gull unhittable, so it never gets here with ice)
 	mode = M.TUMBLE
 	tumble_t = dur
 	velocity = kick
@@ -481,7 +533,7 @@ func _physics_process(delta):
 	if GS.sense_active:
 		# Gull Sight costs stamina per REAL second (the world is slowed down while it is held)
 		var real_dt = delta / max(Engine.time_scale, 0.05)
-		var cost = GS.vision_cost() if (mode == M.FLY and not GS.has_buff("alcohol")) else 0.0
+		var cost = GS.vision_cost() if (mode == M.FLY and not GS.free_flight()) else 0.0
 		GS.stats["vision_s"] += real_dt
 		if cost > 0.0:
 			stamina = max(stamina - cost * real_dt, 0.0)
@@ -495,6 +547,7 @@ func _physics_process(delta):
 			_ground(delta, mouse)
 		M.TUMBLE:
 			_tumble(delta)
+	_flight_log()
 	var smax = GS.stamina_max()
 	stamina = clamp(stamina, 0.0, smax)
 	low_stamina = stamina < smax * 0.2
@@ -507,6 +560,16 @@ func _physics_process(delta):
 	else:
 		stuck_t = 0.0
 	_safety()
+
+# the record of one flight (take-off to landing) that the HUD shows on the right edge
+func _flight_log():
+	if mode == M.GROUND:
+		if GS.flight["on"]:
+			GS.flight_end()
+	elif not GS.flight["on"] and not scripted_move and not input_locked:
+		GS.flight_begin()
+	if GS.flight["on"]:
+		GS.flight["max"] = max(GS.flight["max"], speed * GS.SPEED_UNIT)
 
 func _interp(table, x, col):
 	if x <= table[0][0]:
@@ -550,8 +613,8 @@ func _fly(delta, mouse):
 		drain = 18.0
 	elif throttling:
 		drain = 3.0
-	if GS.buff["alcohol"] > 0.0:
-		drain = 0.0           # the cocktail: flying costs nothing
+	if GS.free_flight():
+		drain = 0.0           # the cocktail and STARLIGHT: flying costs nothing
 	if drain > 0.0:
 		stamina = max(stamina - drain * delta, 0.0)
 		since_spend = 0.0
@@ -559,13 +622,15 @@ func _fly(delta, mouse):
 			boost_locked = true
 	# aiming: the target heading follows the mouse; the bird follows it at a speed-limited rate
 	aim_yaw += -mouse.x * sens - bank * 2.0 * delta
-	aim_pitch = clamp(aim_pitch - mouse.y * sens * (-1.0 if GS.invert_y else 1.0), deg_to_rad(-60.0), deg_to_rad(45.0))
-	var rate = _interp(TURN_TABLE, speed, 1) * max(lerp(1.0, 2.8, focus), lerp(1.0, 3.2, vision))
+	aim_pitch = clamp(aim_pitch - mouse.y * sens * (-1.0 if GS.invert_y else 1.0), deg_to_rad(-70.0), deg_to_rad(78.0))   # (round 8: the sun hangs high: the gull may look almost straight up)
+	# up in the sky (where the cloud, the stars and the sun are) the gull turns much more eagerly: a fast gull used to need half the sky to bring the sun into its beak
+	var sky_k = clamp((global_position.y - 38.0) / 45.0, 0.0, 1.0)
+	var rate = _interp(TURN_TABLE, speed, 1) * max(lerp(1.0, 2.8, focus), lerp(1.0, 3.2, vision)) * (1.0 + 0.45 * star_t_vis) * (1.0 + 1.25 * sky_k)
 	var dyaw_goal = clamp(angle_difference(yaw, aim_yaw), -1.3, 1.3)
 	aim_yaw = yaw + dyaw_goal
 	var step_y = clamp(dyaw_goal, -rate * delta, rate * delta)
 	yaw += step_y
-	var step_p = clamp(aim_pitch - pitch, -rate * 0.8 * delta, rate * 0.8 * delta)
+	var step_p = clamp(aim_pitch - pitch, -rate * (0.8 + 0.25 * sky_k) * delta, rate * (0.8 + 0.25 * sky_k) * delta)
 	pitch += step_p
 	yaw_rate = lerp(yaw_rate, step_y / max(delta, 0.001), 1.0 - exp(-10.0 * delta))
 	# double tap A/D = barrel roll dodge
@@ -615,8 +680,8 @@ func _fly(delta, mouse):
 	accel_now = lerp(accel_now, (speed - speed_before) / max(delta, 0.0001), 1.0 - exp(-10.0 * delta))
 	# flap
 	if not input_locked and Input.is_action_just_pressed("flap"):
-		if flap_cd <= 0.0 and (stamina >= 6.0 or GS.has_buff("alcohol")):
-			if not GS.has_buff("alcohol"):
+		if flap_cd <= 0.0 and (stamina >= 6.0 or GS.free_flight()):
+			if not GS.free_flight():
 				spend(6.0)
 			flap_cd = 0.3
 			flap_anim = 0.4
@@ -692,14 +757,31 @@ func _start_roll(dir):
 	roll_dir = dir
 	invuln_t = 0.45
 	roll_cd = GS.roll_cooldown()
-	if not GS.has_buff("alcohol"):
+	if not GS.free_flight():
 		spend(10.0)
 	var right = Vector3(cos(yaw), 0, -sin(yaw))
 	knock += right * dir * 7.0
 	Sfx.play("roll", -6.0)
 
+# what the gull stands on (for the sound of its feet): grass | sand | wood | stone | roof
+func surface():
+	var p = global_position
+	if p.y < 2.0 and ((p.x > -3.6 and p.x < 5.6 and p.z > 22.0 and p.z < 77.5) or (p.x > -30.0 and p.x < -10.0 and p.z > 26.0 and p.z < 45.0) or (p.x > -12.0 and p.x < 16.0 and p.z > 46.0 and p.z < 63.0) or p.y < 0.2):
+		return "wood"
+	var h = ground_h.call(p.x, p.z) if ground_h != null else 0.0
+	if p.y - h > 1.0:
+		for tr in trees:
+			if tr["kind"] == 0 and Vector2(tr["pos"].x - p.x, tr["pos"].z - p.z).length() < 3.6 and p.y > tr["pos"].y + 4.0:
+				return "grass"
+		return "roof"
+	var k = Terrain.color_at(p.x, p.z, h, 0.0).a
+	if k < 0.1 or k > 0.9:
+		return "grass"
+	if k < 0.3:
+		return "sand"
+	return "stone"
+
 func _land():
-	GS.buffs_die()
 	mode = M.GROUND
 	var high = global_position.y >= 4.0
 	perch_high = high
@@ -709,7 +791,7 @@ func _land():
 	aim_pitch = 0.0
 	boosting = false
 	throttling = false
-	Sfx.play("land", -6.0)
+	Sfx.play("land_" + surface(), -4.0, randf_range(0.95, 1.08))
 	landed.emit(high)
 	if global_position.y >= 15.0:
 		GS.award("SKYLINE")
@@ -747,6 +829,10 @@ func _ground(delta, mouse):
 	speed = 0.0
 	if moving:
 		walk_t += delta * 8.0
+		var ph = int(walk_t / PI)
+		if ph != last_step and is_on_floor():
+			last_step = ph
+			Sfx.play("step_%s%s" % [surface(), "2" if ph % 2 == 1 else ""], -16.0 + randf_range(-2.0, 1.0), randf_range(0.93, 1.1))
 	if is_on_floor():
 		off_floor_t = 0.0
 	else:
@@ -758,8 +844,6 @@ func _ground(delta, mouse):
 			aim_pitch = 0.0
 			aim_yaw = yaw
 			return
-	# standing on anything: every buff starts to burn away fast
-	GS.buffs_die()
 	# perch recovery: standing anywhere refills stamina; higher is faster
 	stamina += GS.regen_perch(perch_high) * (0.5 if soaked_t > 0.0 else 1.0) * delta
 	regen_active = true
@@ -893,7 +977,8 @@ func _process(delta):
 	elif throttling:
 		mname = "throttle"
 	gull.pose(mname, flap_anim / 0.4 if flap_anim > 0.0 else 0.0, throttling, delta)
-	gull.set_trails(boosting and speed > 14.0)
+	_update_star(delta)
+	gull.set_trails((boosting and speed > 14.0) or (star_t_vis > 0.3 and speed > 6.0))
 	var roll_target = clamp(yaw_rate * 0.3 - (0.0 if input_locked else Input.get_axis("bank_left", "bank_right")) * 0.4, -0.8, 0.8)
 	if mode == M.GROUND:
 		roll_target = sin(walk_t) * 0.12
@@ -913,21 +998,54 @@ func _process(delta):
 	Sfx.set_calm(calm)
 	update_camera(delta, false)
 
+# STARLIGHT: a rainbow of light behind the gull, stars falling off it, a halo that never goes out
+func _update_star(delta):
+	var dt_r = delta / max(Engine.time_scale, 0.05)
+	star_t_vis = move_toward(star_t_vis, 1.0 if GS.star_active() else 0.0, 1.4 * dt_r)
+	star_hue = fmod(star_hue + delta * 0.8, 1.0)
+	if star_fx == null:
+		star_fx = _make_particles(Color(1, 1, 1, 0.95), 0.34, 46, 1.1)
+		star_fx.mesh.material.albedo_texture = VisualScript.star_tex()
+		star_fx.mesh.material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		star_fx.local_coords = false
+		star_fx.direction = Vector3(0, 0, 1)
+		star_fx.spread = 80.0
+		star_fx.initial_velocity_min = 0.3
+		star_fx.initial_velocity_max = 1.6
+		star_fx.gravity = Vector3(0, -0.4, 0)
+		star_fx.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+		star_fx.emission_sphere_radius = 0.55
+		star_fx.scale_amount_min = 0.5
+		star_fx.scale_amount_max = 1.5
+		var gr = Gradient.new()
+		gr.colors = PackedColorArray([Color("FFB3E6"), Color("FFE98A"), Color("9BF0FF"), Color("C6A8FF"), Color(1, 1, 1, 0)])
+		gr.offsets = PackedFloat32Array([0.0, 0.3, 0.55, 0.8, 1.0])
+		star_fx.color_ramp = gr
+		visual_root.add_child(star_fx)
+	star_fx.emitting = star_t_vis > 0.05
+	if star_t_vis > 0.05:
+		gull.trail_color = Color.from_hsv(star_hue, 0.55, 1.0)
+
 func update_camera(delta, snap):
 	var boost_n = clamp((speed - 11.0) / 12.0, 0.0, 1.0)
 	var ky = 1.0 if snap else 1.0 - exp(-lerp(14.0, 9.0, boost_n) * delta)
 	var kp = 1.0 if snap else 1.0 - exp(-12.0 * delta)
 	cam_yaw = lerp_angle(cam_yaw, yaw, ky)
 	cam_pitch = lerp(cam_pitch, pitch * 0.9, kp)
-	var roll_cam = roll * 0.25
+	var roll_cam = roll * (0.25 + 0.45 * star_t_vis) + sin(ride * 1.3) * 0.035 * star_t_vis
 	rig.global_transform = Transform3D(Basis.from_euler(Vector3(cam_pitch, cam_yaw, roll_cam)), rig.global_position)
 	var target_pos = get_global_transform_interpolated().origin + Vector3(0, 0.7, 0)
 	if snap:
 		rig.global_position = target_pos
 	else:
-		rig.global_position = rig.global_position.lerp(target_pos, 1.0 - exp(-lerp(26.0, 12.0, boost_n) * delta))
+		rig.global_position = rig.global_position.lerp(target_pos, 1.0 - exp(-lerp(26.0, lerp(12.0, 6.5, star_t_vis), boost_n) * delta))
 	var fov_t = _interp(CAM_TABLE, speed, 1)
 	var dist_t = _interp(CAM_TABLE, speed, 2)
+	# STARLIGHT / riding the wind: a wider lens, the camera hangs further back and trails behind, it leans into every turn and breathes with the gusts
+	if star_t_vis > 0.001:
+		ride += delta
+		fov_t += 9.0 * star_t_vis + 2.2 * sin(ride * 2.3) * star_t_vis
+		dist_t += 1.6 * star_t_vis
 	if mode == M.GROUND:
 		fov_t = 62.0
 		dist_t = 3.4
