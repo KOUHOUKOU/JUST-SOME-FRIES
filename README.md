@@ -1,6 +1,6 @@
 # JUST SOME FRIES
 
-## ▶ Walkthrough video (3 min)
+## ▶ Walkthrough video (under 2 min, narrated)
 
 [![Watch the walkthrough](docs/walkthrough_poster.jpg)](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)
 
@@ -20,12 +20,12 @@ A small 3D flight game made for **Tripothon**, theme *"A Gift for ____"*.
 
 | | Link |
 |---|---|
-| **Walkthrough video** (3 min, plays in the browser) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
+| **Walkthrough video** (under 2 min, English narration + subtitles) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
 | **Play in the browser** (no install) | **[kouhoukou.github.io/JUST-SOME-FRIES](https://kouhoukou.github.io/JUST-SOME-FRIES/)** |
 | **Download for Windows** (the full experience) | **[Releases → JustSomeFries_Windows.zip](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest)** · [direct download](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/download/version1/JustSomeFries_Windows.zip) |
 | Source (Godot 4 project) | [`game/`](game/) in this repository |
 
-The walkthrough was recorded straight from the game with Godot's Movie Maker. A test bot flies it, so each dive starts with a cut. It shows the opening, the three tutorial fries, Gull Sight, silver, gold and diamond fries, the pool villa, the Fry Codex and **the ending (spoilers)**.
+The walkthrough was recorded straight from the game with Godot's Movie Maker (a test bot does the flying), then cut with an English voice-over. The narration is AI-generated (Microsoft Edge neural text-to-speech, voice *Andrew*) and the subtitles are burned in; the script is in [`docs/walkthrough.srt`](docs/walkthrough.srt). It shows the opening, the three tutorial fries, Gull Sight, silver, gold and diamond fries, the pool villa, the Fry Codex, and ends on a question the video will not answer (no ending spoilers).
 
 ## How to play
 
