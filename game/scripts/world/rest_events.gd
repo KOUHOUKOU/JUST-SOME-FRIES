@@ -76,7 +76,9 @@ func _process(delta):
 
 func _start():
 	var kinds = ["buddy", "buddy", "kid", "kid", "dog"]
-	if kid_cd > 0.0 or GS.fry_total() < 4:
+	if GS.watch < 0.7 and GS.fry_total() >= 4:
+		kinds = ["kid", "kid", "kid", "buddy", "buddy", "dog"]       # a calm town: being fed by the children is the normal thing
+	if (kid_cd > 0.0 and GS.watch >= 0.7) or GS.fry_total() < 4:
 		kinds = ["buddy", "buddy", "dog"]
 	if GS.watch_high() or player.perch_high:
 		kinds = ["buddy"]          # on a roof or a tree top only another gull can come to visit
@@ -366,7 +368,7 @@ func _step_kid(dt):
 				ev["t"] = 0.0
 				ev["rig"].override_arm_r = null
 				ev["rig"].set_mode("wave")
-				kid_cd = 90.0
+				kid_cd = 90.0 if GS.watch >= 0.7 else 35.0
 		"leave":
 			if ev["t"] > 1.4:
 				ev["rig"].set_mode("jog")

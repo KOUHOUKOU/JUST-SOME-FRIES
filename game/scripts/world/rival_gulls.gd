@@ -27,19 +27,14 @@ class Rival extends Node3D:
 		physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		gull = Node3D.new()
 		gull.set_script(GullVisual)
+		gull.plain = true
 		add_child(gull)
 		gull.build()
 		gull.scale = Vector3.ONE * 1.15
-		# a scruffy, brownish stranger: nothing of the player's colours
-		for m in gull.wing_mats:
-			m.albedo_color = Color(0.6, 0.54, 0.48)
-		for m in gull.tip_mats:
-			m.albedo_color = Color(0.2, 0.18, 0.18)
-		gull.tail_mat.albedo_color = Color(0.5, 0.46, 0.42)
-		gull.chest_mat.albedo_color = Color(0.93, 0.92, 0.88)
-		gull.beak_mat.albedo_color = Color("E8A030")
-		for m in gull.eye_mats:
-			m.albedo_color = Color("101015")
+		# round 12: a rival is a stranger in a faint colour (butter, blush, sky, mint, lilac, peach) with one piece of decoration of its own, never the player's white
+		gull.tint_pale(GullVisual.pale_color(randi()))
+		var accs = ["bowtie", "scarf", "sailor", "beret", "glasses", "hat"]
+		gull.wear(accs[randi() % accs.size()], true)
 		mark = Label3D.new()
 		mark.text = "!"
 		mark.font_size = 140
@@ -157,7 +152,7 @@ class Rival extends Node3D:
 			Sfx.play("rival_call", -9.0, 1.3)
 
 var player
-var cd = 70.0
+var cd = 45.0
 var rival = null
 var spots = []          # fish spots (world builder)
 var force_next = false
@@ -178,17 +173,22 @@ func _process(delta):
 		return
 	if sn.state != "idle" or sn.lock_fry != null or player.mode == 2 or player.input_locked:
 		return
-	if GS.stats["stolen"] < 3 and not force_next:
+	if GS.stats["stolen"] < 2 and not force_next:
 		return
 	var tgt = _pick_target()
 	if tgt == null:
 		return
 	_spawn(tgt)
 
+const DRINKS = ["coffee", "alcohol", "icecream"]
+
+# round 12: a rival goes for what the gull is flying towards (a fry or a drink, 12-40 m ahead); if nothing is in front of the gull, for something near it
 func _pick_target():
 	var pp = player.global_position
+	var fwd = Vector3(-sin(player.yaw), 0, -cos(player.yaw))
 	var best = null
 	var best_score = 1e9
+	var cands = []
 	for f in get_tree().get_nodes_in_group("fries"):
 		if not is_instance_valid(f) or f.ftype == "ordinary" or f.ftype == "tutorial" or f.ftype == "star":
 			continue
@@ -196,10 +196,18 @@ func _pick_target():
 			continue
 		if f.npc == null or f.npc.gone or f.npc.leaving:
 			continue
+		cands.append(f)
+	for m in get_tree().get_nodes_in_group("mischief"):
+		if is_instance_valid(m) and m.get("kind") in DRINKS and m.is_snatchable() and m.respawn_sec > 0.0:
+			cands.append(m)
+	for f in cands:
 		var d = f.global_position.distance_to(pp)
-		if d < 12.0 or d > 38.0:
+		if d < 12.0 or d > 40.0:
 			continue
-		var score = abs(d - 24.0) + randf() * 8.0
+		var dir = (f.global_position - pp)
+		dir.y = 0.0
+		var align = fwd.dot(dir.normalized()) if dir.length() > 0.1 else 0.0
+		var score = abs(d - 22.0) + (1.0 - align) * 18.0 + randf() * 6.0
 		if score < best_score:
 			best_score = score
 			best = f
@@ -211,7 +219,7 @@ func _pick_target():
 	return best
 
 func _spawn(tgt):
-	cd = randf_range(60.0, 100.0)
+	cd = randf_range(35.0, 65.0)
 	force_next = false
 	var pp = player.global_position
 	var tp = tgt.aim_point()

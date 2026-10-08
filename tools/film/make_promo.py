@@ -17,14 +17,17 @@ GAP = 0.25
 CLIPS = [
     ("seg1.avi", 0.0, 4.2, 0.3, ["Just Some Fries.", "A game about one very hungry seagull."]),
     ("seg1.avi", 10.0, 17.6, 0.2, ["It begins with a fry that nobody notices."]),
-    ("seg1.avi", 20.5, 28.0, 0.2, ["And a big brother who has everything... and is still hungry."]),
-    ("seg2.avi", 2.0, 12.8, 0.2, ["Dive. Lock on. Find the rhythm.", "Every fry is a tiny rhythm game."]),
+    ("seg1.avi", 19.0, 27.5, 0.2, ["And a big brother who has everything... and is still hungry."]),
+    ("seg2.avi", 2.0, 12.8, 0.2, ["Dive. Lock on. When the world slows down, find the rhythm.", "Every fry is a tiny rhythm game."]),
     ("seg2.avi", 14.2, 18.2, 0.2, ["Hold Tab, and the island shows you what it hides.", "Silver. Gold. Diamond. Rainbow."]),
-    ("seg3.avi", 4.0, 16.0, 0.2, ["Coffee. A cocktail. Ice cream.", "Drink all three at once... and the gull can see the wind."]),
-    ("seg3.avi", 25.0, 41.5, 0.2, ["In STARLIGHT, even falling stars can be caught.", "And a caught star never leaves."]),
-    ("seg4.avi", 1.5, 15.0, 0.2, ["Fish. Clouds. The sun itself.", "But in the end... only one fry was ever the point."]),
-    ("seg4.avi", 20.0, 33.0, 0.2, []),
-    ("seg4.avi", 66.0, 86.0, 0.2, []),
+    ("seg3.avi", 4.8, 14.6, 0.2, ["Coffee. A cocktail. Ice cream.", "Drink all three at once... and the gull can see the wind."]),
+    ("seg3.avi", 15.0, 22.0, 0.2, ["In STARLIGHT, even falling stars can be caught."]),
+    ("seg3.avi", 25.5, 38.5, 0.2, ["And when you catch one, the game stops to watch... while you keep flying."]),
+    ("seg5.avi", 2.0, 15.0, 0.2, ["Catch a cloud. A rainbow. The sun itself.", "And somehow... you are still hungry."]),
+    ("seg5.avi", 15.5, 25.5, 0.2, ["Out of breath over the sea? It will hold you. Rest, and take off again."]),
+    ("seg4.avi", 3.0, 11.0, 0.2, ["But in the end... only one fry was ever the point."]),
+    ("seg4.avi", 11.0, 23.0, 0.2, []),
+    ("seg4.avi", 49.0, 62.0, 0.2, []),
 ]
 CARD_LINES = ["Just Some Fries.", "Play it in your browser, or download it for Windows."]
 CARD = 4.2

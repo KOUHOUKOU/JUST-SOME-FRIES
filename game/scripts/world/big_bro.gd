@@ -18,6 +18,9 @@ var main = null
 var scripted_talk = false      # the ending: the line is part of the scene, whatever the distance
 var pose_mode = "ground"      # "throttle" while he flies down to the cafe in the ending
 
+const EARLY = ["Chin up, kid. The wind's free.", "Fly like the sea owes you rent.", "Careful. The old man's watching. Or sleeping. Hard to tell.", "Nice landing. I'd give it a 7. I'm a tough crowd."]
+const MID = ["Still hungry. Still fabulous.", "Everything's shinier. Nothing's tastier.", "I'd say don't copy me. But look at that hat.", "The view's great up here. The menu isn't."]
+const LATE = ["...you too?", "The sky's full of things. Nothing's quite it.", "Hungry suits you. Don't tell anyone I said so.", "You've got the squint now. Welcome."]
 const OUTFIT = ["topper", "shades", "necklace", "pipe", "coat"]
 
 func setup(p_player, pos, face_pos):
@@ -28,7 +31,7 @@ func setup(p_player, pos, face_pos):
 	gull.bro_style = true
 	add_child(gull)
 	gull.build()
-	gull.scale = Vector3.ONE * 1.55
+	gull.scale = Vector3.ONE * 2.3          # round 12: clearly the biggest gull on the island (the player's gull is the yardstick)
 	for k in OUTFIT:
 		gull.wear(k, true)
 	global_position = pos
@@ -41,7 +44,7 @@ func setup(p_player, pos, face_pos):
 	bubble.no_depth_test = true
 	bubble.modulate = Color(1, 0.95, 0.8, 0.0)
 	bubble.outline_size = 14
-	bubble.position = Vector3(0, 1.5, 0)
+	bubble.position = Vector3(0, 2.4, 0)
 	bubble.render_priority = 120          # round 10: always above the sea / horizon haze
 	bubble.outline_render_priority = 119
 	bubble.sorting_offset = 50.0
@@ -104,9 +107,5 @@ func _process(delta):
 	if near_t > 1.2 and line_cd <= 0.0 and not GS.ordinary_eaten and player.mode == 1 and GS.gull_sense_count >= 3:
 		line_cd = 40.0
 		var n = GS.fry_total()
-		if n < 10:
-			speak("Go on. Get strong.", 3.2)
-		elif n < 20:
-			speak("I have everything. Still hungry.", 3.6)
-		else:
-			speak("...you too?", 3.0)
+		var pool = EARLY if n < 10 else (MID if n < 20 else LATE)
+		speak(pool[randi() % pool.size()], 3.8)

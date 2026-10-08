@@ -154,3 +154,10 @@
 - **Big brother**: `GullVisual.bro_style` -> `_build_bro_item` (coat, topper, shades, necklace).
 - **Font sizes**: never animate a font size (each new size = new glyph atlas in the text server: +100s of MB over a session). `story._lettering` uses `round(fs*u/6)*6` and `draw_set_transform` scale for the pop; the E key of the rhythm rounds to 3 px. Check with the `[PERF] mem= vram=` lines (`--menu`, `--r10beats`: ~185 / ~207 MB now).
 - Insets: `inset_pool` (viewports are reused), `positional_shadow_atlas_size = 0`, `msaa_3d` off. Blur: `clear_r` .42, centre lod .12 x amount.
+## Round 12 (2026-10-08/09) - see docs/33_ROUND12_CHANGES.md
+- **Water**: `GullPlayer.on_water`, `_enter_water()` (conditions: FLY mode, landing | speed < 13 | stamina <= 1 | velocity.y < -3, or a tumble ending over water), `_float()` (WATER_SPEED 3.4, drag 1.6/4.0, breath = `regen_perch(false) x .8`, take-off on Space: speed max(glide x .9, 8), vert_boost 7); fast skim keeps `splash_cd` 1.6.
+- **Alertness**: `GS.heat_decay_mult` 9 and heat x .2 in the crowd target when `away` (flying, y > 20 or nearest person > 45 m, and nearest > 14 m). Calm town (watch < .7): rest-event weights kid x3, `kid_cd` 35 s, `kk_cd` 60 s.
+- **Rivals**: cooldown 35-65 s (first 45 s), after 2 thefts; target score = |d - 22| + (1 - align) x 18 + rand x 6 over fries with an owner and drinks (coffee, alcohol, icecream with respawn_sec > 0); `GullVisual.tint_pale` + one accessory.
+- **Catch moments**: `st.think(lines, hold, cps, last_hold, on_last)`; panels `_triptych` corners (.15/.85 x .33, .15 x .68), sizes 1.0 / 1.0 / .7 of the gull's width with `look_fwd` toward the beak; `_make_prop(kind)` in the beak socket.
+- **Sounds**: `tools/audio/fix_sfx_ends.py` (cosine tail over the last 35-45 %, 12 ms attack) on gull_far, chirp, proud, lure, cry, rival_call.
+- **Big brother**: scale 2.3, bubble at y 2.4, near distance 7 m; talks in `story_scenes.gd bro_chat`, one-liners `EARLY / MID / LATE` in `big_bro.gd`.

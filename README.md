@@ -55,7 +55,7 @@ Seven colours of magic fry each change how you fly: top speed, acceleration, rin
 
 The island is full of small adventures: fish that leap where the water bubbles (nine kinds, a fish book), grey clouds and **rain clouds that only rain over the sea**, a rainbow between a rain cloud and a white cloud, and a cloud, the sun, a **rainbow** and **shooting stars** that you can catch and wear. They need the fastest flying in the game: a gold-SONIC gull with all three drinks (STARLIGHT) barely reaches the sun, and each asks for five circles (the rainbow seven), every circle twice. A caught star stays with you as a trail of little golden stars, friendly gulls in faint pastel colours who bring you gifts, kind children, and a task board.
 
-The game has two kinds of short film moments, because gulls collect things one after another and nobody wants to be interrupted. The **beats** (4-8 s: the first coffee, cocktail and ice cream, the first fish, a cloud, the fish book) keep you flying: one big hand-lettered comic word (`BZZZT!`, `GLUG~`, `BRRR!`, `SPLASH!`) and a line or two of the gull's thoughts. The **film moments** (about 12 s, with their own music) are all three drinks at once, the first star, the sun, the rainbow, and the day the gull has every kind of magic there is and is still hungry. They never take the controls away: the world slows down and softens at the edges, and other angles of the gull open as small tilted comic panels while you keep flying. And then there is the big brother on the cafe roof, who has everything and is still hungry. You can sit next to him and talk.
+The game has two kinds of short film moments, because gulls collect things one after another and nobody wants to be interrupted. The **beats** (4-8 s: the first coffee, cocktail and ice cream, the first fish, a cloud, the fish book) keep you flying: one big hand-lettered comic word (`BZZZT!`, `GLUG~`, `BRRR!`, `SPLASH!`) and a line or two of the gull's thoughts. The **film moments** (about 12 s, with their own music) are all three drinks at once, the first star, the sun, the rainbow, and the day the gull has every kind of magic there is and is still hungry. They never take the controls away: the world slows down and softens at the edges while you keep flying. When you catch a star, a cloud, the sun or a rainbow, the catch is shown in three small close-ups in the corners of the picture and the gull's own thoughts stand in the middle. And then there is the big brother on the cafe roof, who has everything and is still hungry. You can sit next to him and talk.
 
 ## Made with
 
@@ -74,11 +74,12 @@ Godot 4.7.1 (GDScript, Compatibility renderer), Claude Code, ChatGPT. Every mode
 | ![gull sight emblems](images/13_gull_sight_emblems.jpg) | ![light pillars](images/14_light_pillars.jpg) |
 | ![a rainbow in the sky](images/15_rainbow_in_the_sky.jpg) | ![i can see the wind](images/16_i_can_see_the_wind.jpg) |
 | ![the task board](images/19_task_board.jpg) | ![a film moment](images/20_flow_moment.jpg) |
+| ![a rest on the sea](images/21_rest_on_the_sea.jpg) | ![catching the sun](images/22_catch_moment.jpg) |
 
 ## Repository
 
 - `game/`: the Godot project. Open `game/project.godot` with Godot 4.7, or run `godot --path game`.
 - `docs/`: the web build served by GitHub Pages, plus the walkthrough video.
-- `design/`: design documents, change logs (`32_ROUND11_CHANGES.md` is the latest) and tuning notes.
+- `design/`: design documents, change logs (`33_ROUND12_CHANGES.md` is the latest) and tuning notes.
 - `tools/`: `audio/` renders every sound and piece of music offline; `film/make_promo.py` cuts the walkthrough video.
 - `images/`: cover and screenshots.

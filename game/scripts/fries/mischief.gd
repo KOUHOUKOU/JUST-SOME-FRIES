@@ -368,6 +368,20 @@ static func respawn_static(parent, pos, kind):
 	m.set_script(load("res://scripts/fries/mischief.gd"))
 	m.setup(kind, parent, pos)
 
+# a rival gull took it (a drink): it is gone for a while, then the bar serves a fresh one
+func rival_take(restock = 14.0):
+	if taken or not (kind in ["coffee", "alcohol", "icecream"]):
+		return
+	taken = true
+	consumed = true
+	remove_from_group("mischief")
+	if owner_amb != null and is_instance_valid(owner_amb):
+		owner_amb.theft_reaction()
+	visible = false
+	if respawn_sec > 0.0 and home_parent != null and is_instance_valid(home_parent):
+		get_tree().create_timer(max(restock, 12.0)).timeout.connect(Callable(load("res://scripts/fries/mischief.gd"), "respawn_static").bind(home_parent, home_pos, kind))
+	queue_free()
+
 func is_wearable():
 	return kind in GS.WEARABLES
 

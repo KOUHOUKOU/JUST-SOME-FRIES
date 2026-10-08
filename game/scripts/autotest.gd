@@ -26,7 +26,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -1830,6 +1830,8 @@ func film():
 			await film_seg3()
 		4:
 			await film_seg4()
+		5:
+			await film_seg5()
 	clock("segment %d done" % seg)
 	get_tree().quit()
 
@@ -1910,7 +1912,7 @@ func film_seg3():
 	GS.gull_sense_count = 3
 	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
 	main._reveal_specials()
-	for id in ["drink_coffee", "drink_alcohol", "drink_ice", "meteor", "fish"]:
+	for id in ["drink_coffee", "drink_alcohol", "drink_ice", "fish"]:
 		GS.cine_seen[id] = true
 	place(Vector3(30.0, 34.0, 60.0), Vector3(30.0, 30.0, 20.0), 14.0)
 	p.input_locked = false
@@ -1924,23 +1926,27 @@ func film_seg3():
 	await real(0.4)
 	GS.add_buff("ice")
 	clock("three drinks")
-	# the real cinematic moment (a key press every 0.7 s, the sentences go on a little faster)
+	# the film moment (round 12: the gull keeps flying; no key presses needed)
 	var t0 = GS.msec()
 	var k = 0
+	Input.action_press("move_forward")
 	while GS.msec() - t0 < 90000:
 		await real(0.5)
 		if main.scenes.cine_busy:
 			k += 1
-			if k % 3 == 0:
-				fkey()
 		elif k > 4:
 			break
 	clock("starlight cinematic done")
-	# STARLIGHT: out over the open sea (nothing else to lock on to), then a shooting star comes by
+	# STARLIGHT: out over the open sea (nothing else to lock on to), then a shooting star comes by (a gold-SONIC gull in STARLIGHT can catch it)
+	GS.set_level("red", 2)
+	GS.star_t = max(GS.star_t, 40.0)
 	place(Vector3(60.0, 80.0, 110.0), Vector3(60.0, 80.0, 40.0), 30.0)
 	p.input_locked = false
 	Input.action_press("move_forward")
 	Input.action_press("dash")
+	await real(0.5)
+	main.meteors.star_pending = 0.0
+	main.meteors._plan_star()
 	var star = null
 	var t1 = GS.msec()
 	while GS.msec() - t1 < 22000:
@@ -1978,6 +1984,17 @@ func film_seg3():
 	say("[film] commit %s state=%s" % [str(p.snatch.last_commit), p.snatch.state])
 	await real(1.0)
 	say("[film] meteor caught=%s worn=%s" % [str(GS.stats["meteors"]), str(GS.worn.has("meteor"))])
+	# the film moment of the star (it starts by itself a moment after the catch)
+	Input.action_press("move_forward")
+	var t2 = GS.msec()
+	var seen_cine = false
+	while GS.msec() - t2 < 40000:
+		await real(0.5)
+		if main.scenes.cine_busy:
+			seen_cine = true
+		elif seen_cine:
+			break
+	clock("star film done")
 	# the new tail, in the open sky
 	Input.action_press("dash")
 	for i in 120:
@@ -1997,6 +2014,8 @@ func film_seg4():
 		GS.set_level(t, 3)
 	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
 	main._reveal_specials()
+	for cid in ["chat1", "chat2", "chat3"]:
+		GS.cine_seen[cid] = true
 	var ids = ["fry1", "coffee", "alcohol", "ice", "starlight", "cloud", "sun", "meteor", "friend"]
 	for i in ids.size():
 		GS.memories[ids[i]] = {"t": 100.0 + i * 40.0}
@@ -2018,14 +2037,79 @@ func film_seg4():
 	while GS.msec() - t0 < 260000:
 		await real(0.5)
 		k += 1
-		# the talking part goes a little faster: a press every 1.5 s once the big brother has landed
-		if main.story.vn != null and k % 3 == 0:
-			fkey()
+		# (round 12: the ending plays at its own pace; the promo cuts what it needs)
 		if k > 40 and not main.scenes.cine_busy and not main.title.visible:
 			break
 	clock("ending talk done")
 	await real(9.0)
 
+
+
+# the new things of rounds 10-12: the sun film (the gull keeps flying), a rest on the sea, a rival gull
+func film_seg5():
+	var p = main.player
+	await film_start_game()
+	Engine.max_fps = 30
+	GS.gull_sense_count = 3
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 2)
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	for id in ["drink_coffee", "drink_alcohol", "drink_ice", "fish", "meteor", "drinks3", "skybow", "all24", "chat1", "chat2", "chat3"]:
+		GS.cine_seen[id] = true
+	GS.quests_check()
+	p.gull.wear("hat")
+	# the sun
+	place(Vector3(-40.0, 70.0, 90.0), Vector3(-40.0, 70.0, 20.0), 16.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	await real(2.0)
+	GS.cine_seen.erase("sun")
+	main.queue_cine("sun")
+	var t0 = GS.msec()
+	var seen = false
+	while GS.msec() - t0 < 40000:
+		await real(0.5)
+		p.aim_yaw += 0.004
+		if main.scenes.cine_busy:
+			seen = true
+		elif seen:
+			break
+	clock("sun film done")
+	# a rest on the sea
+	var sea = Vector3(-60.0, 9.0, 150.0)
+	place(sea, sea + Vector3(0, -2.0, -20.0), 12.0)
+	p.input_locked = false
+	p.stamina = 6.0
+	Input.action_press("move_forward")
+	await real(2.0)
+	Input.action_release("move_forward")
+	Input.action_press("land")
+	var t1 = GS.msec()
+	while GS.msec() - t1 < 10000 and not p.on_water:
+		await real(0.2)
+	Input.action_release("land")
+	clock("on the water")
+	await real(5.5)
+	tap("flap")
+	Input.action_press("move_forward")
+	await real(3.0)
+	Input.action_release("move_forward")
+	# a rival over the cafe
+	GS.stats["stolen"] = 5
+	main.rivals.force_next = true
+	main.rivals.cd = 0.0
+	place(Vector3(-4.0, 7.0, 24.0), Vector3(-4.0, 6.0, 0.0), 9.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	var t3 = GS.msec()
+	while GS.msec() - t3 < 14000:
+		await real(0.5)
+		if main.rivals.rival != null and is_instance_valid(main.rivals.rival):
+			seen = true
+	Input.action_release("move_forward")
+	clock("rival done")
+	await real(2.0)
 
 # the sky quests: a cloud and the sun appear on the board after enough fries; catching one is a single, hard wave
 func sky_test():
@@ -2969,7 +3053,7 @@ func r10beats():
 		await real(0.6)
 	Input.action_release("move_forward")
 	# the film moments
-	var ids = ["drinks3", "meteor", "sun", "skybow", "all24"]
+	var ids = ["drinks3", "meteor", "cloud", "sun", "skybow", "all24"]
 	if only != "":
 		ids = []
 	for id in ids:
@@ -3198,4 +3282,94 @@ func r10look():
 	await shot("r10l_tab")
 	Input.action_release("gull_sense")
 	main._close_sense()
+	get_tree().quit()
+
+# ================================================================== ROUND 12
+func chk12(name_, ok, extra = ""):
+	say("[R12] %s %s %s" % ["PASS" if ok else "FAIL", name_, extra])
+
+# --r12: landing on the sea, the town calming down, rivals, the big brother
+func r12():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	# 1: the sea is a place to rest
+	var sea = Vector3(-60.0, 7.0, 150.0)
+	chk12("the spot is open sea", preload("res://scripts/world/sky.gd").over_sea(sea.x, sea.z, 8.0))
+	place(sea, sea + Vector3(0, -2.0, -20.0), 10.0)
+	p.input_locked = false
+	p.stamina = 6.0
+	Input.action_press("land")
+	var t0 = GS.msec()
+	while GS.msec() - t0 < 9000 and not p.on_water:
+		await real(0.2)
+	Input.action_release("land")
+	chk12("Ctrl over the sea lands the gull ON the water (no tumble, no sinking)", p.on_water and p.mode == 1, "%.1f s, y=%.2f" % [(GS.msec() - t0) / 1000.0, p.global_position.y])
+	await real(0.5)
+	await shot("r12_water")
+	var s0 = p.stamina
+	await real(5.0)
+	chk12("the breath comes back on the water", p.stamina > s0 + 8.0, "%.0f -> %.0f" % [s0, p.stamina])
+	chk12("it floats at the surface", abs(p.global_position.y - p.WATER_Y) < 0.25 and p.on_water, "y=%.2f" % p.global_position.y)
+	chk12("no storm of splash sounds / no soaking", p.soaked_t <= 0.1)
+	tap("flap")
+	await real(1.2)
+	chk12("Space takes off again", p.mode == 0 and not p.on_water and p.global_position.y > p.WATER_Y + 0.5, "y=%.2f" % p.global_position.y)
+	# a fast skim does not trap the gull either
+	place(Vector3(sea.x, -0.5, sea.z), Vector3(sea.x, -0.5, sea.z - 20.0), 22.0)
+	await real(3.0)
+	chk12("a fast low pass is not a landing", not p.on_water)
+	# 2: far from the people and high up the town forgets
+	GS.heat = 3.0
+	GS.watch = 3.0
+	place(Vector3(0.0, 70.0, 230.0), Vector3(0.0, 70.0, 100.0), 12.0)
+	p.input_locked = false
+	await real(12.0)
+	chk12("high above the sea the crowd calms down (watch %.2f, heat %.2f)" % [GS.watch, GS.heat], GS.watch < 0.6 and GS.heat < 1.0)
+	# 3: the rival is a stranger in a faint colour
+	main.rivals.force_next = true
+	main.rivals.cd = 0.0
+	GS.stats["stolen"] = 5
+	place(Vector3(-4.0, 6.0, 22.0), Vector3(-4.0, 6.0, 0.0), 8.0)
+	var seen = null
+	for i in 40:
+		await real(0.5)
+		if main.rivals.rival != null and is_instance_valid(main.rivals.rival):
+			seen = main.rivals.rival
+			break
+	chk12("a rival gull shows up for something the gull is flying towards", seen != null)
+	if seen != null:
+		await real(1.0)
+		await shot("r12_rival")
+		var tgt = seen.target
+		say("[R12] rival target kind=%s" % str(tgt.get("kind") if tgt != null else "-"))
+		chk12("the rival is not white (a faint colour + a decoration)", seen.gull.worn.size() >= 1)
+	# 4: the big brother is bigger
+	chk12("the big brother is clearly bigger than the player's gull", main.bro.gull.scale.x >= 2.0 and p.gull.scale.x <= 1.2, "%.2f vs %.2f" % [main.bro.gull.scale.x, p.gull.scale.x])
+	get_tree().quit()
+
+# --r12audio: 50 s of quiet flight in circles over the sea (record it with --write-movie and look at the sound track for noises)
+func r12audio():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	var c = Vector3(-60.0, 9.0, 160.0)
+	place(c + Vector3(40.0, 0.0, 0.0), c + Vector3(40.0, 0.0, -20.0), 14.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	var t0 = GS.msec()
+	var last = t0
+	while GS.msec() - t0 < 50000:
+		await get_tree().process_frame
+		var now = GS.msec()
+		p.aim_yaw += 0.33 * (now - last) / 1000.0
+		last = now
+		p.stamina = 80.0
+		if p.global_position.distance_to(c) > 70.0:
+			place(c + Vector3(40.0, 0.0, 0.0), c + Vector3(40.0, 0.0, -20.0), 14.0)
+		if int((now - t0) / 1000.0) % 10 == 0 and (now - t0) % 1000 < 40:
+			say("[R12] audio t=%d s" % int((now - t0) / 1000.0))
+	Input.action_release("move_forward")
 	get_tree().quit()

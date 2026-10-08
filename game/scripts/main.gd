@@ -215,7 +215,7 @@ func _ready():
 	GS.buff_started.connect(func(kind): queue_cine("drink_" + kind))
 	GS.meteor_caught.connect(func(): queue_cine("meteor"))
 	GS.quest_done.connect(func(id):
-		if id == "sun" or id == "skybow":
+		if id == "sun" or id == "skybow" or id == "cloud":
 			queue_cine(id))
 	GS.star_ended.connect(func(): Sfx.set_star(false))
 	GS.still_hungry_started.connect(_begin_star_phase)
@@ -230,7 +230,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -762,7 +762,16 @@ func _update_watch(delta):
 		if a.visible and a.global_position.distance_to(pp) < 14.0:
 			crowd += 1
 	local += min(crowd * 0.12, 0.7)
-	_watch_target = clamp(GS.heat + local, 0.0, 4.0)
+	# round 12: up in the sky and away from the people, the crowd calms down fast (the memory of a thief fades in seconds, and what is left counts less);
+	# a gull on the ground among quiet people is what the town is used to
+	var nearest = 999.0
+	for grp in ["ambient", "npcs"]:
+		for a in get_tree().get_nodes_in_group(grp):
+			if is_instance_valid(a) and not a.get("gone"):
+				nearest = min(nearest, a.global_position.distance_to(pp))
+	var away = player.mode == 0 and (pp.y > 20.0 or nearest > 45.0) and nearest > 14.0
+	GS.heat_decay_mult = 9.0 if away else 1.0
+	_watch_target = clamp(GS.heat * (0.2 if away else 1.0) + local, 0.0, 4.0)
 
 var _watch_target = 0.0
 

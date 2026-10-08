@@ -266,7 +266,7 @@ func follow_step(s, gull, yaw, dt):
 		s["cur"] = want - center
 	else:
 		s["cur"] = s["cur"].lerp(want - center, 1.0 - exp(-7.0 * dt))
-	return {"pos": center + s["cur"], "look": center + Vector3(0, o.get("look_h", 0.1), 0), "fov": fov}
+	return {"pos": center + s["cur"], "look": center + fwd * o.get("look_fwd", 0.0) + Vector3(0, o.get("look_h", 0.1), 0), "fov": fov}
 
 # ---- quality check (dev tools): how much of the picture's WIDTH does this gull take, and how close is the camera to it?
 func _meshes(n, out):

@@ -506,6 +506,7 @@ func flow_begin(p, tag_text = ""):
 	bars = 0.0
 	narr = null
 	tag = null
+	thoughts = null
 	tween_prop("bars", 0.8, 0.9)
 	var tb = create_tween().set_ignore_time_scale(true)
 	tb.tween_method(set_blur, 0.0, 1.0, 1.2)
@@ -622,6 +623,12 @@ func _insets_draw(ci, R, u):
 		var h = w * 9.0 / 16.0
 		var pc = o.get("pos", Vector2(0.8, 0.3))
 		var c = Vector2(R.position.x + R.size.x * pc.x, R.position.y + R.size.y * pc.y) + Vector2(sin(age * 0.8 + pc.x * 7.0) * 3.0, sin(age * 0.6 + pc.y * 5.0) * 2.0) * u
+		# a panel never leaves the picture, never touches the bars (round 12)
+		var bh = ci.size.y * 0.135 * (bars * bars * (3.0 - 2.0 * bars))
+		var hw = w * 0.5 + 20.0 * u
+		var hh = h * 0.5 + 22.0 * u
+		c.x = clamp(c.x, R.position.x + hw + 0.02 * R.size.x, R.end.x - hw - 0.02 * R.size.x)
+		c.y = clamp(c.y, R.position.y + bh + hh + 8.0 * u, R.end.y - bh - hh - 8.0 * u)
 		ci.draw_set_transform(c, deg_to_rad(o.get("rot", -3.0) + 4.0 * (1.0 - e)), Vector2.ONE * pop)
 		var rect = Rect2(-w * 0.5, -h * 0.5, w, h)
 		var tint = o.get("tint", GOLD)
@@ -637,6 +644,62 @@ func _insets_draw(ci, R, u):
 			ci.draw_rect(tr, Color(INK.r, INK.g, INK.b, a), false, 2.0 * u)
 			ci.draw_string(bold, tr.position + Vector2(9.0 * u, 17.0 * u), o["tag"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(INK.r, INK.g, INK.b, a))
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+# ------------------------------------------------------------------ THOUGHTS (round 12): the gull's own words in the MIDDLE of the picture, 3-4 lines that stay
+# (the older ones a little dimmer), on a soft dark band; the panels with the close-ups sit in the corners round them.
+var thoughts = null
+
+func think(lines, hold = 1.2, cps = 34.0, last_hold = 2.4, on_last = Callable()):
+	var d = {"lines": lines, "n": 0, "typed": 0, "a": 0.0}
+	thoughts = d
+	var tw = create_tween().set_ignore_time_scale(true)
+	tw.tween_method(func(v): d["a"] = v, 0.0, 1.0, 0.35)
+	for i in lines.size():
+		if i == lines.size() - 1 and on_last.is_valid():
+			on_last.call()
+		d["n"] = i + 1
+		d["typed"] = 0
+		var text = lines[i]
+		var t0 = GS.msec()
+		var last_n = 0
+		while d["typed"] < text.length():
+			d["typed"] = min(int((GS.msec() - t0) / 1000.0 * cps) + 1, text.length())
+			if d["typed"] > last_n and d["typed"] % 2 == 0 and text[d["typed"] - 1] != " ":
+				Sfx.play("blip", -26.0, 1.5 * randf_range(0.93, 1.07))
+			last_n = d["typed"]
+			await get_tree().process_frame
+		await wait(hold if i < lines.size() - 1 else last_hold)
+	var tw2 = create_tween().set_ignore_time_scale(true)
+	tw2.tween_method(func(v): d["a"] = v, 1.0, 0.0, 0.5)
+	await tw2.finished
+	if thoughts == d:
+		thoughts = null
+
+func _thoughts_draw(ci, R, u):
+	var d = thoughts
+	if d == null or d["a"] <= 0.01 or d["n"] <= 0:
+		return
+	var fs = int(30.0 * u)
+	var lh = fs * 1.5
+	var n = d["n"]
+	var total = (d["lines"].size()) * lh
+	var cx = R.position.x + R.size.x * 0.5
+	var y0 = R.position.y + R.size.y * 0.47 - total * 0.5
+	var maxw = 0.0
+	for l in d["lines"]:
+		maxw = max(maxw, font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+	var band = Rect2(Vector2(cx - maxw * 0.5 - 40.0 * u, y0 - 12.0 * u), Vector2(maxw + 80.0 * u, total + 24.0 * u))
+	ci.draw_rect(band, Color(0.02, 0.04, 0.09, 0.34 * d["a"]))
+	ci.draw_rect(Rect2(band.position, Vector2(3.0 * u, band.size.y)), Color(GOLD.r, GOLD.g, GOLD.b, 0.7 * d["a"]))
+	for i in n:
+		var text = d["lines"][i]
+		var cur = i == n - 1
+		var shown = text.substr(0, d["typed"]) if cur else text
+		var w = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var a = d["a"] * (1.0 if cur else 0.68)
+		var pos = Vector2(cx - w * 0.5, y0 + i * lh + fs)
+		ci.draw_string_outline(font, pos, shown, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 5, Color(0, 0, 0, 0.75 * a))
+		ci.draw_string(font, pos, shown, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0.97, 0.88, a))
 
 # ------------------------------------------------------------------ film mode (the cinematic moments)
 func bars_in(sec = 0.9):
@@ -1251,6 +1314,7 @@ func draw_page(ci):
 		var sc = Vector2(R.position.x + R.size.x * s["pos"].x, R.position.y + R.size.y * s["pos"].y)
 		_lettering(ci, s["text"], sc, s["size"], s["col"], s["rot"], fa, pp)
 		i += 1
+	_thoughts_draw(ci, R, u)
 	_balloon(ci, R, u)
 	_caption(ci, R, u)
 	_vn(ci, R, u)

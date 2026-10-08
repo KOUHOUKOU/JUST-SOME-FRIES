@@ -14,6 +14,7 @@ const VisualScript = preload("res://scripts/player/gull_visual.gd")
 
 const WATER_Y = -0.75
 const GROUND_SPEED = 2.2
+const WATER_SPEED = 3.4
 const CAM_TABLE = [[2.5, 62.0, 3.6], [5.0, 66.0, 4.0], [11.0, 74.0, 5.2], [19.0, 92.0, 7.5], [25.0, 104.0, 9.4], [30.0, 112.0, 10.8], [38.0, 122.0, 12.5]]
 const TURN_TABLE = [[2.5, 8.0], [5.0, 7.0], [11.0, 4.5], [19.0, 2.0], [25.0, 1.7], [30.0, 1.5], [38.0, 1.4]]
 
@@ -77,6 +78,8 @@ var low_stamina = false
 var perch_high = false
 var off_floor_t = 0.0
 var skim_t = 0.0
+var on_water = false             # round 12: sitting on the sea with the wings spread: no sinking, no crash, the breath comes back, and Space takes off again
+var ripple_t = 0.0
 var focus = 0.0                # 0..1 blend of the bullet-time look (zoom + faster steering)
 var vision = 0.0               # 0..1 blend of Gull Sight (wider eye, faster steering to compensate the slow motion)
 var speed_target = 5.0         # what the speed is heading to (shown on the speed gauge)
@@ -786,6 +789,9 @@ func _land():
 		GS.award("SKYLINE")
 
 func _ground(delta, mouse):
+	if on_water:
+		_float(delta, mouse)
+		return
 	var sens = 0.0022 * GS.mouse_sens_mult
 	yaw -= mouse.x * sens
 	aim_yaw = yaw
@@ -874,6 +880,8 @@ func _tumble(delta):
 			mode = M.GROUND
 			perch_high = global_position.y >= 4.0
 			velocity = Vector3.ZERO
+		elif global_position.y < WATER_Y + 0.8 and _over_water():
+			_enter_water()
 		else:
 			mode = M.FLY
 			speed = 3.0
@@ -883,13 +891,17 @@ func _tumble(delta):
 			vert_boost = 0.0
 
 func _water(_delta):
-	if splash_cd > 0.0:
+	if on_water or splash_cd > 0.0:
 		return
 	if global_position.y < WATER_Y + 0.3 and _over_water():
-		splash_cd = 0.5
+		# round 12: coming down on the sea (Ctrl, a slow glide, no breath left, a steep drop) is a landing, not a crash
+		if mode == M.FLY and not scripted_move and (landing or speed < 13.0 or stamina <= 1.0 or velocity.y < -3.0):
+			_enter_water()
+			return
+		splash_cd = 1.6
 		var first = soaked_t <= 0.0
 		soaked_t = 15.0
-		Sfx.play("splash", -4.0)
+		Sfx.play("splash", -9.0)
 		_splash_fx()
 		if first:
 			if not GS.achievements_done.has("SOAKED"):
@@ -898,6 +910,103 @@ func _water(_delta):
 		if mode == M.FLY:
 			vert_boost = 5.0
 			speed *= 0.75
+
+# on the water: wings spread, a slow glide that slows to a stop, breath coming back, Space to take off. No sinking, no hurt.
+func _enter_water():
+	on_water = true
+	mode = M.GROUND
+	var fl = Vector3(velocity.x, 0.0, velocity.z)
+	velocity = fl * 0.6
+	speed = 0.0
+	pitch = 0.0
+	aim_pitch = 0.0
+	boosting = false
+	throttling = false
+	braking = false
+	landing = false
+	vert_boost = 0.0
+	knock = Vector3.ZERO
+	global_position.y = WATER_Y + 0.02
+	splash_cd = 1.0
+	soaked_t = 0.0
+	Sfx.play("splash", -11.0, 0.8)
+	_splash_fx()
+	landed.emit(false)
+	var hh = get_tree().current_scene.get("hud")
+	if hh != null:
+		hh.hint("water", "ON THE WATER:  YOUR BREATH COMES BACK.   SPACE - TAKE OFF", 4.5)
+	if not GS.achievements_done.has("SOAKED"):
+		GS.comic.emit("soaked", "WET. DEEPLY DISGRUNTLED.", {})
+	GS.award("SOAKED")
+
+func _float(delta, mouse):
+	var sens = 0.0022 * GS.mouse_sens_mult
+	yaw -= mouse.x * sens
+	aim_yaw = yaw
+	pitch = 0.0
+	aim_pitch = 0.0
+	yaw_rate = 0.0
+	boosting = false
+	throttling = false
+	braking = false
+	var f = Vector3(-sin(yaw), 0, -cos(yaw))
+	var r = Vector3(cos(yaw), 0, -sin(yaw))
+	var d = Vector3.ZERO
+	if not input_locked:
+		if Input.is_action_pressed("move_forward"):
+			d += f
+		if Input.is_action_pressed("move_back"):
+			d -= f
+		if Input.is_action_pressed("bank_right"):
+			d += r
+		if Input.is_action_pressed("bank_left"):
+			d -= r
+	var moving = d.length() > 0.1
+	d = d.normalized() * WATER_SPEED
+	velocity.x = move_toward(velocity.x, d.x, (4.0 if moving else 1.6) * delta)
+	velocity.z = move_toward(velocity.z, d.z, (4.0 if moving else 1.6) * delta)
+	var bob = sin(GS.msec() * 0.0016) * 0.03
+	velocity.y = (WATER_Y + 0.02 + bob - global_position.y) * 8.0
+	rotation = Vector3(0, yaw, 0)
+	floor_snap_length = 0.0
+	move_and_slide()
+	speed = 0.0
+	# the breath comes back, a little slower than on a perch
+	stamina += GS.regen_perch(false) * 0.8 * delta
+	regen_active = true
+	var still = (not moving) and Vector2(velocity.x, velocity.z).length() < 0.4
+	still_t = still_t + delta if still else 0.0
+	calm = move_toward(calm, 1.0 if still_t > 1.5 else 0.0, delta / 0.8)
+	# a soft ripple now and then while it drifts (never a continuous splash)
+	var drifting = Vector2(velocity.x, velocity.z).length() > 0.8
+	spray.emitting = drifting
+	if drifting:
+		spray.global_position = Vector3(global_position.x, WATER_Y + 0.05, global_position.z)
+		spray.initial_velocity_max = 0.8
+		ripple_t -= delta
+		if ripple_t <= 0.0:
+			ripple_t = 1.7
+			Sfx.play("splash", -26.0, randf_range(1.3, 1.6))
+	# the shore: back on land
+	if not _over_water():
+		on_water = false
+		spray.emitting = false
+		return
+	# take off again
+	if not input_locked and Input.is_action_just_pressed("flap"):
+		on_water = false
+		spray.emitting = false
+		mode = M.FLY
+		speed = max(GS.glide_speed() * 0.9, 8.0)
+		pitch = 0.3
+		aim_pitch = 0.3
+		aim_yaw = yaw
+		vert_boost = 7.0
+		flap_anim = 0.4
+		splash_cd = 1.0
+		Sfx.play("flap", -6.0)
+		Sfx.play("splash", -16.0, 1.3)
+		_splash_fx()
 
 func _over_water():
 	if ground_h == null:
@@ -956,7 +1065,7 @@ func _process(delta):
 		return
 	var mname = "glide"
 	if mode == M.GROUND:
-		mname = "ground"
+		mname = "glide" if on_water else "ground"
 	elif mode == M.TUMBLE:
 		mname = "tumble"
 	elif boosting:
@@ -970,7 +1079,7 @@ func _process(delta):
 	gull.set_trails((boosting and speed > 14.0) or (star_t_vis > 0.3 and speed > 6.0))
 	var roll_target = clamp(yaw_rate * 0.3 - (0.0 if input_locked else Input.get_axis("bank_left", "bank_right")) * 0.4, -0.8, 0.8)
 	if mode == M.GROUND:
-		roll_target = sin(walk_t) * 0.12
+		roll_target = sin(GS.msec() * 0.0014) * 0.05 if on_water else sin(walk_t) * 0.12
 	roll = lerp(roll, roll_target, 1.0 - exp(-8.0 * delta))
 	var extra = 0.0
 	if roll_t > 0.0:

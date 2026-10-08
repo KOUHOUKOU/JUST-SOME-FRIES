@@ -1390,7 +1390,7 @@ func _on_quest_done(id):
 			_next_toast()
 		Sfx.play("chime", -10.0, 1.25)
 		return
-	if id == "sun" or id == "skybow":
+	if id == "sun" or id == "skybow" or id == "cloud":
 		return                      # round 9: these two have a short cinematic of their own (story_scenes.gd), with the same words
 	var sc = get_tree().current_scene.scenes
 	if sc.has_beat("quest_" + id):

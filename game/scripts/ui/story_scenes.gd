@@ -395,15 +395,15 @@ func ending(fry):
 	st.frame_in(0.8)
 	var b = m.bro
 	var land = Vector3(-6.9, fp.y + 0.2, 5.1)
-	st.cam_set(Vector3(-7.8, 2.0, 11.2), Vector3(-7.7, 1.1, 5.0), 40.0, Vector3(-7.8, 1.7, 10.4), Vector3(-7.7, 0.95, 5.0), 38.0, 9.0)
+	st.cam_set(Vector3(-7.8, 2.4, 14.6), Vector3(-7.7, 1.3, 5.0), 40.0, Vector3(-7.8, 2.0, 13.8), Vector3(-7.7, 0.95, 5.0), 38.0, 9.0)
 	await st.wait(0.8)
 	Sfx.crossfade_theme("theme_end", false, -8.0, 3.0)       # the memories melt into the Largo as he lands (it climbs to its high note at "...just some fries.")
 	var largo_t0 = GS.msec()
 	await _fly_bro_to(land, 3.0)
 	b._face(spot, 1.0)
 	await st.wait(0.5)
-	st.cam_set(Vector3(-7.7, 1.3, 11.0), Vector3(-7.7, 0.4, 5.0), 34.0, Vector3(-7.7, 1.2, 10.2), Vector3(-7.7, 0.4, 5.0), 32.0, 10.0)
-	await _bro_say("...word is, you found the thing you wanted.", 0.7, {"dist": 1.05, "yaw": 0.5, "up": 0.07, "fov": 34.0})
+	st.cam_set(Vector3(-7.7, 1.8, 14.2), Vector3(-7.7, 0.8, 5.0), 34.0, Vector3(-7.7, 1.7, 13.4), Vector3(-7.7, 0.8, 5.0), 32.0, 10.0)
+	await _bro_say("Word on the roof is you found it. The thing.", 0.7, {"dist": 1.05, "yaw": 0.5, "up": 0.07, "fov": 34.0})
 	await _bro_say("Chain. Shades. Hat. Coat.  I got everything.", 0.7)
 	await _bro_say("So why am I still hungry?", 0.75, {"dist": 1.0, "yaw": 0.42, "up": 0.04, "fov": 34.0, "roll": 0.05})
 	await st.vn_end(0.3)
@@ -414,13 +414,13 @@ func ending(fry):
 	await _old_man_drops(f2, drop_at, false)
 	st.cam_set(drop_at + Vector3(0.9, 0.7, 1.5), drop_at + Vector3(0, 0.1, 0), 26.0, drop_at + Vector3(0.8, 0.65, 1.4), drop_at + Vector3(0, 0.12, 0), 24.0, 6.0, 0.003)
 	await st.wait(1.2)
-	st.cam_set(Vector3(-7.7, 1.3, 11.0), Vector3(-7.7, 0.4, 5.0), 34.0, Vector3(-7.7, 1.2, 10.2), Vector3(-7.7, 0.4, 5.0), 32.0, 10.0)
+	st.cam_set(Vector3(-7.7, 1.8, 14.2), Vector3(-7.7, 0.8, 5.0), 34.0, Vector3(-7.7, 1.7, 13.4), Vector3(-7.7, 0.8, 5.0), 32.0, 10.0)
 	await _bro_say("...What do YOU want?", 0.7)
 	print("[ENDING] 'just some fries' typed %.1f s after the Largo starts" % ((GS.msec() - largo_t0) / 1000.0))
 	await _you_say("...just some fries.", 1.4, {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0})
 	await st.vn_end(0.3)
 	# --- he takes his shades off and eats
-	_ground_shot(b.gull, {"az": 45, "spread": 40, "h": 0.05, "fov": 34, "size": 0.42, "push": 0.08, "side": -1.0}, 8.0, b.global_rotation.y)
+	_ground_shot(b.gull, {"az": 45, "spread": 40, "h": 0.05, "fov": 34, "size": 0.26, "push": 0.08, "side": -1.0}, 8.0, b.global_rotation.y)
 	b.gull.unwear("shades")
 	Sfx.play("equip", -8.0, 0.6)
 	await st.wait(1.0)
@@ -437,7 +437,7 @@ func ending(fry):
 	el.rig.set_mode("wave")
 	await st.wait(0.2)
 	# --- pull back: a gull, a gull, an old man and a plain morning
-	st.cam_set(Vector3(-7.8, 1.5, 8.6), Vector3(-7.8, 0.8, 4.8), 38.0, Vector3(-7.4, 3.4, 15.0), Vector3(-7.8, 1.2, 4.6), 46.0, 12.0, 0.004)
+	st.cam_set(Vector3(-7.8, 1.9, 10.8), Vector3(-7.8, 1.0, 4.8), 38.0, Vector3(-7.4, 3.6, 17.0), Vector3(-7.8, 1.2, 4.6), 46.0, 12.0, 0.004)
 	await st.wait(3.0)
 	await st.frame_out(0.8)
 	await st.fade_black(1.0, 1.6)
@@ -473,16 +473,17 @@ func bro_chat(id):
 	await st.wait(0.5)
 	match id:
 		"chat1":
-			await _bro_say("Hm. Three fries in. You've got a beak for this.")
-			await _bro_say("Go on. Get strong.  Then get stronger.")
+			await _bro_say("Saw you land. Three fries, and not one of them dropped.")
+			await _bro_say("That's either talent or a very sleepy old man.")
+			await _bro_say("Fast beats strong. Strong beats loud.  Go make the sky nervous.", 0.7)
 		"chat2":
-			await _bro_say("Fast now, aren't you.")
-			await _bro_say("I was fast once. Then I got a hat.")
-			await _bro_say("...Hats are heavy.", 0.8)
+			await _bro_say("Ten fries. I can hear the sound barrier clearing its throat.")
+			await _bro_say("I was fast like that once. Then I discovered accessories.")
+			await _bro_say("...Hats are heavier than they look. So is wanting things.", 0.8)
 		"chat3":
-			await _bro_say("...You're starting to look like me.", 0.75)
-			await _bro_say("That's not a compliment. It's not an insult either.")
-			await _bro_say("Come and find me when you're full.", 0.8)
+			await _bro_say("Eighteen. You're starting to look like me. Same squint. Same hunger.", 0.75)
+			await _bro_say("Funny thing about having everything: it needs a lot of room. In here.")
+			await _bro_say("Come find me when you've eaten the lot. I'll be here. Cool, and slightly peckish.", 0.8)
 	await st.vn_end(0.25)
 	b.look_at_player = true
 	pl.input_locked = false
@@ -648,6 +649,8 @@ func cinema(id, extra = {}):
 			await _cine_sun()
 		"skybow":
 			await _cine_skybow()
+		"cloud":
+			await _cine_cloud()
 		"all24":
 			await _cine_all24()
 
@@ -682,9 +685,9 @@ func _flow_end():
 		beat_moment(nx[0], nx[1])
 
 # a small comic panel with another angle of the gull. `az` is degrees from the gull's heading (0 in front, 90 its right, 180 behind)
-func _panel(id, nx, ny, w, rot, tint, tag, az, size, fov, h = 0.08, look_h = 0.12, swing = 12.0):
+func _panel(id, nx, ny, w, rot, tint, tag, az, size, fov, h = 0.08, look_h = 0.12, swing = 12.0, look_fwd = 0.0):
 	return st.inset_open(id, {"pos": Vector2(nx, ny), "w": w, "rot": rot, "tint": tint, "tag": tag,
-		"follow": {"az": az, "size": size, "fov": fov, "h": h, "look_h": look_h, "swing": swing, "dur": 8.0}})
+		"follow": {"az": az, "size": size, "fov": fov, "h": h, "look_h": look_h, "look_fwd": look_fwd, "swing": swing, "dur": 8.0}})
 
 # a big comic word on an ink-edged starburst of its own colour
 func _word(text, nx, ny, sz, col, rot, star):
@@ -702,19 +705,19 @@ func _cine_drinks3():
 	var pl = m.player
 	await _flow_begin("cine_joy", "ALL THREE AT ONCE")
 	var gp = pl.global_position
-	_panel("a", 0.17, 0.30, 0.22, -4.0, GS.BUFF_COL["coffee"], "COFFEE", 35.0, 0.36, 42.0)
+	_panel("a", 0.15, 0.31, 0.21, -4.0, GS.BUFF_COL["coffee"], "COFFEE", 35.0, 0.36, 42.0)
 	m._burst(gp, GS.BUFF_COL["coffee"], 46, 5.0)
-	st.sfx("BZZZT!", 0.17, 0.5, 7.0, Color("E8B27A"), 56.0, 1.1)
+	st.sfx("BZZZT!", 0.3, 0.42, 7.0, Color("E8B27A"), 56.0, 1.1)
 	Sfx.play("buff_coffee", -6.0)
 	_later(0.9, func():
-		_panel("b", 0.5, 0.27, 0.22, 2.0, GS.BUFF_COL["alcohol"], "COCKTAIL", -40.0, 0.34, 40.0)
+		_panel("b", 0.85, 0.31, 0.21, 2.0, GS.BUFF_COL["alcohol"], "COCKTAIL", -40.0, 0.34, 40.0)
 		m._burst(gp, GS.BUFF_COL["alcohol"], 46, 5.0)
-		st.sfx("GLUG~", 0.5, 0.47, -7.0, Color("FFE27A"), 56.0, 1.1)
+		st.sfx("GLUG~", 0.7, 0.42, -7.0, Color("FFE27A"), 56.0, 1.1)
 		Sfx.play("buff_alcohol", -6.0))
 	_later(1.8, func():
-		_panel("c", 0.83, 0.30, 0.22, 4.0, GS.BUFF_COL["ice"], "ICE CREAM", 150.0, 0.30, 44.0, 0.12)
+		_panel("c", 0.15, 0.68, 0.21, 4.0, GS.BUFF_COL["ice"], "ICE CREAM", 150.0, 0.30, 44.0, 0.12)
 		m._burst(gp, GS.BUFF_COL["ice"], 46, 5.0)
-		st.sfx("BRRR!", 0.83, 0.5, 5.0, Color("FFB6E8"), 56.0, 1.1)
+		st.sfx("BRRR!", 0.3, 0.6, 5.0, Color("FFB6E8"), 56.0, 1.1)
 		Sfx.play("buff_ice", -6.0))
 	await _t("coffee. cocktail. ice cream. all at once.", 1.3)
 	for k in ["a", "b", "c"]:
@@ -724,7 +727,7 @@ func _cine_drinks3():
 	st.flash = 0.5
 	st.flash_col = Color(1, 0.95, 0.85)
 	m._burst(gp + Vector3(0, 0.4, 0), Color(1, 0.9, 0.7), 80, 7.0)
-	_panel("d", 0.82, 0.36, 0.28, 3.0, Color("FFE9A8"), "LOOK UP", 20.0, 0.26, 52.0, -0.34, 0.25)
+	_panel("d", 0.85, 0.68, 0.24, 3.0, Color("FFE9A8"), "LOOK UP", 20.0, 0.26, 52.0, -0.34, 0.25)
 	await _t("wait. hold on. i can SEE the wind.", 1.6)
 	st.clear_words(0.3)
 	st.inset_close("d")
@@ -740,88 +743,183 @@ func _cine_drinks3():
 		Sfx.set_star(true)                # the STARLIGHT piece takes over (no riser: the cinematic had its own)
 	await _flow_end()
 
-# ---- THE FIRST SHOOTING STAR. It was falling, so it got caught; it decides to stay and trails a tail. ~12 s
+# ---- THE CATCH MOMENTS (round 12): a star, a cloud, the sun, a rainbow. The thing is held in the beak again for the length of the moment, three close-ups of
+# THE catch sit in the corners of the picture (front, side, from above), and the gull's own words stand in the middle: three or four lines, the last one slow.
+func _make_prop(kind):
+	var n = Node3D.new()
+	var fx = preload("res://scripts/world/meteor_fx.gd")
+	var GV = preload("res://scripts/player/gull_visual.gd")
+	match kind:
+		"sun":
+			var core = MeshInstance3D.new()
+			var sm = SphereMesh.new()
+			sm.radius = 0.2
+			sm.height = 0.4
+			core.mesh = sm
+			var mat = StandardMaterial3D.new()
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			mat.albedo_color = Color(1.0, 0.82, 0.3)
+			core.material_override = mat
+			core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			n.add_child(core)
+			n.add_child(fx.billboard(1.5, GV.soft_tex(), Color(1.0, 0.75, 0.3, 0.55)))
+		"cloud":
+			var cmat = StandardMaterial3D.new()
+			cmat.albedo_color = Color(1, 1, 1, 0.92)
+			cmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			cmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			for c in [[0, 0, 0, 0.17], [0.16, -0.02, 0.02, 0.12], [-0.16, -0.03, 0.0, 0.12], [0.07, 0.08, 0, 0.11], [-0.08, 0.07, 0, 0.1]]:
+				var mi = MeshInstance3D.new()
+				var sp = SphereMesh.new()
+				sp.radius = c[3]
+				sp.height = c[3] * 2.0
+				mi.mesh = sp
+				mi.material_override = cmat
+				mi.position = Vector3(c[0], c[1], c[2])
+				mi.scale = Vector3(1.1, 0.85, 1.0)
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				n.add_child(mi)
+		"meteor":
+			n.add_child(fx.billboard(0.62, GV.soft_tex(), Color(1.0, 0.82, 0.38, 0.4)))
+			n.add_child(fx.billboard(0.42, GV.star_tex(), Color(1.0, 0.85, 0.3, 1.0)))
+		"skybow":
+			var rbm = MeshInstance3D.new()
+			rbm.mesh = preload("res://scripts/world/rainbow_pair.gd").arc_mesh(Vector3(1, 0, 0), 0.34, 0.3, 0.045, 0.028, 16, 0.95)
+			var rbmat = StandardMaterial3D.new()
+			rbmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			rbmat.vertex_color_use_as_albedo = true
+			rbmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			rbm.material_override = rbmat
+			rbm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			rbm.position = Vector3(0, -0.12, 0)
+			n.add_child(rbm)
+	return n
+
+# the caught thing appears in the beak (a pop, a flash); returns the node
+func _prop_in(kind):
+	var pl = main.player
+	var p = _make_prop(kind)
+	pl.beak_socket.add_child(p)
+	p.position = Vector3(0, 0.02, -0.06)
+	p.scale = Vector3.ONE * 0.2
+	var tw = p.create_tween()
+	tw.tween_property(p, "scale", Vector3.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	main._burst(pl.beak_socket.global_position, Color(1.0, 0.92, 0.7), 40, 3.5)
+	return p
+
+# ...and it goes where it belongs (the head, the tail): shrinks away
+func _prop_out(p, target_pos):
+	if not is_instance_valid(p):
+		return
+	p.reparent(main, true)
+	var tw = p.create_tween().set_parallel(true)
+	tw.tween_property(p, "global_position", target_pos, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(p, "scale", Vector3.ONE * 0.1, 0.9)
+	tw.chain().tween_callback(p.queue_free)
+
+# the three close-ups of the catch: front, side, from above (corners, so the middle stays for the words)
+func _triptych(tag_a, tag_b, tag_c, tint):
+	_panel("a", 0.15, 0.33, 0.21, -3.0, tint, tag_a, 14.0, 1.0, 30.0, 0.05, 0.08, 5.0, 0.35)
+	_later(0.6, func(): _panel("b", 0.85, 0.33, 0.21, 3.0, tint, tag_b, 80.0, 1.0, 30.0, 0.05, 0.08, 5.0, 0.3))
+	_later(1.2, func(): _panel("c", 0.15, 0.68, 0.21, 2.0, tint, tag_c, 150.0, 0.7, 34.0, 0.55, 0.05, 8.0, 0.2))
+
+func _close_triptych():
+	for k in ["a", "b", "c"]:
+		st.inset_close(k)
+
+# ---- A CLOUD. ~12 s
+func _cine_cloud():
+	var m = main
+	var pl = m.player
+	await _flow_begin("cine_wish", "A CLOUD")
+	var wn = pl.gull.worn.get("cloud")
+	if wn != null and is_instance_valid(wn):
+		wn.visible = false
+	var prop = _prop_in("cloud")
+	_word("FLUFF!", 0.5, 0.25, 90.0, Color("FFFFFF"), -4.0, Color("8EC8F0"))
+	st.flash = 0.35
+	_triptych("CLOSE-UP", "SOFT", "FROM ABOVE", Color("CFE6FF"))
+	await st.think(["i caught a cloud.", "it was softer than i expected.", "i think it's a little shy.", "and somehow... i'm still hungry."], 1.05, 38.0, 2.2,
+		func():
+			st.clear_words(0.3)
+			_close_triptych()
+			st.flow_pace(0.22, 1.2))
+	_prop_out(prop, pl.gull.global_position + Vector3(0, 0.7, 0.1))
+	await st.wait(0.9)
+	if wn != null and is_instance_valid(wn):
+		wn.visible = true
+	await _flow_end()
+
+# ---- THE FIRST SHOOTING STAR. It decides to stay and trails a tail. ~12 s
 func _cine_meteor():
 	var m = main
 	var pl = m.player
 	await _flow_begin("cine_wish", "A FALLING STAR")
-	_panel("a", 0.19, 0.30, 0.26, -3.0, Color("FFE9A8"), "CAUGHT!", 18.0, 0.42, 34.0, 0.03, 0.1)
-	st.sfx("ZING!", 0.72, 0.3, 8.0, Color("FFF3B0"), 76.0, 1.2)
-	await _t("it was falling. so i caught it.", 1.6)
-	st.inset_close("a")
-	_panel("b", 0.82, 0.30, 0.26, 3.0, Color("BFE3FF"), "MAKE A WISH", 110.0, 0.26, 44.0, 0.1)
-	await _t("everybody says: make a wish. my beak is full.", 1.5)
-	# the star slips out of the beak... and decides to stay: it settles behind the gull and trails a tail of light
 	var s = GS.cine_hold
 	if is_instance_valid(s):
-		s.reparent(m, true)
-		s.carried = true
-		s.tail.visible = false
-		var tw = s.create_tween().set_parallel(true)
-		tw.tween_property(s, "global_position", pl.global_position + Vector3(0, 0.25, 0) + Vector3(sin(pl.yaw), 0, cos(pl.yaw)) * 0.45, 0.9).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
-		tw.tween_property(s, "scale", Vector3(0.35, 0.35, 0.35), 0.9)
-		tw.chain().tween_callback(s.queue_free)
-		Sfx.play("meteor_get", -6.0, 1.1)
-		GS.cine_hold = null
-	await st.wait(0.6)
-	st.inset_close("b")
-	pl.gull.wear("meteor")
-	st.flash = 0.45
-	st.flash_col = Color(1.0, 0.95, 0.8)
-	m._burst(pl.global_position, Color(1.0, 0.92, 0.65), 70, 6.0)
-	Sfx.play("star_on", -6.0, 1.2)
-	_panel("c", 0.5, 0.28, 0.32, -2.0, Color("FFD97A"), "A TAIL!", 150.0, 0.30, 40.0, 0.1)
-	st.sfx("*twinkle*", 0.2, 0.55, -6.0, Color("FFE9A8"), 40.0, 1.8)
-	st.flow_pace(0.24, 1.2)
-	await _t("...oh. it's staying. i have a tail now.", 2.6)
+		s.queue_free()
+	GS.cine_hold = null
+	var prop = _prop_in("meteor")
+	Sfx.play("meteor_get", -6.0, 1.1)
+	st.sfx("ZING!", 0.5, 0.2, 8.0, Color("FFF3B0"), 76.0, 1.4)
+	_triptych("CLOSE-UP", "STILL WARM", "FROM ABOVE", Color("FFE9A8"))
+	await st.think(["it was falling. so i caught it.", "everybody says: make a wish.", "my beak is full.", "...oh. it's staying. i have a tail now."], 1.0, 38.0, 2.2,
+		func():
+			_close_triptych()
+			st.flow_pace(0.22, 1.2)
+			_prop_out(prop, pl.global_position + Vector3(0, 0.25, 0) + Vector3(sin(pl.yaw), 0, cos(pl.yaw)) * 0.45)
+			Sfx.play("star_on", -6.0, 1.2)
+			pl.gull.wear("meteor")
+			st.flash = 0.4
+			st.flash_col = Color(1.0, 0.95, 0.8)
+			m._burst(pl.global_position, Color(1.0, 0.92, 0.65), 70, 6.0))
+	await st.wait(0.4)
 	await _flow_end()
 
-# ---- THE SUN. The same three sentences that used to be the whole moment, with a film around them. The last one is allowed to take its time. ~13 s
+# ---- THE SUN. ~12 s
 func _cine_sun():
 	var m = main
 	var pl = m.player
 	await _flow_begin("cine_sun", "THE SUN")
+	var wn = pl.gull.worn.get("sun")
+	if wn != null and is_instance_valid(wn):
+		wn.visible = false
+	var prop = _prop_in("sun")
 	st.flash = 0.6
 	st.flash_col = Color(1.0, 0.9, 0.6)
-	_word("FWOOM!", 0.62, 0.34, 130.0, Color("FFF6D8"), -6.0, Color("FFA62B"))
-	m._burst(pl.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.82, 0.35), 70, 6.0)
-	_panel("a", 0.2, 0.30, 0.26, -3.0, Color("FFD36A"), "SO BRIGHT", 14.0, 0.40, 34.0, -0.1, 0.16)
-	await _t("i caught the sun.", 1.9)
-	st.clear_words(0.4)
-	st.inset_close("a")
-	_panel("b", 0.8, 0.30, 0.28, 3.0, Color("FFB26A"), "WARM", 100.0, 0.28, 42.0, 0.08)
-	await _t("it was warm. something in me changed.", 2.0)
-	st.inset_close("b")
-	_panel("c", 0.5, 0.28, 0.34, -2.0, Color("BFD8FF"), "FAR BELOW", 170.0, 0.22, 50.0, 0.35, 0.1, 10.0)
-	st.flow_pace(0.22, 1.4)
-	await st.wait(0.5)
-	Sfx.play("growl", -9.0)
-	await _t("and somehow... i'm still hungry.", 2.5)
+	_word("FWOOM!", 0.5, 0.25, 96.0, Color("FFF6D8"), -6.0, Color("FFA62B"))
+	_triptych("CLOSE-UP", "SO BRIGHT", "FROM ABOVE", Color("FFD36A"))
+	await st.think(["i caught the sun.", "it was warm. something in me changed.", "everything went gold for a moment.", "and somehow... i'm still hungry."], 1.05, 38.0, 2.4,
+		func():
+			st.clear_words(0.3)
+			_close_triptych()
+			st.flow_pace(0.2, 1.4)
+			Sfx.play("growl", -9.0))
+	_prop_out(prop, pl.gull.global_position + Vector3(0, 0.8, 0.3))
+	await st.wait(0.9)
+	if wn != null and is_instance_valid(wn):
+		wn.visible = true
 	await _flow_end()
 
-# ---- A RAINBOW IN THE SKY. The whole arch from the side, then the gull under it. ~12 s
+# ---- A RAINBOW IN THE SKY. ~12 s
 func _cine_skybow():
 	var m = main
 	var pl = m.player
 	await _flow_begin("cine_wish", "A WHOLE RAINBOW")
-	var focus = m.skybow_focus()
-	st.inset_open("arch", {"pos": Vector2(0.5, 0.29), "w": 0.38, "rot": -1.5, "tint": Color("FFB6D9"), "tag": "THE WHOLE ARCH", "static": [focus["pos"], focus["look"], 52.0]})
+	var prop = _prop_in("skybow")
 	st.flash = 0.4
 	st.flash_col = Color(1.0, 0.95, 0.9)
-	_word("TA-DAA!", 0.2, 0.36, 110.0, Color("FFFFFF"), -4.0, Color("FF8FC4"))
-	await _t("a rainbow. a whole one.", 1.9)
-	st.clear_words(0.4)
-	st.inset_close("arch")
-	_panel("a", 0.82, 0.30, 0.28, 3.0, Color("FFD0E8"), "INSIDE IT", 28.0, 0.32, 38.0, 0.1)
-	m._burst(pl.global_position + Vector3(0, 0.3, 0), Color(1.0, 0.8, 0.9), 70, 6.0)
-	await _t("from the inside it has more colours than i thought.", 2.0)
+	_word("TA-DAA!", 0.5, 0.25, 90.0, Color("FFFFFF"), -4.0, Color("FF8FC4"))
+	_triptych("CLOSE-UP", "ALL SEVEN", "FROM ABOVE", Color("FFD0E8"))
+	await st.think(["i caught a rainbow.", "from the inside it has more colours than i thought.", "i'm keeping a little one, right over my head.", "and somehow... i'm still hungry."], 1.05, 38.0, 2.2,
+		func():
+			st.clear_words(0.3)
+			_close_triptych()
+			st.flow_pace(0.22, 1.2))
+	_prop_out(prop, pl.gull.global_position + Vector3(0, 0.5, -0.1))
 	pl.gull.wear("skybow")
 	Sfx.play("star_on", -6.0, 1.3)
-	st.inset_close("a")
-	_panel("b", 0.2, 0.30, 0.26, -3.0, Color("FFE0F0"), "STAYING", 150.0, 0.26, 42.0, 0.2)
-	st.sfx("*ding*", 0.5, 0.3, -5.0, Color("FFE0F0"), 40.0, 1.6)
-	st.flow_pace(0.24, 1.2)
-	await _t("...it's staying. right over my head.", 2.6)
+	await st.wait(0.8)
 	await _flow_end()
 
 # ---- ALL TWENTY-FOUR: every kind of magic there is, and still... it rumbles. The slowest of them. ~13 s

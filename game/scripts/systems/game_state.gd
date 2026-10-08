@@ -164,6 +164,7 @@ var skip_menu = false
 var skip_intro = false
 var mouse_sens_mult = 1.0
 var heat = 0.0                        # the town's memory of a thieving gull (decays)
+var heat_decay_mult = 1.0             # round 12: far from the crowd and high in the sky the town forgets in seconds (main._update_watch sets it)
 var watch = 0.0                       # crowd alertness around the player right now: heat + people who are looking (0..4)
 var sense_active = false              # Gull Sight held (slow motion + dark screen)
 var vision_tired = false
@@ -252,7 +253,7 @@ func cull_tree(root, end_m, no_shadow = false):
 
 func _process(delta):
 	if heat > 0.0:
-		heat = max(heat - delta / 30.0, 0.0)
+		heat = max(heat - delta / 30.0 * heat_decay_mult, 0.0)
 	if not get_tree().paused and not codex_open and not showcase_active:
 		_buff_tick(delta / max(Engine.time_scale, 0.1))
 
@@ -878,6 +879,8 @@ func apply_save(d):
 		cine_seen["sun"] = true
 	if quests.get("skybow", "") == "done":
 		cine_seen["skybow"] = true
+	if quests.get("cloud", "") == "done":
+		cine_seen["cloud"] = true
 
 	var p = d.get("pos", [-9.5, 6.0, -0.8])
 	saved_pos = {"pos": Vector3(p[0], p[1], p[2]), "yaw": float(d.get("yaw", PI))}

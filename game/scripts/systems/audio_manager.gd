@@ -150,7 +150,8 @@ func _process(delta):
 	gull_timer -= delta
 	if gull_timer <= 0.0:
 		gull_timer = randf_range(9.0, 22.0)
-		play("gull_far", randf_range(-26.0, -20.0), randf_range(0.85, 1.15))
+		if not ending and not hush:          # round 12: never a stray call in the quiet of the ending or under a film moment
+			play("gull_far", randf_range(-28.0, -22.0), randf_range(0.85, 1.15))
 	# tummy growl scheduler
 	if growl_timer > 0.0:
 		growl_timer -= delta

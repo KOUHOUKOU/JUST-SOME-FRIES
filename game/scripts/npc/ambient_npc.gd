@@ -473,7 +473,7 @@ func _kind(delta):
 				rig.set_mode("wave")
 				kk_state = "home"
 				kk_t = 0.0
-				kk_cd = 150.0
+				kk_cd = 150.0 if GS.watch >= 0.7 else 60.0
 		"home":
 			kk_t += delta
 			if kk_t > 1.6:
