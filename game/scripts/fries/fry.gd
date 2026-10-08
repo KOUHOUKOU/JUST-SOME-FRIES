@@ -470,7 +470,7 @@ func set_steam(level):
 		steam.position = Vector3(0, 0.25, 0)
 		steam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(steam)
-	steam.mesh.material.albedo_color = Color(1.0, 0.97, 0.9, 0.05 + 0.2 * clamp(level, 0.0, 1.0))
+	steam.mesh.material.albedo_color = Color(1.0, 0.97, 0.9, 0.02 + 0.12 * clamp(level, 0.0, 1.0))
 	steam.emitting = level > 0.01 and not consumed
 
 var steam = null
@@ -696,17 +696,11 @@ func update_convergence(player_pos, player_fwd, delta):
 	var rng_ = 0.0
 	var a = 0.0
 	if n >= 12.0:
-		rng_ = 25.0
-		a = 0.8
+		rng_ = 9.0
+		a = 0.32
 	elif n >= 9.0:
-		rng_ = 25.0
-		a = 0.7
-	elif n >= 6.0:
-		rng_ = 18.0
-		a = 0.5
-	elif n >= 3.0:
-		rng_ = 10.0
-		a = 0.3
+		rng_ = 7.0
+		a = 0.24
 	var d = player_pos.distance_to(global_position)
 	if rng_ > 0.0 and d < rng_:
 		var k = clamp(1.0 - d / rng_, 0.0, 1.0)
@@ -719,9 +713,3 @@ func update_convergence(player_pos, player_fwd, delta):
 	else:
 		halo_alpha = 0.0
 	_apply_halo()
-	chime_cd -= delta
-	if n >= 12.0 and chime_cd <= 0.0 and d < 35.0:
-		var to = (global_position - player_pos).normalized()
-		if player_fwd.dot(to) > cos(deg_to_rad(25.0)):
-			chime_cd = 15.0
-			Sfx.play("chime", -8.0)

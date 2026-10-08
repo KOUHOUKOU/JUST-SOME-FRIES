@@ -395,6 +395,16 @@ class Vignette extends Control:
 			return
 		draw_texture_rect(tex, Rect2(Vector2.ZERO, size), false, Color(1, 1, 1, a))
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.35, 0.5, 0.8, 0.07 * a))
+		# round 10: the slow time has a name. Small, spaced out, at the top edge: bright for a new gull, a whisper for an old hand
+		var u = size.y / 720.0
+		var newbie = GS.fry_total() < 6
+		var f = ThemeDB.fallback_font
+		var txt = "G U L L   T I M E"
+		var w = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x
+		var pulse = 0.78 + 0.22 * sin(GS.msec() * 0.004) if newbie else 1.0
+		var ta = a * (0.85 * pulse if newbie else 0.32)
+		draw_string(f, Vector2(size.x * 0.5 - w * 0.5 + 1.0, size.y * 0.045 + 1.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(0, 0, 0, ta * 0.7))
+		draw_string(f, Vector2(size.x * 0.5 - w * 0.5, size.y * 0.045), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(1.0, 0.9, 0.62, ta))
 
 # World-to-screen pointers: the first fries ("where is it?") in gold, and the faint "go back there" hint for the plain fry.
 class Guide extends HC:
@@ -1361,6 +1371,12 @@ func _on_fry_got(type, tier):
 	elif type == "tutorial":
 		dur = 2.6
 	gains.append({"type": type, "tier": tier, "t": 0.0, "slot": slot, "name": nm, "line": ln, "rarity": rar, "dur": dur})
+	# the gull works it out for itself (small print, only for the first two fries): the slow time was the whole trick
+	if type == "tutorial":
+		var wl = ["that slow moment... that's a gull's whole trick.", "the closer the fry, the slower the world. it's called gull time."]
+		var wi = GS.gull_sense_count - 1
+		if wi >= 0 and wi < wl.size():
+			get_tree().create_timer(2.6, true, false, true).timeout.connect(func(): whisper(wl[wi], 5.0))
 	Sfx.play("fry_fly", -10.0)
 
 # the fry reached its square
@@ -1379,7 +1395,11 @@ func _on_quest_done(id):
 		return
 	if id == "sun" or id == "skybow":
 		return                      # round 9: these two have a short cinematic of their own (story_scenes.gd), with the same words
-	quiet_moment(Array(GS.QUESTS[id][2].split("|")))
+	var sc = get_tree().current_scene.scenes
+	if sc.has_beat("quest_" + id):
+		sc.beat_moment("quest_" + id)       # round 10: a beat (a word and three short lines), not a minute of bars
+	else:
+		quiet_moment(Array(GS.QUESTS[id][2].split("|")))
 
 # ROUND 9: the "light film mode". The gull keeps flying (nothing is locked, time does not slow); the interface melts away, two thin bars come in, and 1-4 short
 # lines appear in the middle of the picture one after the other. Used for the first coffee / cocktail / ice cream, the first fish, a cloud, the fish book.

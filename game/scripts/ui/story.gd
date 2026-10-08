@@ -51,6 +51,7 @@ var art_t0 = 0
 var art_id = ""
 var cam_roll = 0.0            # the picture leans (a wobbly cocktail)
 var bars = 0.0                # film mode: 0 = none, 1 = full letterbox bars
+var light = false             # round 10: a BEAT (a short comic moment while the gull keeps flying): only the lettering, the burst and the caption are drawn; nothing is locked or swallowed
 var cards = []                # the memory polaroids of the ending
 var narr = null               # the gull's thought, typed under the picture in film mode
 var tag = null                # a small chapter tag in the upper bar
@@ -227,13 +228,14 @@ func _cam_tick():
 	player.set_override(xf, lerp(cam["f0"], cam["f1"], e), 1.0, 40.0)
 
 func _process(delta):
-	if not active:
+	if not active and not light:
 		return
 	var dt = delta / max(Engine.time_scale, 0.05)
 	shake = move_toward(shake, 0.0, 2.2 * dt)
 	flash = move_toward(flash, 0.0, 3.0 * dt)
-	_cam_tick()
-	_portrait_tick()
+	if active:
+		_cam_tick()
+		_portrait_tick()
 	page.queue_redraw()
 
 # ------------------------------------------------------------------ words, balloons, captions
@@ -253,14 +255,14 @@ func wait(sec):
 		await get_tree().process_frame
 
 # a sentence that is typed out. A press finishes the typing; the next press (or the reading time) goes on.
-func _speak(d, text, voice_pitch, hold = -1.0):
+func _speak(d, text, voice_pitch, hold = -1.0, cps = 34.0):
 	var n = text.length()
 	var t0 = GS.msec()
 	var p0 = last_press
 	d["shown"] = 0
 	var last_n = 0
 	while d["shown"] < n:
-		var k = int((GS.msec() - t0) / 1000.0 * 34.0) + 1
+		var k = int((GS.msec() - t0) / 1000.0 * cps) + 1
 		d["shown"] = min(k, n)
 		if d["shown"] > last_n and (d["shown"] % 2 == 0) and text[d["shown"] - 1] != " ":
 			Sfx.play("blip", -24.0, voice_pitch * randf_range(0.93, 1.07))
@@ -287,12 +289,12 @@ func say(who, text, anchor_fn, side = "right", style = "speech", voice_pitch = 1
 	if bal == d:
 		bal = null
 
-func caption(text):
+func caption(text, hold = -1.0, cps = 34.0):
 	cap = {"text": text, "shown": 0, "a": 0.0, "t0": GS.msec()}
 	var d = cap
 	var tw = create_tween().set_ignore_time_scale(true)
 	tw.tween_method(func(v): d["a"] = v, 0.0, 1.0, 0.18)
-	await _speak(d, text, 0.7)
+	await _speak(d, text, 0.7, hold, cps)
 	var tw2 = create_tween().set_ignore_time_scale(true)
 	tw2.tween_method(func(v): d["a"] = v, 1.0, 0.0, 0.2)
 	await tw2.finished
@@ -407,6 +409,58 @@ func clear_words(sec = 0.5):
 func burst_at(nx, ny):
 	bursts.append({"pos": Vector2(nx, ny), "t0": GS.msec(), "life": 0.6})
 
+# ------------------------------------------------------------------ BEATS (round 10): the short comic moments, 4-8 s, the gull keeps flying
+# A beat is a few panels' worth of comic rhythm laid over the game as it is: a splash of the thing's colour, ONE big hand-lettered word that slams in with impact
+# lines, then the gull's thoughts in a yellow caption box (a line at a time, typed fast). Nothing is locked, slowed or hidden but the interface.
+#   await st.beat("BZZZT!", Color("E8B27A"), ["coffee. my heart just learned drums."], {"rot": -7})
+func beat_begin():
+	light = true
+	visible = true
+	cap = null
+	sfx_items = []
+	words = []
+	bursts = []
+	flash = 0.0
+	cards = []
+
+func beat_end():
+	light = false
+	if not active:
+		visible = false
+	cap = null
+	words = []
+	sfx_items = []
+	bursts = []
+
+func beat(word, col, lines, o = {}):
+	if active:
+		return
+	beat_begin()
+	var life = o.get("life", 1.7)
+	var rot = o.get("rot", -6.0)
+	var pos = o.get("pos", Vector2(0.62, 0.36))
+	var wsz = o.get("size", 118.0)
+	# the word: a hit (impact lines, a flash of the thing's colour, a little shake), then it fades while the thoughts go on
+	flash_col = col.lerp(Color.WHITE, 0.55)
+	var w = slam(word, pos.x, pos.y, wsz, Color.WHITE.lerp(col, 0.15), rot, o.get("shake", 0.5), true, "beat")
+	w["star"] = col.lightened(0.15)
+	Sfx.play(o.get("sfx", "vn_pop"), -8.0, o.get("pitch", 0.9))
+	for e in o.get("extra", []):
+		# small extra words round the big one: sfx(text, nx, ny, rot, col, size, life)
+		sfx(e[0], e[1], e[2], e[3], e[4], e[5], e[6])
+	get_tree().create_timer(life, true, false, true).timeout.connect(func():
+		if is_instance_valid(self) and light:
+			var tw = create_tween().set_ignore_time_scale(true)
+			tw.tween_method(func(v): w["a"] = v, 1.0, 0.0, 0.35)
+			tw.tween_callback(func(): words.erase(w)))
+	await wait(0.35)
+	var k = 0
+	for l in lines:
+		await caption(l, o.get("hold", 1.15) if k < lines.size() - 1 else o.get("hold_last", 1.5), o.get("cps", 46.0))
+		k += 1
+	await wait(0.15)
+	beat_end()
+
 # ------------------------------------------------------------------ film mode (the cinematic moments)
 func bars_in(sec = 0.9):
 	Sfx.play("cine_in", -10.0)
@@ -419,14 +473,14 @@ func bars_out(sec = 0.8):
 	await tw.finished
 
 # the gull's own thought, typed under the picture. A press finishes the sentence; the next one goes on (or the reading time runs out).
-func narrate(text, tint = Color(1.0, 0.97, 0.88), pitch = 1.5):
+func narrate(text, tint = Color(1.0, 0.97, 0.88), pitch = 1.5, hold = -1.0, cps = 34.0):
 	narr = {"text": text, "shown": 0, "a": 0.0, "t0": GS.msec(), "tint": tint}
 	var d = narr
 	var tw = create_tween().set_ignore_time_scale(true)
-	tw.tween_method(func(v): d["a"] = v, 0.0, 1.0, 0.25)
-	await _speak(d, text, pitch, clamp(0.55 + text.length() * 0.035, 1.3, 4.2))
+	tw.tween_method(func(v): d["a"] = v, 0.0, 1.0, 0.2)
+	await _speak(d, text, pitch, clamp(0.55 + text.length() * 0.035, 1.3, 4.2) if hold < 0.0 else hold, cps)
 	var tw2 = create_tween().set_ignore_time_scale(true)
-	tw2.tween_method(func(v): d["a"] = v, 1.0, 0.0, 0.25)
+	tw2.tween_method(func(v): d["a"] = v, 1.0, 0.0, 0.2)
 	await tw2.finished
 	if narr == d:
 		narr = null
@@ -640,8 +694,9 @@ func _caption(ci, R, u):
 	var c = cap
 	if c == null or c["a"] <= 0.01:
 		return
-	var fs = int(19.0 * u)
-	var maxw = min(R.size.x * 0.55, 520.0 * u)
+	var big = light          # a beat's caption is bigger and sits at the lower left, close to the action
+	var fs = int((27.0 if big else 19.0) * u)
+	var maxw = min(R.size.x * (0.62 if big else 0.55), (700.0 if big else 520.0) * u)
 	var lines = _wrap(c["text"], bold, fs, maxw)
 	var lw = 0.0
 	for l in lines:
@@ -650,6 +705,8 @@ func _caption(ci, R, u):
 	var sz = Vector2(lw + 36.0 * u, lines.size() * lh + 24.0 * u)
 	var slide = (1.0 - c["a"]) * -26.0 * u
 	var rect = Rect2(R.position + Vector2(22.0 * u + slide, 20.0 * u), sz)
+	if big:
+		rect = Rect2(Vector2(R.position.x + 34.0 * u + slide, R.end.y - sz.y - 44.0 * u), sz)
 	var a = c["a"]
 	ci.draw_rect(Rect2(rect.position + Vector2(6, 6) * u, rect.size), Color(INK.r, INK.g, INK.b, 0.85 * a))
 	ci.draw_rect(rect, Color(CAP_FILL.r, CAP_FILL.g, CAP_FILL.b, a))
@@ -763,7 +820,7 @@ func _film(ci, u):
 			tx += bold.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x + 4.0 * u
 	if narr != null and narr["a"] > 0.01:
 		var n = narr
-		var fs = int(25.0 * u)
+		var fs = int(29.0 * u)
 		var lines = _wrap(n["text"], font, fs, ci.size.x * 0.72)
 		var lh = fs * 1.3
 		var total_h = lines.size() * lh
@@ -934,7 +991,7 @@ func _mem_icon(ci, kind, c, s, a, extra, age):
 			ci.draw_circle(c, s * 0.5, white)
 
 func draw_page(ci):
-	if not active or ci.size.y < 20.0:
+	if not (active or light) or ci.size.y < 20.0:
 		return
 	var u = ci.size.y / 720.0
 	var t = GS.msec() * 0.001
@@ -992,6 +1049,13 @@ func draw_page(ci):
 		if age2 < 0.3:
 			pop = lerp(2.4, 1.0, 1.0 - pow(1.0 - age2 / 0.3, 3.0))
 		var wc = Vector2(R.position.x + R.size.x * w["pos"].x, R.position.y + R.size.y * w["pos"].y) + jitter * (1.0 if age2 < 0.5 else 0.0)
+		if w.has("star"):
+			# a beat's word sits on an ink-edged starburst of its own colour (it pops in with the word and turns very slowly)
+			var sa = w["a"] * clamp(age2 / 0.06, 0.0, 1.0)
+			var sr = w["size"] * u * 1.25 * pop * (1.0 + 0.04 * sin(age2 * 9.0))
+			var sc2 = w["star"]
+			_starburst(ci, wc, sr * 1.08, 13, INK, sa, age2 * 0.12 + 0.3, 0.66)
+			_starburst(ci, wc, sr, 13, Color(sc2.r, sc2.g, sc2.b), sa * 0.95, age2 * 0.12 + 0.3, 0.66)
 		_lettering(ci, w["text"], wc, w["size"], w["col"], w["rot"], w["a"] * clamp(age2 / 0.06, 0.0, 1.0), pop)
 	# the sound effects
 	i = 0

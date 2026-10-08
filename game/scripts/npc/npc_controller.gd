@@ -4,6 +4,8 @@ extends Node3D
 
 const HumanRig = preload("res://scripts/npc/human_rig.gd")
 const Warn = preload("res://scripts/world/warn.gd")
+const Nav = preload("res://scripts/npc/nav.gd")
+var stuck_t = 0.0
 
 const PROFILES = {
 	"elder": {"view": 8.0, "angle": 80.0, "gain": 0.3, "decay": 0.8, "ring": 1.05, "timing": 0.46, "tele": 0.7, "active": 0.25, "radius": 2.4, "kind": "punch", "scale": 0.95, "grace": true},
@@ -549,7 +551,7 @@ func _update_behavior(delta):
 	if leaving:
 		var dir = get_meta("exit_dir", Vector3(0, 0, 1))
 		dir.y = 0
-		position += dir.normalized() * 2.4 * delta
+		Nav.step(self, dir.normalized() * 2.4 * delta)
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 4.0 * delta)
 		respawn_t += delta
 		if respawn_t > 7.0:
@@ -592,7 +594,15 @@ func _walk_path(delta):
 	rig.set_mode("walk" if behavior == "patrol" else "jog")
 	rig.walk_rate = walk_speed / 1.3
 	var dir = to.normalized()
-	position += dir * walk_speed * delta
+	if not Nav.step(self, dir * walk_speed * delta):
+		# round 10: a wall in the way - wait a beat, then go on to the next waypoint instead of pushing into it
+		stuck_t += delta
+		if stuck_t > 0.8:
+			stuck_t = 0.0
+			wp_i = (wp_i + 1) % waypoints.size()
+			wp_wait = 0.5
+	else:
+		stuck_t = 0.0
 	rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 6.0 * delta)
 
 func _update_awareness(delta, _dist_p):

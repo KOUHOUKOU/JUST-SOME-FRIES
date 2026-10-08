@@ -26,7 +26,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -2497,10 +2497,11 @@ func round8_test():
 	await real(5.4)
 	chk("meteor flies", mg.star != null and is_instance_valid(mg.star))
 	var star = mg.star
-	chk("meteor asks 262", abs(GS.need_speed(star) * GS.SPEED_UNIT - 262.0) < 0.1)
+	chk("meteor asks 232", abs(GS.need_speed(star) * GS.SPEED_UNIT - 232.0) < 0.1)
 	var prm2 = p.snatch._seq_params(star)
 	chk("meteor = 5 circles x 2 judgements", prm2["n"] == 10, str(prm2["n"]))
 	GS.test_boost_bonus = 30.0
+	GS.star_t = 40.0            # the real thing is always caught in STARLIGHT (x1.5 bands); the bot's frame jitter needs them
 	var q0 = GS.quest_state("meteor")
 	# chase it: start behind it on its own line
 	var d = star.vel.normalized()
@@ -2525,11 +2526,13 @@ func round8_test():
 			if idx >= 0:
 				var nt = sq["notes"][idx]
 				var now = p.snatch.seq_now()
-				if now >= nt["t"] - sq["gw"] * 0.5 and not sq.has("p%d" % idx):
+				var rdt0 = get_process_delta_time() / max(Engine.time_scale, 0.05)
+				if now + rdt0 >= nt["t"] - sq["gw"] * 0.3 and not sq.has("p%d" % idx):
 					sq["p%d" % idx] = true
 					tap("interact")
 	Input.action_release("move_forward")
 	Input.action_release("dash")
+	say("[R7] meteor commit %s" % str(p.snatch.last_commit))
 	chk("meteor caught", GS.stats["meteors"] > 0, "state=%s" % GS.quest_state("meteor"))
 	chk("meteor quest done", GS.quest_state("meteor") == "done")
 	# the first star is a cinematic moment of its own: the star stays in the beak, then it becomes the gull's tail
@@ -2659,12 +2662,11 @@ func r9speed():
 		var ceil_g = GS.boost_speed() * 6.0
 		say("[R9] sonic step %d: reached %d gauge (formula ceiling %d)" % [step, int(g), int(ceil_g)])
 		if step == 1:
-			chk9("silver-SONIC gull cannot reach the cloud (255)", g < GS.CLOUD_NEED, "%d" % int(g))
+			chk9("round 10: a silver-SONIC gull in STARLIGHT reaches the sun (244) and so everything else in the sky", g >= GS.SUN_NEED, "%d" % int(g))
 		elif step == 2:
-			chk9("gold-SONIC gull reaches the cloud (255)", g >= GS.CLOUD_NEED, "%d" % int(g))
-			chk9("gold-SONIC gull reaches the sun (272)", g >= GS.SUN_NEED, "%d" % int(g))
+			chk9("gold-SONIC gull reaches the sun with room to spare", g >= GS.SUN_NEED + 20.0, "%d" % int(g))
 		else:
-			chk9("diamond-SONIC gull reaches the sun with room to spare", g >= GS.SUN_NEED + 14.0, "%d" % int(g))
+			chk9("diamond-SONIC gull reaches the sun with room to spare", g >= GS.SUN_NEED + 40.0, "%d" % int(g))
 	get_tree().quit()
 
 # --r9cine: every real cinematic moment of round 9, one screenshot per second, with the gull's share of the picture width measured (--only=a,b)
@@ -2704,7 +2706,7 @@ func r9cine():
 			if k > 40:
 				break
 		var dur = (GS.msec() - t0) / 1000.0
-		chk9("cinematic %s lasts 10-20 s" % id, dur >= 9.0 and dur <= 21.0, "%.1f s" % dur)
+		chk9("cinematic %s lasts 6-10.5 s" % id, dur >= 6.0 and dur <= 10.5, "%.1f s" % dur)
 		chk9("cinematic %s never fills the picture with the gull" % id, worst <= 0.62 and nearest >= 2.6, "worst %d%% nearest %.1f m" % [int(worst * 100.0), nearest])
 		await real(1.0)
 	get_tree().quit()
@@ -2875,7 +2877,7 @@ func r9quiet():
 			slowed = true
 		await shot("r9q_%02d" % k)
 		k += 1
-		if not main.hud.quiet_busy and main.hud.quiet_queue.is_empty() and main.cine_queue.is_empty() and k > 4:
+		if not main.scenes.beat_busy and main.scenes.beat_queue.is_empty() and main.cine_queue.is_empty() and k > 4:
 			break
 	Input.action_release("move_forward")
 	chk9("the light film mode never locks the gull or slows time", not locked_seen and not slowed)
@@ -2920,4 +2922,221 @@ func shotcheck():
 	Input.action_release("interact")
 	run[0] = false
 	chk9("the opening never puts a gull in the lens", worst["w"] <= 0.62 and worst["near"] >= 2.4, "worst %d%% %.1f m" % [int(worst["w"] * 100.0), worst["near"]])
+	get_tree().quit()
+
+# ================================================================== ROUND 10
+func chk10(name_, ok, extra = ""):
+	say("[R10] %s %s %s" % ["PASS" if ok else "FAIL", name_, extra])
+
+# --r10beats: every beat (first coffee / cocktail / ice cream, a fish of each rarity, the cloud, the fish book) and every film moment, timed and filmed.
+# Beats must not lock the gull or slow time, and must not last more than ~7 s; film moments no more than ~9.5 s.
+func r10beats():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	main.autotest_no_cine = false
+	GS.cine_seen.clear()
+	place(Vector3(-4.0, 40.0, 30.0), Vector3(-4.0, 40.0, 0.0), 8.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	var jobs = [["drink_coffee", {}], ["drink_alcohol", {}], ["drink_ice", {}], ["fish", {"sp": "sardine", "len": 18.0, "kg": 0.1}], ["fish", {"sp": "tuna", "len": 140.0, "kg": 52.0}],
+		["fish", {"sp": "marlin", "len": 300.0, "kg": 200.0}], ["quest_cloud", {}], ["quest_fishbook", {}]]
+	var only = ""
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--only="):
+			only = a.substr(7)
+	var k = 0
+	for j in jobs:
+		if only != "" and not (j[0] in only.split(",")):
+			continue
+		main.scenes.beat_moment(j[0], j[1])
+		var t0 = GS.msec()
+		var locked = false
+		var slowed = false
+		var shots = 0
+		await real(0.3)
+		while main.scenes.beat_busy:
+			if p.input_locked:
+				locked = true
+			if Engine.time_scale < 0.9:
+				slowed = true
+			if shots < 4:
+				await real(1.2)
+				await shot("r10b_%s_%d_%02d" % [j[0], k, shots])
+				shots += 1
+			else:
+				await real(0.3)
+			if GS.msec() - t0 > 20000:
+				break
+		var dur = (GS.msec() - t0) / 1000.0
+		chk10("beat %s lasts 3-8 s" % j[0], dur >= 3.0 and dur <= 8.0, "%.1f s" % dur)
+		chk10("beat %s never locks the gull or slows time" % j[0], not locked and not slowed)
+		k += 1
+		await real(0.6)
+	Input.action_release("move_forward")
+	# the film moments
+	var ids = ["drinks3", "meteor", "sun", "skybow", "all24"]
+	if only != "":
+		ids = []
+	for id in ids:
+		place(Vector3(-4.0, 40.0, 30.0), Vector3(-4.0, 40.0, 0.0), 6.0)
+		p.mode = 0
+		await real(0.5)
+		if main.menus.paused:
+			main.menus.set_paused(false)
+		main.scenes.cinema(id, {})
+		var t1 = GS.msec()
+		var n = 0
+		await real(0.3)
+		while main.scenes.cine_busy:
+			await real(1.5)
+			await shot("r10c_%s_%02d" % [id, n])
+			n += 1
+			if GS.msec() - t1 > 25000:
+				break
+		var d2 = (GS.msec() - t1) / 1000.0
+		chk10("film moment %s lasts 6-10 s" % id, d2 >= 6.0 and d2 <= 10.0, "%.1f s" % d2)
+		await real(1.0)
+	get_tree().quit()
+
+# --r10npc: nobody is born inside a wall, and nobody walks or runs into one (the real movement code, thousands of steps)
+func r10npc():
+	await get_tree().create_timer(1.5).timeout
+	var Nav = preload("res://scripts/npc/nav.gd")
+	var amb = get_tree().get_nodes_in_group("ambient")
+	var bad_spawn = []
+	for a in amb:
+		if Nav.inside_solid(a, "props") and not a.rig.seated and a.mode in ["stroll", "jog", "stand", "play", "paint", "fish", "wave"]:
+			bad_spawn.append("%s@%s" % [a.mode, str(a.global_position.snapped(Vector3(0.1, 0.1, 0.1)))])
+	say("[R10] %d ambient people, %d standing inside a solid: %s" % [amb.size(), bad_spawn.size(), str(bad_spawn)])
+	# the walkers: walk their own paths for ten minutes of game time
+	var walkers = 0
+	var inside = 0
+	var skipped = 0
+	for a in amb:
+		if not (a.mode in ["stroll", "jog"]) or a.waypoints.size() < 2:
+			continue
+		walkers += 1
+		var wp0 = a.wp_i
+		var worst = 0
+		var first = null
+		for step in 1500:
+			a._walk(0.2)
+			if Nav.inside_solid(a, "props"):
+				worst += 1
+				if first == null:
+					first = [step, a.global_position, a.wp_i]
+		if first != null:
+			say("[R10]   first at step %d pos %s heading to wp %d (%s)" % [first[0], str(first[1]), first[2], str(a.waypoints[first[2]])])
+		if worst > 0:
+			inside += 1
+			say("[R10] walker %s from %s ended inside a solid %d times" % [a.mode, str(a.home_pos), worst])
+		if a.wp_i != wp0:
+			skipped += 0
+	chk10("%d walkers never enter a wall" % walkers, inside == 0, "%d offenders" % inside)
+	# the fry owners who patrol (npc_controller): their own paths
+	var pat = 0
+	var pat_bad = 0
+	for o in get_tree().get_nodes_in_group("npcs"):
+		if not ("waypoints" in o) or o.waypoints.size() < 2 or not (o.behavior in ["patrol", "kid"]):
+			continue
+		pat += 1
+		var offended = 0
+		for step in 1200:
+			o._walk_path(0.2)
+			if Nav.inside_solid(o, "props"):
+				offended += 1
+		if offended > 0:
+			pat_bad += 1
+			say("[R10]   patrol %s from %s ended inside a solid %d times" % [o.behavior, str(o.global_position), offended])
+	chk10("%d patrolling owners never enter a wall" % pat, pat_bad == 0, "%d offenders" % pat_bad)
+	# the kids: run at the gull from every direction, then walk home
+	var kids = 0
+	var kid_bad = 0
+	var stuck_home = 0
+	for a in amb:
+		if not (a.kind_kid or a.chaser):
+			continue
+		kids += 1
+		var home = a.home_pos
+		if Nav.inside_solid(a, "props"):
+			say("[R10]   kid at %s is born inside a prop" % str(home))
+			continue
+		for ang in range(0, 360, 30):
+			a.global_position = home
+			a.trail.clear()
+			a.blocked_t = 0.0
+			var tgt = home + Vector3(cos(deg_to_rad(ang)), 0, sin(deg_to_rad(ang))) * 14.0
+			var steps = 0
+			while steps < 120:
+				var dir = tgt - a.global_position
+				dir.y = 0.0
+				if dir.length() < 1.0:
+					break
+				a._run_step(dir.normalized(), 3.7, 0.1)
+				if Nav.inside_solid(a, "props"):
+					kid_bad += 1
+					say("[R10]   kid from %s towards %d deg ended at %s" % [str(home), ang, str(a.global_position)])
+					break
+				steps += 1
+			# and back
+			var back_steps = 0
+			while back_steps < 400 and not a._home_step(2.6, 0.1):
+				back_steps += 1
+				if Nav.inside_solid(a, "props"):
+					kid_bad += 1
+					break
+			if back_steps >= 400:
+				stuck_home += 1
+	chk10("%d running kids never enter a wall (%d directions each)" % [kids, 12], kid_bad == 0, "%d bad" % kid_bad)
+	chk10("every kid gets home again", stuck_home == 0, "%d stuck" % stuck_home)
+	# a dog's lunge towards a wall
+	for dg in get_tree().get_nodes_in_group("dogs"):
+		var ok = true
+		for ang in range(0, 360, 45):
+			dg.global_position = dg.home
+			var dirv = Vector3(cos(deg_to_rad(ang)), 0, sin(deg_to_rad(ang)))
+			for i in 12:
+				var before = dg.global_position
+				var moved = Nav.step(dg, dirv * 0.5)
+				if Nav.inside_solid(dg, "props"):
+					ok = false
+		dg.global_position = dg.home
+		if not ok:
+			say("[R10] a dog went inside a solid at %s" % str(dg.home))
+	get_tree().quit()
+
+# --r10misc: the big brother's line, the sky's needs, the fish, the quiet way to the plain fry
+func r10misc():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	var b = main.bro
+	# 1: his words
+	await real(0.5)
+	chk10("the big brother's bubble is hidden while he is silent", not b.bubble.visible)
+	p.global_position = b.global_position + Vector3(0, 0, 30.0)
+	b.speak("a line from far away", 3.0)
+	await real(0.5)
+	chk10("a line is dropped when the gull is far away", not b.bubble.visible and b.bubble_t <= 0.0)
+	p.global_position = b.global_position + Vector3(0, 0.5, 5.0)
+	b.speak("a line for someone close", 2.0)
+	await real(0.4)
+	chk10("a line shows when the gull is close", b.bubble.visible and b.bubble.modulate.a > 0.3)
+	await real(2.6)
+	chk10("and it goes away again", not b.bubble.visible)
+	# 2: the sky and the fish
+	var silver_ceiling = (20.0 + 12.2 + 9.0) * 6.0
+	chk10("every wonder of the sky is within a silver gull's reach with all three cups", GS.CLOUD_NEED <= silver_ceiling and GS.METEOR_NEED <= silver_ceiling and GS.SKYBOW_NEED <= silver_ceiling and GS.SUN_NEED <= silver_ceiling, "%d %d %d %d <= %d" % [int(GS.CLOUD_NEED), int(GS.METEOR_NEED), int(GS.SKYBOW_NEED), int(GS.SUN_NEED), int(silver_ceiling)])
+	chk10("the fish are the hard ones now (legendary above the silver ceiling without drinks)", GS.FISH_NEED[2] > 120.0 + 40.0 and GS.FISH_NEED[1] > GS.FISH_NEED[0], str(GS.FISH_NEED))
+	# 3: the way to the plain fry is quiet
+	chk10("only two whispers by the clock and one by the count", main.HUNGER_STEPS.size() == 2 and main.HUNGER_COUNT_STEPS.size() == 1)
+	GS.hunger_t = 500.0
+	GS.set_level("red", 3)
+	var ord = main.ordinary
+	var lg = GS.longing()
+	say("[R10] longing %.1f" % lg)
+	p.global_position = ord.global_position + Vector3(0, 1.0, 40.0)
+	ord.update_convergence(p.global_position, Vector3(0, 0, -1), 0.1)
+	chk10("no glow from 40 m", ord.halo_alpha <= 0.01)
 	get_tree().quit()

@@ -13,7 +13,7 @@ const MRATE = 11025
 const PENTA = [1.0, 1.1225, 1.2599, 1.4983, 1.6818, 2.0, 2.2449, 2.5198]
 # how loud each piece plays (dB): they are all normalised to the same loudness, so this is only taste
 const MUSIC_DB = {"title": -7.0, "boardwalk": -9.5, "beach": -10.0, "hill": -9.0, "sea": -9.0, "summit": -9.5, "sky": -10.0, "star": -9.5, "ending": -7.0, "ending_mem": -9.0,
-	"cine_joy": -9.0, "cine_wish": -8.0, "cine_home": -8.0}
+	"cine_joy": -9.0, "cine_wish": -8.0, "cine_home": -8.0, "cine_sun": -8.0}
 const ALT = {"flap": ["flap", "flap2"]}
 
 var sounds = {}

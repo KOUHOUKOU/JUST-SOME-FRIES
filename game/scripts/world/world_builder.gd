@@ -236,6 +236,7 @@ func _terrain():
 	mi.name = "Terrain"
 	map.add_child(mi)
 	var sb = StaticBody3D.new()
+	sb.name = "TerrainBody"
 	sb.collision_layer = 1
 	sb.collision_mask = 0
 	var cs = CollisionShape3D.new()

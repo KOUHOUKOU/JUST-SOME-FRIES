@@ -44,20 +44,14 @@ const PREF_GOLD = {"red": ["lifeguard"], "orange": ["cafe_table", "market_stall"
 	"cyan": ["roof_laundry", "villa_bbq", "villa_pool"], "purple": ["chimney", "mast", "containers"], "pink": ["barn", "islet", "buoy"]}
 const PREF_DIAMOND = {"red": ["ferris"], "orange": ["clock_tower", "church"], "green": ["crane_hook", "kite"], "blue": ["crane_hook2", "lighthouse"],
 	"cyan": ["turbine"], "purple": ["windmill"], "pink": ["lighthouse", "turbine"]}
+# ROUND 10: the way to the plain fry is no longer spelled out. Two faint whispers by the clock and one by the count, none of them pointing anywhere;
+# the rest (a thread of steam when you pass near, a dim glow at a few metres) is for the player to notice and understand alone.
 const HUNGER_STEPS = [
-	[45.0, "something is still missing."],
-	[110.0, "none of these was the one you wanted."],
-	[190.0, "full of magic. and it is not the right kind."],
-	[270.0, "warm. i remember warm."],
+	[180.0, "something is still missing."],
+	[420.0, "...what was it, again?"],
 ]
-# ...and the same story told by how many fries you have already eaten: every few strong fries the gull remembers a little more
 const HUNGER_COUNT_STEPS = [
-	[10, "stronger. faster. still hungry."],
-	[13, "none of these taste like what you remember."],
-	[16, "what did you want, before all of this?"],
-	[19, "it wasn't magic. i'm almost sure of that."],
-	[21, "salt. warmth. a quiet morning."],
-	[23, "so small. i must have flown right past it."],
+	[18, "stronger. faster. still hungry."],
 ]
 
 var player
@@ -236,7 +230,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -546,7 +540,7 @@ func queue_cine(id, extra = {}):
 	cine_wait = 0.9
 
 func _cine_tick(rdt):
-	if cine_queue.is_empty() or scenes.cine_busy:
+	if cine_queue.is_empty() or scenes.cine_busy or scenes.beat_busy:
 		return
 	var sn = player.snatch
 	if sn.state != "idle" or sn.lock_fry != null or sn.carry_fry != null or showcase.active or codex_open or intro_active or player.mode == 2 or ending_started:
@@ -569,8 +563,8 @@ func _cine_tick(rdt):
 			GS.cine_seen[e[0]] = true
 			return
 	GS.cine_seen[e[0]] = true
-	if scenes.QUIET.has(e[0]) or e[0] == "fish":
-		hud.quiet_moment(scenes.quiet_lines(e[0], e[1]))       # the light film mode: the gull keeps flying
+	if scenes.has_beat(e[0]):
+		scenes.beat_moment(e[0], e[1])       # a beat: 4-7 s of comic, the gull keeps flying
 		return
 	scenes.cinema(e[0], e[1])
 
@@ -722,7 +716,13 @@ func _tutorial_director():
 			elif best.vanished:
 				prompt = "THE OLD MAN IS ORDERING A NEW ONE..."
 			elif sn.lock_fry != null:
-				prompt = "PRESS  E  WHEN A WHITE RING HITS THE GREEN   (GOLD COUNTS DOUBLE)"
+				# round 10: the slow time is the most important skill of the game; the first fries name it, quietly
+				if n == 0:
+					prompt = "THE WORLD SLOWS DOWN: THIS IS GULL TIME.   PRESS  E  WHEN A WHITE RING HITS THE GREEN"
+				elif n == 1:
+					prompt = "GULL TIME AGAIN.   PRESS  E  WHEN A WHITE RING HITS THE GREEN   (GOLD COUNTS DOUBLE)"
+				else:
+					prompt = "PRESS  E  WHEN A WHITE RING HITS THE GREEN   (GOLD COUNTS DOUBLE)"
 			elif n == 0:
 				if player.mode == 1:
 					prompt = "SPACE  -  TAKE OFF" if play_t > 1.0 else ""
@@ -1266,16 +1266,9 @@ func _hunger_tick(rdt):
 	steam_t -= rdt
 	if steam_t <= 0.0:
 		steam_t = 1.0
-		ordinary.set_steam(clamp(GS.longing() / 14.0, 0.0, 1.0))
-	if GS.hunger_t >= 330.0 or GS.fry_total() >= 22:
-		# the old man, who has been sitting there all this time, waves (no marker, no words)
-		var near = elder.global_position.distance_to(player.global_position)
-		if near < 90.0 and near > 6.0 and not elder_waving:
-			elder_waving = true
-			elder.rig.set_mode("wave")
-		elif (near <= 6.0 or near >= 90.0) and elder_waving:
-			elder_waving = false
-			elder.rig.set_mode("idle")
+		# a wisp of warmth only for someone who is already close (nothing to see from the other end of the island)
+		var dd = ordinary.global_position.distance_to(player.global_position)
+		ordinary.set_steam(clamp(GS.longing() / 14.0, 0.0, 1.0) * clamp(1.0 - (dd - 10.0) / 28.0, 0.0, 1.0))
 
 func _on_ate_ordinary(f):
 	if GS.ordinary_eaten:
@@ -1405,6 +1398,7 @@ func _ending_cinematic(fry):
 	await get_tree().create_timer(0.4).timeout
 	# the big brother takes off his shades
 	bro.gull.unwear("shades")
+	bro.scripted_talk = true
 	bro.speak("...same.", 2.4)
 	await get_tree().create_timer(2.6).timeout
 	player.scripted_move = false

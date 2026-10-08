@@ -71,8 +71,6 @@ func _draw():
 	var free = p.mode != 0 or cost <= 0.0
 	var cost_txt = "FREE" if free else "-%.1f STAMINA / SEC" % cost
 	draw_string(font, Vector2(0, 132 * u), sub + "    " + cost_txt, HORIZONTAL_ALIGNMENT_CENTER, size.x, int(13 * u), Color(1.0, 0.92, 0.7, 0.6 * a))
-	if (GS.hunger_t > 100.0 or GS.fry_total() >= 8) and not GS.ordinary_eaten:
-		draw_string(font, Vector2(0, size.y - 60 * u), "nothing ordinary glows.", HORIZONTAL_ALIGNMENT_CENTER, size.x, int(15 * u), Color(1, 1, 1, 0.34 * a))
 	# the legend of the light pillars: the colour of the beam is the rarity of the fry
 	var names = ["SILVER", "GOLD", "DIAMOND", "RAINBOW"]
 	var x = size.x * 0.5 - 205.0 * u

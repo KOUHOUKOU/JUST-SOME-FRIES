@@ -138,3 +138,11 @@
 - **Star trail** (`gull_visual` "meteor"): 60 stars, 3.2 s, world space, alpha-blended gold, `speed_scale` .55 + 2.2 x speed share, distance fade 0.8-3.5 m.
 - **Music** (`tools/audio/music9.py`, `music9_end.py`, `sf_render.py`, `midi_util.py`): FluidSynth + GeneralUser GS, 32 kHz, reverb in the synth, -23 dBFS RMS, OGG q5. Title 63 s loop (80 bpm, 6/8), ending_mem 48 s loop (60 bpm, 6/8), ending 62 s once (62 bpm, Largo notes from `ref/largo.mid`). `Sfx.crossfade_theme("theme_end", false, -8, 3)` when the big brother lands.
 - **Dev modes added**: `--r9speed --r9cine --r9quiet --r9tab --r9trail --r9sky --shotcheck`.
+## Round 10 (2026-10-08) - see docs/31_ROUND10_CHANGES.md
+- **Sky needs** (`game_state.gd`): cloud 225, meteor 232, rainbow 238, sun 244 (gauge); silver SONIC + 3 drinks + STARLIGHT = 247. **Fish** `FISH_NEED` 96 / 132 / 186.
+- **Beats** (`story.gd beat`, `story_scenes.gd BEATS / beat_moment`): `light` mode of the story layer (draws word, burst, caption; swallows nothing), caption 27 px lower left, word on a 13-point starburst; `hud.ui_root` fades 0.25 s. Film moments: bars 0.5 s, time scale 0.22, `narrate(text, tint, pitch, hold, cps)` typed at 46 cps, holds 0.35-1.0 s; 6.6-8.1 s each. `cine_done_at` + 4 s between two moments.
+- **Plain fry** (`main.gd`): `HUNGER_STEPS` 180 s / 420 s, `HUNGER_COUNT_STEPS` 18 fries; halo only for longing >= 9 (7 m, a .24) / >= 12 (9 m, a .32), no chime, steam alpha .02 + .12 x level x distance fade (10-38 m), no waving old man.
+- **Nav** (`npc/nav.gd`): probes = waist (0.95 m, r .30) + knee (0.55 m, r .20), AHEAD .35 m, slide tries +-40 / +-80 degrees, the ground body "TerrainBody" is excluded from the casts; `ambient_npc`: breadcrumbs `trail` (<= 90 crumbs, 1.2 m apart), blocked 0.7 s = give up a run, 2.5 s blocked on the way home = back at the rug; `_unstick` lifts a person out of a prop (<= 2.4 m) when first near.
+- **Gull time**: `hud.Vignette` draws "G U L L   T I M E" while focus_a > 0 (alpha .85 pulsing if fry_total < 6, else .32); tutorial prompts in `main._tutorial_director`.
+- **Music** (`tools/audio/real_music.py`): see the doc; `LARGO_START` (default 463 s) decides where the Largo's climax falls (about 25-30 s after it starts = "...just some fries."; the scene prints `[ENDING] ... s after the Largo starts`).
+- **Dev modes added**: `--r10beats --r10npc --r10misc`.

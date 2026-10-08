@@ -55,13 +55,13 @@ const NEED_GAUGE = {"red": [78, 102, 126], "orange": [78, 99, 132], "green": [72
 # ROUND 7: the ladder of top speeds. The first SONIC fry (silver) covers EVERY silver and gold fry (the hardest gold needs 114), the second one (gold) covers every diamond
 # fry (the hardest needs 144), and one drink on top of the first one reaches a diamond fry too.
 const RAINBOW_NEED = 150.0           # round 8: a rainbow fry is five judgements and asks for a gold-SONIC gull or a drink or two on top of a silver one
-# ROUND 9: the sky asks for the best gull there is. Gauge = m/s x 6. The ceiling with a GOLD sonic fry (25) + all three drinks (+12.2) + STARLIGHT (+9) is 277;
-# with a DIAMOND sonic fry (28.5) it is 298; with a silver one (20) it is 247. So: nothing in the sky can be caught by a silver gull, the cloud asks for gold + STARLIGHT,
-# the sun leaves a gold gull only 5 points of slack (it is the hardest thing in the game; a diamond gull has 26).
-const METEOR_NEED = 262.0            # a shooting star
-const CLOUD_NEED = 255.0             # a whole cloud
-const SKYBOW_NEED = 266.0            # the rainbow in the sky
-const SUN_NEED = 272.0               # the sun
+# ROUND 10: the sky asks for the gull in its full-drink state, nothing more. Gauge = m/s x 6. A SILVER sonic fry (20) + all three drinks (+12.2) + STARLIGHT (+9)
+# reaches 247, so every wonder of the sky (cloud, star, rainbow, sun) is within reach of a silver gull the moment it has all three cups running (gold: 277, diamond: 298
+# - plenty of slack). The hard ones are the fish now (FISH_NEED).
+const METEOR_NEED = 232.0            # a shooting star
+const CLOUD_NEED = 225.0             # a whole cloud
+const SKYBOW_NEED = 238.0            # the rainbow in the sky
+const SUN_NEED = 244.0               # the sun
 const DECOR_NEED = 11.0               # m/s for borrowed hats, balloons... (mischief objects set their own)
 const SPEED_UNIT = 6.0                # gauge number = m/s * SPEED_UNIT
 const RARITY_NAMES = ["COMMON", "SILVER", "GOLD", "DIAMOND", "RAINBOW"]
@@ -114,7 +114,7 @@ const FISH_SPECIES = {
 const FISH_ORDER = ["sardine", "mackerel", "herring", "mullet", "flyer", "bass", "tuna", "opah", "marlin"]
 const FISH_RARITY_NAMES = ["COMMON", "RARE", "LEGENDARY"]
 const FISH_RARITY_COLORS = [Color("BFD7E4"), Color("B58CF0"), Color("FFC83A")]
-const FISH_NEED = [96.0, 120.0, 144.0]     # gauge speed to catch a fish of this rarity (round 6: 84)
+const FISH_NEED = [96.0, 132.0, 186.0]     # gauge speed to catch a fish of this rarity (round 10: rare 120 -> 132, legendary 144 -> 186: gold SONIC plus a drink or two)
 const FISH_JUDGE = [2, 6, 10]       # judgements (every circle is judged twice)
 const REGEN_GLIDE_TAB = [1.5, 2.2, 3.2, 4.5]
 const REGEN_PERCH_TAB = [1.0, 1.5, 2.2, 3.0]

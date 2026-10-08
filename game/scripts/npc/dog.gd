@@ -3,6 +3,7 @@ extends Node3D
 # and lunges at a gull that is carrying fries (telegraphed crouch, then a short jump).
 # Round 4: dogs also go for a gull that has LANDED nearby (a gull on the ground is a gull in reach).
 
+const Nav = preload("res://scripts/npc/nav.gd")
 var player = null
 var owner_npc = null
 var home = Vector3.ZERO
@@ -133,7 +134,12 @@ func _physics_process(delta):
 			var u = clamp(st / 0.5, 0.0, 1.0)
 			var p = lunge_from.lerp(lunge_to, u)
 			p.y = home.y + sin(u * PI) * 1.3
-			global_position = p
+			var ahead = p - global_position
+			ahead.y = 0.0
+			if Nav.step(self, ahead):
+				global_position.y = p.y
+			else:
+				st = max(st, 0.51)        # a wall: the lunge ends right here
 			body.position.y = 0.0
 			if not hit_done and d < 1.7 and player.global_position.y - home.y < 2.6:
 				hit_done = true
@@ -143,7 +149,10 @@ func _physics_process(delta):
 				st = 0.0
 				cd = 4.0
 		"return":
-			global_position = global_position.move_toward(home, 3.0 * delta)
+			var bk = global_position.move_toward(home, 3.0 * delta) - global_position
+			bk.y = 0.0
+			if not Nav.step(self, bk):
+				global_position = home          # (a dog nobody is watching goes straight back to its rug)
 			global_position.y = home.y
 			rotation.y = lerp_angle(rotation.y, atan2(home.x - global_position.x, home.z - global_position.z), 6.0 * delta)
 			if global_position.distance_to(home) < 0.2:

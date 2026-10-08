@@ -7,7 +7,12 @@ extends Node3D
 
 const HumanRig = preload("res://scripts/npc/human_rig.gd")
 const Terrain = preload("res://scripts/world/terrain.gd")
+const Nav = preload("res://scripts/npc/nav.gd")
 
+var spawn_checked = false
+var follow_ground = false     # a walker on the ground follows the hills (a pier or a deck does not)
+var trail = []               # round 10: breadcrumbs of a run (kids), so the way home is the way that was free
+var blocked_t = 0.0
 var rig
 var mode = "stand"
 var waypoints = []
@@ -58,6 +63,7 @@ func setup(p_mode, style, pos, face, path, p_speed, p_player):
 	chaser = style.get("chaser", false)
 	kind_kid = style.get("kind_kid", false)
 	home_pos = pos
+	follow_ground = abs(pos.y - Terrain.H(pos.x, pos.z)) < 0.35 and Terrain.H(pos.x, pos.z) > -0.2
 	rig = Node3D.new()
 	rig.set_script(HumanRig)
 	add_child(rig)
@@ -90,6 +96,9 @@ func _process(delta):
 		vis_t = 0.4 + randf() * 0.2
 		var d = global_position.distance_to(player.global_position)
 		active = d < (75.0 if GS.web else 130.0)
+		if active and not spawn_checked and Engine.get_physics_frames() > 40:
+			spawn_checked = true
+			_unstick()
 		visible = active and not has_meta("cine_hidden")       # (the ending's last scene clears the people near the camera)
 	if not active:
 		return
@@ -111,6 +120,19 @@ func _process(delta):
 	_chase(delta)
 	_kind(delta)
 	_friendly(delta)
+
+# round 10: nobody stands half inside a wall or a table: lifted to the nearest free spot (never more than 2.4 m away)
+func _unstick():
+	if rig == null or rig.seated or not (mode in ["stand", "stroll", "jog", "play", "paint", "wave", "fish"]):
+		return
+	if not Nav.inside_solid(self):
+		return
+	var p = Nav.free_spot(self)
+	if p != null and p.distance_to(global_position) < 2.4:
+		global_position = p
+		home_pos = Vector3(p.x, home_pos.y, p.z)
+		if mode in ["stroll", "jog"] and waypoints.size() > 0:
+			wp_i = clampi(wp_i, 0, waypoints.size() - 1)
 
 func _restore_mode():
 	match mode:
@@ -138,8 +160,67 @@ func _walk(delta):
 			wp_wait = randf_range(1.0, 3.0)
 		return
 	var dir = to.normalized()
-	position += dir * speed * delta
+	if Nav.step(self, dir * speed * delta, _dy_for(dir, speed * delta) if follow_ground else 0.0):
+		blocked_t = 0.0
+	else:
+		# a wall in the way: wait a moment, then give up on this waypoint and go on to the next
+		blocked_t += delta
+		if blocked_t > 0.8:
+			blocked_t = 0.0
+			wp_i = (wp_i + 1) % waypoints.size()
+			wp_wait = 0.5
 	rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 5.0 * delta)
+
+# ---- round 10: running at the gull and coming back without ever touching a wall ----
+# how far the ground rises or falls under the next step (a child running over a hill stays on it)
+func _dy_for(dir, dist):
+	var np = position + dir * dist
+	return home_pos.y + (Terrain.H(np.x, np.z) - Terrain.H(home_pos.x, home_pos.z)) - position.y
+
+func _run_step(dir, spd, delta):
+	var ok = Nav.step(self, dir * spd * delta, _dy_for(dir, spd * delta))
+	rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 8.0 * delta)
+	if ok:
+		blocked_t = 0.0
+		if trail.is_empty() or trail.back().distance_to(position) > 1.2:
+			if trail.size() < 90:
+				trail.append(position)
+	else:
+		blocked_t += delta
+	return ok
+
+# one step of the way home along the breadcrumbs; true when home
+func _home_step(spd, delta):
+	var to_home = home_pos - position
+	to_home.y = 0.0
+	if to_home.length() < 0.4:
+		trail.clear()
+		blocked_t = 0.0
+		return true
+	var tgt = home_pos
+	while not trail.is_empty():
+		var c = trail.back() - position
+		c.y = 0.0
+		if c.length() < 0.5:
+			trail.pop_back()
+		else:
+			tgt = trail.back()
+			break
+	var dir = tgt - position
+	dir.y = 0.0
+	dir = dir.normalized()
+	if Nav.step(self, dir * spd * delta, _dy_for(dir, spd * delta)):
+		blocked_t = 0.0
+	else:
+		blocked_t += delta
+		if blocked_t > 2.5:
+			# stuck for good: it just went back (a person nobody was watching)
+			position = home_pos
+			trail.clear()
+			blocked_t = 0.0
+			return true
+	rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 6.0 * delta)
+	return false
 
 func _witness():
 	if witness_cd > 0.0 or alarm_t > 0.0:
@@ -324,6 +405,7 @@ func _kind(delta):
 		"":
 			if kk_cd <= 0.0 and GS.gull_sense_count >= 3 and pl.mode == 1 and pl.still_t > 0.5 and flat.length() < 22.0 and alarm_t <= 0.0 					and abs(pl.global_position.y - global_position.y) < 4.5 and Terrain.H(pl.global_position.x, pl.global_position.z) > -0.25 and not GS.codex_open:
 				kk_state = "run"
+				trail.clear()
 				kk_t = 0.0
 				rig.set_mode("jog")
 				rig.walk_rate = 1.6
@@ -336,9 +418,12 @@ func _kind(delta):
 				rig.set_mode("walk")
 				return
 			var dir = Vector3(flat.x, 0, flat.y).normalized()
-			position += dir * 3.6 * delta
-			position.y = home_pos.y + (Terrain.H(position.x, position.z) - Terrain.H(home_pos.x, home_pos.z))
-			rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 8.0 * delta)
+			_run_step(dir, 3.6, delta)
+			if blocked_t > 0.7:
+				kk_state = "home"          # a wall between the two: the child gives up and walks back
+				kk_t = 0.0
+				rig.set_mode("walk")
+				return
 			if flat.length() < 2.2:
 				kk_state = "give"
 				kk_t = 0.0
@@ -395,16 +480,15 @@ func _kind(delta):
 				rig.set_mode("walk")
 			var back = home_pos - position
 			back.y = 0.0
-			if back.length() < 0.4 or kk_t > 16.0:
+			if kk_t > 20.0:
+				position = home_pos
+				trail.clear()
+				back = Vector3.ZERO
+			if back.length() < 0.4 or (kk_t > 1.6 and _home_step(2.6, delta)):
 				kk_state = ""
 				rig.set_mode(mode if mode != "stand" else "idle")
 				rotation.y = base_yaw
 				return
-			if kk_t > 1.6:
-				var dir2 = back.normalized()
-				position += dir2 * 2.6 * delta
-				position.y = home_pos.y + (Terrain.H(position.x, position.z) - Terrain.H(home_pos.x, home_pos.z))
-				rotation.y = lerp_angle(rotation.y, atan2(dir2.x, dir2.z), 6.0 * delta)
 
 # kids: a gull that sits down nearby is an invitation
 func _chase(delta):
@@ -420,6 +504,7 @@ func _chase(delta):
 			if chase_cd <= 0.0 and landed_t > 1.0 and GS.gull_sense_count >= 3 and flat.length() < 20.0 and alarm_t <= 0.0 \
 					and pl.global_position.y - global_position.y < 3.2 and Terrain.H(pl.global_position.x, pl.global_position.z) > -0.25:
 				chase_state = "run"
+				trail.clear()
 				chase_t = 0.0
 				rig.set_mode("jog")
 				rig.walk_rate = 1.5
@@ -430,9 +515,10 @@ func _chase(delta):
 				_chase_end(false)
 				return
 			var dir = Vector3(flat.x, 0, flat.y).normalized()
-			position += dir * 3.7 * delta
-			position.y = home_pos.y + (Terrain.H(position.x, position.z) - Terrain.H(home_pos.x, home_pos.z))
-			rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 8.0 * delta)
+			_run_step(dir, 3.7, delta)
+			if blocked_t > 0.7:
+				_chase_end(false)              # a wall in the way: no use running into it
+				return
 			if flat.length() < 1.8:
 				# BOO!
 				Sfx.play("boo", -9.0, randf_range(1.15, 1.35))
@@ -443,17 +529,14 @@ func _chase(delta):
 				_chase_end(true)
 		"home":
 			chase_t += delta
-			var back = home_pos - position
-			back.y = 0.0
-			if back.length() < 0.4 or chase_t > 14.0:
+			if chase_t > 20.0:
+				position = home_pos
+				trail.clear()
+			if _home_step(2.6, delta) or chase_t > 20.0:
 				chase_state = ""
 				rig.set_mode(mode if mode != "stand" else "idle")
 				rotation.y = base_yaw
 				return
-			var dir2 = back.normalized()
-			position += dir2 * 2.6 * delta
-			position.y = home_pos.y + (Terrain.H(position.x, position.z) - Terrain.H(home_pos.x, home_pos.z))
-			rotation.y = lerp_angle(rotation.y, atan2(dir2.x, dir2.z), 6.0 * delta)
 
 func _chase_end(booed):
 	chase_state = "home"

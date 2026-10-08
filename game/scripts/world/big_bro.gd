@@ -15,6 +15,7 @@ var t = 0.0
 var look_at_player = true
 var puff_t = 4.0
 var main = null
+var scripted_talk = false      # the ending: the line is part of the scene, whatever the distance
 var pose_mode = "ground"      # "throttle" while he flies down to the cafe in the ending
 
 const OUTFIT = ["topper", "shades", "necklace", "pipe", "coat"]
@@ -40,7 +41,10 @@ func setup(p_player, pos, face_pos):
 	bubble.modulate = Color(1, 0.95, 0.8, 0.0)
 	bubble.outline_size = 14
 	bubble.position = Vector3(0, 1.5, 0)
-	bubble.render_priority = 5
+	bubble.render_priority = 120          # round 10: always above the sea / horizon haze
+	bubble.outline_render_priority = 119
+	bubble.sorting_offset = 50.0
+	bubble.visible = false              # it exists only while he is talking (the outline of an invisible label used to stay)
 	add_child(bubble)
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 
@@ -53,6 +57,7 @@ func _face(target, k = 0.15):
 func speak(text, sec = 3.0):
 	bubble.text = text
 	bubble_t = sec
+	bubble.visible = true
 
 func _process(delta):
 	t += delta
@@ -64,9 +69,15 @@ func _process(delta):
 	gull.head.rotation.x = sin(t * 0.23) * 0.06
 	if bubble_t > 0.0:
 		bubble_t -= delta
-		bubble.modulate.a = clamp(min(bubble_t, 0.6) / 0.6, 0.0, 1.0) * 0.95
+		var ba = clamp(min(bubble_t, 0.6) / 0.6, 0.0, 1.0) * 0.95
+		bubble.modulate.a = ba
+		bubble.outline_modulate = Color(0.05, 0.04, 0.07, ba)
+		# only for someone who is close (never a line floating over a far-away roof)
+		if not scripted_talk and player != null and global_position.distance_to(player.global_position) > 14.0:
+			bubble_t = 0.0
 	else:
 		bubble.modulate.a = 0.0
+		bubble.visible = false
 	if player == null or not player.active:
 		return
 	var d = global_position.distance_to(player.global_position)
