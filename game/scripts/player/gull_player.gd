@@ -547,7 +547,6 @@ func _physics_process(delta):
 			_ground(delta, mouse)
 		M.TUMBLE:
 			_tumble(delta)
-	_flight_log()
 	var smax = GS.stamina_max()
 	stamina = clamp(stamina, 0.0, smax)
 	low_stamina = stamina < smax * 0.2
@@ -560,16 +559,6 @@ func _physics_process(delta):
 	else:
 		stuck_t = 0.0
 	_safety()
-
-# the record of one flight (take-off to landing) that the HUD shows on the right edge
-func _flight_log():
-	if mode == M.GROUND:
-		if GS.flight["on"]:
-			GS.flight_end()
-	elif not GS.flight["on"] and not scripted_move and not input_locked:
-		GS.flight_begin()
-	if GS.flight["on"]:
-		GS.flight["max"] = max(GS.flight["max"], speed * GS.SPEED_UNIT)
 
 func _interp(table, x, col):
 	if x <= table[0][0]:

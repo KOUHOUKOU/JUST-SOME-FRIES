@@ -146,3 +146,11 @@
 - **Gull time**: `hud.Vignette` draws "G U L L   T I M E" while focus_a > 0 (alpha .85 pulsing if fry_total < 6, else .32); tutorial prompts in `main._tutorial_director`.
 - **Music** (`tools/audio/real_music.py`): see the doc; `LARGO_START` (default 463 s) decides where the Largo's climax falls (about 25-30 s after it starts = "...just some fries."; the scene prints `[ENDING] ... s after the Largo starts`).
 - **Dev modes added**: `--r10beats --r10npc --r10misc`.
+## Round 11 (2026-10-08) - see docs/32_ROUND11_CHANGES.md
+- **Flow film moments**: `story.gd` `flow_begin` (bars .8, blur 0->1 over 1.2 s, time scale .38) / `flow_pace(ts)` (.2-.26 for the last line) / `inset_open(id, {pos, w, rot, tint, tag, follow | static})` (512x288 SubViewport, 384x216 on the web; `CineCam.follow_make/follow_step`: az, size, fov, h, look_h, swing; the OFFSET from the gull is smoothed, the free-spot search runs every .35 s) / `flow_end`. Blur shader: `BLUR_SHADER` in story.gd (lod = amount x (.6 + 3.4 x edge factor), slight desaturation and darkening at the edges). `GS.film_flow` blocks lock-on (`snatch_controller`), Gull Sight, the codex. Typing 36 cps, holds 1.1-3.0 s.
+- **Task board** (`hud.gd FryGrid`): `QUEST_HINTS`, focus task = first open one, panel alpha .42, heading 16 px, tasks 14/15 px, hints 12 px.
+- **Removed**: the flight record (`FlightLog`, `GS.flight*`, `best_speed`).
+- **Rainbow**: accessory alpha .3; Gull Sight emblem x .5 (label 10 px, no NEED line), edge arrow x .55.
+- **Big brother**: `GullVisual.bro_style` -> `_build_bro_item` (coat, topper, shades, necklace).
+- **Font sizes**: never animate a font size (each new size = new glyph atlas in the text server: +100s of MB over a session). `story._lettering` uses `round(fs*u/6)*6` and `draw_set_transform` scale for the pop; the E key of the rhythm rounds to 3 px. Check with the `[PERF] mem= vram=` lines (`--menu`, `--r10beats`: ~185 / ~207 MB now).
+- Insets: `inset_pool` (viewports are reused), `positional_shadow_atlas_size = 0`, `msaa_3d` off. Blur: `clear_r` .42, centre lod .12 x amount.

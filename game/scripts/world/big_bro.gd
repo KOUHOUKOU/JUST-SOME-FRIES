@@ -25,6 +25,7 @@ func setup(p_player, pos, face_pos):
 	gull = Node3D.new()
 	gull.set_script(GullVisual)
 	gull.plain = true
+	gull.bro_style = true
 	add_child(gull)
 	gull.build()
 	gull.scale = Vector3.ONE * 1.55

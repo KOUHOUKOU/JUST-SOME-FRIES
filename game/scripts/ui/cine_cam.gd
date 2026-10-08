@@ -232,6 +232,42 @@ func follow(st, pl, o, dur, tag_id):
 		if u >= 1.0:
 			return
 
+# ---- round 10: a follower for the little extra pictures (insets) of the flow moments. The gull keeps flying; the inset camera keeps its composition around it.
+# o: az (degrees from the gull's heading, 0 = in front of it, 90 = its right, 180 = behind), size (fraction of the inset's width), fov, h, look_h, swing (degrees of drift)
+func follow_make(o):
+	return {"o": o, "t0": GS.msec(), "cur": null, "az_fix": 0.0, "search_t": 0.0}
+
+func follow_step(s, gull, yaw, dt):
+	var o = s["o"]
+	var fov = o.get("fov", 40.0)
+	var frac = o.get("size", 0.3)
+	var d = dist_for(gull_width(gull, true), frac, fov)
+	var center = gull.global_position + Vector3(0, 0.4, 0)
+	var fwd = Vector3(-sin(yaw), 0, -cos(yaw))
+	var u = clamp((GS.msec() - s["t0"]) / 1000.0 / max(o.get("dur", 6.0), 0.1), 0.0, 1.0)
+	var az = deg_to_rad(o.get("az", 150.0)) + deg_to_rad(o.get("swing", 14.0)) * (u - 0.5) * 2.0
+	var hk = o.get("h", 0.14)
+	s["search_t"] -= dt
+	if s["search_t"] <= 0.0 or s["cur"] == null:
+		s["search_t"] = 0.35
+		s["az_fix"] = 0.0
+		for off in [0.0, 0.35, -0.35, 0.7, -0.7, 1.1, -1.1, 1.6, -1.6]:
+			var dirh = fwd.rotated(Vector3.UP, -(az + off))
+			var cam = center + dirh * d + Vector3(0, hk * d + 0.2, 0)
+			if cam.y >= floor_y(cam) + 0.8 and clear(center, cam):
+				s["az_fix"] = off
+				break
+	var dirh2 = fwd.rotated(Vector3.UP, -(az + s["az_fix"]))
+	var want = center + dirh2 * d + Vector3(0, hk * d + 0.2, 0)
+	if want.y < floor_y(want) + 0.8:
+		want.y = floor_y(want) + 0.8
+	# smooth the OFFSET from the gull, not the position (the gull flies at 30 m/s: a smoothed position would be left far behind)
+	if s["cur"] == null:
+		s["cur"] = want - center
+	else:
+		s["cur"] = s["cur"].lerp(want - center, 1.0 - exp(-7.0 * dt))
+	return {"pos": center + s["cur"], "look": center + Vector3(0, o.get("look_h", 0.1), 0), "fov": fov}
+
 # ---- quality check (dev tools): how much of the picture's WIDTH does this gull take, and how close is the camera to it?
 func _meshes(n, out):
 	if n is MeshInstance3D and n.visible and n.mesh != null and not (n.mesh is QuadMesh):

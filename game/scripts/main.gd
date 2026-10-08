@@ -230,7 +230,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -816,7 +816,7 @@ func _unhandled_input(event):
 
 # ---- Gull Sight: hold TAB. Slow motion, dark screen, every fry in range shines, everything else gets a number. Free on the ground. ----
 func _try_open_vision():
-	if codex_open or GS.sense_active or player.input_locked:
+	if codex_open or GS.sense_active or player.input_locked or GS.film_flow:
 		return
 	if not GS.vision_unlocked():
 		hud.whisper("gull sight is not open yet. three fries first.", 3.0)
@@ -899,7 +899,7 @@ func _quest_tick(rdt):
 
 # ---- Fry Codex: key C (map + stats + fries with tiers) ----
 func _can_open_codex():
-	return player.mode != 2 and not GS.sense_active and player.snatch.state == "idle" and player.snatch.lock_fry == null and not player.input_locked
+	return player.mode != 2 and not GS.sense_active and player.snatch.state == "idle" and player.snatch.lock_fry == null and not player.input_locked and not GS.film_flow
 
 func _open_codex():
 	codex_open = true

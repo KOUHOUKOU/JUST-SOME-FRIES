@@ -170,6 +170,7 @@ var vision_tired = false
 var codex_open = false
 var no_focus_pause = false            # dev test modes: a minimised window must not pause the bot
 var showcase_active = false
+var film_flow = false                # a flow film moment is running: the gull keeps flying, but nothing new may lock or open Gull Sight
 var achievements_done = {}
 var fries_eaten = 0
 var mischief_counts = {}
@@ -193,8 +194,6 @@ var star_t = 0.0                      # seconds of STARLIGHT left (all three dri
 var star_total = 0                    # how many times the gull has been in it
 var fish_book = {}                    # species id -> {"n": caught, "kg": heaviest, "cm": longest}
 var quest_done_at = {}                # quest id -> game seconds when it was ticked off (the board drops it a little later)
-var flight = {"on": false, "t": 0.0, "max": 0.0, "loot": 0, "show": 0.0, "end": 0.0, "pb": false}   # the right-hand record of one flight (take-off to landing)
-var best_speed = 0.0                  # the fastest flight of this session
 var cine_hold = null                  # a caught thing (a fish, a star) that the cinematic moment keeps alive until it is over
 var cine_seen = {}                    # the cinematic moments that have been shown already (each plays once per run): drinks3, fish, meteor, all24
 
@@ -302,7 +301,6 @@ func reset():
 	cine_hold = null
 	fish_book = {}
 	quest_done_at = {}
-	flight = {"on": false, "t": 0.0, "max": 0.0, "loot": 0, "show": 0.0, "end": 0.0, "pb": false}
 	reset_stats()
 
 func set_level(type, level):
@@ -467,9 +465,6 @@ func _buff_tick(rdt):
 		star_t = max(star_t - rdt, 0.0)
 		if star_t <= 0.0:
 			star_ended.emit()
-	# the record of one flight
-	if flight["on"]:
-		flight["t"] += rdt
 
 # the lower-left one-liner ("senses sharpened...")
 func say_buff(text):
@@ -513,22 +508,6 @@ func buff_window_mult():
 # nothing costs stamina: the cocktail and STARLIGHT
 func free_flight():
 	return buff["alcohol"] > 0.0 or star_t > 0.0
-
-# ---- the record of one flight: start at take-off, show while flying, stay a few seconds after landing ----
-func flight_begin():
-	flight = {"on": true, "t": 0.0, "max": 0.0, "loot": 0, "show": 0.0, "end": 0.0, "pb": false}
-
-func flight_loot(n = 1):
-	if flight["on"]:
-		flight["loot"] += n
-
-func flight_end():
-	if flight["on"]:
-		flight["on"] = false
-		flight["end"] = msec() / 1000.0
-		flight["pb"] = flight["max"] > best_speed + 0.5 and best_speed > 0.0 and flight["t"] >= 3.0
-		if flight["t"] >= 3.0:
-			best_speed = max(best_speed, flight["max"])
 
 # ---- "where to fly next": the nearest fry that the gull's top speed can really lock (E in free flight, and the arrow of Gull Sight) ----
 var sniff_node = null

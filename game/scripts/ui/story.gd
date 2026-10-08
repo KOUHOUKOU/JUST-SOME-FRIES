@@ -79,12 +79,15 @@ func _ready():
 		poster_tex = load("res://assets/ui/cover.jpg")
 	_make_halftone()
 	_make_portrait()
+	_make_blur()
 	visible = false
 
 func _make_portrait():
 	pvp = SubViewport.new()
 	pvp.size = Vector2i(320, 320)
 	pvp.transparent_bg = false
+	pvp.positional_shadow_atlas_size = 0
+	pvp.msaa_3d = Viewport.MSAA_DISABLED
 	pvp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	pvp.audio_listener_enable_3d = false
 	pvp.handle_input_locally = false
@@ -236,6 +239,8 @@ func _process(delta):
 	if active:
 		_cam_tick()
 		_portrait_tick()
+	if not insets.is_empty():
+		_insets_tick(dt)
 	page.queue_redraw()
 
 # ------------------------------------------------------------------ words, balloons, captions
@@ -461,6 +466,178 @@ func beat(word, col, lines, o = {}):
 	await wait(0.15)
 	beat_end()
 
+# ------------------------------------------------------------------ FLOW (round 10): a film moment that does NOT interrupt the flight
+# The gull keeps flying under the player's hands, the world slows down and softens (a blur that grows towards the edges of the picture), thin bars close in,
+# the gull's thoughts are typed under the picture, and OTHER ANGLES of the same gull appear as small tilted comic panels (insets: a second camera that
+# flies along with the gull). Nothing is locked; the player may steer all the way through.
+const BLUR_SHADER = "shader_type canvas_item;\nuniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap, repeat_disable;\nuniform float amount = 0.0;\nuniform float clear_r = 0.42;\nvoid fragment() {\n\tvec2 uv = SCREEN_UV;\n\tfloat d = distance(vec2(uv.x * 1.6, uv.y), vec2(0.8, 0.5)) / 0.95;\n\tfloat k = smoothstep(clear_r, 1.0, d);\n\tfloat lod = amount * (0.12 + 3.2 * k);\n\tvec3 c = textureLod(screen_tex, uv, lod).rgb;\n\tfloat lum = dot(c, vec3(0.3, 0.55, 0.15));\n\tc = mix(c, vec3(lum), 0.18 * amount * k);\n\tCOLOR = vec4(c * (1.0 - 0.22 * amount * k), 1.0);\n}\n"
+var flow = false
+var blur_rect = null
+var blur_mat = null
+var blur_amt = 0.0
+var insets = []
+var inset_pool = []
+var director = null
+
+func _make_blur():
+	blur_rect = ColorRect.new()
+	blur_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	blur_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sh = Shader.new()
+	sh.code = BLUR_SHADER
+	blur_mat = ShaderMaterial.new()
+	blur_mat.shader = sh
+	blur_rect.material = blur_mat
+	blur_rect.visible = false
+	add_child(blur_rect)
+	move_child(blur_rect, 0)
+
+func set_blur(v):
+	blur_amt = v
+	if blur_mat != null:
+		blur_mat.set_shader_parameter("amount", v)
+		blur_rect.visible = v > 0.01
+
+func flow_begin(p, tag_text = ""):
+	player = p
+	flow = true
+	GS.film_flow = true
+	beat_begin()
+	bars = 0.0
+	narr = null
+	tag = null
+	tween_prop("bars", 0.8, 0.9)
+	var tb = create_tween().set_ignore_time_scale(true)
+	tb.tween_method(set_blur, 0.0, 1.0, 1.2)
+	var tt = create_tween().set_ignore_time_scale(true)
+	tt.tween_property(Engine, "time_scale", 0.38, 0.8)
+	Sfx.play("cine_in", -10.0)
+	if tag_text != "":
+		set_tag(tag_text, 3.0)
+
+func flow_end():
+	for s in insets:
+		s["closing"] = true
+	var tb = create_tween().set_ignore_time_scale(true)
+	tb.tween_method(set_blur, blur_amt, 0.0, 1.0)
+	var tt = create_tween().set_ignore_time_scale(true)
+	tt.tween_property(Engine, "time_scale", 1.0, 0.9)
+	Sfx.play("cine_out", -12.0)
+	var tw = tween_prop("bars", 0.0, 0.9)
+	await tw.finished
+	await wait(0.2)
+	flow = false
+	GS.film_flow = false
+	Engine.time_scale = 1.0
+	set_blur(0.0)
+	for s in insets:
+		_inset_free(s)
+	insets = []
+	beat_end()
+
+# the pace of the world inside the flow moment: the last, thoughtful lines slow it further
+func flow_pace(ts, sec = 1.0):
+	var tt = create_tween().set_ignore_time_scale(true)
+	tt.tween_property(Engine, "time_scale", ts, sec)
+
+# o: {"pos": Vector2 (centre, 0..1), "w": width as a fraction of the picture, "rot": degrees, "tint": border colour, "tag": small label,
+#     "follow": {az, size, fov, h, look_h, swing, dur}  or  "static": [pos, look, fov]}
+func inset_open(id, o):
+	inset_close(id, true)
+	var vp
+	var cam
+	if not inset_pool.is_empty():
+		var pr = inset_pool.pop_back()          # a viewport costs tens of MB of video memory: they are reused, never made twice
+		vp = pr[0]
+		cam = pr[1]
+		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	else:
+		vp = SubViewport.new()
+		vp.size = Vector2i(384, 216) if GS.web else Vector2i(512, 288)
+		vp.audio_listener_enable_3d = false
+		vp.handle_input_locally = false
+		vp.positional_shadow_atlas_size = 0
+		vp.msaa_3d = Viewport.MSAA_DISABLED
+		vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child(vp)
+		cam = Camera3D.new()
+		cam.cull_mask = 0xFFFFF & ~(1 << 19)
+		vp.add_child(cam)
+		cam.current = true
+	var s = {"id": id, "vp": vp, "cam": cam, "o": o, "t0": GS.msec(), "a": 0.0, "closing": false, "state": null}
+	if o.has("follow"):
+		s["state"] = director.follow_make(o["follow"])
+	insets.append(s)
+	Sfx.play("vn_pop", -11.0, 1.2)
+	return s
+
+func inset_close(id, instant = false):
+	for s in insets:
+		if s["id"] == id and not s["closing"]:
+			s["closing"] = true
+			if instant:
+				s["a"] = 0.0
+
+func _inset_free(s):
+	if is_instance_valid(s["vp"]):
+		s["vp"].render_target_update_mode = SubViewport.UPDATE_DISABLED
+		inset_pool.append([s["vp"], s["cam"]])
+
+func _insets_tick(dt):
+	var i = 0
+	while i < insets.size():
+		var s = insets[i]
+		var target = 0.0 if s["closing"] else 1.0
+		s["a"] = move_toward(s["a"], target, dt * 4.0)
+		if s["closing"] and s["a"] <= 0.0:
+			_inset_free(s)
+			insets.remove_at(i)
+			continue
+		i += 1
+		var cam = s["cam"]
+		if not is_instance_valid(cam):
+			continue
+		var o = s["o"]
+		if s["state"] != null and player != null and is_instance_valid(player.gull):
+			var r = director.follow_step(s["state"], player.gull, player.yaw, max(dt, 0.001))
+			cam.global_position = r["pos"]
+			cam.look_at(r["look"], Vector3.UP)
+			cam.fov = r["fov"]
+		elif o.has("static"):
+			var st_ = o["static"]
+			cam.global_position = st_[0]
+			cam.look_at(st_[1], Vector3.UP)
+			cam.fov = st_[2]
+
+func _insets_draw(ci, R, u):
+	for s in insets:
+		var a = s["a"]
+		if a <= 0.01:
+			continue
+		var o = s["o"]
+		var age = (GS.msec() - s["t0"]) / 1000.0
+		var e = clamp(age / 0.35, 0.0, 1.0)
+		var pop = 0.75 + 0.25 * (1.0 - pow(1.0 - e, 3.0)) + (0.06 * sin(e * PI) if e < 1.0 else 0.0)
+		var w = ci.size.x * o.get("w", 0.26)
+		var h = w * 9.0 / 16.0
+		var pc = o.get("pos", Vector2(0.8, 0.3))
+		var c = Vector2(R.position.x + R.size.x * pc.x, R.position.y + R.size.y * pc.y) + Vector2(sin(age * 0.8 + pc.x * 7.0) * 3.0, sin(age * 0.6 + pc.y * 5.0) * 2.0) * u
+		ci.draw_set_transform(c, deg_to_rad(o.get("rot", -3.0) + 4.0 * (1.0 - e)), Vector2.ONE * pop)
+		var rect = Rect2(-w * 0.5, -h * 0.5, w, h)
+		var tint = o.get("tint", GOLD)
+		ci.draw_rect(Rect2(rect.position + Vector2(8, 10) * u, rect.size).grow(8.0 * u), Color(0, 0, 0, 0.4 * a))
+		ci.draw_rect(rect.grow(9.0 * u), Color(0.99, 0.97, 0.9, a))
+		ci.draw_rect(rect.grow(9.0 * u), Color(INK.r, INK.g, INK.b, a), false, 3.0 * u)
+		ci.draw_texture_rect(s["vp"].get_texture(), rect, false, Color(1, 1, 1, a))
+		ci.draw_rect(rect, Color(INK.r, INK.g, INK.b, a), false, 3.0 * u)
+		if o.has("tag"):
+			var tw_ = bold.get_string_size(o["tag"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x + 18.0 * u
+			var tr = Rect2(rect.position + Vector2(-4.0 * u, -14.0 * u), Vector2(tw_, 24.0 * u))
+			ci.draw_rect(tr, Color(tint.r, tint.g, tint.b, a))
+			ci.draw_rect(tr, Color(INK.r, INK.g, INK.b, a), false, 2.0 * u)
+			ci.draw_string(bold, tr.position + Vector2(9.0 * u, 17.0 * u), o["tag"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(INK.r, INK.g, INK.b, a))
+	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
 # ------------------------------------------------------------------ film mode (the cinematic moments)
 func bars_in(sec = 0.9):
 	Sfx.play("cine_in", -10.0)
@@ -568,9 +745,11 @@ func _stroke_text(ci, f, pos, text, fs, col, outline, ink = INK, width = -1.0):
 # one big comic word: an extruded block of colour, an ink outline, a white sheen
 func _lettering(ci, text, centre, fs, col, rot_deg, a, pop):
 	var u = ci.size.y / 720.0
-	var sz = int(fs * u * pop)
+	# ONE font size per word (the pop is a scale of the drawing): every new size makes the text server bake a new set of glyph textures, and the old
+	# per-frame sizes cost hundreds of MB of video memory over the opening, the ending and the film moments
+	var sz = int(round(fs * u / 6.0)) * 6
 	var w = bold.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
-	ci.draw_set_transform(centre, deg_to_rad(rot_deg), Vector2.ONE)
+	ci.draw_set_transform(centre, deg_to_rad(rot_deg), Vector2.ONE * pop)
 	var base = Vector2(-w * 0.5, sz * 0.34)
 	var depth = int(max(sz * 0.07, 4.0))
 	for k in range(depth, 0, -1):
@@ -1042,6 +1221,8 @@ func draw_page(ci):
 			var r1 = r0 + (90.0 + 160.0 * float((q * 7) % 5) / 4.0) * u
 			ci.draw_line(cc + Vector2(cos(ang), sin(ang)) * r0, cc + Vector2(cos(ang), sin(ang)) * r1, Color(INK.r, INK.g, INK.b, (1.0 - kk) * 0.8), (2.0 + 4.0 * (1.0 - kk)) * u)
 		i += 1
+	# the little extra pictures (flow moments) lie under the words
+	_insets_draw(ci, R, u)
 	# the slammed words
 	for w in words:
 		var age2 = (GS.msec() - w["t0"]) / 1000.0

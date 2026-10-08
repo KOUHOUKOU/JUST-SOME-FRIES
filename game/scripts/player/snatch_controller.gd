@@ -226,7 +226,7 @@ func _scan(delta):
 	if best == null:
 		return
 	near_target = best
-	var can = p.mode == 0 and not GS.sense_active and not p.input_locked
+	var can = p.mode == 0 and not GS.sense_active and not p.input_locked and not GS.film_flow
 	var need = GS.need_speed(best)
 	need_speed = need
 	need_tier = _tier_of(best)
@@ -671,7 +671,6 @@ func _finish_snatch(f):
 	if n != null:
 		n.on_escaped()
 	GS.stats["stolen"] += 1
-	GS.flight_loot()
 	GS.add_heat(0.3)
 	player.escaped.emit(f)
 	if clean and f.ftype != "mischief":

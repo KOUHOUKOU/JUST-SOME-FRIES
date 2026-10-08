@@ -395,7 +395,6 @@ func stolen(player):
 	if owner_amb != null and is_instance_valid(owner_amb):
 		owner_amb.theft_reaction()
 	GS.add_heat(0.3)
-	GS.flight_loot()
 	GS.mischief_counts[kind] = GS.mischief_counts.get(kind, 0) + 1
 	if is_wearable():
 		player.gull.wear(kind)

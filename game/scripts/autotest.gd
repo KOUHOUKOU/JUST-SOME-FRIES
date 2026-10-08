@@ -26,7 +26,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -575,6 +575,7 @@ func menu_test():
 	say("opening over after %.1fs active=%s hud=%s" % [(Time.get_ticks_msec() - t0) / 1000.0, main.player.active, main.hud.visible])
 	await get_tree().create_timer(2.5).timeout
 	await shot("mn_game")
+	await get_tree().create_timer(32.0).timeout        # a tail: does the memory of the opening come back?
 	get_tree().quit()
 
 func vp_screen(name_):
@@ -2287,14 +2288,6 @@ func round7_test():
 				if sp._in_avoid(a.x, a.z, 1.0) or sp._in_avoid(b.x, b.z, 1.0):
 					bad += 1
 	chk("planned leaps stay off the pier, marina and boats", bad == 0 and planned > 30, "planned=%d bad=%d" % [planned, bad])
-	# --- K: the flight record
-	p.mode = 0
-	GS.flight_begin()
-	GS.flight["max"] = 120.0
-	GS.flight["t"] = 12.0
-	GS.flight["loot"] = 2
-	await get_tree().create_timer(0.3).timeout
-	await shot("r7_flightlog")
 	get_tree().quit()
 
 
@@ -2706,7 +2699,7 @@ func r9cine():
 			if k > 40:
 				break
 		var dur = (GS.msec() - t0) / 1000.0
-		chk9("cinematic %s lasts 6-10.5 s" % id, dur >= 6.0 and dur <= 10.5, "%.1f s" % dur)
+		chk9("cinematic %s lasts 10-14.5 s" % id, dur >= 10.0 and dur <= 14.5, "%.1f s" % dur)
 		chk9("cinematic %s never fills the picture with the gull" % id, worst <= 0.62 and nearest >= 2.6, "worst %d%% nearest %.1f m" % [int(worst * 100.0), nearest])
 		await real(1.0)
 	get_tree().quit()
@@ -2985,18 +2978,29 @@ func r10beats():
 		await real(0.5)
 		if main.menus.paused:
 			main.menus.set_paused(false)
+		p.input_locked = false
+		Input.action_press("move_forward")
+		var z0 = p.global_position
 		main.scenes.cinema(id, {})
 		var t1 = GS.msec()
 		var n = 0
+		var locked2 = false
+		var min_ts = 1.0
 		await real(0.3)
 		while main.scenes.cine_busy:
+			if p.input_locked or p.scripted_move:
+				locked2 = true
+			min_ts = min(min_ts, Engine.time_scale)
 			await real(1.5)
 			await shot("r10c_%s_%02d" % [id, n])
 			n += 1
 			if GS.msec() - t1 > 25000:
 				break
+		Input.action_release("move_forward")
+		chk10("film moment %s never locks the gull (it kept flying %d m)" % [id, int(p.global_position.distance_to(z0))], not locked2 and p.global_position.distance_to(z0) > 10.0)
+		chk10("film moment %s slows time but never freezes it" % id, min_ts < 0.6 and min_ts > 0.15, "%.2f" % min_ts)
 		var d2 = (GS.msec() - t1) / 1000.0
-		chk10("film moment %s lasts 6-10 s" % id, d2 >= 6.0 and d2 <= 10.0, "%.1f s" % d2)
+		chk10("film moment %s lasts 10-14 s" % id, d2 >= 10.0 and d2 <= 14.5, "%.1f s" % d2)
 		await real(1.0)
 	get_tree().quit()
 
@@ -3139,4 +3143,59 @@ func r10misc():
 	p.global_position = ord.global_position + Vector3(0, 1.0, 40.0)
 	ord.update_convergence(p.global_position, Vector3(0, 0, -1), 0.1)
 	chk10("no glow from 40 m", ord.halo_alpha <= 0.01)
+	get_tree().quit()
+
+# --r10look: the big brother's new wardrobe, the task board, the see-through rainbow, the small rainbow emblem in Gull Sight
+func r10look():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	var b = main.bro
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	p.input_locked = true
+	var bp = b.global_position + Vector3(0, 0.8, 0)
+	var f = Vector3(-sin(b.rotation.y), 0, -cos(b.rotation.y))
+	var cc0 = main.scenes.cc()
+	var k0 = 0
+	for az in [20.0, 70.0, 140.0]:
+		var pl0 = cc0.plan(bp, 1.5 * 1.55, b.rotation.y, {"size": 0.28, "fov": 34.0, "az": az, "spread": 30, "h": 0.12, "look_h": 0.0, "third": false})
+		view(pl0["p0"], pl0["l0"], 34.0)
+		await real(0.5)
+		await shot("r10l_bro_%d" % k0)
+		k0 += 1
+	# the task board with a few open tasks
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 1)
+	GS.quests_check()
+	p.input_locked = false
+	place(Vector3(-4.0, 30.0, 30.0), Vector3(-4.0, 30.0, 0.0), 8.0)
+	await real(1.5)
+	await shot("r10l_board")
+	# the see-through rainbow on the gull
+	p.gull.wear("skybow")
+	p.input_locked = true
+	var gp = p.global_position
+	var fw = Vector3(-sin(p.yaw), 0, -cos(p.yaw))
+	view(gp - fw * 4.0 + Vector3(0, 1.6, 0), gp + Vector3(0, 0.3, 0), 55.0)
+	await real(0.6)
+	await shot("r10l_rainbow_worn")
+	p.gull.unwear("skybow")
+	# Gull Sight with a rainbow fry among the others
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 2)
+	var base = Vector3(-4.0, 30.0, 40.0)
+	var rb = make_star("pink", 4, base + Vector3(10.0, -6.0, -30.0), "STAR_EMB_RB")
+	rb.revealed = true
+	rb.visible = true
+	rb.tier = 4
+	var gd = make_star("red", 2, base + Vector3(-10.0, -6.0, -40.0), "STAR_EMB_GD")
+	place(base, base + Vector3(0, -2, -20), 4.0)
+	p.input_locked = false
+	await real(0.8)
+	Input.action_press("gull_sense")
+	main._open_sense()
+	await real(1.3)
+	await shot("r10l_tab")
+	Input.action_release("gull_sense")
+	main._close_sense()
 	get_tree().quit()

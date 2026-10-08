@@ -167,7 +167,6 @@ class Star extends Comet:
 		remove_from_group("mischief")
 		GS.stats["meteors"] += 1
 		GS.mischief_counts["meteor"] = GS.mischief_counts.get("meteor", 0) + 1
-		GS.flight_loot()
 		GS.award("WISHFUL THINKING")
 		GS.quest_finish("meteor")
 		GS.quests_check()

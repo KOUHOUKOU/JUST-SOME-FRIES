@@ -28,6 +28,7 @@ var flap_phase = 0.0
 var head_lunge = 0.0
 var worn = {}                  # slot nodes of what this gull has ON right now: kind -> node
 var plain = false              # not the player: no growth looks
+var bro_style = false          # the big brother's grand versions of the coat, the top hat, the shades and the chain
 var tracked = false            # the player gull: wearing changes the game state (GS.worn = owned, GS.equipped = on)
 var body_mi
 var white_mat
@@ -450,7 +451,74 @@ func _ring_(parent, r_in, r_out, pos, col, rot = Vector3(PI / 2.0, 0, 0), rough 
 	parent.add_child(mi)
 	return mi
 
+# ROUND 10: the big brother's wardrobe. A gull that has everything should look like it: a wine-red pinstripe coat with a fur collar, gold trim, epaulettes and
+# long tails; a tall black satin top hat with a gold band and a plume; gold-rimmed aviators; a double gold chain with a medallion.
+func _build_bro_item(kind):
+	var n = Node3D.new()
+	var wine = "8A1B3C"
+	var gold = "E6B93C"
+	match kind:
+		"coat":
+			add_child(n)
+			_ball_(n, 0.235, Vector3(0, -0.015, 0.08), wine, Vector3(1.1, 1.0, 1.4), 0.7, Pattern.mat("vstripes", wine, "6E1330", 10, 0.7))
+			# the tails: two long panels behind, a gold hem
+			for sx in [-1.0, 1.0]:
+				var tl = _blk(n, Vector3(0.15, 0.035, 0.46), Vector3(0.09 * sx, -0.05, 0.46), wine, 0.7, Pattern.mat("vstripes", wine, "6E1330", 5, 0.7))
+				tl.rotation = Vector3(0.18, 0.12 * sx, 0.0)
+				var hem = _blk(n, Vector3(0.155, 0.04, 0.024), Vector3(0.095 * sx, -0.115, 0.68), gold, 0.3)
+				hem.rotation = Vector3(0.18, 0.12 * sx, 0.0)
+			# the lapels: two gold-edged wings in a V on the chest, and a double row of buttons
+			for sx in [-1.0, 1.0]:
+				var lp = _blk(n, Vector3(0.05, 0.16, 0.016), Vector3(0.06 * sx, 0.02, -0.215), "3E0C20", 0.6)
+				lp.rotation = Vector3(0.1, 0, 0.35 * sx)
+				var lg = _blk(n, Vector3(0.01, 0.17, 0.018), Vector3(0.088 * sx, 0.02, -0.216), gold, 0.3)
+				lg.rotation = Vector3(0.1, 0, 0.35 * sx)
+				for k in 3:
+					_ball_(n, 0.013, Vector3(0.045 * sx, -0.03 - k * 0.045, -0.225 + k * 0.012), gold, Vector3.ONE, 0.25)
+				# the epaulettes
+				var ep = _blk(n, Vector3(0.09, 0.016, 0.06), Vector3(0.17 * sx, 0.11, 0.0), gold, 0.3)
+				ep.rotation = Vector3(0, 0, -0.3 * sx)
+				for q in 3:
+					_ball_(n, 0.01, Vector3(0.2 * sx + (q - 1) * 0.0, 0.09, -0.03 + q * 0.03), gold, Vector3.ONE, 0.3)
+			# the fur collar: a ring of soft white puffs round the neck
+			for k in 11:
+				var a4 = TAU * k / 11.0
+				_ball_(n, 0.045, Vector3(cos(a4) * 0.12, 0.1 + 0.01 * sin(k * 2.0), -0.2 + sin(a4) * 0.075), "F5F1EA", Vector3(1, 0.85, 1), 0.95)
+			# a white pocket square
+			var ps = _blk(n, Vector3(0.036, 0.03, 0.01), Vector3(-0.14, 0.03, -0.17), "FFFFFF", 0.8)
+			ps.rotation = Vector3(0, 0.5, 0.4)
+		"topper":
+			head.add_child(n)
+			n.position = Vector3(0, 0.1, 0.0)
+			n.rotation = Vector3(0, 0, -0.1)
+			_cyl(n, 0.19, 0.19, 0.016, Vector3.ZERO, "0D0D12", 0.25)
+			_cyl(n, 0.105, 0.112, 0.24, Vector3(0, 0.12, 0), "0D0D12", 0.2)
+			_cyl(n, 0.113, 0.113, 0.045, Vector3(0, 0.04, 0), gold, 0.25)
+			_blk(n, Vector3(0.03, 0.03, 0.01), Vector3(0, 0.04, -0.114), "C9202E", 0.2)
+			# the plume: a curl of red and white feathers
+			for k in 6:
+				var f = _ball_(n, 0.026 - k * 0.002, Vector3(0.11 + k * 0.026, 0.07 + sin(k * 0.55) * 0.06, 0.0), "E03A55" if k % 2 == 0 else "FFF1E6", Vector3(1.6, 0.6, 0.8), 0.7)
+				f.rotation = Vector3(0, 0, 0.5 - k * 0.15)
+		"shades":
+			head.add_child(n)
+			for sx in [-1.0, 1.0]:
+				_ball_(n, 0.034, Vector3(0.062 * sx, 0.036, -0.1), "08080C", Vector3(1.25, 0.95, 0.35), 0.1)
+				_ring_(n, 0.03, 0.039, Vector3(0.062 * sx, 0.036, -0.103), gold, Vector3(PI / 2.0, 0, 0), 0.25).scale = Vector3(1.25, 1.0, 0.95)
+				_blk(n, Vector3(0.012, 0.012, 0.09), Vector3(0.108 * sx, 0.04, -0.055), gold, 0.25)
+			_blk(n, Vector3(0.03, 0.012, 0.012), Vector3(0, 0.042, -0.108), gold, 0.25)
+		"necklace":
+			add_child(n)
+			n.position = Vector3(0, -0.015, -0.27)
+			_ring_(n, 0.1, 0.122, Vector3.ZERO, gold, Vector3(PI / 2.0, 0.0, 0.0), 0.2)
+			_ring_(n, 0.12, 0.138, Vector3(0, -0.035, -0.02), gold, Vector3(PI / 2.0, 0.0, 0.0), 0.2)
+			var md = _cyl(n, 0.05, 0.05, 0.012, Vector3(0, -0.15, -0.045), gold, 0.15)
+			md.rotation = Vector3(PI / 2.0 - 0.2, 0, 0)
+			_ball_(n, 0.022, Vector3(0, -0.15, -0.06), "E03A55", Vector3.ONE, 0.1)
+	return n
+
 func _build_item(kind):
+	if bro_style and kind in ["coat", "topper", "shades", "necklace"]:
+		return _build_bro_item(kind)
 	var n = Node3D.new()
 	match kind:
 		"hat":                      # the straw sun hat
@@ -565,8 +633,13 @@ func _build_item(kind):
 		"cloud":                    # a small cloud following the gull, just above and behind
 			add_child(n)
 			n.position = Vector3(0, 0.66, 0.1)
+			var cmat = StandardMaterial3D.new()          # round 10: a see-through cloud (it hovers right in the camera's way)
+			cmat.albedo_color = Color(1, 1, 1, 0.6)
+			cmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			cmat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+			cmat.roughness = 0.8
 			for c in [[0, 0, 0, 0.16], [0.17, -0.02, 0.02, 0.12], [-0.17, -0.03, 0.0, 0.12], [0.07, 0.07, 0, 0.1], [-0.08, 0.06, 0, 0.1]]:
-				_ball_(n, c[3], Vector3(c[0], c[1], c[2]), "FFFFFF", Vector3(1.1, 0.8, 1.0), 0.8)
+				_ball_(n, c[3], Vector3(c[0], c[1], c[2]), "FFFFFF", Vector3(1.1, 0.8, 1.0), 0.8, cmat)
 			n.name = "CloudBuddy"
 		"sun":                      # a little sun, a glowing coin behind the head
 			add_child(n)
@@ -599,6 +672,9 @@ func _build_item(kind):
 			rbmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 			rbmat.vertex_color_use_as_albedo = true
 			rbmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			rbmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA          # round 10: see-through (it used to be solid and blocked the view)
+			rbmat.albedo_color = Color(1, 1, 1, 0.3)
+			rbmat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 			rbm.material_override = rbmat
 			rbm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			n.add_child(rbm)

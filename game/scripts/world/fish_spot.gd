@@ -189,7 +189,6 @@ class Fish extends Node3D:
 		consumed = true
 		remove_from_group("mischief")
 		GS.stats["fish"] += 1
-		GS.flight_loot()
 		GS.award("GONE FISHING")
 		if GS.stats["fish"] >= 3:
 			GS.award("SEA DOG")

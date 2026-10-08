@@ -174,11 +174,14 @@ func draw_glows(ci):
 				# round 8: a slim, crisp emblem per rarity instead of a big soft glow (silver: ring + hexagon, gold: ring + four-point star,
 				# diamond: a cut gem, rainbow: a ring of colours). The colour of the little core says which stat the fry gives.
 				var r = (20.0 + 40.0 / (1.0 + d / 40.0)) * u * (1.0 + 0.05 * sin(t * 4.0 + ph))      # round 9: much bigger
+				if tier >= 4:
+					r *= 0.5          # round 10: a rainbow fry adds little; its pillar of light stays, its emblem is small and quiet
 				_emblem(ci, sp, tier, col, core, r, u)
 				var lines = label.split("\n")
-				var tcol = Color(col.r, col.g, col.b, 0.95 * a)
-				ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 16 * u), lines[0], HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), tcol)
-				ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 32 * u), lines[1], HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), lc)
+				var tcol = Color(col.r, col.g, col.b, (0.95 if tier < 4 else 0.7) * a)
+				ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 16 * u), lines[0], HORIZONTAL_ALIGNMENT_CENTER, 160, int((12 if tier < 4 else 10) * u), tcol)
+				if tier < 4:
+					ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 32 * u), lines[1], HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), lc)
 				n_labels += 1
 			else:
 				var dir = sp - size * 0.5
@@ -192,7 +195,7 @@ func draw_glows(ci):
 				var ky = half.y / max(abs(dir.y), 0.001)
 				var pos = rect.position + half + dir * min(kx, ky)
 				var nrm = Vector2(-dir.y, dir.x)
-				var sc = (1.0 + 0.1 * sin(t * 5.0 + ph))
+				var sc = (1.0 + 0.1 * sin(t * 5.0 + ph)) * (0.55 if tier >= 4 else 1.0)
 				ci.draw_circle(pos, 24.0 * sc * u, Color(col.r, col.g, col.b, 0.2 * a))
 				ci.draw_colored_polygon(PackedVector2Array([pos + dir * 17.0 * sc * u, pos - dir * 9.0 * u + nrm * 12.0 * u, pos - dir * 9.0 * u - nrm * 12.0 * u]), Color(col.r, col.g, col.b, 0.95 * a))
 				ci.draw_circle(pos - dir * 4.0, 4.0 * u, Color(core.r, core.g, core.b, 0.9 * a))
