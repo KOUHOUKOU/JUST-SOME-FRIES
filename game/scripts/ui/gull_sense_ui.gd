@@ -211,6 +211,9 @@ class Pane extends Control:
 				for q in 10:
 					var a3 = q * TAU / 10.0
 					draw_line(c + Vector2(cos(a3), sin(a3)) * s * 0.7, c + Vector2(cos(a3), sin(a3)) * s * 1.05, col, 3.0)
+			"skybow":
+				for q in 7:
+					draw_arc(c + Vector2(0, s * 0.55), s * (1.05 - q * 0.11), PI, TAU, 18, Color.from_hsv(float(q) / 8.0, 0.65, 1.0, col.a), max(s * 0.1, 2.0), true)
 			"meteor":
 				# a four-pointed star with a tail
 				var sc2 = c + Vector2(s * 0.35, -s * 0.35)
@@ -378,12 +381,12 @@ class Pane extends Control:
 		# ---- the wardrobe (under the gull)
 		var wx = 22.0 * u
 		var wy = size.y * 0.695
-		var tw = 62.0 * u
+		var tw = 56.0 * u
 		var kinds = GS.WEARABLES
 		for i in kinds.size():
 			var k3 = kinds[i]
-			var col2 = i % 6
-			var row = i / 6
+			var col2 = i % 7          # round 9: nineteen things to wear, three rows of seven
+			var row = i / 7
 			var r = Rect2(Vector2(wx + col2 * (tw + 6.0 * u), wy + row * (tw * 0.9 + 6.0 * u)), Vector2(tw, tw * 0.9))
 			hit[k3] = r
 			var owned = GS.worn.has(k3)
@@ -393,7 +396,7 @@ class Pane extends Control:
 				draw_rect(r, Color(1.0, 0.85, 0.35, 0.95), false, 3.0)
 			var base = {"hat": Color("F0D9A0"), "sailor": Color("F4F4F0"), "topper": Color("2A2D36"), "beret": Color("C23B3B"), "glasses": Color("DDE3EA"), "shades": Color("15151A"),
 				"necklace": Color("F2B53A"), "bowtie": Color("C9202E"), "scarf": Color("D9442E"), "pipe": Color("5A3A1E"), "hawaii": Color("2BA7A0"), "stripes": Color("F4F4F0"),
-				"coat": Color("3A4155"), "balloon": Color("E85745"), "socks": Color("E85745"), "cloud": Color("FFFFFF"), "sun": Color("FFC83A"), "meteor": Color("FFE08A")}[k3]
+				"coat": Color("3A4155"), "balloon": Color("E85745"), "socks": Color("E85745"), "cloud": Color("FFFFFF"), "sun": Color("FFC83A"), "meteor": Color("FFE08A"), "skybow": Color("FFB6E8")}[k3]
 			var pc = base if owned else Color(0.4, 0.42, 0.5, 0.35)
 			if owned and k3 in ["topper", "shades", "pipe", "coat"]:
 				draw_rect(Rect2(r.position + Vector2(5, 5), r.size - Vector2(10, 10)), Color(0.8, 0.82, 0.9, 0.22))
@@ -406,7 +409,7 @@ class Pane extends Control:
 				if not GS.menu_seen.has("w_" + k3):
 					draw_circle(r.position + Vector2(r.size.x - 8.0 * u, 9.0 * u), 5.0 * u, Color(1.0, 0.3, 0.3))
 		# the mouse hint: a little mouse with the right button lit
-		var mx = wx + 6.0 * (tw + 6.0 * u) + 8.0 * u
+		var mx = wx + 7.0 * (tw + 6.0 * u) + 8.0 * u
 		var my2 = wy + 4.0 * u
 		draw_rect(Rect2(Vector2(mx, my2), Vector2(26.0 * u, 38.0 * u)), Color(1, 1, 1, 0.5), false, 2.0)
 		draw_rect(Rect2(Vector2(mx + 13.0 * u, my2), Vector2(13.0 * u, 16.0 * u)), Color(1.0, 0.85, 0.35, 0.9))

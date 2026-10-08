@@ -20,17 +20,18 @@ const STAND_OFF = 1.7           # the guided approach stops this far from the fr
 const APPR = 0.56               # seconds a white wave takes to shrink onto its circle
 # per tier: circles, waves per circle, time of the first wave, gap between waves, gold width, green (outer) width  - all in real seconds
 const SEQ_TIER = {
-	0: {"c": 1, "w": 1, "lead": 0.85, "gap": 0.0, "gw": 0.07, "gg": 0.13},      # things: hats, drinks, ice cream
+	0: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.40, "gw": 0.06, "gg": 0.115},     # things: hats, drinks, ice cream  (round 9: every circle is judged twice)
 	1: {"c": 2, "w": 2, "lead": 0.85, "gap": 0.36, "gw": 0.05, "gg": 0.095},    # silver / rare
 	2: {"c": 3, "w": 2, "lead": 0.85, "gap": 0.33, "gw": 0.045, "gg": 0.085},   # gold / epic
 	3: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.04, "gg": 0.075},    # diamond / legendary
-	4: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.42, "gw": 0.06, "gg": 0.11},     # rainbow (repeatable, a single easy circle)
-	5: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.48, "gw": 0.05, "gg": 0.10},     # fish, common: 2 judgements
-	6: {"c": 1, "w": 1, "lead": 0.8, "gap": 0.0, "gw": 0.035, "gg": 0.06},      # cloud / sun: one wave, the narrowest in the game (the fall is expensive)
-	7: {"c": 3, "w": 1, "lead": 0.85, "gap": 0.40, "gw": 0.045, "gg": 0.09},    # fish, rare: 3 judgements
-	8: {"c": 5, "w": 1, "lead": 0.85, "gap": 0.32, "gw": 0.04, "gg": 0.08},     # fish, legendary: 5 judgements (the olympic rings)
-	9: {"c": 5, "w": 1, "lead": 0.85, "gap": 0.31, "gw": 0.038, "gg": 0.075},   # RAINBOW fry (round 8): five judgements, and the speed to match
-	10: {"c": 5, "w": 1, "lead": 0.8, "gap": 0.29, "gw": 0.034, "gg": 0.068},   # a shooting star: five judgements, the narrowest of them all (STARLIGHT widens the bands x1.5)
+	4: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.42, "gw": 0.06, "gg": 0.11},     # (old rainbow, unused)
+	5: {"c": 1, "w": 2, "lead": 0.85, "gap": 0.48, "gw": 0.05, "gg": 0.10},     # fish, common: 1 circle x 2
+	6: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.03, "gg": 0.06},     # cloud / sun: five circles x 2 like a diamond fry (STARLIGHT is always on, x1.5 bands)
+	7: {"c": 3, "w": 2, "lead": 0.85, "gap": 0.36, "gw": 0.045, "gg": 0.09},    # fish, rare: 3 x 2
+	8: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.30, "gw": 0.04, "gg": 0.08},     # fish, legendary: 5 x 2
+	9: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.30, "gw": 0.04, "gg": 0.075},    # RAINBOW fry: five circles x 2
+	10: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.03, "gg": 0.06},    # a shooting star: five circles x 2
+	11: {"c": 7, "w": 2, "lead": 0.85, "gap": 0.28, "gw": 0.03, "gg": 0.06},    # the rainbow in the sky: seven circles x 2 = 14 judgements
 }
 const TUT_SEQ = {"TUTORIAL_01": {"c": 1, "w": 2, "lead": 1.1, "gap": 0.55, "gw": 0.09, "gg": 0.2}, "TUTORIAL_02": {"c": 1, "w": 2, "lead": 1.0, "gap": 0.5, "gw": 0.075, "gg": 0.16},
 	"TUTORIAL_03": {"c": 1, "w": 2, "lead": 0.95, "gap": 0.46, "gw": 0.065, "gg": 0.13}}
@@ -41,6 +42,7 @@ const LAYOUTS = {
 	2: [[0.0, -0.5], [0.0, 0.5]],
 	3: [[0.0, -1.0], [0.0, 0.0], [0.0, 1.0]],
 	5: [[-1.0, -0.5], [0.0, -0.5], [1.0, -0.5], [-0.5, 0.5], [0.5, 0.5]],       # the olympic rings: three on top, two between them below, none touching
+	7: [[-3.0, 0.6], [-2.0, -0.2], [-1.0, -0.7], [0.0, -0.9], [1.0, -0.7], [2.0, -0.2], [3.0, 0.6]],   # a rainbow: seven circles on an arch, left to right = red to violet
 }
 
 var player
@@ -244,14 +246,16 @@ func _scan(delta):
 func _is_tut(f):
 	return f != null and f.id.begins_with("TUTORIAL")
 
-# 0 common (tutorial / decorative), 1 silver, 2 gold, 3 diamond, 4 (old rainbow), 5 fish, 6 cloud / sun (the hardest single wave in the game), 7-8 rare / legendary fish,
-# 9 rainbow fry, 10 shooting star
+# 0 common (tutorial / decorative), 1 silver, 2 gold, 3 diamond, 4 (old rainbow), 5 fish, 6 cloud / sun, 7-8 rare / legendary fish,
+# 9 rainbow fry, 10 shooting star, 11 the rainbow in the sky
 func _tier_of(f):
 	if f.ftype == "fish":
 		return [5, 7, 8][clamp(f.rarity, 0, 2)]
 	if f.ftype == "mischief":
 		if f.kind == "meteor":
 			return 10
+		if f.kind == "skybow":
+			return 11
 		return 6 if f.kind in ["cloud", "sun"] else 0
 	if f.ftype == "tutorial":
 		return 0

@@ -9,6 +9,7 @@ var win_mat
 var lamp_mat
 var beam_mat
 var cloud_mat
+var storm_mat
 var sun_disc = null
 var sun_pos = Vector3(0, 110, 170)     # where the sun is in the sky (it is also what the "catch the sun" quest flies to)
 var sun_caught = false
@@ -60,6 +61,10 @@ func _apply(delta):
 		cloud_mat.set_shader_parameter("top_col", Color(1, 1, 1).lerp(Color(1.0, 0.72, 0.62), u))
 		cloud_mat.set_shader_parameter("bottom_col", Color(0.74, 0.82, 0.93).lerp(Color(0.62, 0.42, 0.55), u))
 		cloud_mat.set_shader_parameter("glow", lerp(0.42, 0.22, u))
+	if storm_mat != null:
+		storm_mat.set_shader_parameter("top_col", Color(0.52, 0.56, 0.65).lerp(Color(0.7, 0.45, 0.45), u * 0.7))
+		storm_mat.set_shader_parameter("bottom_col", Color(0.24, 0.27, 0.35).lerp(Color(0.3, 0.2, 0.28), u))
+		storm_mat.set_shader_parameter("glow", lerp(0.16, 0.1, u))
 	if sun_disc != null:
 		sun_disc.caught = sun_caught
 	# colour: richer with every special fry, back to natural at the ending, muted in Gull Sense view

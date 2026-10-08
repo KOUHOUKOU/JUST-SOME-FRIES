@@ -335,14 +335,15 @@ func _comet_tick(mode, delta):
 		co.visible = comet_k > 0.04
 	var sp = n.get_node_or_null("Sparks")
 	if sp != null:
-		sp.emitting = comet_k > 0.3
+		sp.emitting = comet_k > 0.12
+		sp.speed_scale = 0.55 + 2.2 * comet_k           # the faster the gull, the more stars it drops per second
 	var spin = n.get_node_or_null("Spin")
 	if spin != null:
 		spin.rotation.z += delta * 2.0
 
 # ---- wearables: every kind lives in one slot; putting something on replaces whatever sat in that slot ----
 const SLOTS = {"hat": "head", "sailor": "head", "topper": "head", "beret": "head", "glasses": "eyes", "shades": "eyes", "necklace": "neck", "bowtie": "neck",
-	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float", "socks": "tail", "cloud": "cloud", "sun": "halo", "meteor": "comet"}
+	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float", "socks": "tail", "cloud": "cloud", "sun": "halo", "meteor": "comet", "skybow": "halo2"}
 
 static func slot_of(kind):
 	return SLOTS.get(kind, "head")
@@ -589,50 +590,71 @@ func _build_item(kind):
 			gl.material_override = gm
 			gl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			n.add_child(gl)
-		"meteor":                   # a shooting star that has decided to stay: it hangs behind the gull and trails a long glittering tail while it flies
+		"skybow":                   # a little rainbow arched over the head
+			add_child(n)
+			n.position = Vector3(0, 0.2, -0.12)
+			var rbm = MeshInstance3D.new()
+			rbm.mesh = preload("res://scripts/world/rainbow_pair.gd").arc_mesh(Vector3(1, 0, 0), 0.3, 0.26, 0.04, 0.024, 16, 0.95)
+			var rbmat = StandardMaterial3D.new()
+			rbmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			rbmat.vertex_color_use_as_albedo = true
+			rbmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			rbm.material_override = rbmat
+			rbm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			n.add_child(rbm)
+			n.name = "RainbowHalo"
+		"meteor":                   # a shooting star that has decided to stay: a little golden star behind the gull, and a trail of golden stars left in the air
 			add_child(n)
 			n.position = Vector3(0, 0.02, 0.36)
 			var fx = preload("res://scripts/world/meteor_fx.gd")
-			var head_g = fx.billboard(0.5, soft_tex(), Color(1.0, 0.9, 0.62, 0.8))
+			var head_g = fx.billboard(0.36, soft_tex(), Color(1.0, 0.82, 0.38, 0.32))
 			n.add_child(head_g)
-			var head_s = fx.billboard(0.3, star_tex(), Color(1, 1, 1, 1))
+			var head_s = fx.billboard(0.26, star_tex(), Color(1.0, 0.82, 0.3, 1))
 			head_s.name = "Spin"
 			n.add_child(head_s)
-			var tl = MeshInstance3D.new()
-			tl.name = "Tail"
-			tl.mesh = fx.tail_mesh(9.0, 0.34)
-			var tmat = fx.tail_material().duplicate()
-			tmat.set_shader_parameter("power", 1.3)
-			tl.material_override = tmat
-			tl.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			n.add_child(tl)
-			var core = MeshInstance3D.new()
-			core.name = "Core"
-			core.mesh = fx.tail_mesh(5.0, 0.12)
-			var cmat = fx.tail_material().duplicate()
-			cmat.set_shader_parameter("col_tail", Color(1, 0.95, 0.8, 1))
-			cmat.set_shader_parameter("power", 1.2)
-			core.material_override = cmat
-			core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			n.add_child(core)
+			# the trail: small four-pointed stars that STAY where they were dropped and fade away (world space), gold and yellow, never white, never additive
 			var sp = CPUParticles3D.new()
 			sp.name = "Sparks"
-			sp.amount = 30
-			sp.lifetime = 1.6
+			sp.amount = 60
+			sp.lifetime = 3.2
 			sp.local_coords = false
 			sp.direction = Vector3(0, 0, 1)
-			sp.spread = 40.0
-			sp.initial_velocity_min = 0.2
-			sp.initial_velocity_max = 1.2
-			sp.gravity = Vector3(0, -0.5, 0)
+			sp.spread = 180.0
+			sp.initial_velocity_min = 0.05
+			sp.initial_velocity_max = 0.3
+			sp.gravity = Vector3(0, -0.12, 0)
 			sp.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-			sp.emission_sphere_radius = 0.25
-			var pq = QuadMesh.new()
-			pq.size = Vector2(0.28, 0.28)
-			pq.material = fx.glow_mat(star_tex(), Color(1.0, 0.93, 0.72, 0.95))
-			sp.mesh = pq
+			sp.emission_sphere_radius = 0.14
+			sp.angle_min = -40.0
+			sp.angle_max = 40.0
+			sp.hue_variation_min = -0.03
+			sp.hue_variation_max = 0.02
 			sp.scale_amount_min = 0.5
-			sp.scale_amount_max = 1.4
+			sp.scale_amount_max = 1.3
+			var sc_curve = Curve.new()
+			sc_curve.add_point(Vector2(0.0, 0.2))
+			sc_curve.add_point(Vector2(0.12, 1.0))
+			sc_curve.add_point(Vector2(1.0, 0.1))
+			sp.scale_amount_curve = sc_curve
+			var ramp = Gradient.new()
+			ramp.set_color(0, Color(1.0, 0.86, 0.3, 0.0))
+			ramp.add_point(0.1, Color(1.0, 0.8, 0.25, 0.85))
+			ramp.set_color(2, Color(1.0, 0.7, 0.2, 0.0))
+			sp.color_ramp = ramp
+			var pq = QuadMesh.new()
+			pq.size = Vector2(0.42, 0.42)
+			var pm = StandardMaterial3D.new()
+			pm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			pm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			pm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			pm.vertex_color_use_as_albedo = true
+			pm.albedo_texture = star_tex()
+			pm.albedo_color = Color(1.0, 0.84, 0.32, 1.0)
+			pm.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA        # a star that floats past the lens does not blind it
+			pm.distance_fade_min_distance = 0.8
+			pm.distance_fade_max_distance = 3.5
+			pq.material = pm
+			sp.mesh = pq
 			sp.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			n.add_child(sp)
 			sp.emitting = true

@@ -7,14 +7,26 @@ var main
 var shots = "C:/Users/ROG/Desktop/JUST_SOME_FRIES_CODEX_WORKSPACE_v1.0/JUST_SOME_FRIES/shots/"
 var metrics = {}
 
+# ECO MODE (round 9): the test bots run on a laptop that must stay quiet: 30 fps, a small window, a lighter 3D resolution. `--full` turns it off (and `--film` never uses it).
+var eco = false
+
+func _process(_delta):
+	if eco and Engine.max_fps != 30:
+		Engine.max_fps = 30
+
 func _ready():
 	DirAccess.make_dir_recursive_absolute(shots)
 	var args = OS.get_cmdline_user_args()
+	if not ("--full" in args) and not ("--film" in args):
+		eco = true
+		Engine.max_fps = 30
+		get_window().size = Vector2i(960, 540)
+		get_viewport().scaling_3d_scale = 0.75
 	var table = {"--tour": "tour", "--intro": "intro_shots", "--ui": "ui_shots", "--cam": "cam_shots", "--systems": "systems_test", "--early": "early_test", "--fuzz": "fuzz_test",
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -2022,7 +2034,7 @@ func sky_test():
 	main._reveal_specials()
 	for t in GS.FRY_TYPES:
 		GS.set_level(t, 3)
-	GS.test_boost_bonus = 0.0
+	GS.test_boost_bonus = 30.0       # round 9: the sky wants STARLIGHT speeds (255-272); the bot borrows them
 	main.hud.slots_visible = true
 	await get_tree().create_timer(2.0).timeout
 	say("quests: %s items=%s" % [str(GS.quests), str(main.quest_items.keys())])
@@ -2469,7 +2481,7 @@ func round8_test():
 	rb.tier = 4
 	chk("rainbow needs 150", abs(GS.need_speed(rb) * GS.SPEED_UNIT - 150.0) < 0.1, str(GS.need_speed(rb) * GS.SPEED_UNIT))
 	var prm = p.snatch._seq_params(rb)
-	chk("rainbow = 5 judgements", prm["n"] == 5 and prm["c"] == 5, str(prm["n"]))
+	chk("rainbow = 5 circles x 2 judgements", prm["n"] == 10 and prm["c"] == 5, str(prm["n"]))
 	# 2 the plain fry lies on the table, visible, with no glow, and is not eatable before the 3 starters
 	GS.gull_sense_count = 0
 	main.ordinary.visible = true
@@ -2478,15 +2490,16 @@ func round8_test():
 	GS.gull_sense_count = 3
 	# 3 the meteor: forecast, flight, trajectory, catch
 	var mg = main.meteors
+	GS.lv["red"] = 3
 	mg._plan_star()
 	var inf = mg.sight_info()
 	chk("meteor forecast exists", inf != null and inf["t"] > 4.0, str(inf))
 	await real(5.4)
 	chk("meteor flies", mg.star != null and is_instance_valid(mg.star))
 	var star = mg.star
-	chk("meteor asks 190", abs(GS.need_speed(star) * GS.SPEED_UNIT - 190.0) < 0.1)
+	chk("meteor asks 262", abs(GS.need_speed(star) * GS.SPEED_UNIT - 262.0) < 0.1)
 	var prm2 = p.snatch._seq_params(star)
-	chk("meteor = 5 judgements", prm2["n"] == 5, str(prm2["n"]))
+	chk("meteor = 5 circles x 2 judgements", prm2["n"] == 10, str(prm2["n"]))
 	GS.test_boost_bonus = 30.0
 	var q0 = GS.quest_state("meteor")
 	# chase it: start behind it on its own line
@@ -2558,12 +2571,25 @@ func r8end():
 	main._on_ate_ordinary(main.ordinary)
 	var t0 = Time.get_ticks_msec()
 	var k = 0
+	var ccx = main.scenes.cc()
+	var worst_e = 0.0
+	var near_e = 99.0
 	while Time.get_ticks_msec() - t0 < 300000:
 		await real(2.0)
 		await shot("r8e_%03d" % k)
+		var camx = get_viewport().get_camera_3d()
+		if camx != null and main.story.active and main.story.cam != null:
+			for pair in [["you", p.gull], ["bro", main.bro.gull]]:
+				if pair[1].is_visible_in_tree():
+					var cv = ccx.approx_cover(camx, pair[1])
+					say("[R9] end t=%03d %s covers %d%% camera %.1f m" % [k * 2, pair[0], int(cv["w"] * 100.0), cv["near"]])
+					if cv["w"] > 0.0:
+						worst_e = max(worst_e, cv["w"])
+						near_e = min(near_e, cv["near"])
 		k += 1
 		if k > 20 and not main.scenes.cine_busy:
 			break
+	chk9("the ending never puts a gull in the lens", worst_e <= 0.6 and near_e >= 2.4, "worst %d%% nearest %.1f m" % [int(worst_e * 100.0), near_e])
 	say("[R8] ending finished after %d shots" % k)
 	for i in 6:
 		await real(2.0)
@@ -2593,4 +2619,305 @@ func r8bro():
 			await real(1.5)
 			await shot("r8m_%s_%02d" % [id, k])
 			k += 1
+	get_tree().quit()
+
+
+# ================================================================== ROUND 9
+func chk9(name_, ok, extra = ""):
+	say("[R9] %s %s %s" % ["PASS" if ok else "FAIL", name_, extra])
+
+# the real top speed a gull reaches in the air for a given ladder step with all three drinks (STARLIGHT on): must clear the sky's needs
+func r9speed():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main.meteors.set_process(false)
+	for step in [1, 2, 3]:
+		GS.lv["red"] = step
+		GS.buff["coffee"] = 0.0
+		GS.buff["alcohol"] = 0.0
+		GS.buff["ice"] = 0.0
+		GS.star_t = 0.0
+		for k in ["coffee", "alcohol", "ice"]:
+			GS.add_buff(k)
+		p.input_locked = false
+		place(Vector3(0, 150, 300), Vector3(0, 150, 100), 12.0)
+		Input.action_press("move_forward")
+		Input.action_press("dash")
+		var top = 0.0
+		for i in 900:
+			await get_tree().process_frame
+			if p.stamina < 40.0:
+				p.stamina = 90.0
+			GS.star_t = max(GS.star_t, 5.0)
+			top = max(top, p.speed)
+			if p.global_position.z < -250.0:
+				place(Vector3(0, 150, 300), Vector3(0, 150, 100), p.speed)
+		Input.action_release("move_forward")
+		Input.action_release("dash")
+		var g = top * 6.0
+		var ceil_g = GS.boost_speed() * 6.0
+		say("[R9] sonic step %d: reached %d gauge (formula ceiling %d)" % [step, int(g), int(ceil_g)])
+		if step == 1:
+			chk9("silver-SONIC gull cannot reach the cloud (255)", g < GS.CLOUD_NEED, "%d" % int(g))
+		elif step == 2:
+			chk9("gold-SONIC gull reaches the cloud (255)", g >= GS.CLOUD_NEED, "%d" % int(g))
+			chk9("gold-SONIC gull reaches the sun (272)", g >= GS.SUN_NEED, "%d" % int(g))
+		else:
+			chk9("diamond-SONIC gull reaches the sun with room to spare", g >= GS.SUN_NEED + 14.0, "%d" % int(g))
+	get_tree().quit()
+
+# --r9cine: every real cinematic moment of round 9, one screenshot per second, with the gull's share of the picture width measured (--only=a,b)
+func r9cine():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	var ids = ["drinks3", "meteor", "sun", "skybow", "all24"]
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--only="):
+			ids = a.substr(7).split(",")
+	var cc = main.scenes.cc()
+	for id in ids:
+		place(Vector3(-4.0, 40.0, 30.0), Vector3(-4.0, 40.0, 0.0), 6.0)
+		p.mode = 0
+		await real(0.5)
+		GS.cine_seen[id] = true
+		if main.menus.paused:
+			main.menus.set_paused(false)
+		main.scenes.cinema(id, {})
+		var t0 = GS.msec()
+		var k = 0
+		var worst = 0.0
+		var nearest = 999.0
+		await real(0.3)
+		while main.scenes.cine_busy or GS.msec() - t0 < 1500:
+			await real(1.0)
+			await shot("r9c_%s_%02d" % [id, k])
+			var cam = get_viewport().get_camera_3d()
+			var cv = cc.screen_cover(cam, p.gull)
+			if main.scenes.cine_busy:
+				worst = max(worst, cv["w"])
+				nearest = min(nearest, cv["near"])
+			say("[R9] %s t=%02d gull covers %d%% of the width at x=%.2f y=%.2f, camera %.1f m away" % [id, k, int(cv["w"] * 100.0), cv.get("cx", -1.0), cv.get("cy", -1.0), cv["near"]])
+			k += 1
+			if k > 40:
+				break
+		var dur = (GS.msec() - t0) / 1000.0
+		chk9("cinematic %s lasts 10-20 s" % id, dur >= 9.0 and dur <= 21.0, "%.1f s" % dur)
+		chk9("cinematic %s never fills the picture with the gull" % id, worst <= 0.62 and nearest >= 2.6, "worst %d%% nearest %.1f m" % [int(worst * 100.0), nearest])
+		await real(1.0)
+	get_tree().quit()
+
+# --r9sky: the weather (white / grey / rain clouds, rain only over the sea) and the rainbow in the sky: look at it, then catch it (7 circles x 2)
+func r9sky():
+	await get_tree().create_timer(1.5).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	GS.test_boost_bonus = 30.0
+	var kinds = {"white": 0, "dark": 0, "rain": 0}
+	var holder = main.get_node_or_null("Map/Clouds")
+	if holder == null:
+		holder = get_tree().get_first_node_in_group("rainbow_pair").get_parent()
+	for c in holder.get_children():
+		if c.has_meta("kind"):
+			kinds[c.get_meta("kind")] += 1
+	say("[R9] clouds: %s" % str(kinds))
+	chk9("three kinds of clouds exist", kinds["white"] >= 10 and kinds["dark"] >= 3 and kinds["rain"] >= 3)
+	await real(1.2)
+	var bad = 0
+	var wet = 0
+	for c in get_tree().get_nodes_in_group("rain_cloud"):
+		var gp = c.global_position
+		var want = preload("res://scripts/world/sky.gd").over_sea(gp.x, gp.z, 22.0)
+		var rn = c.get_meta("rain")
+		if rn.emitting != want:
+			bad += 1
+		if rn.emitting:
+			wet += 1
+	chk9("every rain cloud rains exactly while it is over open sea", bad == 0, "%d raining, %d wrong" % [wet, bad])
+	var rp = get_tree().get_first_node_in_group("rainbow_pair")
+	chk9("the rainbow pair exists and it rains on it", rp != null and rp.raining(), "fade %.2f" % rp.fade)
+	await real(14.0)
+	chk9("the rainbow is visible", rp.fade > 0.95, "fade %.2f" % rp.fade)
+	var wv = rp.wide_view(Vector3(0, 60, 100))
+	p.input_locked = true
+	view(wv["pos"], wv["look"], 55.0)
+	await real(0.8)
+	await shot("r9s_bow_wide")
+	var ap = rp.apex()
+	view(ap + Vector3(40, -25, 90), ap, 60.0)
+	await real(0.5)
+	await shot("r9s_bow_close")
+	# rain: look at the first rain cloud from the side, a little below it
+	for c in get_tree().get_nodes_in_group("rain_cloud"):
+		if c.get_meta("rain").emitting:
+			var gp = c.global_position
+			view(gp + Vector3(90, -35, 60), gp + Vector3(0, -45, 0), 60.0)
+			await real(0.8)
+			await shot("r9s_rain")
+			break
+	# the catch
+	p.input_locked = false
+	GS.quests["skybow"] = "active"
+	await real(1.2)
+	var it = main.quest_items.get("skybow", null)
+	chk9("the rainbow quest item exists", it != null)
+	if it != null:
+		say("[R9] rainbow at %s need %d gauge" % [str(it.global_position), int(GS.need_speed(it) * 6)])
+		var r = await attempt(it, Vector3(0, 0.2, 1), 30.0, 0.0, -1.0, {"shot": "r9s_bow_rhythm"})
+		var lc = main.player.snatch.last_commit
+		say("[R9] rainbow -> %s commit=%s quests=%s worn=%s" % [r, str(lc), str(GS.quests.get("skybow")), str(GS.worn.keys())])
+		chk9("the rainbow takes 14 judgements and can be caught", r == "ok" and lc.get("n", 0) == 14 and GS.quest_state("skybow") == "done" and GS.worn.has("skybow"), "n=%s" % str(lc.get("n", 0)))
+	await real(1.0)
+	GS.cine_seen.erase("skybow")
+	main.scenes.cinema("skybow", {})
+	var k = 0
+	while main.scenes.cine_busy or k < 3:
+		await real(1.0)
+		await shot("r9s_cine_%02d" % k)
+		k += 1
+		if k > 30:
+			break
+	say("[R9] rainbow cinematic %d s" % k)
+	await real(1.0)
+	await shot("r9s_after")
+	get_tree().quit()
+
+# --r9tab: Gull Sight with the light pillars (silver / gold / diamond / rainbow) and the big emblems
+func r9tab():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 2)
+	var base = Vector3(-4.0, 30.0, 40.0)
+	var types = ["red", "orange", "green", "cyan", "blue"]
+	var made = []
+	for i in 4:
+		var f = make_star(types[i], i + 1 if i < 3 else 3, base + Vector3(-18.0 + i * 12.0, -22.0 + i * 4.0, -30.0 - i * 6.0), "STAR_EMB_%d" % i)
+		made.append(f)
+	var rb = make_star("pink", 4, base + Vector3(26.0, -10.0, -60.0), "STAR_EMB_RB")
+	rb.revealed = true
+	rb.visible = true
+	rb.tier = 4
+	place(base, base + Vector3(0, 0, -20), 4.0)
+	p.input_locked = false
+	await real(1.0)
+	Input.action_press("gull_sense")
+	main._open_sense()
+	await real(1.3)
+	await shot("r9t_tab_a")
+	place(base + Vector3(0, 0, 30), base + Vector3(0, 8, -20), 3.0)
+	await real(0.6)
+	await shot("r9t_tab_b")
+	Input.action_release("gull_sense")
+	main._close_sense()
+	await real(0.8)
+	await shot("r9t_world")
+	get_tree().quit()
+
+# --r9trail: the caught star's trail of golden stars (slow, fast, from behind the gull)
+func r9trail():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	p.gull.wear("meteor")
+	place(Vector3(60.0, 40.0, 150.0), Vector3(-80.0, 40.0, 110.0), 14.0)
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	await real(5.0)
+	await shot("r9r_fast_a")
+	await real(1.0)
+	await shot("r9r_fast_b")
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+	var gp = p.global_position
+	p.input_locked = true
+	var fwd = Vector3(-sin(p.yaw), 0, -cos(p.yaw))
+	view(gp - fwd * 7.0 + Vector3(0, 2.5, 0), gp, 55.0)
+	await real(0.6)
+	await shot("r9r_behind")
+	view(gp + Vector3(fwd.z, 0, -fwd.x) * 8.0 - fwd * 4.0 + Vector3(0, 1.0, 0), gp - fwd * 3.0, 50.0)
+	await real(0.4)
+	await shot("r9r_side")
+	get_tree().quit()
+
+# --r9quiet: the light film mode (first coffee / cocktail / ice cream / fish / cloud): the gull keeps flying, text in the middle, nothing locked
+func r9quiet():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	main.autotest_no_cine = false
+	GS.cine_seen.clear()
+	place(Vector3(-4.0, 40.0, 30.0), Vector3(-4.0, 40.0, 0.0), 8.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	var jobs = [["drink_coffee", {}], ["drink_alcohol", {}], ["fish", {"sp": "tuna", "len": 140.0, "kg": 52.0}], ["drink_ice", {}]]
+	var k = 0
+	for j in jobs:
+		main.queue_cine(j[0], j[1])
+	var t0 = GS.msec()
+	var locked_seen = false
+	var slowed = false
+	while GS.msec() - t0 < 45000:
+		await real(1.5)
+		if p.input_locked:
+			locked_seen = true
+		if Engine.time_scale < 0.9:
+			slowed = true
+		await shot("r9q_%02d" % k)
+		k += 1
+		if not main.hud.quiet_busy and main.hud.quiet_queue.is_empty() and main.cine_queue.is_empty() and k > 4:
+			break
+	Input.action_release("move_forward")
+	chk9("the light film mode never locks the gull or slows time", not locked_seen and not slowed)
+	chk9("all four quiet moments were shown", GS.cine_seen.has("drink_coffee") and GS.cine_seen.has("drink_alcohol") and GS.cine_seen.has("fish") and GS.cine_seen.has("drink_ice"))
+	say("[R9] quiet moments done after %d shots" % k)
+	get_tree().quit()
+
+# --shotcheck: the real opening and the real ending, the share of the picture width that each gull takes and how close the camera is, every 0.8 s
+func shotcheck():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	var cc = main.scenes.cc()
+	var worst = {"w": 0.0, "near": 99.0}
+	var tag = "opening"
+	var run = [true]
+	var sampler = func():
+		var tt0 = GS.msec()
+		var n = 0
+		while run[0]:
+			await real(0.8)
+			var cam = get_viewport().get_camera_3d()
+			if cam == null or not main.story.active or main.story.cam == null:
+				continue
+			for pair in [["you", p.gull], ["bro", main.bro.gull]]:
+				if not pair[1].is_visible_in_tree():
+					continue
+				var cv = cc.approx_cover(cam, pair[1])
+				var close = cv["near"] < 2.4 and cv["w"] > 0.3
+				if cv["w"] > 0.62 or close:
+					say("[R9] %s t=%03d %s covers %d%% camera %.1f m  <-- too close" % [tag, int((GS.msec() - tt0) / 1000.0), pair[0], int(cv["w"] * 100.0), cv["near"]])
+					worst["w"] = max(worst["w"], cv["w"])
+					worst["near"] = min(worst["near"], cv["near"])
+			n += 1
+	sampler.call()
+	main.scenes.opening()
+	for i in 46:
+		await real(2.5)
+		if main.story.hold["on"]:
+			Input.action_press("interact")
+		if not main.story.active and i > 8:
+			break
+	Input.action_release("interact")
+	run[0] = false
+	chk9("the opening never puts a gull in the lens", worst["w"] <= 0.62 and worst["near"] >= 2.4, "worst %d%% %.1f m" % [int(worst["w"] * 100.0), worst["near"]])
 	get_tree().quit()

@@ -12,7 +12,7 @@ const MRATE = 11025
 # the pitch ladder of a streak of good presses (a major pentatonic climb)
 const PENTA = [1.0, 1.1225, 1.2599, 1.4983, 1.6818, 2.0, 2.2449, 2.5198]
 # how loud each piece plays (dB): they are all normalised to the same loudness, so this is only taste
-const MUSIC_DB = {"title": -7.0, "boardwalk": -9.5, "beach": -10.0, "hill": -9.0, "sea": -9.0, "summit": -9.5, "sky": -10.0, "star": -9.5, "ending": -7.0,
+const MUSIC_DB = {"title": -7.0, "boardwalk": -9.5, "beach": -10.0, "hill": -9.0, "sea": -9.0, "summit": -9.5, "sky": -10.0, "star": -9.5, "ending": -7.0, "ending_mem": -9.0,
 	"cine_joy": -9.0, "cine_wish": -8.0, "cine_home": -8.0}
 const ALT = {"flap": ["flap", "flap2"]}
 
@@ -37,6 +37,7 @@ var music_fade = 1.0
 var ending = false
 var muffle_tw = null
 var theme_player
+var theme_player2
 var theme_want = ""
 var theme_loop = false
 var themes = {}
@@ -61,6 +62,7 @@ func _ready():
 		music.append(_loop_player(-80.0))
 		zone_tw.append(null)
 	theme_player = _loop_player(-80.0)
+	theme_player2 = _loop_player(-80.0)
 	lowpass = AudioEffectLowPassFilter.new()
 	lowpass.cutoff_hz = 20500.0
 	AudioServer.add_bus_effect(0, lowpass)
@@ -256,7 +258,7 @@ func play_theme(theme_name, loop = true, vol = -7.0):
 	theme_loop = loop
 	if not ready_ok:
 		return
-	var key = {"theme_open": "title", "theme_end": "ending"}.get(theme_name, theme_name)
+	var key = {"theme_open": "title", "theme_end": "ending", "theme_mem": "ending_mem"}.get(theme_name, theme_name)
 	if not music_streams.has(key) or music_streams[key] == null:
 		return
 	var st = music_streams[key]
@@ -265,6 +267,30 @@ func play_theme(theme_name, loop = true, vol = -7.0):
 	theme_player.stream = st
 	theme_player.volume_db = vol
 	theme_player.play()
+
+# round 9: one theme melts into the next (the memories of the ending turn into the Largo when the big brother lands)
+func crossfade_theme(theme_name, loop = false, vol = -9.0, sec = 2.5):
+	theme_want = theme_name
+	theme_loop = loop
+	if not ready_ok:
+		return
+	var key = {"theme_open": "title", "theme_end": "ending", "theme_mem": "ending_mem"}.get(theme_name, theme_name)
+	if not music_streams.has(key) or music_streams[key] == null:
+		return
+	var old = theme_player
+	var nw = theme_player2
+	theme_player2 = old
+	theme_player = nw
+	var st = music_streams[key]
+	if "loop" in st:
+		st.loop = loop
+	nw.stream = st
+	nw.volume_db = -60.0
+	nw.play()
+	var tw = create_tween().set_ignore_time_scale(true)
+	tw.tween_property(nw, "volume_db", vol, sec)
+	tw.parallel().tween_property(old, "volume_db", -60.0, sec)
+	tw.tween_callback(old.stop)
 
 func stop_theme(sec = 1.5):
 	theme_want = ""

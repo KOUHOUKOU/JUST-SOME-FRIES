@@ -138,6 +138,7 @@ func _ready():
 	day.lamp_mat = world["lamp_mat"]
 	day.beam_mat = world.get("beam_mat")
 	day.cloud_mat = world.get("cloud_mat")
+	day.storm_mat = world.get("storm_mat")
 	day.sun_disc = world.get("sun_disc")
 	day.player = player
 	add_child(day)
@@ -219,6 +220,9 @@ func _ready():
 	GS.fish_caught.connect(func(info): queue_cine("fish", info))
 	GS.buff_started.connect(func(kind): queue_cine("drink_" + kind))
 	GS.meteor_caught.connect(func(): queue_cine("meteor"))
+	GS.quest_done.connect(func(id):
+		if id == "sun" or id == "skybow":
+			queue_cine(id))
 	GS.star_ended.connect(func(): Sfx.set_star(false))
 	GS.still_hungry_started.connect(_begin_star_phase)
 	player.update_camera(0.0, true)
@@ -232,7 +236,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -550,6 +554,8 @@ func _cine_tick(rdt):
 	cine_wait -= rdt
 	if cine_wait > 0.0:
 		return
+	if GS.msec() - scenes.cine_done_at < 4000:      # a breather between two moments
+		return
 	var e = cine_queue.pop_front()
 	if GS.cine_seen.has(e[0]):
 		return
@@ -563,9 +569,31 @@ func _cine_tick(rdt):
 			GS.cine_seen[e[0]] = true
 			return
 	GS.cine_seen[e[0]] = true
+	if scenes.QUIET.has(e[0]) or e[0] == "fish":
+		hud.quiet_moment(scenes.quiet_lines(e[0], e[1]))       # the light film mode: the gull keeps flying
+		return
 	scenes.cinema(e[0], e[1])
 
 var autotest_no_cine = false
+
+# the rainbow quest item sits on the arch at the point nearest to the gull (every frame: the gull is fast)
+func _bow_tick():
+	var it = quest_items.get("skybow", null)
+	if it == null or not is_instance_valid(it) or it.taken:
+		return
+	var rp = get_tree().get_first_node_in_group("rainbow_pair")
+	if rp == null:
+		return
+	it.global_position = rp.nearest(player.global_position)
+	it.visible = rp.fade > 0.45 and not rp.taken
+
+# where the camera of the rainbow cinematic stands: the whole arch from the side
+func skybow_focus():
+	var rp = get_tree().get_first_node_in_group("rainbow_pair")
+	if rp == null:
+		var gp = player.global_position
+		return {"pos": gp + Vector3(0, 6.0, 30.0), "look": gp + Vector3(0, 6.0, 0.0)}
+	return rp.wide_view(player.global_position)
 
 # ------------------------------------------------------------------ per-frame
 func _perf_log():
@@ -613,6 +641,7 @@ func _process(delta):
 		_hunger_tick(rdt)
 		_autosave_tick(rdt)
 		_quest_tick(rdt)
+		_bow_tick()
 		_cine_tick(rdt)
 
 # which piece of the island the gull is over decides which piece of music plays (they cross-fade, with a little stubbornness so that a quick dip
@@ -854,6 +883,13 @@ func _quest_tick(rdt):
 		s2.set_script(load("res://scripts/fries/mischief.gd"))
 		s2.setup("sun", self, day.sun_pos if day != null else Vector3(0, 110, 160))
 		quest_items["sun"] = s2
+	if GS.quest_state("skybow") == "active" and not quest_items.has("skybow"):
+		var rp0 = get_tree().get_first_node_in_group("rainbow_pair")
+		if rp0 != null:
+			var b0 = Node3D.new()
+			b0.set_script(load("res://scripts/fries/mischief.gd"))
+			b0.setup("skybow", self, rp0.apex())
+			quest_items["skybow"] = b0
 	# the sun item rides along with the sun in the sky; once it is caught the sky sun is gone
 	var sun_item = quest_items.get("sun", null)
 	if sun_item != null and is_instance_valid(sun_item) and not sun_item.taken and day != null:

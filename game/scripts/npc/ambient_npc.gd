@@ -90,7 +90,7 @@ func _process(delta):
 		vis_t = 0.4 + randf() * 0.2
 		var d = global_position.distance_to(player.global_position)
 		active = d < (75.0 if GS.web else 130.0)
-		visible = active
+		visible = active and not has_meta("cine_hidden")       # (the ending's last scene clears the people near the camera)
 	if not active:
 		return
 	witness_cd = max(witness_cd - delta, 0.0)

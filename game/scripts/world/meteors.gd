@@ -1,7 +1,7 @@
 extends Node
 # SHOOTING STARS (round 8). Now and then a star falls across the sky. Most of them are just a streak far away (decoration). Every few minutes - and ALWAYS
 # a little after STARLIGHT starts - a real one comes by close enough to chase: it can be caught like a fish, with FIVE judgements, but only by a gull that is
-# faster than anything else in the game (it needs 190 on the gauge: STARLIGHT, or a very well-fed gull).
+# faster than anything else in the game (it needs 262 on the gauge: a gold-SONIC gull in STARLIGHT).
 #   forecast (5 s)  -> only Gull Sight shows it (hold TAB high in the sky): the whole orbit as a dotted line, the seconds left, the speed it needs
 #   twinkle         -> a point of light grows where the star will enter
 #   flight (~17 s)  -> a bright head with a long tail and sparkles; the gull can intercept it or chase it down
@@ -205,6 +205,9 @@ func sight_info():
 		return {"pos": star.global_position, "dir": star.vel.normalized(), "speed": SPEED, "t": 0.0, "left": star.life - star.age, "need": GS.METEOR_NEED, "start": star.global_position}
 	return null
 
+func _can_catch():
+	return GS.boost_speed() * GS.SPEED_UNIT >= GS.METEOR_NEED - 1.0
+
 func _free_sky(p):
 	return Terrain.H(p.x, p.z) + 14.0 <= p.y
 
@@ -285,11 +288,11 @@ func _process(delta):
 	elif star == null:
 		if star_pending > 0.0:
 			star_pending -= rdt
-			if star_pending <= 0.0:
+			if star_pending <= 0.0 and _can_catch():
 				_plan_star()
 		else:
 			next_star -= rdt
-			if next_star <= 0.0:
+			if next_star <= 0.0 and _can_catch():       # round 9: a star is only sent to a gull that can actually reach it
 				next_star = randf_range(110.0, 200.0)
 				_plan_star()
 	# a streak far away now and then

@@ -79,6 +79,7 @@ var banner
 var quiet_t = 0.0
 var quiet_bar = 0.0              # a finished quest: every bit of UI fades away for a few seconds (and the black bars come in)
 var quiet_label
+var quiet_back
 var quiet_lines = []
 var starfx
 var flightlog
@@ -95,6 +96,7 @@ class HC extends Control:
 		draw_polyline(PackedVector2Array([c + Vector2(-w, -s * w * 0.45), c + Vector2(0, s * w * 0.45), c + Vector2(w, -s * w * 0.45)]), col, 3.0, true)
 
 class Reticle extends HC:
+	const RAINBOW_COLS = [Color("EF4444"), Color("F9892E"), Color("FFD83A"), Color("46C45A"), Color("3AA8F0"), Color("4B5BDB"), Color("A55CE0")]
 	var hud
 	var pulse_t = 0.0
 	var pulse_col = Color.WHITE
@@ -173,7 +175,7 @@ class Reticle extends HC:
 		var layout = sq["layout"]
 		var multi = layout.size() > 1
 		# round 7: big, easy-to-read circles. Radius where the wave starts / where the gold band ends / spacing of the circles, per number of circles
-		var geo = {1: [172.0, 52.0, 0.0], 2: [120.0, 40.0, 262.0], 3: [100.0, 35.0, 208.0], 5: [106.0, 37.0, 228.0]}[layout.size()]
+		var geo = {1: [172.0, 52.0, 0.0], 2: [120.0, 40.0, 262.0], 3: [100.0, 35.0, 208.0], 5: [106.0, 37.0, 228.0], 7: [76.0, 28.0, 148.0]}[layout.size()]
 		var r_start = geo[0] * u
 		var r_ge = geo[1] * u                                 # the radius where the gold band ends
 		var sep = geo[2] * u
@@ -206,8 +208,11 @@ class Reticle extends HC:
 			draw_circle(c, r_ge, Color(1, 1, 1, 0.05 * base_a))
 			draw_circle(c, 4.0 * u, Color(1, 1, 1, 0.55 * base_a))
 			draw_arc(c, r_ge * 0.5, 0, TAU, 24, Color(1, 1, 1, 0.3 * base_a), 2.0, true)
-			draw_arc(c, g_mid, 0, TAU, 96, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.14 * base_a), green_px + 12.0, true)
-			draw_arc(c, g_mid, 0, TAU, 96, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.85 * base_a), green_px, true)
+			var gcol = RING_GREEN
+			if sq["tier"] == 11:      # the rainbow in the sky: seven colours, each circle with its golden ring
+				gcol = RAINBOW_COLS[ci % RAINBOW_COLS.size()]
+			draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.14 * base_a), green_px + 12.0, true)
+			draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.85 * base_a), green_px, true)
 			draw_arc(c, o_mid, 0, TAU, 96, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, 0.28 * base_a), gold_px + 8.0, true)
 			draw_arc(c, o_mid, 0, TAU, 96, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, base_a), gold_px, true)
 		# the waves
@@ -291,7 +296,7 @@ class Tach extends HC:
 	var hud
 	var shown = 0.0
 	const N = 26
-	const VMAX = 160.0
+	var vmax = 160.0          # the scale grows to 310 when a drink / STARLIGHT lifts the top speed past it
 	func _seg_col(i):
 		var t = float(i) / float(N - 1)
 		if t < 0.45:
@@ -312,9 +317,15 @@ class Tach extends HC:
 		var x1 = size.x - 26.0 * u
 		var x0 = x1 - total_w
 		var yb = 134.0 * u
-		var lit = clamp(shown / VMAX, 0.0, 1.0) * N
 		var t = GS.msec() * 0.001
 		var maxv = GS.boost_speed() * GS.SPEED_UNIT
+		var need_hi = 0.0
+		if s.near_target != null and is_instance_valid(s.near_target):
+			need_hi = s.need_speed * GS.SPEED_UNIT
+		var vwant = 310.0 if (maxv > 155.0 or shown > 150.0 or need_hi > 150.0) else 160.0
+		vmax = lerp(vmax, vwant, 0.06)
+		var VMAX = vmax
+		var lit = clamp(shown / VMAX, 0.0, 1.0) * N
 		var hot = p.boosting and shown > maxv * 0.92
 		for i in N:
 			var k = float(i) / float(N - 1)
@@ -349,6 +360,10 @@ class Tach extends HC:
 				tc = Color.from_hsv(fmod(t * 0.5, 1.0), 0.5, 1.0)
 			elif s.need_tier == 10:
 				tc = Color("FFF3B0")
+			elif s.need_tier == 6:
+				tc = Color("BFEFFF")
+			elif s.need_tier == 11:
+				tc = Color.from_hsv(fmod(t * 0.5, 1.0), 0.5, 1.0)
 			var ok = spd >= need - 0.2 and p.mode == 0
 			draw_line(Vector2(nx, yb - 44 * u), Vector2(nx, yb + 2 * u), Color(tc.r, tc.g, tc.b, 1.0 if ok else 0.8), 3.0 if ok else 2.0)
 			shadow(font, Vector2(nx - 30 * u, yb - 48 * u), "%d" % int(round(need)), int(13 * u), Color(tc.r, tc.g, tc.b, 0.95), HORIZONTAL_ALIGNMENT_CENTER, 60 * u)
@@ -1160,10 +1175,19 @@ func _ready():
 	quiet_label.anchor_bottom = 0.4
 	quiet_label.add_theme_constant_override("separation", 14)
 	quiet_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for i in 3:
-		var ql = _lbl("", 30 if i == 0 else 24, Color(1, 0.97, 0.88), 8)
+	for i in 4:
+		var ql = _lbl("", 34 if i == 0 else 27, Color(1, 0.97, 0.88), 10)
 		ql.modulate.a = 0.0
 		quiet_label.add_child(ql)
+	quiet_back = ColorRect.new()
+	quiet_back.anchor_left = 0.0
+	quiet_back.anchor_right = 1.0
+	quiet_back.anchor_top = 0.36
+	quiet_back.anchor_bottom = 0.66
+	quiet_back.color = Color(0.02, 0.04, 0.1, 0.0)
+	quiet_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(quiet_back)
+	move_child(quiet_back, quiet_label.get_index())
 	add_child(quiet_label)
 	reset_ui()
 
@@ -1353,22 +1377,44 @@ func _on_quest_done(id):
 			_next_toast()
 		Sfx.play("chime", -10.0, 1.25)
 		return
-	var lines = GS.QUESTS[id][2].split("|")
+	if id == "sun" or id == "skybow":
+		return                      # round 9: these two have a short cinematic of their own (story_scenes.gd), with the same words
+	quiet_moment(Array(GS.QUESTS[id][2].split("|")))
+
+# ROUND 9: the "light film mode". The gull keeps flying (nothing is locked, time does not slow); the interface melts away, two thin bars come in, and 1-4 short
+# lines appear in the middle of the picture one after the other. Used for the first coffee / cocktail / ice cream, the first fish, a cloud, the fish book.
+var quiet_queue = []
+var quiet_busy = false
+func quiet_moment(lines):
+	if quiet_busy:
+		quiet_queue.append(lines)
+		return
+	quiet_busy = true
+	var n = min(lines.size(), 4)
 	var tw = create_tween().set_ignore_time_scale(true)
-	for i in 3:
-		quiet_label.get_child(i).text = lines[i] if i < lines.size() else ""
+	for i in 4:
+		quiet_label.get_child(i).text = lines[i] if i < n else ""
 		quiet_label.get_child(i).modulate.a = 0.0
-	tw.tween_property(ui_root, "modulate:a", 0.0, 0.7)
-	tw.parallel().tween_property(self, "quiet_bar", 0.55, 0.9)
-	tw.tween_interval(0.5)
-	for i in 3:
-		tw.tween_property(quiet_label.get_child(i), "modulate:a", 1.0, 0.9)
-		tw.tween_interval(1.5 if i < 2 else 2.8)
+	tw.tween_property(ui_root, "modulate:a", 0.0, 0.6)
+	tw.parallel().tween_property(self, "quiet_bar", 0.34, 0.8)
+	tw.tween_interval(0.35)
+	tw.tween_property(quiet_back, "color:a", 0.3, 0.7)
+	for i in n:
+		if i == 0:
+			tw.parallel().tween_property(quiet_label.get_child(i), "modulate:a", 1.0, 0.7)
+		else:
+			tw.tween_property(quiet_label.get_child(i), "modulate:a", 1.0, 0.7)
+		tw.tween_interval(clamp(0.9 + String(lines[i]).length() * 0.03, 1.3, 2.5) if i < n - 1 else 2.3)
 	tw.tween_callback(func(): Sfx.schedule_growl(0.2))
-	for i in 3:
-		tw.tween_property(quiet_label.get_child(i), "modulate:a", 0.0, 0.9).set_delay(0.0 if i > 0 else 0.0)
-	tw.tween_property(ui_root, "modulate:a", 1.0, 1.0)
-	tw.parallel().tween_property(self, "quiet_bar", 0.0, 1.0)
+	for i in n:
+		tw.tween_property(quiet_label.get_child(i), "modulate:a", 0.0, 0.7 if i == 0 else 0.0)
+	tw.tween_property(quiet_back, "color:a", 0.0, 0.7)
+	tw.tween_property(ui_root, "modulate:a", 1.0, 0.8)
+	tw.parallel().tween_property(self, "quiet_bar", 0.0, 0.9)
+	tw.tween_callback(func():
+		quiet_busy = false
+		if quiet_queue.size() > 0:
+			quiet_moment(quiet_queue.pop_front()))
 
 func collect_special(key):
 	collected[key] = true

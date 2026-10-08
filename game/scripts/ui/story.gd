@@ -784,7 +784,7 @@ func _film(ci, u):
 # ------------------------------------------------------------------ memory cards (the ending): small tilted polaroids with a drawn picture and a title
 const CARD_COL = {"fry": [Color("FFE9A8"), Color("F6C453")], "plain": [Color("F6E7C4"), Color("D8C9A6")], "coffee": [Color("F2D3B0"), Color("C98A4B")], "alcohol": [Color("FFE9A0"), Color("FFB05A")],
 	"ice": [Color("FFD6EC"), Color("BFEBD2")], "starlight": [Color("2A2E6A"), Color("C689E8")], "fish": [Color("BFE6F8"), Color("5FA8D8")], "bigfish": [Color("BFE6F8"), Color("4F86C8")],
-	"cloud": [Color("A9D4F5"), Color("E8F4FF")], "sun": [Color("FFE08A"), Color("FF9E4A")], "meteor": [Color("1B1F4E"), Color("5A63B8")], "friend": [Color("FFD3DE"), Color("FFB2C6")],
+	"cloud": [Color("A9D4F5"), Color("E8F4FF")], "sun": [Color("FFE08A"), Color("FF9E4A")], "skybow": [Color("CFE8FF"), Color("FFD9EC")], "meteor": [Color("1B1F4E"), Color("5A63B8")], "friend": [Color("FFD3DE"), Color("FFB2C6")],
 	"gift": [Color("FFD3DE"), Color("FFE1A8")], "kid": [Color("FFD3DE"), Color("FFC8A8")], "rainbow": [Color("FFE1F2"), Color("BDE8FF")], "thermal": [Color("CFE9FF"), Color("FFE7B0")],
 	"skim": [Color("BFE6F8"), Color("7FC3E4")], "wall": [Color("E9D8C4"), Color("C9AE94")], "armed": [Color("D8D8E6"), Color("A8A8C4")], "all24": [Color("FFF1C8"), Color("FFC9E8")]}
 
@@ -879,6 +879,9 @@ func _mem_icon(ci, kind, c, s, a, extra, age):
 			for k in 12:
 				var an = k * TAU / 12.0 + age * 0.4
 				ci.draw_line(c + Vector2(cos(an), sin(an)) * s * 0.85, c + Vector2(cos(an), sin(an)) * s * (1.2 + 0.1 * (k % 2)), Color(1.0, 0.7, 0.2, a), lw)
+		"skybow":
+			for k in 7:
+				ci.draw_arc(c + Vector2(0, s * 0.6), s * (1.35 - k * 0.14), PI, TAU, 24, Color.from_hsv(float(k) / 8.0, 0.65, 1.0, a), lw * 1.3, true)
 		"meteor":
 			var st0 = c + Vector2(s * 0.4, -s * 0.4)
 			ci.draw_colored_polygon(PackedVector2Array([st0 + Vector2(0, -s * 0.7), st0 + Vector2(s * 0.17, -s * 0.17), st0 + Vector2(s * 0.7, 0), st0 + Vector2(s * 0.17, s * 0.17),

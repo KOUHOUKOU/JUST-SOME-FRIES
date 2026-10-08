@@ -205,14 +205,7 @@ class Fish extends Node3D:
 			Sfx.play("reward_%d" % (rarity + 0), -9.0, 1.2)
 		if spot != null:
 			spot.fish_gone(true)
-		if GS.cine_seen.has("fish"):
-			get_tree().create_timer(0.7).timeout.connect(queue_free)
-		else:
-			# the first catch of a run is a cinematic moment: the fish stays in the beak until it is over
-			GS.cine_hold = self
-			get_tree().create_timer(40.0).timeout.connect(func():
-				if is_instance_valid(self):
-					queue_free())
+		get_tree().create_timer(0.7).timeout.connect(queue_free)
 
 var player = null
 var water_y = -0.75

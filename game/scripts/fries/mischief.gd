@@ -7,7 +7,7 @@ extends Node3D
 const Pattern = preload("res://scripts/world/pattern.gd")
 
 # kinds that exist once per world (the first one the world builder places wins, the rest are quietly dropped)
-const UNIQUE = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "ball", "cloud", "sun"]
+const UNIQUE = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "ball", "cloud", "sun", "skybow"]
 const ICE_COLORS = ["F7C7D4", "BFEBD2", "FFF1C7", "8A5636", "FFB36B", "9DB5F5", "FF6F91", "D6B6FF"]
 static var claimed = {}
 static var ice_count = 0
@@ -261,6 +261,35 @@ func _build():
 			gq.material = gm
 			gl.mesh = gq
 			visual.add_child(gl)
+		"skybow":              # the rainbow in the sky: the arch itself is the thing (world/rainbow_pair.gd); this is the glitter where the gull will bite
+			quest_item = true
+			var rg = CPUParticles3D.new()
+			rg.amount = 24
+			rg.lifetime = 1.8
+			rg.direction = Vector3.UP
+			rg.spread = 180.0
+			rg.initial_velocity_min = 0.3
+			rg.initial_velocity_max = 1.0
+			rg.gravity = Vector3.ZERO
+			rg.local_coords = false
+			rg.hue_variation_min = -1.0
+			rg.hue_variation_max = 1.0
+			rg.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+			rg.emission_sphere_radius = 2.4
+			var rq = QuadMesh.new()
+			rq.size = Vector2(0.7, 0.7)
+			var rm = StandardMaterial3D.new()
+			rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			rm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			rm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			rm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+			rm.vertex_color_use_as_albedo = true
+			rm.albedo_texture = preload("res://scripts/player/gull_visual.gd").star_tex()
+			rm.albedo_color = Color.from_hsv(0.0, 0.55, 1.0, 0.9)
+			rq.material = rm
+			rg.mesh = rq
+			visual.add_child(rg)
+			rg.emitting = true
 		"sun":                 # the sun (the last sky quest): a hot gold ball with a corona
 			quest_item = true
 			_ball(Vector3.ZERO, 1.0, "FFC83A", Vector3.ONE, null, 2.2)
@@ -286,9 +315,11 @@ func _build():
 	if kind == "ball":
 		min_speed = 13.0
 	elif kind == "cloud":
-		min_speed = 96.0 / 6.0
+		min_speed = GS.CLOUD_NEED / GS.SPEED_UNIT
 	elif kind == "sun":
-		min_speed = 114.0 / 6.0
+		min_speed = GS.SUN_NEED / GS.SPEED_UNIT
+	elif kind == "skybow":
+		min_speed = GS.SKYBOW_NEED / GS.SPEED_UNIT
 	elif kind in ["pipe", "shades", "necklace", "bowtie", "scarf", "glasses"]:
 		min_speed = 13.0      # worn by a person: a little less than the hats and balloons, but you still have to be quick
 	elif kind in ["hawaii", "stripes", "coat", "socks"]:
@@ -321,7 +352,7 @@ func aim_point():
 			return global_position + Vector3(0, 0.3, 0)
 		"hawaii", "stripes", "coat", "socks", "coffee", "alcohol":
 			return global_position + Vector3(0, 0.25, 0)
-		"cloud", "sun":
+		"cloud", "sun", "skybow":
 			return global_position
 	return global_position + Vector3(0, 0.1, 0)
 
@@ -355,7 +386,7 @@ func attach(socket):
 
 const AWARDS = {"hat": "HAT TRICK", "pipe": "PIPE DREAMS", "shades": "TOO COOL", "necklace": "BLING", "bowtie": "BLACK TIE (BLACK-BEAKED)", "scarf": "COZY",
 	"sailor": "SEA LEGS", "topper": "A GENTLEBIRD", "beret": "VERY ARTISTIC", "glasses": "WELL READ", "hawaii": "WEEKEND MODE", "stripes": "MARINE LIFE",
-	"coat": "DETECTIVE GULL", "socks": "SOCKED AWAY", "balloon": "UP, UP AND AWAY", "cloud": "HEAD IN THE CLOUDS", "sun": "TOO HOT TO HANDLE"}
+	"coat": "DETECTIVE GULL", "socks": "SOCKED AWAY", "balloon": "UP, UP AND AWAY", "cloud": "HEAD IN THE CLOUDS", "sun": "TOO HOT TO HANDLE", "skybow": "OVER THE RAINBOW"}
 
 func stolen(player):
 	taken = true
@@ -373,6 +404,12 @@ func stolen(player):
 			GS.quest_finish("cloud")
 		elif kind == "sun":
 			GS.quest_finish("sun")
+		elif kind == "skybow":
+			var rp = player.get_tree().get_first_node_in_group("rainbow_pair")
+			if rp != null:
+				rp.taken = true
+				rp.taken_t = 0.0
+			GS.quest_finish("skybow")
 	else:
 		match kind:
 			"coffee":

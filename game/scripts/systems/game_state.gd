@@ -43,10 +43,10 @@ const STAR_TOTAL = 14                 # gold + diamond of every type
 const RAINBOW_MAX = 8
 const SAVE_PATH = "user://savegame.json"
 # every kind exists ONCE in the world and can be taken ONCE (only fries, rainbow fries and the drinks come back)
-const WEARABLES = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "cloud", "sun", "meteor"]
+const WEARABLES = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "cloud", "sun", "meteor", "skybow"]
 const WEAR_NAMES = {"hat": "STRAW HAT", "sailor": "SAILOR CAP", "topper": "TOP HAT", "beret": "RED BERET", "glasses": "READING GLASSES", "shades": "SUNGLASSES", "necklace": "GOLD CHAIN",
 	"bowtie": "BOW TIE", "scarf": "RED SCARF", "pipe": "PIPE", "hawaii": "FLOWER SHIRT", "stripes": "STRIPED SHIRT", "coat": "LONG COAT", "socks": "STRIPED SOCK", "balloon": "BALLOON",
-	"cloud": "A WHOLE CLOUD", "sun": "A LITTLE SUN", "meteor": "A SHOOTING STAR"}
+	"cloud": "A WHOLE CLOUD", "sun": "A LITTLE SUN", "meteor": "A SHOOTING STAR", "skybow": "A WHOLE RAINBOW"}
 const TUT_NEED = {"TUTORIAL_01": 7.5, "TUTORIAL_02": 8.5, "TUTORIAL_03": 9.5}   # m/s: the first three fries, a gentle ramp (gauge 45 / 51 / 57)
 # gauge speed needed to lock a fry of this type: [silver, gold, diamond]. The gull starts with a top speed of 90:
 # silvers need 78-84 (a boost run-up), golds need SONIC (96-114 - a silver SONIC fry gives 105, a gold one 123), diamonds need 120-138 (SONIC gold 123 / diamond 144).
@@ -55,7 +55,13 @@ const NEED_GAUGE = {"red": [78, 102, 126], "orange": [78, 99, 132], "green": [72
 # ROUND 7: the ladder of top speeds. The first SONIC fry (silver) covers EVERY silver and gold fry (the hardest gold needs 114), the second one (gold) covers every diamond
 # fry (the hardest needs 144), and one drink on top of the first one reaches a diamond fry too.
 const RAINBOW_NEED = 150.0           # round 8: a rainbow fry is five judgements and asks for a gold-SONIC gull or a drink or two on top of a silver one
-const METEOR_NEED = 190.0            # a shooting star: only STARLIGHT (or a very well-fed gull) is fast enough
+# ROUND 9: the sky asks for the best gull there is. Gauge = m/s x 6. The ceiling with a GOLD sonic fry (25) + all three drinks (+12.2) + STARLIGHT (+9) is 277;
+# with a DIAMOND sonic fry (28.5) it is 298; with a silver one (20) it is 247. So: nothing in the sky can be caught by a silver gull, the cloud asks for gold + STARLIGHT,
+# the sun leaves a gold gull only 5 points of slack (it is the hardest thing in the game; a diamond gull has 26).
+const METEOR_NEED = 262.0            # a shooting star
+const CLOUD_NEED = 255.0             # a whole cloud
+const SKYBOW_NEED = 266.0            # the rainbow in the sky
+const SUN_NEED = 272.0               # the sun
 const DECOR_NEED = 11.0               # m/s for borrowed hats, balloons... (mischief objects set their own)
 const SPEED_UNIT = 6.0                # gauge number = m/s * SPEED_UNIT
 const RARITY_NAMES = ["COMMON", "SILVER", "GOLD", "DIAMOND", "RAINBOW"]
@@ -87,8 +93,9 @@ const QUESTS = {
 	"meteor": [10, "CATCH A SHOOTING STAR", ""],
 	"cloud": [10, "CATCH A CLOUD", "i caught a cloud.|it was softer than i expected.|and somehow... i'm still hungry."],
 	"sun": [17, "CATCH THE SUN", "i caught the sun.|it was warm. something in me changed.|and somehow... i'm still hungry."],
+	"skybow": [17, "CATCH A RAINBOW", "i caught a rainbow.|from the inside it has more colours than i thought.|and somehow... i'm still hungry."],
 }
-const BIG_QUESTS = ["fishbook", "cloud", "sun"]
+const BIG_QUESTS = ["fishbook", "cloud", "sun", "skybow"]
 const QUEST_SHOWN = 4                 # lines on the board at once
 
 # ---- the fish book: nine kinds in three rarities (2 / 3 / 5 judgements, faster gull needed). Length in cm, weight in kg (rolled per fish) ----
@@ -108,7 +115,7 @@ const FISH_ORDER = ["sardine", "mackerel", "herring", "mullet", "flyer", "bass",
 const FISH_RARITY_NAMES = ["COMMON", "RARE", "LEGENDARY"]
 const FISH_RARITY_COLORS = [Color("BFD7E4"), Color("B58CF0"), Color("FFC83A")]
 const FISH_NEED = [96.0, 120.0, 144.0]     # gauge speed to catch a fish of this rarity (round 6: 84)
-const FISH_JUDGE = [2, 3, 5]
+const FISH_JUDGE = [2, 6, 10]       # judgements (every circle is judged twice)
 const REGEN_GLIDE_TAB = [1.5, 2.2, 3.2, 4.5]
 const REGEN_PERCH_TAB = [1.0, 1.5, 2.2, 3.0]
 const ROLL_CD_TAB = [1.0, 0.85, 0.7, 0.5]
@@ -332,7 +339,7 @@ func award(title):
 
 # ---- the gull's memories (round 8): the things it really did, in the order it did them. The ending plays them back while the plain fry is being chewed.
 const AWARD_MEM = {"ESPRESSO": "coffee", "LAST ORDERS": "alcohol", "SWEET TOOTH": "ice", "GONE FISHING": "fish", "BIG FISH ENERGY": "bigfish", "HEAD IN THE CLOUDS": "cloud",
-	"TOO HOT TO HANDLE": "sun", "WISHFUL THINKING": "meteor", "NEW FRIEND": "friend", "A FRIEND WHO SHARES": "gift", "A KIND CHILD": "kid", "RAINBOW": "rainbow",
+	"TOO HOT TO HANDLE": "sun", "OVER THE RAINBOW": "skybow", "WISHFUL THINKING": "meteor", "NEW FRIEND": "friend", "A FRIEND WHO SHARES": "gift", "A KIND CHILD": "kid", "RAINBOW": "rainbow",
 	"THERMAL RIDER": "thermal", "SKIMMER": "skim", "WALL KISS": "wall", "FULLY ARMED": "armed", "ALL 24": "all24"}
 var memories = {}                     # id -> {"t": seconds of the run when it happened, ...}
 
@@ -888,5 +895,10 @@ func apply_save(d):
 		cine_seen["meteor"] = true
 	if fry_total() >= FRY_CAP:
 		cine_seen["all24"] = true
+	if quests.get("sun", "") == "done":
+		cine_seen["sun"] = true
+	if quests.get("skybow", "") == "done":
+		cine_seen["skybow"] = true
+
 	var p = d.get("pos", [-9.5, 6.0, -0.8])
 	saved_pos = {"pos": Vector3(p[0], p[1], p[2]), "yaw": float(d.get("yaw", PI))}

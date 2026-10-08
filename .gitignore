@@ -2,3 +2,9 @@
 game/.godot/
 *.avi
 build/
+tools/audio/sf/*.sf2
+tools/audio/sf/*.zip
+tools/audio/sf/fluidsynth-v*/
+tools/audio/sf/tmp/
+tools/audio/ref/*.mid
+__pycache__/

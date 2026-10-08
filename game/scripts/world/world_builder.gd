@@ -226,6 +226,7 @@ func _environment():
 	out["sky_mat"] = sky_mat
 	var clouds = SkyBuilder.build_clouds(map, rng, [Vector3(22.0, 92.0, 74.0)])
 	out["cloud_mat"] = clouds["mat"]
+	out["storm_mat"] = clouds["storm"]
 	out["sun_disc"] = SkyBuilder.build_sun(root)
 
 func _terrain():

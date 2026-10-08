@@ -20,6 +20,7 @@ void fragment() {
 }
 """
 
+const Terrain = preload("res://scripts/world/terrain.gd")
 static var _unit = null
 
 # a flat-shaded unit sphere: every facet has its own normal, so the clouds read as crisp, stylised heaps
@@ -57,34 +58,105 @@ static func cloud_material():
 	m.shader = sh
 	return m
 
-# the drifting field of clouds. Returns {"mat": material, "node": the node that drifts them}
+# a darker material for the grey clouds and the rain clouds (day_cycle.gd tints it like the white one, only greyer)
+static func storm_material():
+	var m = cloud_material()
+	m.set_shader_parameter("top_col", Color(0.52, 0.56, 0.65))
+	m.set_shader_parameter("bottom_col", Color(0.24, 0.27, 0.35))
+	m.set_shader_parameter("glow", 0.16)
+	return m
+
+# is the sea (well off the coast) under this point and the footprint of a cloud of this size?
+static func over_sea(x, z, r = 0.0):
+	for o in [Vector2.ZERO, Vector2(r, 0), Vector2(-r, 0), Vector2(0, r), Vector2(0, -r)]:
+		if Terrain.H(x + o.x, z + o.y) > -1.2:
+			return false
+	return true
+
+# the rain under a rain cloud: long thin streaks that fall to the sea. It only rains where there is sea under the cloud (cloud_drift.gd switches it).
+static func rain_node(size):
+	var pr = CPUParticles3D.new()
+	pr.name = "Rain"
+	pr.amount = 130 if GS.web else 380
+	pr.lifetime = 3.4
+	pr.preprocess = 3.4
+	pr.local_coords = true
+	pr.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	pr.emission_box_extents = Vector3(size * 0.26, 0.4, size * 0.15)
+	pr.direction = Vector3(0, -1, 0)
+	pr.spread = 1.5
+	pr.initial_velocity_min = 38.0
+	pr.initial_velocity_max = 44.0
+	pr.gravity = Vector3(0, -4.0, 0)
+	pr.position = Vector3(0, -size * 0.03, 0)
+	var q = QuadMesh.new()
+	q.size = Vector2(0.14, 3.6)
+	var m = StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	m.albedo_color = Color(0.72, 0.82, 0.95, 0.42)
+	q.material = m
+	pr.mesh = q
+	pr.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return pr
+
+# one cloud as a mesh instance; kind = "white" | "dark" | "rain"
+static func make_cloud(rng, size, kind, mats):
+	var mi = MeshInstance3D.new()
+	mi.mesh = cloud_mesh(rng, size * (1.15 if kind != "white" else 1.0))
+	mi.material_override = mats["white"] if kind == "white" else mats["storm"]
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if kind != "white":
+		mi.scale = Vector3(1.0, 0.8, 1.0)         # heavier and flatter
+	mi.rotation.y = rng.randf_range(0.0, TAU)
+	mi.set_meta("kind", kind)
+	if kind == "rain":
+		var rn = rain_node(size)
+		rn.emitting = false
+		mi.add_child(rn)
+		mi.set_meta("rain", rn)
+		mi.add_to_group("rain_cloud")
+	return mi
+
+# the drifting field of clouds: white (the most), dark grey ones, and rain clouds that only rain over the sea; one pair of rain cloud + white cloud has a rainbow between them
+# (world/rainbow_pair.gd). Returns {"mat": the white material, "storm": the grey one, "node": the node that drifts them}
 static func build_clouds(parent, rng, avoid = []):
-	var mat = cloud_material()
+	var mats = {"white": cloud_material(), "storm": storm_material()}
 	var holder = Node3D.new()
 	holder.name = "Clouds"
 	holder.set_script(load("res://scripts/world/cloud_drift.gd"))
 	parent.add_child(holder)
-	var made = 0
-	var tries = 0
-	while made < 26 and tries < 200:
-		tries += 1
-		var pos = Vector3(rng.randf_range(-300, 300), rng.randf_range(72, 138), rng.randf_range(-220, 300))
-		var bad = false
-		for a in avoid:
-			if Vector2(pos.x, pos.z).distance_to(Vector2(a.x, a.z)) < 60.0 and abs(pos.y - a.y) < 40.0:
-				bad = true
-		if bad:
-			continue
-		var size = rng.randf_range(26.0, 62.0)
-		var mi = MeshInstance3D.new()
-		mi.mesh = cloud_mesh(rng, size)
-		mi.material_override = mat
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mi.position = pos
-		mi.rotation.y = rng.randf_range(0.0, TAU)
-		mi.set_meta("drift", rng.randf_range(0.8, 2.2))
-		holder.add_child(mi)
-		made += 1
+	var plan = []
+	for i in 15:
+		plan.append("white")
+	for i in 6:
+		plan.append("dark")
+	for i in 5:
+		plan.append("rain")
+	for kind in plan:
+		var tries = 0
+		while tries < 200:
+			tries += 1
+			var pos = Vector3(rng.randf_range(-300, 300), rng.randf_range(72, 138), rng.randf_range(-220, 300))
+			var size = rng.randf_range(26.0, 62.0)
+			if kind == "rain":
+				pos.y = rng.randf_range(70, 105)
+				if not over_sea(pos.x, pos.z, size * 0.3):
+					continue
+			var bad = false
+			for a in avoid:
+				if Vector2(pos.x, pos.z).distance_to(Vector2(a.x, a.z)) < 60.0 and abs(pos.y - a.y) < 40.0:
+					bad = true
+			if kind != "white" and Vector2(pos.x, pos.z).length() < 110.0:
+				bad = true                    # no storm right over the town
+			if bad:
+				continue
+			var mi = make_cloud(rng, size, kind, mats)
+			mi.position = pos
+			mi.set_meta("drift", rng.randf_range(0.8, 2.2))
+			holder.add_child(mi)
+			break
 	# a low bank of big clouds near the horizon: the town sits under a big sky
 	for i in 14:
 		var a = rng.randf_range(0.0, TAU)
@@ -92,12 +164,20 @@ static func build_clouds(parent, rng, avoid = []):
 		var size2 = rng.randf_range(120.0, 220.0)
 		var mi2 = MeshInstance3D.new()
 		mi2.mesh = cloud_mesh(rng, size2)
-		mi2.material_override = mat
+		mi2.material_override = mats["white"]
 		mi2.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi2.position = Vector3(cos(a) * dist, rng.randf_range(35, 90), sin(a) * dist - 40.0)
 		mi2.rotation.y = rng.randf_range(0.0, TAU)
 		holder.add_child(mi2)
-	return {"mat": mat, "node": holder}
+	# the rainbow between a rain cloud and a white cloud, out over the southern sea
+	var pair = Node3D.new()
+	pair.set_script(load("res://scripts/world/rainbow_pair.gd"))
+	pair.name = "RainbowPair"
+	pair.set_meta("drift", 1.1)
+	holder.add_child(pair)
+	pair.position = Vector3(-160.0, 82.0, 215.0)
+	pair.build(rng, mats)
+	return {"mat": mats["white"], "storm": mats["storm"], "node": holder, "pair": pair}
 
 # the sun: a disc with a corona and rays that always faces the camera
 static func build_sun(parent):

@@ -73,6 +73,14 @@ func _draw():
 	draw_string(font, Vector2(0, 132 * u), sub + "    " + cost_txt, HORIZONTAL_ALIGNMENT_CENTER, size.x, int(13 * u), Color(1.0, 0.92, 0.7, 0.6 * a))
 	if (GS.hunger_t > 100.0 or GS.fry_total() >= 8) and not GS.ordinary_eaten:
 		draw_string(font, Vector2(0, size.y - 60 * u), "nothing ordinary glows.", HORIZONTAL_ALIGNMENT_CENTER, size.x, int(15 * u), Color(1, 1, 1, 0.34 * a))
+	# the legend of the light pillars: the colour of the beam is the rarity of the fry
+	var names = ["SILVER", "GOLD", "DIAMOND", "RAINBOW"]
+	var x = size.x * 0.5 - 205.0 * u
+	for k in 4:
+		var c = _beam_col(k + 1, k * 0.2)
+		draw_rect(Rect2(x, 150 * u, 6.0 * u, 16.0 * u), Color(c.r, c.g, c.b, 0.95 * a))
+		draw_string(font, Vector2(x + 12.0 * u, 163 * u), names[k], HORIZONTAL_ALIGNMENT_LEFT, 90, int(12 * u), Color(c.r, c.g, c.b, 0.9 * a))
+		x += 104.0 * u
 
 # everything inside the radius that the gull could snatch, nearest first (fries before props), at most ~16 labels
 func _gather():
@@ -162,10 +170,12 @@ func draw_glows(ci):
 			var label = "%s  %dm" % [GS.RARITY_NAMES[clamp(tier, 0, 4)], int(d)] if tier >= 1 else "%dm" % int(d)
 			label += "\nNEED %d" % int(round(need))
 			var lc = Color(1, 1, 1, 0.9 * a) if reachable else Color(1.0, 0.55, 0.45, 0.8 * a)
+			if tier >= 1:
+				_beam(ci, cam, f.global_position + Vector3(0, 0.3, 0), tier, d, u, ph)
 			if onscreen:
 				# round 8: a slim, crisp emblem per rarity instead of a big soft glow (silver: ring + hexagon, gold: ring + four-point star,
 				# diamond: a cut gem, rainbow: a ring of colours). The colour of the little core says which stat the fry gives.
-				var r = (11.0 + 22.0 / (1.0 + d / 40.0)) * u * (1.0 + 0.05 * sin(t * 4.0 + ph))
+				var r = (20.0 + 40.0 / (1.0 + d / 40.0)) * u * (1.0 + 0.05 * sin(t * 4.0 + ph))      # round 9: much bigger
 				_emblem(ci, sp, tier, col, core, r, u)
 				var lines = label.split("\n")
 				var tcol = Color(col.r, col.g, col.b, 0.95 * a)
@@ -194,7 +204,7 @@ func draw_glows(ci):
 				n_labels += 1
 		else:
 			# a thing (a drink, an ice cream, something to wear, a fish, a cloud...): a small picture of what it is, so the gull can decide whether it wants it
-			if (onscreen and n_labels < 22 and d < 110.0) or f.ftype == "mischief" and f.kind in ["cloud", "sun"] and onscreen:
+			if (onscreen and n_labels < 22 and d < 110.0) or f.ftype == "mischief" and f.kind in ["cloud", "sun", "skybow"] and onscreen:
 				var kind = f.kind if "kind" in f else f.ftype
 				var tint = _tint_of(kind)
 				var tag = _tag_of(kind)
@@ -222,6 +232,55 @@ func draw_glows(ci):
 
 func _unused(_a, _b):
 	pass
+
+# ---- the light pillars (round 9): every silver / gold / diamond / rainbow fry in sight sends a column of light to the sky. Its colour and height are its rarity.
+const BEAM_H = [0.0, 70.0, 130.0, 220.0, 350.0]
+func _beam_col(tier, ph, k = 0.0):
+	match clamp(tier, 1, 4):
+		1:
+			return Color("DCE6F4")
+		2:
+			return Color("FFC83A")
+		3:
+			return Color("5FE3FF")
+	return Color.from_hsv(fmod(t * 0.35 + ph * 0.07 + k * 0.1, 1.0), 0.6, 1.0)
+
+func _beam(ci, cam, base, tier, d, u, ph):
+	var H = BEAM_H[clamp(tier, 1, 4)]
+	var wb = clamp(2300.0 * u / (d + 50.0), 8.0 * u, 32.0 * u) * (1.0 + 0.25 * (clamp(tier, 1, 4) - 1))
+	var n = 10
+	var prev = Vector2.ZERO
+	var prev_ok = false
+	var prev_w = 0.0
+	var prev_c = Color.WHITE
+	for k in n + 1:
+		var f = float(k) / float(n)
+		var wp = base + Vector3(0, H * pow(f, 1.5), 0)
+		var ok = not cam.is_position_behind(wp)
+		var c = _beam_col(tier, ph, f)
+		var al = pow(1.0 - f, 1.1) * 0.8 * a
+		var cc = Color(c.r, c.g, c.b, al)
+		if ok:
+			var sp = cam.unproject_position(wp)
+			var w = wb * lerp(1.0, 0.4, f)
+			if prev_ok:
+				ci.draw_polygon(PackedVector2Array([prev + Vector2(-prev_w, 0), prev + Vector2(prev_w, 0), sp + Vector2(w, 0), sp + Vector2(-w, 0)]),
+					PackedColorArray([Color(prev_c.r, prev_c.g, prev_c.b, prev_c.a * 0.55), Color(prev_c.r, prev_c.g, prev_c.b, prev_c.a * 0.55), Color(cc.r, cc.g, cc.b, cc.a * 0.55), Color(cc.r, cc.g, cc.b, cc.a * 0.55)]))
+				ci.draw_line(prev, sp, Color(1, 1, 1, min(prev_c.a, cc.a) * 0.9), max(1.6 * u, 1.2))
+			prev = sp
+			prev_w = w
+			prev_c = cc
+		prev_ok = ok
+	# a spark that climbs the pillar (diamond and rainbow: two)
+	if tier >= 3:
+		for s in (2 if tier >= 4 else 1):
+			var q = fmod(t * 0.3 + ph * 0.13 + s * 0.5, 1.0)
+			var wp2 = base + Vector3(0, H * pow(q, 1.5), 0)
+			if not cam.is_position_behind(wp2):
+				var sp2 = cam.unproject_position(wp2)
+				var rr = 7.0 * u * sin(q * PI)
+				ci.draw_line(sp2 - Vector2(rr, 0), sp2 + Vector2(rr, 0), Color(1, 1, 1, 0.9 * a), max(1.5 * u, 1.2))
+				ci.draw_line(sp2 - Vector2(0, rr), sp2 + Vector2(0, rr), Color(1, 1, 1, 0.9 * a), max(1.5 * u, 1.2))
 
 # one slim emblem. r = radius in pixels. Nothing here is filled thickly: it has to stay readable over a dark, busy picture.
 func _emblem(ci, c, tier, col, core, r, u):
@@ -427,7 +486,7 @@ func _nearest_pointer(ci, cam, font, u, rect, pl):
 # ---------------------------------------------------------------- the pictures of the things
 const KIND_TAG = {"coffee": "COFFEE", "alcohol": "COCKTAIL", "icecream": "ICE CREAM", "hawaii": "SHIRT", "stripes": "SHIRT", "coat": "COAT", "socks": "SOCK", "hat": "HAT", "sailor": "HAT",
 	"topper": "HAT", "beret": "HAT", "glasses": "GLASSES", "shades": "SHADES", "necklace": "CHAIN", "bowtie": "BOW TIE", "scarf": "SCARF", "pipe": "PIPE", "balloon": "BALLOON",
-	"ball": "BALL", "fish": "FISH", "cloud": "CLOUD", "sun": "THE SUN", "meteor": "STAR"}
+	"ball": "BALL", "fish": "FISH", "cloud": "CLOUD", "sun": "THE SUN", "meteor": "STAR", "skybow": "RAINBOW"}
 
 func _tag_of(kind):
 	return KIND_TAG.get(kind, "THING")
@@ -446,6 +505,8 @@ func _tint_of(kind):
 			return Color("FFFFFF")
 		"sun":
 			return Color("FFC83A")
+		"skybow":
+			return Color.from_hsv(fmod(t * 0.4, 1.0), 0.5, 1.0)
 	return Color("D8E2EE")
 
 func _icon(ci, kind, c, s, col):
@@ -500,6 +561,9 @@ func _icon(ci, kind, c, s, col):
 			ci.draw_circle(c + Vector2(-s * 0.4, s * 0.1), s * 0.45, col)
 			ci.draw_circle(c + Vector2(s * 0.1, -s * 0.15), s * 0.55, col)
 			ci.draw_circle(c + Vector2(s * 0.5, s * 0.15), s * 0.4, col)
+		"skybow":
+			for k in 5:
+				ci.draw_arc(c + Vector2(0, s * 0.5), s * (1.0 - k * 0.15), PI, TAU, 14, Color.from_hsv(float(k) / 6.0, 0.6, 1.0, col.a), lw, true)
 		"sun":
 			ci.draw_circle(c, s * 0.5, col)
 			for k in 8:
