@@ -135,6 +135,7 @@ class Fish extends Node3D:
 			"tuna":
 				for k in 5:
 					_fin(visual, Vector3(0, bs.y * 0.5, 0.42 + k * 0.05), Vector3(0.02, 0.07, 0.07), _m("FFE24A", 0.5))
+		preload("res://scripts/art/p2_parts.gd").fish(self)
 		visual.scale = Vector3.ONE * scl
 		# a rarer fish glints so it can be seen from far away
 		if rarity >= 1:

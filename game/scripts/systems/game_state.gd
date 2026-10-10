@@ -189,6 +189,7 @@ var buff_msg_t = -9.0
 var quests = {}                       # id -> "active" | "done"
 var quest_flash = ""                  # a quest that was finished a moment ago (the HUD fades out, a line fades in)
 var menu_seen = {}                    # codex items already seen (the NEW dots)
+var lite_flags = 0                    # dev (web only): see `?lite=N` in `_ready`
 var web = OS.has_feature("web")       # the browser build: a lighter world (fewer people, no grass blades far away, no MSAA, smaller shadows...)
 var test_boost_bonus = 0.0            # dev tests only: extra top speed so the bot can reach diamond fries
 var star_t = 0.0                      # seconds of STARLIGHT left (all three drinks at once)
@@ -214,6 +215,14 @@ func _ready():
 		ev.physical_keycode = keys[a]
 		InputMap.action_add_event(a, ev)
 	reset_stats()
+	if web:
+		# the browser build restarts by reloading the page (main.gd `_reload`): the choice (straight into a new run, or the menu) comes through the tab's session storage
+		var v = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_skip_menu'); sessionStorage.removeItem('jsf_skip_menu'); return v; } catch (e) { return null; } })()")
+		skip_menu = str(v) == "1"
+		# dev: `?lite=N` in the page address switches parts of the film moments off to find out what costs the most in the browser (1 = no close-ups, 2 = no blur, 4 = no letterbox bars + words)
+		var lv = JavaScriptBridge.eval("(function(){ try { return new URLSearchParams(location.search).get('lite'); } catch (e) { return null; } })()")
+		if lv != null:
+			lite_flags = int(str(lv))
 
 # The clock every timed thing in the game reads (rhythm rings, dialogue, cards). Normally the wall clock; under Movie Maker
 # (--write-movie, the walkthrough video) frames render slower than real time, so there it counts movie frames instead.

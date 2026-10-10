@@ -1,7 +1,11 @@
 extends Node3D
-# Procedural low-poly person with a tiny animation set. Visual only (game logic lives in the controllers).
+# Optional authored cover person with the original procedural fallback. Visual only; controllers own gameplay.
 # Face front = local +Z (see npc_controller). Modes: idle walk jog eat chat fish paint sit lie wave alarm play
 
+const PersonParts = preload("res://scripts/art/person_parts.gd")
+var authored = false
+var authored_path = PersonParts.PATH
+var force_procedural = false
 static var _mats = {}
 
 var style = {}
@@ -84,6 +88,52 @@ func _cyl(parent, pos, r, h, c, top_r = -1.0, rot = Vector3.ZERO):
 	return mi
 
 func build(st):
+	if not force_procedural and _build_authored(st):return
+	_build_procedural(st)
+
+func _pivot(parent, pos, label):
+	var n = Node3D.new()
+	n.name = label;n.position = pos;parent.add_child(n)
+	return n
+
+func _build_authored(st) -> bool:
+	var parts = PersonParts.for_style(st, authored_path)
+	if parts.is_empty():return false
+	style = st
+	scale_f = st.get("scale", 1.0)
+	seed_off = randf() * 10.0
+	root = _pivot(self, Vector3.ZERO, "HumanRoot")
+	root.scale = Vector3.ONE * scale_f
+	upper = _pivot(root, Vector3(0,.85,0), "Upper")
+	torso = _pivot(upper, Vector3.ZERO, "Torso")
+	PersonParts.attach(torso, parts.Torso, "ClayTorso")
+	head = _pivot(upper, Vector3(0,.77,0), "Head")
+	PersonParts.attach(head, parts.Head, "ClayHead")
+	leg_l = _pivot(root, Vector3(-.11,.85,0), "LegL")
+	leg_r = _pivot(root, Vector3(.11,.85,0), "LegR")
+	arm_l = _pivot(upper, Vector3(-.35,.55,0), "ArmL")
+	arm_r = _pivot(upper, Vector3(.35,.55,0), "ArmR")
+	for pair in [[leg_l,"LegL"],[leg_r,"LegR"],[arm_l,"ArmL"],[arm_r,"ArmR"]]:
+		PersonParts.attach(pair[0], parts[pair[1]], "Clay" + pair[1])
+	hand_l = _pivot(arm_l, Vector3(0,-.6,.04), "Hand")
+	hand_r = _pivot(arm_r, Vector3(0,-.6,.04), "Hand")
+	eye_l = PersonParts.attach(head, parts.EyeL, "EyeL")
+	eye_r = PersonParts.attach(head, parts.EyeR, "EyeR")
+	mouth = PersonParts.attach(head, parts.Mouth, "Mouth")
+	# Cover faces are dots only. Retain the emote transform interface without a draw.
+	mouth.visible = false
+	eye_l.position = Vector3(-.09,.2,.16)
+	eye_r.position = Vector3(.09,.2,.16)
+	mouth.position = Vector3(0,.045,.17)
+	hand_anchor = _pivot(self, Vector3.ZERO, "HandAnchor")
+	if st.has("item_r"):item_node_r = _make_item(st["item_r"], hand_r)
+	if st.has("item_l"):item_node_l = _make_item(st["item_l"], hand_l)
+	authored = true
+	if item_node_l != null:preload("res://scripts/art/p2_parts.gd").human_item(item_node_l, st["item_l"])
+	if item_node_r != null:preload("res://scripts/art/p2_parts.gd").human_item(item_node_r, st["item_r"])
+	return true
+
+func _build_procedural(st):
 	style = st
 	scale_f = st.get("scale", 1.0)
 	seed_off = randf() * 10.0

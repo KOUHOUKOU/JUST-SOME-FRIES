@@ -161,3 +161,12 @@
 - **Catch moments**: `st.think(lines, hold, cps, last_hold, on_last)`; panels `_triptych` corners (.15/.85 x .33, .15 x .68), sizes 1.0 / 1.0 / .7 of the gull's width with `look_fwd` toward the beak; `_make_prop(kind)` in the beak socket.
 - **Sounds**: `tools/audio/fix_sfx_ends.py` (cosine tail over the last 35-45 %, 12 ms attack) on gull_far, chirp, proud, lure, cry, rival_call.
 - **Big brother**: scale 2.3, bubble at y 2.4, near distance 7 m; talks in `story_scenes.gd bro_chat`, one-liners `EARLY / MID / LATE` in `big_bro.gd`.
+## Round 13 (2026-10-10) - see docs/34_ROUND13_CHANGES.md
+- **Places**: `WB.SPAWN_POS` (-11.6, 5.22, -0.8), `WB.BRO_POS` (-5.8, 5.4, -1.3), ending: little gull (-9.2, fp.y + .42, 5.0), he lands (-5.5, fp.y + .2, 5.1). Minimum gap 3 m (`[R13]` checks in `--r8c` / `--r8e`; `bro_chat` moves a gull closer than 4 m to 4.2 m west of him).
+- **Browser**: build order = world sync (~1.0 s native: `_terrain` .45 s is the biggest step) + `flora` scatter time-sliced (`_slice_over`: 10 ms/frame paused, 3 ms playing). `main._reload` reloads the page on web (`sessionStorage jsf_skip_menu`). Web close-ups redraw every 3rd frame. `[PERF] the island was built in N ms`, `slowest build steps`, `grass ... all in`.
+- **Web page**: after every export run `python tools/web/patch_index.py web/index.html film/poster_new.jpg` (start card, GL attributes, DPR cap, stall / crash card, `?diag=1`, `?autostart=1`, `?hq=1`). Do not run it twice on one export (it says "already patched").
+
+## S7 local headland / build cache (2026-10-11)
+- User-authorised fallback after failed overlay: `Terrain.HEADLAND_HEIGHT=12` (was24), original cap/influence radii and every non-headland H sample retained. Structures,68 collider origins,keeper/fiveNPCs and two anchors follow ground; thermals unchanged. Three original gameplay turbines retained rather than creating invisible solid remnants.
+- Regenerate `game/assets/models/s7/*.res` with `run_s7.ps1 -Mode Bake` after terrain/person-source changes. Person cache verifies source arrays/version; unknown styles/missing resources use the original generator. Cached noise pixels and171 person styles are exact. Terrain render trim is valid only with the optional headland shell; collision uses full terrain.
+- Five native fresh-process build median600ms vs freshS6 1022ms/preS6 target916ms. This is not disk-cold, total-load-time or browser throughput evidence. No web export. S7 STOP after four art iterations; remaining defects and all evidence in docs/36.

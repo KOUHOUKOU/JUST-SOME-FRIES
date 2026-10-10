@@ -1,7 +1,8 @@
 extends Node
 # "A day goes by while you hunt" (docs/18 §11.6): the sun sets with progress, windows and lamps light up,
-# colours grow more saturated with every special fry and fall back to natural at the ending.
+# S2 colour states grow gently richer to a fixed plateau; ending and Gull Sense still override saturation.
 
+var atmosphere
 var sun
 var env
 var sky
@@ -43,23 +44,31 @@ func _apply(delta):
 	var elev = lerp(58.0, 2.0, pow(u, 0.9))
 	sun.rotation_degrees = Vector3(-max(elev, 1.5), lerp(-35.0, 15.0, u), 0)
 	_place_sun(max(elev, 1.5), lerp(-35.0, 15.0, u))
-	sun.light_color = _k3(Color(1.0, 0.97, 0.9), Color(1.0, 0.78, 0.5), Color(0.95, 0.5, 0.4), u)
-	sun.light_energy = _k3(Color(0.9, 0, 0), Color(0.85, 0, 0), Color(0.3, 0, 0), u).r
-	sky.sky_top_color = _k3(Color(0.30, 0.52, 0.82), Color(0.38, 0.50, 0.72), Color(0.13, 0.17, 0.36), u)
-	var hz = _k3(Color(0.75, 0.86, 0.93), Color(0.98, 0.76, 0.52), Color(0.85, 0.45, 0.42), u)
-	sky.sky_horizon_color = hz
-	sky.ground_horizon_color = hz
-	env.fog_light_color = hz.lerp(Color(1, 1, 1), 0.15)
-	env.fog_density = lerp(0.0004, 0.0007, u)
-	env.ambient_light_energy = _k3(Color(0.5, 0, 0), Color(0.45, 0, 0), Color(0.35, 0, 0), u).r
-	var night = smoothstep(0.6, 0.95, u)
-	win_mat.emission_energy_multiplier = night * 2.4
-	lamp_mat.emission_energy_multiplier = 0.6 + night * 1.6
+	# S2 deliberate colour states, without changing progress/time or the catchable sun.
+	sun.light_color = _colour(["FFF1DA","FFDFB3","FFC18A","FFB980"],u)
+	sun.light_energy = _scalar([.85,.88,.86,.64],u)
+	var hz = _colour(["BDD4DE","D3CBCE","E6AC91","D9919A"],u)
+	var sun_dir=sun.global_transform.basis.z.normalized()
+	sky.set_shader_parameter("zenith",_colour(["467DB3","647EA7","686997","544879"],u))
+	sky.set_shader_parameter("middle",_colour(["91B5D3","AAAAC3","A695BC","9A81AE"],u))
+	sky.set_shader_parameter("horizon",hz)
+	sky.set_shader_parameter("sun_direction",sun_dir)
+	sky.set_shader_parameter("dusk",smoothstep(.4,1.0,u))
+	env.fog_light_color=hz.lerp(Color("969CC9"),.44)
+	env.fog_density=lerp(.00030,.00048,u)
+	env.ambient_light_color=_colour(["A5B7DE","A6B0D8","A49DCE","9891C4"],u)
+	env.ambient_light_energy=_scalar([.38,.35,.32,.36],u)
+	var night=smoothstep(.48,.93,u)
+	win_mat.albedo_color=Color("344553").lerp(Color("FFB850"),night)
+	win_mat.emission_energy_multiplier=night*.65
+	lamp_mat.albedo_color=Color("AAA6A0").lerp(Color("FFD68D"),night)
+	lamp_mat.emission_energy_multiplier=night*.48
+	if atmosphere!=null:atmosphere.apply(u,hz,sun_dir)
 	if beam_mat != null:
 		beam_mat.albedo_color.a = smoothstep(0.7, 1.0, u) * 0.22
 	if cloud_mat != null:
-		cloud_mat.set_shader_parameter("top_col", Color(1, 1, 1).lerp(Color(1.0, 0.72, 0.62), u))
-		cloud_mat.set_shader_parameter("bottom_col", Color(0.74, 0.82, 0.93).lerp(Color(0.62, 0.42, 0.55), u))
+		cloud_mat.set_shader_parameter("top_col", _colour(["F4F3ED","F4E6DE","F2A190","DF93A6"],u))
+		cloud_mat.set_shader_parameter("bottom_col", _colour(["8CABC7","A5A8C1","977694","74638D"],u))
 		cloud_mat.set_shader_parameter("glow", lerp(0.42, 0.22, u))
 	if storm_mat != null:
 		storm_mat.set_shader_parameter("top_col", Color(0.52, 0.56, 0.65).lerp(Color(0.7, 0.45, 0.45), u * 0.7))
@@ -68,7 +77,7 @@ func _apply(delta):
 	if sun_disc != null:
 		sun_disc.caught = sun_caught
 	# colour: richer with every special fry, back to natural at the ending, muted in Gull Sense view
-	var sat_t = 1.0 + 0.08 * GS.special_count()
+	var sat_t = 1.0 + min(0.012 * GS.special_count(), 0.08)
 	if player != null:
 		sat_t = lerp(sat_t, 1.0, player.calm)
 	if GS.ordinary_eaten:
@@ -78,7 +87,7 @@ func _apply(delta):
 	var rate = 0.25 if GS.ordinary_eaten else 1.2
 	sat = move_toward(sat, sat_t, delta * rate)
 	env.adjustment_saturation = sat
-	var glow_t = 0.4 + 0.05 * GS.special_count()
+	var glow_t = 0.32 + min(0.012 * GS.special_count(), 0.10)
 	if GS.ordinary_eaten:
 		glow_t = 0.3
 	glow = move_toward(glow, glow_t, delta * 0.2)
@@ -92,3 +101,16 @@ func _place_sun(elev_deg, yaw_deg):
 	sun_pos = Vector3(0, 0, 10) + dir * 170.0 + Vector3(0, h, 0)
 	if sun_disc != null:
 		sun_disc.global_position = sun_pos
+
+# Four art keys, separate from the gameplay clock. No new time/progress system.
+func _colour(values,u):
+	var keys=[0.0,.35,.72,1.0]
+	for i in 3:
+		if u<=keys[i+1]:return Color(values[i]).lerp(Color(values[i+1]),smoothstep(keys[i],keys[i+1],u))
+	return Color(values[3])
+
+func _scalar(values,u):
+	var keys=[0.0,.35,.72,1.0]
+	for i in 3:
+		if u<=keys[i+1]:return lerp(values[i],values[i+1],smoothstep(keys[i],keys[i+1],u))
+	return values[3]

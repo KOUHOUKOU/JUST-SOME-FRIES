@@ -69,6 +69,7 @@ func setup(p_player, pos, yaw, coat, p_owner = null):
 		for sz in [-0.3, 0.3]:
 			var l = _box(body, Vector3(sx, 0.13, sz), Vector3(0.1, 0.26, 0.1), coat)
 			legs.append(l)
+	preload("res://scripts/art/p2_parts.gd").dog(self, coat)
 	add_to_group("dogs")
 
 func _physics_process(delta):

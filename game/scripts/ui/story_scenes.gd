@@ -157,7 +157,7 @@ func opening():
 	await st.cut(func():
 		m.bro.visible = true
 		st.set_art("")
-		st.cam_set(Vector3(-12.8, 6.0, 2.6), Vector3(-8.0, 5.5, -1.0), 38.0, Vector3(-12.2, 5.95, 2.2), Vector3(-7.9, 5.5, -1.0), 36.0, 16.0))
+		st.cam_set(Vector3(-8.8, 6.6, 6.9), Vector3(-8.3, 5.7, -1.0), 43.0, Vector3(-8.3, 6.5, 6.3), Vector3(-8.3, 5.7, -1.0), 41.0, 16.0))
 	await st.wait(0.4)
 	st.sfx("CLINK", 0.74, 0.3, 8.0, Color("FFE27A"), 50.0, 1.0)
 	Sfx.play("equip", -10.0, 0.8)
@@ -171,13 +171,13 @@ func opening():
 	await st.wait(0.8)
 	# close on him
 	await st.cut(func():
-		st.cam_set(Vector3(-10.2, 6.2, 2.2), Vector3(-6.2, 5.9, -1.3), 34.0, Vector3(-9.6, 6.1, 1.7), Vector3(-6.2, 5.9, -1.3), 32.0, 9.0))
+		st.cam_set(Vector3(-8.8, 6.3, 2.0), Vector3(-5.9, 5.9, -1.3), 34.0, Vector3(-8.3, 6.2, 1.6), Vector3(-5.9, 5.9, -1.3), 32.0, 9.0))
 	await _bro_say("...and I'm still hungry.", 0.8, {"dist": 1.0, "yaw": 0.4, "up": 0.04, "fov": 34.0, "roll": 0.05})
 	await _bro_say("So.  What do YOU want?", 0.7)
 	await st.vn_end(0.25)
 	# the little gull has no answer
 	await st.cut(func():
-		st.cam_set(Vector3(-5.6, 5.8, 0.6), Vector3(-9.5, 5.4, -0.8), 30.0, Vector3(-5.9, 5.75, 0.3), Vector3(-9.5, 5.4, -0.8), 28.0, 8.0))
+		st.cam_set(Vector3(-6.9, 5.9, 1.9), Vector3(-11.4, 5.4, -0.8), 28.0, Vector3(-7.3, 5.85, 1.6), Vector3(-11.4, 5.4, -0.8), 26.0, 8.0))
 	st.sfx("?", 0.34, 0.3, -8.0, Color("FFFFFF"), 90.0, 1.2)
 	await _you_say("...")
 	await st.vn_end(0.25)
@@ -185,7 +185,7 @@ func opening():
 	var t0 = GS.msec()
 	var y0 = pl.yaw
 	var y1 = atan2(0.2, -1.0)
-	st.cam_set(Vector3(-12.8, 6.0, 2.6), Vector3(-8.0, 5.5, -1.0), 38.0, Vector3(-12.2, 5.95, 2.2), Vector3(-8.6, 5.45, -0.6), 36.0, 4.0)
+	st.cam_set(Vector3(-14.2, 6.0, 2.6), Vector3(-11.4, 5.5, -1.0), 38.0, Vector3(-13.6, 5.95, 2.2), Vector3(-11.8, 5.45, -0.6), 36.0, 4.0)
 	while (GS.msec() - t0) < 2600:
 		var u = clamp((GS.msec() - t0) / 1800.0, 0.0, 1.0)
 		pl.yaw = lerp_angle(y0, y1, u * u * (3.0 - 2.0 * u))
@@ -321,6 +321,22 @@ func _fly_bro_to(land, secs = 2.8):
 	b.pose_mode = "ground"
 	Sfx.play("land", -9.0, 0.8)
 
+# people near the two gulls, and whoever could stroll through the picture between the camera (at the boardwalk) and the gulls, are hidden for the scene
+func _clear_picture(spot, el):
+	for grp in ["ambient", "npcs"]:
+		for n in main.get_tree().get_nodes_in_group(grp):
+			if n == el or not is_instance_valid(n):
+				continue
+			var np_ = n.global_position
+			if np_.distance_to(spot) < 12.0 or (np_.x > spot.x - 8.0 and np_.x < spot.x + 12.0 and np_.z > spot.z and np_.z < 17.0):
+				n.set_meta("cine_hidden", true)
+				n.visible = false
+
+func _keep_picture_clear(spot, el):
+	while cine_busy and is_instance_valid(main):
+		await get_tree().create_timer(0.25, true, false, true).timeout
+		_clear_picture(spot, el)
+
 func ending(fry):
 	var m = main
 	st = m.story
@@ -337,17 +353,14 @@ func ending(fry):
 	m.hud.visible = false
 	m._close_sense_if_open()
 	var fp = WB.ORDINARY_POS
-	var spot = Vector3(-8.5, fp.y + 0.42, 5.0)            # open floor in front of the table: the gull steps out of the corner for the last scene
+	var spot = Vector3(-9.2, fp.y + 0.42, 5.0)            # open floor in front of the table: the gull steps out of the corner for the last scene (3.7 m from where the 2.3x big brother lands)
 	pl.global_position = spot
 	var el = m.elder
 	pl.yaw = atan2(-1.0, 0.0)                              # facing east: the camera sees its face, the old man and his table behind it
 	pl.aim_yaw = pl.yaw
 	pl.rotation = Vector3(0, pl.yaw, 0)
-	for grp in ["ambient", "npcs"]:
-		for n in m.get_tree().get_nodes_in_group(grp):
-			if n != el and is_instance_valid(n) and n.global_position.distance_to(spot) < 12.0:
-				n.set_meta("cine_hidden", true)
-				n.visible = false
+	_clear_picture(spot, el)
+	_keep_picture_clear(spot, el)                                # (and again every moment: whoever strolls into the picture later is cleared too)
 	for dg in m.get_tree().get_nodes_in_group("dogs"):
 		if dg.global_position.distance_to(spot) < 8.0:
 			dg.visible = false
@@ -394,7 +407,7 @@ func ending(fry):
 	Engine.time_scale = 1.0
 	st.frame_in(0.8)
 	var b = m.bro
-	var land = Vector3(-6.9, fp.y + 0.2, 5.1)
+	var land = Vector3(-5.5, fp.y + 0.2, 5.1)
 	st.cam_set(Vector3(-7.8, 2.4, 14.6), Vector3(-7.7, 1.3, 5.0), 40.0, Vector3(-7.8, 2.0, 13.8), Vector3(-7.7, 0.95, 5.0), 38.0, 9.0)
 	await st.wait(0.8)
 	Sfx.crossfade_theme("theme_end", false, -8.0, 3.0)       # the memories melt into the Largo as he lands (it climbs to its high note at "...just some fries.")
@@ -460,10 +473,22 @@ func bro_chat(id):
 	m._close_sense_if_open()
 	var b = m.bro
 	b.look_at_player = false
+	# he is 2.3 times a gull: if the little gull landed right beside him, it steps west along the roof so the two never overlap in the picture
+	var gap = pl.global_position - b.global_position
+	gap.y = 0.0
+	if gap.length() < 4.0:
+		var np = b.global_position + Vector3(-4.2, 0.0, 0.0)
+		np.y = pl.global_position.y
+		np.z = clamp(pl.global_position.z, -4.6, 0.0)
+		pl.global_position = np
+		pl.velocity = Vector3.ZERO
+		pl.yaw = atan2(-1.0, 0.0)               # facing east, towards him
+		pl.aim_yaw = pl.yaw
+		pl.rotation = Vector3(0, pl.yaw, 0)
 	b._face(pl.global_position, 1.0)
 	st.begin(pl)
 	st.frame = 0.0
-	var mid = (pl.global_position + b.global_position) * 0.5 + Vector3(0, 0.45, 0)
+	var mid =(pl.global_position + b.global_position) * 0.5 + Vector3(0, 0.45, 0)
 	var line = (b.global_position - pl.global_position)
 	line.y = 0.0
 	var sep = max(line.length(), 1.0)

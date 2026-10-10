@@ -325,7 +325,7 @@ func set_paused(p):
 	get_tree().paused = p
 	pause_panel.visible = p
 	controls_panel.visible = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if p else Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if (p or OS.get_cmdline_user_args().size() > 0) else Input.MOUSE_MODE_CAPTURED
 	resume_pressed.emit()
 
 func _notification(what):

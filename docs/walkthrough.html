@@ -11,7 +11,9 @@
   body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
   main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
   h1 { font-size: 28px; letter-spacing: .04em; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 32px 0 8px; }
   p.tag { margin: 0 0 18px; color: var(--muted); }
+  .note { margin: 0 0 18px; padding: 12px 16px; border-radius: 10px; background: var(--card); border: 1px solid var(--accent); }
   video { width: 100%; height: auto; display: block; border-radius: 10px; background: #000; }
   nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
   nav a { padding: 10px 16px; border-radius: 8px; background: var(--card); color: var(--ink); text-decoration: none; border: 1px solid rgba(128,100,60,.25); }
@@ -23,17 +25,25 @@
 <main>
   <h1>JUST SOME FRIES</h1>
   <p class="tag">Be a gull. Steal magic fries off a seaside pier, and find out what you were really hungry for.</p>
+  <p class="note"><b>Recommended: download the Windows version and play it locally.</b> The browser version is only a light trial and may not run stably; the local version has clearer graphics and runs much more smoothly. / <b>推荐下载到本地游玩</b>：网页版可能无法稳定运行，本地版画质更清晰、更流畅。</p>
   <video controls playsinline preload="metadata" poster="walkthrough_poster.jpg">
     <source src="walkthrough.mp4" type="video/mp4">
     Your browser cannot play this video. <a href="walkthrough.mp4">Download the .mp4</a>.
   </video>
   <nav>
-    <a class="main" href="./">Play in the browser</a>
-    <a href="https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest">Download for Windows</a>
+    <a class="main" href="https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest">Download for Windows (recommended)</a>
+    <a href="./">Play the light version in the browser</a>
     <a href="https://github.com/KOUHOUKOU/JUST-SOME-FRIES">Source on GitHub</a>
     <a href="walkthrough.mp4" download>Download the video</a>
   </nav>
   <small>Recorded in-game with Godot's Movie Maker (a test bot does the flying), narrated by an AI voice (Microsoft Edge neural text-to-speech) with English subtitles. About two minutes, and the last scene of the game is not shown.</small>
+
+  <h2>Gameplay preview (40 seconds, no narration)</h2>
+  <video controls playsinline preload="none">
+    <source src="gameplay_preview.mp4" type="video/mp4">
+    Your browser cannot play this video. <a href="gameplay_preview.mp4">Download the .mp4</a>.
+  </video>
+  <small>Take off from the cafe roof at golden hour, fly over the pier and the Ferris wheel, dive for a fry, find the rhythm, then fast flight over the town and out to the lighthouse island. Real game footage from the Windows build.</small>
 </main>
 </body>
 </html>

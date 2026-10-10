@@ -4,7 +4,7 @@ extends RefCounted
 
 const CLOUD_SHADER = """
 shader_type spatial;
-render_mode cull_back, diffuse_lambert;
+render_mode cull_back, unshaded;
 uniform vec4 top_col : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec4 bottom_col : source_color = vec4(0.74, 0.82, 0.93, 1.0);
 uniform float glow = 0.42;
@@ -15,7 +15,7 @@ void vertex() {
 void fragment() {
 	float k = smoothstep(-0.55, 0.65, up);
 	ALBEDO = mix(bottom_col.rgb, top_col.rgb, k);
-	EMISSION = ALBEDO * glow;
+	EMISSION = vec3(0.0);
 	ROUGHNESS = 1.0;
 }
 """
@@ -23,7 +23,7 @@ void fragment() {
 const Terrain = preload("res://scripts/world/terrain.gd")
 static var _unit = null
 
-# a flat-shaded unit sphere: every facet has its own normal, so the clouds read as crisp, stylised heaps
+# S2 smooth normals on the same cheap blob geometry; cloud paths/quest footprints are unchanged.
 static func unit_blob():
 	if _unit == null:
 		var sm = SphereMesh.new()
@@ -33,8 +33,6 @@ static func unit_blob():
 		sm.rings = 5
 		var st = SurfaceTool.new()
 		st.create_from(sm, 0)
-		st.deindex()
-		st.generate_normals()
 		_unit = st.commit()
 	return _unit
 
@@ -198,7 +196,7 @@ static func build_sun(parent):
 	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(core)
 	var soft = preload("res://scripts/player/gull_visual.gd").soft_tex()
-	for spec in [[70.0, Color(1.0, 0.85, 0.5, 0.55)], [150.0, Color(1.0, 0.8, 0.45, 0.22)]]:
+	for spec in [[70.0, Color(1.0, 0.78, 0.45, 0.22)], [150.0, Color(1.0, 0.68, 0.38, 0.07)]]:
 		var g = MeshInstance3D.new()
 		var q = QuadMesh.new()
 		q.size = Vector2(spec[0], spec[0])
@@ -227,7 +225,7 @@ static func build_sun(parent):
 	rm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	rm.billboard_keep_scale = true
 	rm.albedo_texture = ray_texture()
-	rm.albedo_color = Color(1.0, 0.9, 0.6, 0.55)
+	rm.albedo_color = Color(1.0, 0.9, 0.6, 0.08)
 	rays.material_override = rm
 	rays.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	rays.name = "Rays"

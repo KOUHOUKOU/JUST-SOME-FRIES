@@ -2,6 +2,10 @@ extends RefCounted
 # Builds the whole seaside town (docs/18 §8): terrain, nine districts, props, fry encounters, ambient people.
 # Everything is made of primitives merged by material (see batcher.gd).
 
+const KitArt = preload("res://scripts/art/kenney_parts.gd")
+const S6Art = preload("res://scripts/art/s6_parts.gd")
+const SceneryArt = preload("res://scripts/art/scenery_parts.gd")
+
 const Terrain = preload("res://scripts/world/terrain.gd")
 const Batcher = preload("res://scripts/world/batcher.gd")
 const NPC_SCRIPT = preload("res://scripts/npc/npc_controller.gd")
@@ -37,7 +41,8 @@ const PANTS = ["4B5566", "3A3F4A", "6B5A48", "2F4A5E", "7A6A52"]
 const HAIRS = ["2A2420", "4A3426", "7A4B22", "B58A4B", "D8D8D8", "1E1A18"]
 
 const ORDINARY_POS = Vector3(-8.65, 0.10, 3.65)
-const SPAWN_POS = Vector3(-9.5, 5.22, -0.8)
+const SPAWN_POS = Vector3(-11.6, 5.22, -0.8)         # round 13: the big brother is 2.3x a gull, so the little gull starts at the far west end of the roof (he sits at BRO_POS, 5.8 m away)
+const BRO_POS = Vector3(-5.8, 5.4, -1.3)
 
 var root
 var map
@@ -46,6 +51,7 @@ var out = {}
 var player
 var rng = RandomNumberGenerator.new()
 var reserved = []
+var atmosphere
 var win_mat
 var lamp_mat
 var anchors = {}
@@ -111,22 +117,46 @@ func rand_style(extra = {}):
 	return d
 
 # ====================================================================== build
+# round 13: how long each part of the island takes to build (the browser build builds it in one go, ~8x slower than here: this is where a long first frame comes from)
+var _tick_t = 0
+var _tick_log = []
+
+func _tick(label):
+	var now = Time.get_ticks_msec()
+	if _tick_t > 0:
+		_tick_log.append([now - _tick_t, label])
+	_tick_t = now
+
+func tick_report():
+	var l = _tick_log.duplicate()
+	l.sort_custom(func(x, y): return x[0] > y[0])
+	var txt = ""
+	for e in l.slice(0, 8):
+		txt += "%s %d ms, " % [e[1], e[0]]
+	print("[PERF] slowest build steps: " + txt)
+
 func build(root_node, p_player):
+	SceneryArt.reset()
+	atmosphere=preload("res://scripts/world/cover_atmosphere.gd").new()
 	root = root_node
 	player = p_player
 	rng.seed = 42
+	_tick_t = Time.get_ticks_msec()
 	map = Node3D.new()
 	map.name = "MapGeometry"
 	root.add_child(map)
 	B = Batcher.new(map)
+	KitArt.setup(self)
 	win_mat = StandardMaterial3D.new()
 	win_mat.albedo_color = Color("2B3A44")
 	win_mat.roughness = 0.15
+	win_mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
 	win_mat.emission_enabled = true
 	win_mat.emission = Color(1.0, 0.8, 0.5)
 	win_mat.emission_energy_multiplier = 0.0
 	lamp_mat = StandardMaterial3D.new()
 	lamp_mat.albedo_color = Color("FFE2A8")
+	lamp_mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
 	lamp_mat.emission_enabled = true
 	lamp_mat.emission = Color(1.0, 0.85, 0.55)
 	lamp_mat.emission_energy_multiplier = 0.6
@@ -146,42 +176,82 @@ func build(root_node, p_player):
 	flora = FLORA_SCRIPT.new()
 	flora.setup(self)
 	_environment()
+	_tick("_environment")
 	_terrain()
+	KitArt.ground(self)
+	_tick("_terrain")
 	_cafe()
+	KitArt.cafe(self)
+	_tick("_cafe")
 	_boardwalk()
+	_tick("_boardwalk")
 	_market()
+	_tick("_market")
 	_kiosk()
+	_tick("_kiosk")
 	_beach()
+	_tick("_beach")
 	_playground()
+	_tick("_playground")
 	_pier()
+	_tick("_pier")
 	_marina()
+	KitArt.pier(self)
+	_tick("_marina")
 	_hill()
+	_tick("_hill")
 	_church()
+	_tick("_church")
 	_park()
+	_tick("_park")
 	_harbor()
+	_tick("_harbor")
 	_headland()
+	_tick("_headland")
 	_islet()
+	_tick("_islet")
 	_distant()
+	S6Art.decorate(self)
+	_tick("_distant")
 	_thermals()
+	_tick("_thermals")
 	extra.build_places()
+	_tick("extra.build_places")
 	town.build_places()
+	_tick("town.build_places")
 	_encounters()
+	_tick("_encounters")
 	_prism_anchors()
+	_tick("_prism_anchors")
 	_dogs()
+	_tick("_dogs")
 	_ambient()
+	_tick("_ambient")
 	extra.build_life()
+	_tick("extra.build_life")
 	town.build_life()
+	_tick("town.build_life")
 	homes.build_life()
+	_tick("homes.build_life")
 	out["fish_spots"] = extra.build_fish_spots()
+	_tick("fish_spots")
 	out["volley"] = volley
 	_mischief_balls()
+	_tick("_mischief_balls")
 	_kind_kids()
+	_tick("_kind_kids")
 	_ambient_gulls()
+	_tick("_ambient_gulls")
 	flora.build()
+	_tick("flora.build")
+	atmosphere.finish(self)
+	SceneryArt.flush_trees(self)
 	B.flush()
+	_tick("B.flush")
 	out["anchors"] = anchors
 	out["air_zones"] = zones
 	out["spawn"] = SPAWN_POS
+	out["cover_atmosphere"] = atmosphere
 	return out
 
 # ====================================================================== environment
@@ -191,23 +261,23 @@ func _environment():
 	sun.light_color = Color("FFF1D6")
 	sun.light_energy = 1.0
 	sun.shadow_enabled = true
+	# Round 14 palette/bevel calibration; light colour and energy remain unchanged.
+	sun.shadow_bias = 0.35
+	sun.shadow_normal_bias = 1.25
 	sun.directional_shadow_max_distance = 140.0
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY          # the sun in the sky is drawn by us (sky.gd): a crisp disc you can fly to
 	root.add_child(sun)
-	var sky_mat = ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("4C7FB8")
-	sky_mat.sky_horizon_color = Color("BFD8E8")
-	sky_mat.ground_horizon_color = Color("BFD8E8")
-	sky_mat.ground_bottom_color = Color("4A5A6A")
-	sky_mat.sun_angle_max = 25.0
-	sky_mat.sky_curve = 0.12
+	var sky_mat = ShaderMaterial.new()
+	sky_mat.shader=preload("res://shaders/cover_sky.gdshader")
+	sky_mat.set_shader_parameter("compatibility",RenderingServer.get_current_rendering_method()=="gl_compatibility")
 	var sky = Sky.new()
 	sky.sky_material = sky_mat
 	var env = Environment.new()
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color("A2B2DB")
 	env.ambient_light_energy = 0.55
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.glow_enabled = true
@@ -228,11 +298,12 @@ func _environment():
 	out["cloud_mat"] = clouds["mat"]
 	out["storm_mat"] = clouds["storm"]
 	out["sun_disc"] = SkyBuilder.build_sun(root)
+	for child in out["sun_disc"].get_children().slice(1):atmosphere.heavy_nodes.append(child)
 
 func _terrain():
 	var mesh = Terrain.build_mesh()
 	var mi = MeshInstance3D.new()
-	mi.mesh = mesh
+	mi.mesh = Terrain.visual_mesh(mesh) if KitArt.mesh_at("rock")!=null and SceneryArt.mesh_at("res://assets/models/s7/headland.glb")!=null else mesh
 	mi.name = "Terrain"
 	map.add_child(mi)
 	var sb = StaticBody3D.new()
@@ -246,12 +317,13 @@ func _terrain():
 	var sea = MeshInstance3D.new()
 	var pm = PlaneMesh.new()
 	pm.size = Vector2(2600, 2600)
-	pm.subdivide_width = 180
-	pm.subdivide_depth = 180
+	pm.subdivide_width = 2
+	pm.subdivide_depth = 2
 	sea.mesh = pm
 	var sm = ShaderMaterial.new()
 	sm.shader = load("res://shaders/sea.gdshader")
 	sea.material_override = sm
+	atmosphere.sea_mat=sm
 	sea.position = Vector3(0, Terrain.WATER_Y, 0)
 	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	map.add_child(sea)
@@ -273,6 +345,7 @@ func lamp(x, z, y = -999.0, h = 3.4):
 	B.cyl(Vector3(x, y + h * 0.5, z), 0.07, h, "30343A", true)
 	B.cyl(Vector3(x, y + h + 0.05, z), 0.2, 0.1, "30343A", true)
 	B.ball(Vector3(x, y + h + 0.3, z), 0.2, "FFE2A8", Vector3.ONE, 0.0, false, "lamp")
+	atmosphere.lamp_at(Vector3(x,y+h+.3,z))
 
 func bench(x, z, yaw_deg, y = -999.0):
 	if y < -900.0:
@@ -287,6 +360,16 @@ func bench(x, z, yaw_deg, y = -999.0):
 	B.box(p + Vector3(0, 0.22, 0) - r * 0.7, Vector3(0.08, 0.44, 0.44), SLATE, false, Vector3(0, yaw_deg, 0))
 
 func chair(x, z, yaw_deg, y = -999.0):
+	var mesh=KitArt.mesh_at("chair")
+	B.begin_visual_capture(mesh!=null)
+	_chair_procedural(x,z,yaw_deg,y)
+	var commands=B.end_visual_capture()
+	if mesh!=null:
+		var base=gh(x,z) if y < -900 else y
+		var angle=deg_to_rad(yaw_deg)
+		KitArt.place(self,"chair",Vector3(x,base,z),Vector3.ONE,angle)
+
+func _chair_procedural(x, z, yaw_deg, y = -999.0):
 	if y < -900.0:
 		y = gh(x, z)
 	var p = Vector3(x, y, z)
@@ -299,6 +382,16 @@ func chair(x, z, yaw_deg, y = -999.0):
 			B.box(p + Vector3(sx, 0.22, sz), Vector3(0.05, 0.44, 0.05), DARKWOOD, false)
 
 func table(x, z, yaw_rad, y = -999.0, w = 1.0, d = 0.8):
+	var mesh=KitArt.mesh_at("table")
+	B.begin_visual_capture(mesh!=null)
+	_table_procedural(x,z,yaw_rad,y,w,d)
+	var commands=B.end_visual_capture()
+	if mesh!=null:
+		var base=gh(x,z) if y < -900 else y
+		var angle=yaw_rad
+		KitArt.place(self,"table",Vector3(x,base,z),Vector3(w,1,d/.8),angle)
+
+func _table_procedural(x, z, yaw_rad, y = -999.0, w = 1.0, d = 0.8):
 	if y < -900.0:
 		y = gh(x, z)
 	var p = Vector3(x, y, z)
@@ -308,12 +401,29 @@ func table(x, z, yaw_rad, y = -999.0, w = 1.0, d = 0.8):
 	B.box(p + Vector3(0, 0.02, 0), Vector3(0.5, 0.04, 0.5), DARKWOOD, false)
 
 func patio_umbrella(x, z, col, y = -999.0):
+	var active=KitArt.mesh_at("table")!=null
+	B.begin_visual_capture(active)
+	_patio_umbrella_procedural(x,z,col,y)
+	B.end_visual_capture()
+	if active:KitArt.umbrella(self,x,gh(x,z) if y < -900 else y,z,col)
+
+func _patio_umbrella_procedural(x, z, col, y = -999.0):
 	if y < -900.0:
 		y = gh(x, z)
 	B.cyl(Vector3(x, y + 1.25, z), 0.04, 2.5, "E8E2D2", false)
 	B.cyl(Vector3(x, y + 2.55, z), 1.6, 0.4, col, true, 0.0)
 
 func planter(x, z, y = -999.0):
+	var mesh=KitArt.mesh_at("plant")
+	B.begin_visual_capture(mesh!=null)
+	_planter_procedural(x,z,y)
+	var commands=B.end_visual_capture()
+	if mesh!=null:
+		var base=gh(x,z) if y < -900 else y
+		var angle=0.0
+		KitArt.place(self,"plant",Vector3(x,base,z),Vector3(1.14,1,1.14),angle)
+
+func _planter_procedural(x, z, y = -999.0):
 	if y < -900.0:
 		y = gh(x, z)
 	B.box(Vector3(x, y + 0.3, z), Vector3(0.8, 0.6, 0.8), TERRA, true)
@@ -322,6 +432,17 @@ func planter(x, z, y = -999.0):
 		B.ball(Vector3(x + rng.randf_range(-0.3, 0.3), y + 1.15, z + rng.randf_range(-0.3, 0.3)), 0.1, _pick(["E85745", "F1C94B", "F7C7D4", "FFFFFF"]))
 
 func crate(x, z, s = 0.8, y = -999.0):
+	var mesh=KitArt.mesh_at("crate")
+	B.begin_visual_capture(mesh!=null)
+	_crate_procedural(x,z,s,y)
+	var commands=B.end_visual_capture()
+	if mesh!=null:
+		var base=gh(x,z) if y < -900 else y
+		var angle=0.0
+		angle=deg_to_rad(commands[0].rot[1])
+		KitArt.place(self,"crate",Vector3(x,base,z),Vector3.ONE*s/.85,angle)
+
+func _crate_procedural(x, z, s = 0.8, y = -999.0):
 	if y < -900.0:
 		y = gh(x, z)
 	B.box(Vector3(x, y + s * 0.5, z), Vector3(s, s, s), "A98860", true, Vector3(0, rng.randf_range(0, 90), 0))
@@ -344,6 +465,13 @@ func line(a, b, col = "D8D2C0", collide = true, flags = false):
 			B.box(p, Vector3(0.28, 0.36, 0.02), _pick([CORAL, OCHRE, FADED_BLUE, SAGE, WHITE]), false, Vector3(0, rot.y, 0))
 
 func tree(x, z, kind = 0, scale_v = 1.0):
+	var mesh = KitArt.mesh_at("palm") if kind==2 else SceneryArt.tree_mesh(kind, x, z)
+	B.begin_visual_capture(mesh != null)
+	_tree_procedural(x, z, kind, scale_v)
+	var commands = B.end_visual_capture()
+	SceneryArt.record_tree(self, mesh, x, z, kind, scale_v, commands)
+
+func _tree_procedural(x, z, kind = 0, scale_v = 1.0):
 	var y = gh(x, z)
 	var s = scale_v
 	if not out.has("trees"):
@@ -402,6 +530,15 @@ func _facade(x, base, z, w, d, h, shutter, floors_override = -1):
 # the house. Round 6: a real roof solid (you can stand on the tiles), a chimney that grows out of the slope, shutters, sills, a door with a hood.
 # opts: {"door": colour, "shutter": colour, "floors": n, "chimney": bool}
 func house(x, z, w, d, h, wall, roof_col, roof_kind = "pitched", opts = {}):
+	var params = [x, z, w, d, h, wall, roof_col, roof_kind, opts]
+	var mesh = SceneryArt.house_mesh(params)
+	B.begin_visual_capture(mesh != null)
+	var top = _house_procedural(x, z, w, d, h, wall, roof_col, roof_kind, opts)
+	var commands = B.end_visual_capture()
+	SceneryArt.record_house(self, mesh, params, commands)
+	return top
+
+func _house_procedural(x, z, w, d, h, wall, roof_col, roof_kind = "pitched", opts = {}):
 	var g1 = gh(x - w * 0.5, z - d * 0.5)
 	var g2 = gh(x + w * 0.5, z - d * 0.5)
 	var g3 = gh(x - w * 0.5, z + d * 0.5)
@@ -478,11 +615,11 @@ func _cafe():
 	bench(-17.5, 6.5, 90)
 	lamp(-17.0, 2.0)
 	lamp(1.8, 6.0)
-	B.perch_pad(Vector3(-9.5, 4.8, -0.8), 1.2)
+	B.perch_pad(Vector3(-11.6, 4.8, -0.8), 1.2)
 
 func _boardwalk():
-	B.box(Vector3(-22, 0.03, 11.25), Vector3(84, 0.06, 4.5), "A8896A", false)
-	B.box(Vector3(1, 0.03, 19.75), Vector3(6, 0.06, 12.5), "A8896A", false)
+	B.box(Vector3(-22, 0.03, 11.25), Vector3(84, 0.06, 4.5), "A8896A", false, Vector3.ZERO, 0.0, "deck")
+	B.box(Vector3(1, 0.03, 19.75), Vector3(6, 0.06, 12.5), "A8896A", false, Vector3.ZERO, 0.0, "deck")
 	for x in range(-66, 20, 12):
 		lamp(x, 9.2)
 	bench(-6, 13.2, 180)
@@ -504,6 +641,7 @@ func _boardwalk():
 	for pair in [[-42, -54], [-54, -66]]:
 		line(Vector3(pair[0], 3.5, 9.2), Vector3(pair[1], 3.5, 9.2), "D8D2C0", true, true)
 	line(Vector3(-10, 3.5, 9.2), Vector3(2, 3.5, 9.2), "D8D2C0", true, true)
+
 
 func _market():
 	var cols = [CORAL, FADED_BLUE, OCHRE, SAGE, CORAL]
@@ -556,8 +694,12 @@ func _beach():
 		if p == null:
 			continue
 		var gy = gh(p.x, p.y)
+		var kit_umbrella=KitArt.mesh_at("table")!=null
+		B.begin_visual_capture(kit_umbrella)
 		B.cyl(Vector3(p.x, gy + 1.1, p.y), 0.04, 2.2, WHITE, false)
 		B.cyl(Vector3(p.x, gy + 2.3, p.y), 1.5, 0.45, ucols[i % 5], true, 0.0)
+		B.end_visual_capture()
+		if kit_umbrella:KitArt.umbrella(self,p.x,gy,p.y,ucols[i%5],2.525,1.5)
 		var hip = lounger(p.x + 0.9, gy, p.y + 0.9, 0.0, ucols[(i + 2) % 5])
 		if i % 3 == 0:
 			beach_loungers.append(hip)
@@ -653,8 +795,8 @@ func _playground():
 	anchors["playground_top"] = Vector3(px + 7, 4.2, pz)
 
 func _pier():
-	B.box(Vector3(1, 0.2, 50), Vector3(8, 0.4, 52), WOOD, true)
-	B.box(Vector3(2, 0.2, 55), Vector3(26, 0.4, 14), WOOD, true)
+	B.box(Vector3(1, 0.2, 50), Vector3(8, 0.4, 52), WOOD, true, Vector3.ZERO, 0.0, "deck")
+	B.box(Vector3(2, 0.2, 55), Vector3(26, 0.4, 14), WOOD, true, Vector3.ZERO, 0.0, "deck")
 	for z in range(26, 76, 4):
 		for x in [-2.7, 4.7]:
 			B.cyl(Vector3(x, -1.4, z), 0.18, 3.2, "5A4332", false)
@@ -674,6 +816,8 @@ func _pier():
 	B.box(Vector3(-2.5, 0.6, 52), Vector3(0.4, 0.4, 0.4), "3A3F4A", true)
 	var lb = MeshInstance3D.new()
 	var tm = TorusMesh.new()
+	tm.rings = 12
+	tm.ring_segments = 6
 	tm.inner_radius = 0.12
 	tm.outer_radius = 0.32
 	lb.mesh = tm
@@ -718,10 +862,12 @@ func _pier():
 		_mesh_box(g, Vector3(0, -0.25, 0), Vector3(1.5, 0.08, 1.3), WHITE, 0.0)
 		gondolas.append(g)
 	wheel.upright = gondolas
+	atmosphere.wheel_lights(wheel,lamp_mat)
 	anchors["ferris"] = hub + Vector3(0, 4.5, 0)
 	anchors["buoy"] = Vector3(16, 0.9, 74)
 	B.cyl(Vector3(16, 0.1, 74), 0.5, 0.9, CORAL, false)
 	B.cyl(Vector3(16, 0.9, 74), 0.3, 0.9, WHITE, false)
+
 
 func _mesh_box(parent, pos, size, col, rot_z_deg):
 	var mi = MeshInstance3D.new()
@@ -748,7 +894,7 @@ func _coll_box(parent, pos, size, rot_z_deg):
 
 func _marina():
 	for x in [-12.0, -20.0, -28.0]:
-		B.box(Vector3(x, 0.15, 35.5), Vector3(1.6, 0.3, 17), WOOD, true)
+		B.box(Vector3(x, 0.15, 35.5), Vector3(1.6, 0.3, 17), WOOD, true, Vector3.ZERO, 0.0, "deck")
 		for z in range(28, 44, 4):
 			B.cyl(Vector3(x - 0.7, -1.2, z), 0.14, 2.8, "5A4332", false)
 			B.cyl(Vector3(x + 0.7, -1.2, z), 0.14, 2.8, "5A4332", false)
@@ -765,6 +911,7 @@ func _marina():
 		B.box(Vector3(x, 2.4, 25.05), Vector3(1.2, 1.1, 0.08), "", false, Vector3.ZERO, 0.0, "window")
 	bin(-30.0, 24.0)
 	lamp(-26.0, 25.0)
+
 
 const BOAT_ROOFS = ["D96D5F", "2D6F5E", "C9A24A", "3E6F8E", "A94F3E"]
 
@@ -785,6 +932,7 @@ func _boat(p, yaw_deg, col, mast_anchor = false):
 	B.cyl(p + bs * Vector3(0, 2.9, 0.9), 0.06, 4.9, "E8E2D2", false)
 	B.box(p + bs * Vector3(0, 1.3, -0.1), Vector3(0.06, 0.06, 2.3), "E8E2D2", false, yw)
 	B.prism(p + bs * Vector3(0, 3.3, -0.1), Vector3(0.05, 3.4, 2.2), "F7F4EA", false, yw)
+
 	B.box(p + bs * Vector3(0, 5.2, 0.62), Vector3(0.04, 0.34, 0.5), roof, false, yw)
 	B.perch_pad(p + bs * Vector3(0, 5.42, 0.9), 0.3)
 	for s2 in [-1.0, 1.0]:
@@ -825,7 +973,7 @@ func _church():
 	var y = gh(cx, cz)
 	B.box(Vector3(cx, y - 3.0, cz + 2.0), Vector3(12.0, 8.0, 22.0), "9A9484", true)        # the plinth and forecourt
 	B.box(Vector3(cx, y + 3.0, cz + 2.0), Vector3(6.5, 6.0, 12.0), CHALK, true)
-	B.prism(Vector3(cx, y + 6.5, cz + 2.0), Vector3(13.0, 2.8, 7.4), SLATE, true, Vector3(0, 90, 0))
+	B.prism(Vector3(cx, y + 6.5, cz + 2.0), Vector3(13.0, 2.8, 7.4), "C56846", true, Vector3(0, 90, 0))
 	B.box(Vector3(cx, y + 10.0, cz - 5.5), Vector3(4.6, 20.0, 4.6), CHALK, true)
 	B.box(Vector3(cx, y + 17.0, cz - 3.2), Vector3(2.4, 3.0, 0.2), "2B3A44", false)
 	B.box(Vector3(cx, y + 20.2, cz - 5.5), Vector3(5.2, 0.5, 5.2), TERRA, true)
@@ -904,7 +1052,7 @@ func _harbor():
 		B.perch_pad(Vector3(cxx, 23.9, 4.0), 0.9)
 	anchors["crane_hook"] = Vector3(72.0, 11.4, 4.0)
 	B.box(Vector3(98.0, 4.0, -34.0), Vector3(22.0, 8.0, 14.0), "A9BCC4", true)
-	B.prism(Vector3(98.0, 8.9, -34.0), Vector3(23.0, 2.4, 15.0), SLATE, true)
+	B.prism(Vector3(98.0, 8.9, -34.0), Vector3(23.0, 2.4, 15.0), "B86A4F", true)
 	for x in range(2, 20, 4):
 		B.box(Vector3(88.0 + x, 4.0, -26.95), Vector3(2.4, 3.0, 0.08), "", false, Vector3.ZERO, 0.0, "window")
 	for i in 8:
@@ -926,7 +1074,7 @@ func _headland():
 	var y = gh(cx, cz)
 	B.cyl(Vector3(cx, y + 7.0, cz), 3.4, 14.0, WHITE, true)
 	for i in 3:
-		B.cyl(Vector3(cx, y + 3.0 + i * 4.5, cz), 3.45 - i * 0.2, 1.2, "D96D5F", false)
+		B.cyl(Vector3(cx, y + 3.0 + i * 4.5, cz), 3.46, 2.15, "B94837", false)
 	B.cyl(Vector3(cx, y + 14.4, cz), 3.6, 0.4, "30343A", true)
 	B.cyl(Vector3(cx, y + 16.0, cz), 1.6, 3.0, "FFE2A8", false, -1.0, 0.0, Vector3.ZERO, "lamp")
 	B.cone(Vector3(cx, y + 18.2, cz), 2.2, 1.8, CORAL, false)
@@ -936,6 +1084,7 @@ func _headland():
 		B.box(Vector3(cx + cos(a) * 3.3, y + 15.0, cz + sin(a) * 3.3), Vector3(0.1, 1.0, 0.1), "30343A", false)
 	B.box(Vector3(cx, y + 15.5, cz), Vector3(7.0, 0.08, 7.0), "30343A", false)
 	anchors["lighthouse"] = Vector3(cx + 3.0, y + 15.6, cz)
+	atmosphere.lamp_at(Vector3(cx,y+16,cz),10.0)
 	var beam = MeshInstance3D.new()
 	var bm = BoxMesh.new()
 	bm.size = Vector3(0.8, 0.8, 90.0)
@@ -962,20 +1111,20 @@ func _headland():
 		var rr = 22.5
 		var fx = cx + cos(deg_to_rad(a)) * rr
 		var fz = cz + sin(deg_to_rad(a)) * rr
-		if Terrain.H(fx, fz) > 20.0:
+		if Terrain.H(fx, fz) > Terrain.HEADLAND_HEIGHT * (20.0 / 24.0):
 			B.box(Vector3(fx, Terrain.H(fx, fz) + 0.5, fz), Vector3(0.1, 1.0, 0.1), CHALK, false)
 	for tpos in [Vector2(-118, 26), Vector2(-112, 58), Vector2(-86, 52)]:
 		_turbine(tpos.x, tpos.y)
 	for i in 8:
 		var rx = cx + rng.randf_range(-20, 20)
 		var rz = cz + rng.randf_range(-20, 20)
-		if Terrain.H(rx, rz) > 20.0 and Vector2(rx - cx, rz - cz).length() > 5.0:
+		if Terrain.H(rx, rz) > Terrain.HEADLAND_HEIGHT * (20.0 / 24.0) and Vector2(rx - cx, rz - cz).length() > 5.0:
 			B.ball(Vector3(rx, Terrain.H(rx, rz) + 0.2, rz), rng.randf_range(0.5, 1.2), "8D8A80", Vector3(1, 0.7, 1), 0.0, true)
 	bench(cx + 8.0, cz + 12.0, 200)
 	for i in 6:
 		var gx = cx + rng.randf_range(-18, 18)
 		var gz = cz + rng.randf_range(-18, 18)
-		if Terrain.H(gx, gz) > 20.0 and Vector2(gx - cx, gz - cz).length() > 6.0:
+		if Terrain.H(gx, gz) > Terrain.HEADLAND_HEIGHT * (20.0 / 24.0) and Vector2(gx - cx, gz - cz).length() > 6.0:
 			tree(gx, gz, 1, rng.randf_range(0.8, 1.1))
 
 func _turbine(x, z):
@@ -996,6 +1145,7 @@ func _turbine(x, z):
 		var rz = rad_to_deg(a)
 		_mesh_box(rotor, Vector3(-sin(a) * 4.5, cos(a) * 4.5, 0), Vector3(0.55, 9.0, 0.16), WHITE, rz)
 		_coll_box(rotor, Vector3(-sin(a) * 4.5, cos(a) * 4.5, 0), Vector3(0.55, 9.0, 0.16), rz)
+	S6Art.merge_rotor_visuals(rotor) # Same moving geometry/solids, one draw per turbine.
 	if not anchors.has("turbine"):
 		anchors["turbine"] = Vector3(x + 5.5, y + 20.5, z + 1.0)
 
@@ -1011,15 +1161,7 @@ func _islet():
 	anchors["islet"] = Vector3(cx - 3.0, gh(cx - 3.0, cz - 1.0) + 7.5 * 1.5 + 2.0, cz - 1.0)
 
 func _distant():
-	var mc = ["56707F", "607A8B", "4E687A", "6A8596"]
-	for i in 9:
-		var a = -2.7 + i * 0.6
-		var mx = 700.0 * sin(a)
-		var mz = -700.0 * cos(a) - 100.0
-		B.cone(Vector3(mx, 70.0, mz), 150.0 + (i % 3) * 40.0, 140.0 + (i % 4) * 30.0, mc[i % 4])
-	for i in 6:
-		B.cone(Vector3(-600, 40.0, 100.0 + i * 120.0), 140.0, 90.0, mc[i % 4])
-		B.cone(Vector3(600, 40.0, -80.0 + i * 120.0), 140.0, 90.0, mc[(i + 1) % 4])
+	atmosphere.distant(map)
 	# sailing boats out on the open water, each with somebody on board (and a cup, a cone or a deck chair)
 	var cols = ["F4F1E8", "7396A8", "D96D5F", "879B82", "D9B25F"]
 	var k = 0

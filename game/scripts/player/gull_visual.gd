@@ -1,6 +1,11 @@
 extends Node3D
-# Procedural gull: bent wings (shoulder + elbow), tail fan, legs. Pure visuals; gameplay never depends on it.
-# Optional: assets/models/hero_gull.glb replaces the fallback (see player).
+# Authored pivot-local gull with the original procedural fallback. Pure visuals.
+const GullParts = preload("res://scripts/art/gull_parts.gd")
+var authored = false
+var authored_path = GullParts.PATH
+var authored_parts = {}
+var _authored_fold = 0.0
+var _authored_wrist = 0.0
 
 const Pattern = preload("res://scripts/world/pattern.gd")
 const WHITE = Color("F6F6F1")
@@ -62,6 +67,65 @@ func _sph(r, h = -1.0):
 	return s
 
 func build():
+	if _build_authored():
+		return
+	_build_procedural()
+
+func _pivot(parent, pos):
+	var n = Node3D.new()
+	n.position = pos
+	parent.add_child(n)
+	return n
+
+func _build_authored() -> bool:
+	var parts = GullParts.load_parts(authored_path)
+	if parts.is_empty():
+		return false
+	authored = true
+	# Keep the original StandardMaterial3D values as cosmetic state channels.
+	# Rendered geometry uses ONLY the shared vertex-colour ShaderMaterial.
+	white_mat = _mat(WHITE)
+	chest_mat = _mat(WHITE)
+	beak_mat = _mat(ORANGE)
+	tail_mat = _mat(GREY)
+	eye_mats = [_mat(Color("101015")), _mat(Color("101015"))]
+	body_mi = _pivot(self, Vector3.ZERO)
+	body_mi.scale = Vector3(1.0, 0.9, 1.9)
+	head = _pivot(self, Vector3(0, 0.1, -0.36))
+	tail = _pivot(self, Vector3(0, 0, 0.38))
+	legs = _pivot(self, Vector3.ZERO)
+	legs.visible = false
+	beak_socket = Marker3D.new()
+	beak_socket.name = "BeakSocket"
+	beak_socket.position = Vector3(0, -0.03, -0.3)
+	head.add_child(beak_socket)
+	var parents = {"Body": body_mi, "Chest": self, "Head": head, "Tail": tail, "Legs": legs}
+	for side in [-1.0, 1.0]:
+		var suffix = "L" if side < 0 else "R"
+		shoulder[side] = _pivot(self, Vector3(0.14 * side, 0.07, -0.06))
+		elbow[side] = _pivot(shoulder[side], Vector3(0.32 * side, 0, 0))
+		parents["Upper" + suffix] = shoulder[side]
+		parents["Fore" + suffix] = elbow[side]
+		parents["Hand" + suffix] = elbow[side]
+		wing_mats.append(_mat(GREY))
+		wing_mats.append(_mat(GREY))
+		tip_mats.append(_mat(DARK))
+	for name_ in GullParts.NAMES:
+		authored_parts[name_] = GullParts.attach(parents[name_], parts[name_], name_)
+	trail_l = _make_trail()
+	trail_r = _make_trail()
+	elbow[-1.0].add_child(trail_l)
+	elbow[1.0].add_child(trail_r)
+	trail_l.position = Vector3(-0.5, 0, 0.1)
+	trail_r.position = Vector3(0.5, 0, 0.1)
+	apply_growth()
+	return true
+
+func _sync_authored_colours():
+	if authored:
+		GullParts.recolour(authored_parts, [Color.WHITE, white_mat.albedo_color, chest_mat.albedo_color, wing_mats[0].albedo_color, tip_mats[0].albedo_color, tail_mat.albedo_color, beak_mat.albedo_color, eye_mats[0].albedo_color])
+
+func _build_procedural():
 	var white = _mat(WHITE)
 	white_mat = white
 	chest_mat = _mat(WHITE)
@@ -138,6 +202,7 @@ func tint_pale(c):
 	for m in wing_mats:
 		m.albedo_color = GREY.lerp(c, 0.5)
 	tail_mat.albedo_color = GREY.lerp(c, 0.5)
+	_sync_authored_colours()
 
 func _make_trail():
 	var p = CPUParticles3D.new()
@@ -184,6 +249,7 @@ func reset_plain():
 	for m in eye_mats:
 		m.albedo_color = Color("101015")
 	trail_color = Color.WHITE
+	_sync_authored_colours()
 
 func apply_growth():
 	if plain:
@@ -228,6 +294,7 @@ func apply_growth():
 	if GS.has["pink"]:
 		tc = tc.lerp(rose, 0.5)
 	trail_color = tc
+	_sync_authored_colours()
 
 var trail_color = Color.WHITE
 static var _soft = null
@@ -315,8 +382,36 @@ func pose(mode, flap_t, throttle, delta):
 	legs.visible = cur["legs"] > 0.3
 	tail.rotation.x = -0.1 * cur["legs"]
 	head.position.z = -0.36 - head_lunge
+	if authored:
+		_pose_authored_fold()
 	if worn.has("meteor") and is_instance_valid(worn["meteor"]):
 		_comet_tick(mode, delta)
+
+func _pose_authored_fold():
+	# Long flight feathers tuck along the back when the existing ground pose folds.
+	# Only mesh children move: the animation pivots, sockets and trails stay intact.
+	var fold = smoothstep(0.0, 0.5, cur["legs"]) * smoothstep(-0.02, 0.45, -cur["a"])
+	# Longer blades must not pass through one another at the old flap extremes.
+	var wrist = clamp(cur["a"] - cur["e"], -1.35, 1.35) - (cur["a"] - cur["e"])
+	if fold == 0.0 and _authored_fold == 0.0 and wrist == 0.0 and _authored_wrist == 0.0:
+		return
+	_authored_fold = fold
+	_authored_wrist = wrist
+	for side in [-1.0, 1.0]:
+		var suffix = "L" if side < 0 else "R"
+		for prefix in ["Upper", "Fore", "Hand"]:
+			var upper = prefix == "Upper"
+			var parent_pose = shoulder[side].transform
+			if not upper:
+				parent_pose *= elbow[side].transform
+			var basis_ = Basis.from_euler(Vector3(0, -side * (1.25 if upper else 1.50), -side * 0.12 if upper else 0.0))
+			# S1 faceted part fitting: tuck the thick flight chord onto the flanks.
+			# This changes only mesh-child folded targets, not animation pivots,
+			# fold weight, flap timing, sockets or procedural fallback.
+			basis_ = basis_ * Basis.from_scale(Vector3(1.0 if upper else 0.75, 0.60 if upper else 0.32, 0.65 if upper else 0.55))
+			var goal = Transform3D(basis_, Vector3(side * (0.24 if upper else 0.285), 0.075 if upper else 0.035, -0.12 if upper else 0.09))
+			var flying = Transform3D.IDENTITY if upper else Transform3D(Basis.from_euler(Vector3(0,0,wrist*side)),Vector3.ZERO)
+			authored_parts[prefix + suffix].transform = flying.interpolate_with(parent_pose.affine_inverse() * goal, fold)
 
 func _comet_tick(mode, delta):
 	var goal = {"boost": 1.0, "throttle": 0.85, "glide": 0.55, "brake": 0.3, "ground": 0.0, "tumble": 0.35}.get(mode, 0.5)
@@ -356,6 +451,7 @@ func wear(kind, silent = false):
 		if slot_of(k) == slot:
 			_remove(k)
 	var n = _build_item(kind)
+	preload("res://scripts/art/p2_parts.gd").wear(self, n, kind)
 	worn[kind] = n
 	if tracked and not silent:
 		GS.worn[kind] = true

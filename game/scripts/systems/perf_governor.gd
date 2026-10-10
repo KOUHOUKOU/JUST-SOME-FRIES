@@ -33,6 +33,11 @@ func _apply():
 		sun.directional_shadow_max_distance = SHADOW_DIST[level]
 		if GS.web:
 			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	if main != null and main.world != null:
+		var atmosphere=main.world.get("cover_atmosphere")
+		if atmosphere!=null:atmosphere.set_quality(level,GS.web)
+		var env=main.world.get("env")
+		if env!=null:env.glow_enabled=level<2 and not GS.web
 	print("[PERF] quality level %d (3D scale %.2f, shadows %s)" % [level, SCALE[level], str(level < 3)])
 
 func _process(delta):

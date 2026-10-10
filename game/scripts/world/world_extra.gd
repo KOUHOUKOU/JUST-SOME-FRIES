@@ -77,7 +77,7 @@ func _summit():
 	var tz = plaza_cz - plaza_hd + 2.2
 	B.box(Vector3(tx, py + 6.5, tz), Vector3(4.2, 13.0, 4.2), CHALK, true)
 	B.box(Vector3(tx, py + 13.2, tz), Vector3(5.0, 0.5, 5.0), TERRA, true)
-	B.cone(Vector3(tx, py + 15.2, tz), 3.1, 3.6, SLATE, true)
+	B.cone(Vector3(tx, py + 15.2, tz), 3.1, 3.6, "BC6449", true)
 	B.perch_pad(Vector3(tx, py + 17.2, tz), 0.35)
 	for side in [[0.0, 1.0], [0.0, -1.0], [1.0, 0.0], [-1.0, 0.0]]:
 		var fp = Vector3(tx + side[0] * 2.12, py + 10.2, tz + side[1] * 2.12)
@@ -160,13 +160,14 @@ func _farm():
 		var c2 = Vector3(-sin(a) * 5.5 + cos(a) * 0.55, cos(a) * 5.5 + sin(a) * 0.55, 0.0)
 		w._mesh_box(rotor, c2, Vector3(1.0, 6.4, 0.08), "F4F1E8", rad_to_deg(a))
 		w._coll_box(rotor, c2, Vector3(1.0, 6.4, 0.08), rad_to_deg(a))
+	w.S6Art.merge_rotor_visuals(rotor)
 	w.anchors["windmill"] = Vector3(wx + 5.4, wy + 13.5, wz + 2.0)
 	# the barn, the silo and a tractor
 	var bx = 102.0
 	var bz = -66.0
 	var by = w.gh(bx, bz)
 	B.box(Vector3(bx, by + 3.2, bz), Vector3(10.0, 6.4, 14.0), "A8382C", true)
-	B.prism(Vector3(bx, by + 8.2, bz), Vector3(14.8, 3.6, 11.0), "6F7C84", true, Vector3(0, 90, 0))
+	B.prism(Vector3(bx, by + 8.2, bz), Vector3(14.8, 3.6, 11.0), "A76B51", true, Vector3(0, 90, 0))
 	B.box(Vector3(bx - 5.05, by + 2.2, bz), Vector3(0.1, 4.4, 4.4), "F4F1E8", false)
 	B.box(Vector3(bx - 5.12, by + 2.2, bz), Vector3(0.06, 4.4, 0.25), "A8382C", false, Vector3(0, 0, 0))
 	for k in 5:
@@ -188,7 +189,9 @@ func _farm():
 		for seg in 8:
 			var xx = 62.0 + seg * 5.0 + 2.5
 			var gy = w.gh(xx, zz)
-			B.box(Vector3(xx, gy + 0.2, zz), Vector3(4.2, 0.4, 0.7), "5E8C3A" if r % 2 == 0 else "7BA043", false)
+			if not w.S6Art.crops(w,Vector3(xx,gy+.03,zz),r):
+				B.box(Vector3(xx, gy + 0.2, zz), Vector3(4.2, 0.4, 0.7), "5E8C3A" if r % 2 == 0 else "7BA043", false)
+	w.S6Art.flush_crops(w)
 	# a fence along the meadow's south edge
 	for k in 14:
 		var fx = 64.0 + k * 3.2

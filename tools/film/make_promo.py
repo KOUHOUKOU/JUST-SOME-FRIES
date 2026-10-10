@@ -1,4 +1,4 @@
-"""
+﻿"""
 Joins the four recorded segments (film/seg1..4.avi, see autotest.gd `film`) into the 2-minute promotional video with a spoken narration (edge-tts, a neural voice)
 and burned-in subtitles. Run from the project folder:  python tools/film/make_promo.py
 Outputs: film/promo.mp4 (+ film/promo.srt, film/promo_10MB.mp4).
@@ -29,7 +29,7 @@ CLIPS = [
     ("seg4.avi", 11.0, 23.0, 0.2, []),
     ("seg4.avi", 49.0, 62.0, 0.2, []),
 ]
-CARD_LINES = ["Just Some Fries.", "Play it in your browser, or download it for Windows."]
+CARD_LINES = ["Just Some Fries.", "Download the Windows version for the best experience."]
 CARD = 4.2
 SRC_FILE = {}
 
@@ -104,9 +104,10 @@ async def main():
     F.append("color=c=0x14110d:s=1280x720:r=30:d=%s[cardv0]" % CARD)
     F.append("anullsrc=r=48000:cl=stereo,atrim=duration=%s[carda]" % CARD)
     F.append("[cardv0]drawtext=fontfile=arialbd.ttf:text='JUST SOME FRIES':fontcolor=0xf0b453:fontsize=84:x=(w-text_w)/2:y=h/2-110,"
-             "drawtext=fontfile=arial.ttf:text='Play it free in your browser':fontcolor=white:fontsize=40:x=(w-text_w)/2:y=h/2:,"
-             "drawtext=fontfile=arial.ttf:text='kouhoukou.github.io/JUST-SOME-FRIES':fontcolor=0xcfc3b0:fontsize=32:x=(w-text_w)/2:y=h/2+60,"
-             "drawtext=fontfile=arial.ttf:text='or download the Windows build':fontcolor=0xcfc3b0:fontsize=28:x=(w-text_w)/2:y=h/2+110,"
+             "drawtext=fontfile=arial.ttf:text='Recommended - download the Windows version':fontcolor=white:fontsize=40:x=(w-text_w)/2:y=h/2,"
+             "drawtext=fontfile=arial.ttf:text='github.com/KOUHOUKOU/JUST-SOME-FRIES/releases':fontcolor=0xcfc3b0:fontsize=32:x=(w-text_w)/2:y=h/2+60,"
+             "drawtext=fontfile=arial.ttf:text='Clearer and smoother locally - the browser version is only a light trial':fontcolor=0xcfc3b0:fontsize=26:x=(w-text_w)/2:y=h/2+110,"
+             "drawtext=fontfile=arial.ttf:text='kouhoukou.github.io/JUST-SOME-FRIES':fontcolor=0xcfc3b0:fontsize=24:x=(w-text_w)/2:y=h/2+152,"
              "fade=t=in:st=0:d=0.5,fade=t=out:st=%s:d=0.5[cardv]" % (CARD - 0.5))
     vparts.append("[cardv][carda]")
     F.append("".join(vparts) + "concat=n=%d:v=1:a=1[cv][ca]" % (len(CLIPS) + 1))

@@ -356,6 +356,15 @@ func _portrait_tick():
 	if g == null or not is_instance_valid(g) or g.head == null:
 		return
 	var look = vn["look"]
+	# Art-only framing for the S1 head (top .531) and existing hats (top <= .78).
+	# Preserve the caller's wider compositions and all story timing / text.
+	if g.get("authored") == true and g.get("worn") != null:
+		look = look.duplicate()
+		var has_hat = g.worn.has("hat") or g.worn.has("topper") or g.worn.has("sailor") or g.worn.has("beret")
+		var extent = 0.98 if has_hat else 0.72
+		var fit_dist = extent / (2.0 * tan(deg_to_rad(look.get("fov", pset["fov"])) * 0.5)) + 0.23
+		look["dist"] = max(look.get("dist", pset["dist"]), fit_dist)
+		look["up"] = max(look.get("up", pset["up"]), 0.27 if has_hat else 0.18)
 	var hp = g.head.global_position
 	var gb = g.global_transform.basis
 	var sc = gb.get_scale().x
@@ -471,6 +480,8 @@ func beat(word, col, lines, o = {}):
 # the gull's thoughts are typed under the picture, and OTHER ANGLES of the same gull appear as small tilted comic panels (insets: a second camera that
 # flies along with the gull). Nothing is locked; the player may steer all the way through.
 const BLUR_SHADER = "shader_type canvas_item;\nuniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap, repeat_disable;\nuniform float amount = 0.0;\nuniform float clear_r = 0.42;\nvoid fragment() {\n\tvec2 uv = SCREEN_UV;\n\tfloat d = distance(vec2(uv.x * 1.6, uv.y), vec2(0.8, 0.5)) / 0.95;\n\tfloat k = smoothstep(clear_r, 1.0, d);\n\tfloat lod = amount * (0.12 + 3.2 * k);\n\tvec3 c = textureLod(screen_tex, uv, lod).rgb;\n\tfloat lum = dot(c, vec3(0.3, 0.55, 0.15));\n\tc = mix(c, vec3(lum), 0.18 * amount * k);\n\tCOLOR = vec4(c * (1.0 - 0.22 * amount * k), 1.0);\n}\n"
+# the browser build: reading the whole screen with mipmaps every frame (the blur above) cost 300-500 ms per frame there; a soft dark vignette at the edges needs no screen texture
+const VIGNETTE_SHADER = "shader_type canvas_item;\nuniform float amount = 0.0;\nuniform float clear_r = 0.42;\nvoid fragment() {\n\tfloat d = distance(vec2(UV.x * 1.6, UV.y), vec2(0.8, 0.5)) / 0.95;\n\tfloat k = smoothstep(clear_r, 1.0, d);\n\tCOLOR = vec4(0.05, 0.04, 0.08, 0.5 * amount * k);\n}\n"
 var flow = false
 var blur_rect = null
 var blur_mat = null
@@ -484,7 +495,7 @@ func _make_blur():
 	blur_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	blur_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var sh = Shader.new()
-	sh.code = BLUR_SHADER
+	sh.code = VIGNETTE_SHADER if GS.web else BLUR_SHADER
 	blur_mat = ShaderMaterial.new()
 	blur_mat.shader = sh
 	blur_rect.material = blur_mat
@@ -496,7 +507,7 @@ func set_blur(v):
 	blur_amt = v
 	if blur_mat != null:
 		blur_mat.set_shader_parameter("amount", v)
-		blur_rect.visible = v > 0.01
+		blur_rect.visible = v > 0.01 and (GS.lite_flags & 2) == 0
 
 func flow_begin(p, tag_text = ""):
 	player = p
@@ -544,6 +555,8 @@ func flow_pace(ts, sec = 1.0):
 # o: {"pos": Vector2 (centre, 0..1), "w": width as a fraction of the picture, "rot": degrees, "tint": border colour, "tag": small label,
 #     "follow": {az, size, fov, h, look_h, swing, dur}  or  "static": [pos, look, fov]}
 func inset_open(id, o):
+	if (GS.lite_flags & 1) != 0:
+		return null
 	inset_close(id, true)
 	var vp
 	var cam
@@ -598,6 +611,9 @@ func _insets_tick(dt):
 		var cam = s["cam"]
 		if not is_instance_valid(cam):
 			continue
+		if GS.web and is_instance_valid(s["vp"]):
+			# the browser build draws the whole island once more for every little close-up: each one is redrawn only every third frame (staggered), a third of the cost
+			s["vp"].render_target_update_mode = SubViewport.UPDATE_ONCE if (Engine.get_frames_drawn() + i) % 3 == 0 else SubViewport.UPDATE_DISABLED
 		var o = s["o"]
 		if s["state"] != null and player != null and is_instance_valid(player.gull):
 			var r = director.follow_step(s["state"], player.gull, player.yaw, max(dt, 0.001))

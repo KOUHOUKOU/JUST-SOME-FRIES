@@ -116,7 +116,12 @@ func _ready():
 	add_child(player)
 	player.mode = 1
 	var wb = WB.new()
+	var t_build = Time.get_ticks_msec()
 	world = wb.build(self, player)
+	print("[PERF] the island was built in %d ms" % (Time.get_ticks_msec() - t_build))     # (the browser build builds it in one go: the first frame can take a long time there)
+	wb.tick_report()
+	preload("res://scripts/art/s7_profile.gd").report()
+	if "--s7-profile" in OS.get_cmdline_user_args():RenderingServer.frame_post_draw.connect(_s7_first_frame,CONNECT_ONE_SHOT)
 	player.ground_h = world["ground_h"]
 	player.trees = world.get("trees", [])
 	player.air_zones = world["air_zones"]
@@ -135,6 +140,7 @@ func _ready():
 	day.storm_mat = world.get("storm_mat")
 	day.sun_disc = world.get("sun_disc")
 	day.player = player
+	day.atmosphere = world.get("cover_atmosphere")
 	add_child(day)
 	hud = CanvasLayer.new()
 	hud.set_script(HUD_SCRIPT)
@@ -165,7 +171,7 @@ func _ready():
 	bro.set_script(load("res://scripts/world/big_bro.gd"))
 	add_child(bro)
 	bro.main = self
-	bro.setup(player, Vector3(-6.2, 5.4, -1.3), Vector3(-9.5, 5.4, -0.8))
+	bro.setup(player, WB.BRO_POS, Vector3(WB.SPAWN_POS.x, 5.4, WB.SPAWN_POS.z))
 	title.restart_requested.connect(func(): _reload(true))
 	title.menu_requested.connect(func(): _reload(false))
 	menus = CanvasLayer.new()
@@ -222,6 +228,8 @@ func _ready():
 	player.update_camera(0.0, true)
 	Sfx.set_music_level(0)
 	var args = OS.get_cmdline_user_args()
+	if args.size() > 0:                              # dev/test run: never steal the keyboard focus or the mouse from the person at the desk
+		DisplayServer.window_set_flag(DisplayServer.WINDOW_FLAG_NO_FOCUS, true)
 	for a in args:
 		if a.begins_with("--shot="):
 			var path = a.substr(7)
@@ -230,7 +238,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -241,6 +249,8 @@ func _ready():
 		GS.no_focus_pause = true
 		showcase.fast = true
 		GS.skip_intro = not ("--intro" in args)
+		if "--warm" in args:
+			await _web_warm_up()                  # (dev: the browser's preparation of the graphics, before a bot flies)
 		_start_game()
 		var t = Node.new()
 		t.set_script(load("res://scripts/autotest.gd"))
@@ -273,18 +283,72 @@ func _ready():
 	elif GS.skip_menu:
 		GS.skip_menu = false
 		GS.skip_intro = true
+		await _web_warm_up()
 		_start_game()
 	else:
+		await _web_warm_up()
 		get_tree().paused = true
 		Engine.max_fps = 30
 		menus.show_main()
 		Sfx.play_theme("theme_open", true)
+
+# The browser compiles a shader the first time it sees something and the whole page waits for it: 2-5 s every time the gull flew somewhere new, 20-30 s for the
+# very first picture. So, behind the "preparing" card of the page, the camera is sent once over every part of the island (and a burst of sparks is shown) before the
+# title appears: the waiting happens once, at the start, and is explained, instead of freezes in the middle of a flight. Only in the browser build.
+const WARM_VIEWS = [
+	[Vector3(-9.5, 8.0, -9.0), Vector3(-9.5, 3.0, 4.0), 70.0], [Vector3(20.0, 6.0, 40.0), Vector3(30.0, 1.0, 14.0), 70.0],
+	[Vector3(2.0, 8.0, 98.0), Vector3(2.0, 12.0, 55.0), 65.0], [Vector3(-50.0, 30.0, 70.0), Vector3(-102.0, 20.0, 40.0), 65.0],
+	[Vector3(0.0, 24.0, -6.0), Vector3(0.0, 10.0, -50.0), 70.0], [Vector3(-45.0, 14.0, 20.0), Vector3(-58.0, 0.0, -10.0), 70.0],
+	[Vector3(55.0, 28.0, 12.0), Vector3(85.0, 5.0, -25.0), 70.0], [Vector3(10.0, 110.0, 150.0), Vector3(0.0, 0.0, 10.0), 70.0],
+	[Vector3(-30.0, 5.0, 28.0), Vector3(-46.0, 1.0, 16.0), 70.0], [Vector3(0.0, 14.0, 96.0), Vector3(0.0, 4.0, 118.0), 70.0],
+	[Vector3(-4.0, 40.0, 30.0), Vector3(-4.0, 75.0, -40.0), 70.0], [Vector3(40.0, 3.0, 95.0), Vector3(80.0, 2.0, 130.0), 70.0]]
+
+func _web_warm_up():
+	if not GS.web or loaded_run:
+		return
+	var was_locked = player.input_locked
+	player.input_locked = true
+	var n = WARM_VIEWS.size()
+	var tw0 = Time.get_ticks_msec()
+	var times = []
+	for i in n:
+		var tv0 = Time.get_ticks_msec()
+		var v = WARM_VIEWS[i]
+		JavaScriptBridge.eval("window.JSF && JSF.warm && JSF.warm(%d, %d)" % [i + 1, n])
+		player.set_override(Transform3D(Basis.IDENTITY, v[0]).looking_at(v[1], Vector3.UP), v[2], 1.0, 200.0)
+		if i == 1 or i == 7:
+			_burst(v[1] + Vector3(0, 2.0, 0), Color(1.0, 0.9, 0.6), 30, 4.0)
+		var props = []
+		if i == 2 or i == 8:
+			# the things the gull holds in its beak in the film moments (sun, cloud, falling star, rainbow): shown once, in front of the camera
+			var ahead = v[0] + (v[1] - v[0]).normalized() * 2.5
+			for k in ["sun", "cloud", "meteor", "skybow"]:
+				var pr = scenes._make_prop(k)
+				add_child(pr)
+				pr.global_position = ahead + Vector3(0.0, 0.2 * props.size(), 0.0)
+				props.append(pr)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		await RenderingServer.frame_post_draw
+		for pr in props:
+			pr.queue_free()
+		times.append(Time.get_ticks_msec() - tv0)
+	player.set_override(Transform3D.IDENTITY, 60.0, 0.0, 200.0)
+	player.input_locked = was_locked
+	print("[PERF] graphics prepared in %d ms (per view: %s)" % [Time.get_ticks_msec() - tw0, str(times)])
+	JavaScriptBridge.eval("window.JSF && JSF.gameReady && JSF.gameReady()")
 
 func _reload(skip):
 	GS.skip_menu = skip
 	Engine.time_scale = 1.0
 	get_tree().paused = false
 	Sfx.muffle(false, 0.01)
+	# the browser build: a second island built on top of the first one fragments the wasm heap (which only ever grows): the classic way a long session ends in
+	# a crash. A page reload gives a clean heap; the 0.8 s lets a save that was just written reach the browser's storage first.
+	if GS.web and not autotest:
+		var ok = JavaScriptBridge.eval("(function(){ try { sessionStorage.setItem('jsf_skip_menu', '%s'); setTimeout(function(){ location.reload(); }, 800); return 1; } catch (e) { return 0; } })()" % ("1" if skip else "0"))
+		if ok != null and float(ok) > 0.5:
+			return
 	get_tree().reload_current_scene()
 
 # START button: the opening title cards first (only on a fresh launch), then the game
@@ -316,7 +380,8 @@ func _start_game():
 	Engine.max_fps = 60
 	menus.begin_game()
 	player.active = true
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	if OS.get_cmdline_user_args().size() == 0:       # dev/test runs (any user arg) never grab the real mouse
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	Sfx.stop_theme(2.5)
 	Sfx.world_zone = _zone_of(player.global_position)
 	Sfx.start_music()
@@ -1459,3 +1524,6 @@ func _ending_cafe():
 	story.finish()
 	title.finished.connect(func(): title.play_credits(), CONNECT_ONE_SHOT)
 	title.play_ending()
+
+func _s7_first_frame():
+	print("[S7_FIRST_FRAME] ",JSON.stringify({"draws":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),"tris":Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),"ticks_ms":Time.get_ticks_msec(),"no_focus":DisplayServer.window_get_flag(DisplayServer.WINDOW_FLAG_NO_FOCUS),"mouse_captured":Input.mouse_mode==Input.MOUSE_MODE_CAPTURED}))

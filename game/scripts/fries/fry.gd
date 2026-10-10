@@ -196,6 +196,7 @@ func _rebuild():
 					_build_carton(0.8)
 				_:
 					_build_carton(1.0)
+	preload("res://scripts/art/p2_parts.gd").fry(self)
 	_build_halo()
 	_build_sense_ring()
 

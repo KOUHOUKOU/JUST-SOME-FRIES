@@ -94,7 +94,9 @@ func _load_assets():
 		if sounds.has(n) and sounds[n] is AudioStreamWAV:
 			sounds[n].loop_mode = AudioStreamWAV.LOOP_FORWARD
 			sounds[n].loop_begin = 0
-			sounds[n].loop_end = sounds[n].data.size() / 2
+			# loop_end is in SAMPLES. The imported wavs are QOA-compressed, so data.size() is NOT the sample count
+			# (it made the loop cover only the first ~20 %: a swell that rises, cuts off and starts again).
+			sounds[n].loop_end = int(round(sounds[n].get_length() * sounds[n].mix_rate))
 	return ok and sounds.has("wind") and music_streams.has("title")
 
 func _finish_loading():
@@ -104,7 +106,6 @@ func _finish_loading():
 	waves.volume_db = -14.0
 	wind.volume_db = -40.0
 	murmur.volume_db = -30.0
-	waves.play()
 	wind.play()
 	murmur.play()
 	ready_ok = true
@@ -135,7 +136,6 @@ func _process(delta):
 			waves.volume_db = -14.0
 			wind.volume_db = -40.0
 			murmur.volume_db = -30.0
-			waves.play()
 			wind.play()
 			murmur.play()
 			ready_ok = true
@@ -159,7 +159,7 @@ func _process(delta):
 			play("growl", -22.0 + 2.0 * min(GS.fries_eaten, 8))
 			growl_timer = -1.0
 	murmur.volume_db = lerp(murmur.volume_db, -30.0 + 6.0 * calm, 1.0 - exp(-2.0 * delta))
-	waves.volume_db = lerp(waves.volume_db, -14.0 + 3.0 * calm, 1.0 - exp(-2.0 * delta))
+	# (the sea-wave loop is retired: too rough; the "waves" player is never started)
 	# the music follows the hush and the fade-out of the ending
 	var active = music[cur]
 	if active.playing:

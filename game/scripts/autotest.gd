@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 # Dev-only test bot. `godot --path game -- <mode>`:
 #   --autotest   scripted playthrough of the whole game with a bot pilot
 #   --rhythm --flee --star --tiers --land --hud --rainbow   round 5 systems
@@ -15,6 +15,23 @@ func _process(_delta):
 		Engine.max_fps = 30
 
 func _ready():
+	# Round 14 review artifacts stay inside art_src; normal dev output is unchanged.
+	if "--art-review" in OS.get_cmdline_user_args():
+		shots = ProjectSettings.globalize_path("res://../art_src/p0/autotest/" if "--autotest" in OS.get_cmdline_user_args() else "res://../art_src/p0/game/")
+		if "--art-p1a" in OS.get_cmdline_user_args():
+			shots = ProjectSettings.globalize_path("res://../art_src/p1a/autotest/" if "--autotest" in OS.get_cmdline_user_args() else "res://../art_src/p1a/game/")
+	if "--art-p1b" in OS.get_cmdline_user_args():
+		shots = ProjectSettings.globalize_path("res://../art_src/p1b/autotest/" if "--autotest" in OS.get_cmdline_user_args() else "res://../art_src/p1b/game/")
+	if "--p1b-r2" in OS.get_cmdline_user_args():shots = shots.replace("/p1b/","/p1b_review2/")
+	if "--art-p2" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/p2/autotest/" if "--autotest" in OS.get_cmdline_user_args() else "res://../art_src/p2/game/")
+	if "--art-s1" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/s1/autotest/" if "--autotest" in OS.get_cmdline_user_args() else "res://../art_src/s1/game/")
+	if "--s1-r2" in OS.get_cmdline_user_args():shots=shots.replace("/s1/", "/s1/round_2/")
+	if "--art-s3" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/s3/autotest/")
+	if "--art-s3b" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/s3b/autotest/")
+	if "--art-s2" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/s2/autotest/")
+	if "--art-s5" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/s5/autotest/")
+	if "--art-s7" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/s7/autotest/")
+	if "--art-s6" in OS.get_cmdline_user_args():shots=ProjectSettings.globalize_path("res://../art_src/s6/autotest/")
 	DirAccess.make_dir_recursive_absolute(shots)
 	var args = OS.get_cmdline_user_args()
 	if not ("--full" in args) and not ("--film" in args):
@@ -22,11 +39,14 @@ func _ready():
 		Engine.max_fps = 30
 		get_window().size = Vector2i(960, 540)
 		get_viewport().scaling_3d_scale = 0.75
+	if "--art-review" in args:
+		get_window().size = Vector2i(512, 288)
+		get_viewport().scaling_3d_scale = 1.0
 	var table = {"--tour": "tour", "--intro": "intro_shots", "--ui": "ui_shots", "--cam": "cam_shots", "--systems": "systems_test", "--early": "early_test", "--fuzz": "fuzz_test",
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -35,7 +55,10 @@ func _ready():
 
 func shot(n):
 	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png(shots + n + ".png")
+	var image = get_viewport().get_texture().get_image()
+	if "--art-review" in OS.get_cmdline_user_args() and image.get_width() > 512:
+		image.resize(512, roundi(image.get_height() * 512.0 / image.get_width()))
+	image.save_png(shots + n + ".png")
 
 
 func view(pos, target, fov = 70.0):
@@ -1832,6 +1855,9 @@ func film():
 			await film_seg4()
 		5:
 			await film_seg5()
+		6:
+			var preview=load("res://scripts/art/s4_film.gd").new();add_child(preview)
+			await preview.run(self)
 	clock("segment %d done" % seg)
 	get_tree().quit()
 
@@ -2183,6 +2209,68 @@ func bank_test():
 
 # the comic-panel camera shots, read from shots/cams.json: [[name, px, py, pz, lx, ly, lz, fov], ...] (dev: tune the opening / ending shots without touching code)
 func cams_test():
+	if "--art-s4" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s4_review.gd").new();add_child(review)
+		await review.run(main);return
+	if "--art-s7" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s7_review.gd").new();add_child(review)
+		await review.run(main,shots);return
+	if "--art-s6" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s6_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--art-s5" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s5_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--art-s3" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s3_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--art-s2" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s2_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--s1-r2" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s1_r2_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--art-s1" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/s1_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--p2-r2" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/p2_r2_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--art-p2" in OS.get_cmdline_user_args():
+		var review=load("res://scripts/art/p2_review.gd").new();add_child(review)
+		await review.run(main,shots)
+		return
+	if "--art-p1b" in OS.get_cmdline_user_args():
+		var review = Node.new()
+		review.set_script(load("res://scripts/art/p1b_review.gd"))
+		add_child(review)
+		await review.run(main, shots)
+		return
+	if "--art-r2" in OS.get_cmdline_user_args():
+		var review = Node.new()
+		review.set_script(load("res://scripts/art/p1a_r2_review.gd"))
+		add_child(review)
+		await review.run(main, shots)
+		return
+	if "--art-p1a" in OS.get_cmdline_user_args():
+		var review = Node.new()
+		review.set_script(load("res://scripts/art/p1a_review.gd"))
+		add_child(review)
+		await review.run(main, shots)
+		return
+	if "--art-p0" in OS.get_cmdline_user_args():
+		var review = Node.new()
+		review.set_script(load("res://scripts/art/p0_review.gd"))
+		add_child(review)
+		await review.run(main, shots)
+		return
 	await get_tree().create_timer(1.0).timeout
 	var txt = FileAccess.get_file_as_string(shots + "cams.json")
 	var list = JSON.parse_string(txt)
@@ -2455,15 +2543,45 @@ func round7b_test():
 
 # ---------------------------------------------------------------- round 8
 # --r8c: the real opening, a contact sheet of screenshots every 2.5 s (the VN box, the portraits, the old man's fry)
+# --r13reload: the browser build restarts by reloading the page; this asks for a restart once and checks, after the reload, that the choice came through
+func r13reload():
+	await get_tree().create_timer(2.0).timeout
+	if GS.skip_menu:
+		say("[R13] PASS the restart (page reload on the web) carried 'straight into a new run' over, web=%s" % str(GS.web))
+		get_tree().quit()
+		return
+	say("[R13] first load: asking for a restart, web=%s" % str(GS.web))
+	main.autotest = false
+	main._reload(true)
+
+func chk13(name_, ok, extra = ""):
+	say("[R13] %s %s %s" % ["PASS" if ok else "FAIL", name_, extra])
+
+# round 13: the big brother is 2.3x a gull; whenever both gulls are in the world the two must never overlap (body centres at least this far apart, metres)
+const GULL_GAP_MIN = 3.0
+
+func gull_gap():
+	var b = main.bro
+	var p = main.player
+	if b == null or p == null or not b.gull.is_visible_in_tree() or not p.gull.is_visible_in_tree():
+		return 99.0
+	var d = b.global_position - p.global_position
+	d.y = 0.0
+	return d.length()
+
 func r8open():
 	await get_tree().create_timer(1.0).timeout
+	var min_gap = 99.0
+	chk13("the little gull starts well away from the big brother", gull_gap() >= GULL_GAP_MIN, "%.1f m" % gull_gap())
 	main.scenes.opening()
 	for i in 44:
 		await real(2.5)
+		min_gap = min(min_gap, gull_gap())
 		await shot("r8o_%02d" % i)
 		if main.story.hold["on"]:
 			Input.action_press("interact")
 	Input.action_release("interact")
+	chk13("the opening never puts the two gulls on top of each other", min_gap >= GULL_GAP_MIN, "closest %.1f m" % min_gap)
 	await real(2.0)
 	await shot("r8o_end")
 	get_tree().quit()
@@ -2654,8 +2772,10 @@ func r8end():
 	var ccx = main.scenes.cc()
 	var worst_e = 0.0
 	var near_e = 99.0
+	var gap_e = 99.0
 	while Time.get_ticks_msec() - t0 < 300000:
 		await real(2.0)
+		gap_e = min(gap_e, gull_gap())
 		await shot("r8e_%03d" % k)
 		var camx = get_viewport().get_camera_3d()
 		if camx != null and main.story.active and main.story.cam != null:
@@ -2670,6 +2790,7 @@ func r8end():
 		if k > 20 and not main.scenes.cine_busy:
 			break
 	chk9("the ending never puts a gull in the lens", worst_e <= 0.6 and near_e >= 2.4, "worst %d%% nearest %.1f m" % [int(worst_e * 100.0), near_e])
+	chk13("the ending never puts the two gulls on top of each other", gap_e >= GULL_GAP_MIN, "closest %.1f m" % gap_e)
 	say("[R8] ending finished after %d shots" % k)
 	for i in 6:
 		await real(2.0)
