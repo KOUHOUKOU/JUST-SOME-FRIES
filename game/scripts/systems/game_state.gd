@@ -34,6 +34,10 @@ signal fish_caught(info)              # {"sp": id, "len": cm, "kg": x, "new": bo
 signal meteor_caught                  # a shooting star was caught (round 8)
 signal sky_caught(kind, count)        # round 15: cloud | raincloud | star | moon | sun | rainbow; count = how many of the five are in
 signal achievement_unlocked(id)       # round 15: a gallery achievement (icon, name, date)
+signal fish_started                   # round 16: the first fish of a streak: FISH TIME begins
+signal fish_added(streak, rarity)     # ...and every fish after it (the streak climbs, the time grows)
+signal fish_ended
+signal memory_added(id)               # round 16: a first-time moment worth a little film (main.gd records a few frames of it)
 
 enum Phase { TUTORIAL, SPECIAL_HUNT, STILL_HUNGRY, ENDED }
 
@@ -64,6 +68,7 @@ const METEOR_NEED = 232.0            # a shooting star
 const CLOUD_NEED = 225.0             # a whole cloud
 const SKYBOW_NEED = 238.0            # the rainbow in the sky
 const SUN_NEED = 244.0               # the sun (the moon asks for exactly the same)
+const SUN_CIRCLES = 9                # round 16: nine suns (the old tale): the sun and the moon are 9 circles x 2 judgements
 const MOON_NEED = 244.0
 const RAINCLOUD_NEED = 225.0         # the grey cloud, as hard as the white one
 const DECOR_NEED = 11.0               # m/s for borrowed hats, balloons... (mischief objects set their own)
@@ -91,10 +96,9 @@ const QUESTS = {
 	"wear": [3, "GET AN ACCESSORY", ""],
 	"fish": [3, "CATCH A FISH", ""],
 	"rainbow": [6, "GET A RAINBOW FRY", ""],
-	"fishbook": [6, "FILL THE FISH BOOK", "the whole sea, written down.|every one of them wetter than i expected.|and somehow... i'm still hungry."],
 	"sky": [10, "SKY HIGH! CLOUD, STAR, MOON, SUN, RAINBOW", "the whole sky, in my beak.|it was softer, warmer and louder than i expected.|and somehow... i'm still hungry."],
 }
-const BIG_QUESTS = ["fishbook", "sky"]
+const BIG_QUESTS = ["sky"]
 const SKY_KINDS = ["cloud", "star", "moon", "sun", "rainbow"]      # the five things of the sky quest (a rain cloud counts as the cloud; catching both is an achievement of its own)
 const QUEST_SHOWN = 5                 # lines on the board at once
 
@@ -203,6 +207,53 @@ var sight_time = 0.0                  # seconds Gull Sight has been held in tota
 var tab_lesson = 0                    # 0 = not shown yet, 1 = prompt on screen, 2 = done
 var cine_seen = {}                    # the cinematic moments that have been shown already (each plays once per run): drinks3, fish, meteor, all24
 
+# ---- ROUND 16: FISH TIME. A fish gives the breath back and starts (or tops up) a state of the sea: on the water the gull surfs at no cost, Space on the water is a
+# LAUNCH (a big, short burst of acceleration to catch the fish that jump), and every other fish starts leaping so that a streak is easy to keep going.
+# When RAINBOW TIME and FISH TIME run together, the SEA (the water and the air just above it) belongs to FISH TIME and the air to RAINBOW TIME (see `fish_mode`).
+const FISH_FIRST_SEC = 22.0
+const FISH_ADD = [10.0, 15.0, 24.0]    # seconds per fish: common, rare, legendary
+const FISH_CAP = 90.0
+const FISH_TOP = 3.0                   # m/s of extra top speed in the sea while FISH TIME runs (the fish ask for a lot)
+const FISH_STREAK_SEC = 14.0           # a fish within this many seconds of the last one keeps the streak going
+const SEA_ZONE_H = 9.0                 # the "sea" reaches this high above the water (a leaping fish tops out at ~4.4 m)
+var fish_t = 0.0                       # seconds of FISH TIME left
+var fish_streak = 0
+var fish_streak_t = 0.0
+var fish_best_streak = 0
+var sea_zone = false                   # the gull is over the sea and low: the player script sets this every frame
+var cutscene = false                   # a film moment / the story is on screen: the drinks and FISH TIME wait (main / story_scenes set it)
+var free_play = false                  # round 16: the ending is over and the player kept playing (every colour, every fish, every achievement still to get)
+var slot = 1                           # which of the save slots this run lives in
+var autoload_slot = 0                  # a reload that must continue a slot at once (KEEP PLAYING after the credits)
+
+func fish_active():
+	return fish_t > 0.0
+
+# the sea belongs to FISH TIME while it runs; everywhere else RAINBOW TIME (if it runs) is in charge
+func fish_mode():
+	return fish_t > 0.0 and sea_zone
+
+func add_fish_time(rarity):
+	var was = fish_t > 0.0
+	remember("fishtime")
+	if fish_streak_t <= 0.0:
+		fish_streak = 0
+	fish_streak += 1
+	fish_best_streak = max(fish_best_streak, fish_streak)
+	fish_streak_t = FISH_STREAK_SEC
+	fish_t = min(fish_t + FISH_ADD[clamp(rarity, 0, 2)] + (0.0 if was else FISH_FIRST_SEC), FISH_CAP)
+	if not was:
+		fish_started.emit()
+	fish_added.emit(fish_streak, rarity)
+	if fish_streak >= 5:
+		ach_unlock("fishstreak")
+
+func end_fish():
+	if fish_t > 0.0:
+		fish_t = 0.0
+		fish_streak = 0
+		fish_ended.emit()
+
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# 240 Hz uncapped rendering of a ~2000-draw-call scene saturated a laptop GPU/CPU (system-wide lag after a while).
@@ -224,6 +275,8 @@ func _ready():
 		# the browser build restarts by reloading the page (main.gd `_reload`): the choice (straight into a new run, or the menu) comes through the tab's session storage
 		var v = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_skip_menu'); sessionStorage.removeItem('jsf_skip_menu'); return v; } catch (e) { return null; } })()")
 		skip_menu = str(v) == "1"
+		var vs = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_slot'); sessionStorage.removeItem('jsf_slot'); return v; } catch (e) { return null; } })()")
+		autoload_slot = int(str(vs)) if (vs != null and str(vs).is_valid_int()) else 0
 		# dev: `?lite=N` in the page address switches parts of the film moments off to find out what costs the most in the browser (1 = no close-ups, 2 = no blur, 4 = no letterbox bars + words)
 		var lv = JavaScriptBridge.eval("(function(){ try { return new URLSearchParams(location.search).get('lite'); } catch (e) { return null; } })()")
 		if lv != null:
@@ -268,8 +321,10 @@ func cull_tree(root, end_m, no_shadow = false):
 func _process(delta):
 	if heat > 0.0:
 		heat = max(heat - delta / 30.0 * heat_decay_mult, 0.0)
-	if not get_tree().paused and not codex_open and not showcase_active:
-		_buff_tick(delta / max(Engine.time_scale, 0.1))
+	# round 16: the drinks and FISH TIME run on GAME time (Gull Sight and the grab slow-motion slow them too, so a player who taps TAB keeps them longer) and wait
+	# while a film moment, the story or the credits are on screen
+	if not get_tree().paused and not codex_open and not showcase_active and not cutscene and not film_flow:
+		_buff_tick(delta)
 
 func reset_stats():
 	stats = {"stolen": 0, "perfect": 0, "shot": 0, "slipped": 0, "walls": 0, "missed": 0, "swats": 0, "vision_s": 0.0, "fish": 0, "rivals": 0, "bops": 0, "scares": 0,
@@ -320,6 +375,14 @@ func reset():
 	cine_hold = null
 	fish_book = {}
 	quest_done_at = {}
+	fish_t = 0.0
+	fish_streak = 0
+	fish_streak_t = 0.0
+	fish_best_streak = 0
+	last_steal_t = -999.0
+	sea_zone = false
+	cutscene = false
+	free_play = false
 	reset_stats()
 
 func set_level(type, level):
@@ -333,6 +396,16 @@ func add_rainbow(type):
 
 func add_heat(a):
 	heat = clamp(heat + a, 0.0, 4.0)
+
+# round 16: the crowd only stays wary of a gull that keeps stealing. A gull that has taken nothing for IDLE_CALM seconds is forgotten quickly (heat and the watching crowd
+# fade to zero in a few seconds) and stays forgotten until its next theft.
+const IDLE_CALM = 8.0
+var last_steal_t = -999.0             # game clock (seconds) of the last successful theft
+func mark_steal():
+	last_steal_t = msec() / 1000.0
+
+func idle_steal_s():
+	return msec() / 1000.0 - last_steal_t
 
 func watch_label():
 	if watch < 1.0:
@@ -382,6 +455,11 @@ const ACH = {
 	"thermal": ["THERMAL RIDER", "Soar up on a column of warm air.", "Free altitude. Freer than free."],
 	"skim": ["SKIMMER", "Skim the sea at speed.", "Wet feet, dry wit."],
 	"wall": ["WALL KISS", "Fly into a wall at full speed.", "The wall is fine. The wall is always fine."],
+	"fishstreak": ["SCHOOL'S IN", "Catch five fish in one FISH TIME.", "The sea ran out of excuses before you ran out of beak."],
+	"callgulls": ["BIRDS OF A FEATHER", "Call a flock of gulls to a rooftop with F.", "You did not ask them to come. They came anyway. Hearts."],
+	"callkind": ["WELL, HELLO", "Squawk at a calm crowd and be waved at.", "Turns out a good squawk is just a loud hello."],
+	"callshoo": ["INDOOR VOICE", "Squawk at a wary crowd and be chased off.", "They did not want your hello. They wanted a quiet pier."],
+	"freeplay": ["ONE MORE LAP", "Keep playing after the end.", "The fry is eaten. The sky is not."],
 	"innocent": ["INNOCENT AS A SEAGULL", "Calm a crowd that was on full alert, until nobody is watching you.", "Whistle. Look at the clouds. Works every time."],
 }
 const AWARD_ID = {"EARLY BIRD": "plain_first", "ENOUGH": "enough", "ALL 24": "all24", "RAINBOW": "rainbowfry", "BIG FISH ENERGY": "bigfish", "NEW FRIEND": "friend",
@@ -453,7 +531,7 @@ func ach_tick():
 		ach_unlock("fishall")
 
 # ---- the gull's memories (round 8): the things it really did, in the order it did them. The ending plays them back while the plain fry is being chewed.
-const AWARD_MEM = {"ESPRESSO": "coffee", "LAST ORDERS": "alcohol", "SWEET TOOTH": "ice", "GONE FISHING": "fish", "BIG FISH ENERGY": "bigfish", "HEAD IN THE CLOUDS": "cloud",
+const AWARD_MEM = {"OVER THE MOON": "moon", "RAIN ON MY PARADE": "raincloud", "ESPRESSO": "coffee", "LAST ORDERS": "alcohol", "SWEET TOOTH": "ice", "GONE FISHING": "fish", "BIG FISH ENERGY": "bigfish", "HEAD IN THE CLOUDS": "cloud",
 	"TOO HOT TO HANDLE": "sun", "OVER THE RAINBOW": "skybow", "WISHFUL THINKING": "meteor", "NEW FRIEND": "friend", "A FRIEND WHO SHARES": "gift", "A KIND CHILD": "kid", "RAINBOW": "rainbow",
 	"THERMAL RIDER": "thermal", "SKIMMER": "skim", "WALL KISS": "wall", "FULLY ARMED": "armed", "ALL 24": "all24"}
 var memories = {}                     # id -> {"t": seconds of the run when it happened, ...}
@@ -466,6 +544,7 @@ func remember(id, data = {}):
 	var d = data.duplicate()
 	d["t"] = run_time
 	memories[id] = d
+	memory_added.emit(id)
 
 func special_count():
 	var n = 0
@@ -555,8 +634,9 @@ func start_star():
 	stats["star"] = stats.get("star", 0) + 1
 	star_started.emit()
 
+# RAINBOW TIME as the gull feels it right now: in the sea FISH TIME is in charge, so the rainbow stays quiet there
 func star_active():
-	return star_t > 0.0
+	return star_t > 0.0 and not fish_mode()
 
 func end_star():
 	if star_t > 0.0:
@@ -583,6 +663,13 @@ func _buff_tick(rdt):
 		star_t = max(star_t - rdt, 0.0)
 		if star_t <= 0.0:
 			star_ended.emit()
+	if fish_streak_t > 0.0:
+		fish_streak_t = max(fish_streak_t - rdt, 0.0)
+	if fish_t > 0.0:
+		fish_t = max(fish_t - rdt, 0.0)
+		if fish_t <= 0.0:
+			fish_streak = 0
+			fish_ended.emit()
 
 # the lower-left one-liner ("senses sharpened...")
 func say_buff(text):
@@ -590,15 +677,17 @@ func say_buff(text):
 	buff_msg_t = msec() / 1000.0
 
 func invincible():
-	return buff["ice"] > 0.0 or star_t > 0.0
+	return buff["ice"] > 0.0 or star_active()
 
 func drink_speed_mult():
 	return 1.0
 
 func drink_accel_mult():
 	var m = 2.2 if buff["coffee"] > 0.0 else 1.0
-	if star_t > 0.0:
+	if star_active():
 		m *= 2.0
+	if fish_mode():
+		m *= 1.5
 	return m
 
 # how much the grab slow-motion slows the world: coffee deeper, cocktail milder, STARLIGHT deepest of all
@@ -608,7 +697,7 @@ func slowmo_mult():
 		m *= 0.55
 	if buff["alcohol"] > 0.0:
 		m *= 1.7
-	if star_t > 0.0:
+	if star_active():
 		m = min(m, 0.5)
 	return m
 
@@ -619,13 +708,15 @@ func buff_window_mult():
 		m *= 1.3
 	if buff["alcohol"] > 0.0:
 		m *= 0.88
-	if star_t > 0.0:
+	if star_active():
 		m = max(m, 1.0) * 1.5
+	if fish_mode():
+		m *= 1.25
 	return m
 
 # nothing costs stamina: the cocktail and STARLIGHT
 func free_flight():
-	return buff["alcohol"] > 0.0 or star_t > 0.0
+	return buff["alcohol"] > 0.0 or star_active() or fish_mode()
 
 # ---- "where to fly next": the nearest fry that the gull's top speed can really lock (E in free flight, and the arrow of Gull Sight) ----
 var sniff_node = null
@@ -652,10 +743,10 @@ func nearest_fry(from_pos, reachable_only = true):
 
 # ---- stat formulas (every number a player can feel lives here) ----
 func glide_speed():
-	return 5.0 * drink_speed_mult() + (4.0 if star_t > 0.0 else 0.0)
+	return 5.0 * drink_speed_mult() + (4.0 if star_active() else 0.0)
 
 func cruise_speed():
-	return 11.0 * drink_speed_mult() + (7.0 if star_t > 0.0 else 0.0)      # fries never change this
+	return 11.0 * drink_speed_mult() + (7.0 if star_active() else 0.0)      # fries never change this
 
 # the TOP speed: boost. Sonic fries lift it; every buff lifts it a bit more
 func boost_speed():
@@ -663,8 +754,10 @@ func boost_speed():
 	for k in BUFF_TOP:
 		if buff[k] > 0.0:
 			b += BUFF_TOP[k]
-	if star_t > 0.0:
+	if star_active():
 		b += STAR_TOP
+	if fish_mode():
+		b += FISH_TOP
 	return b
 
 func accel_mult():
@@ -698,6 +791,8 @@ func sight_radius():
 	return SIGHT_R_TAB[lv["cyan"]] + 4.0 * rainbow["cyan"]
 
 func vision_cost():
+	if tab_lesson < 2:
+		return 0.0                # round 16: the first look through Gull Sight is free: the lesson must never fail on an empty bar
 	return VISION_BASE_COST * VISION_TAB[lv["cyan"]]
 
 func hurt_mult():
@@ -752,8 +847,6 @@ func quest_progress(id):
 	match id:
 		"sky":
 			return [sky_got.size(), SKY_KINDS.size()]
-		"fishbook":
-			return [fish_book.size(), FISH_ORDER.size()]
 	return []
 
 func quest_label(id):
@@ -767,7 +860,7 @@ func _quest_ok(id):
 	match id:
 		"drink":
 			return stats.get("drinks", 0) >= 1
-		"sky", "fishbook":
+		"sky":
 			var pr = quest_progress(id)
 			return pr[0] >= pr[1]
 		"star":
@@ -824,9 +917,11 @@ func quests_shown():
 	return out
 
 # ---- the fish book ----
-func fish_pick_species():
+func fish_pick_species(force_rar = -1):
 	var r = randf()
 	var rar = 0 if r < 0.58 else (1 if r < 0.88 else 2)
+	if force_rar >= 0:
+		rar = force_rar
 	var pool = []
 	for k in FISH_ORDER:
 		if FISH_SPECIES[k][1] == rar:
@@ -922,31 +1017,64 @@ func rainbow_text(type):
 	return ""
 
 # ---- save game (a plain JSON file in the user folder): the run so far, the gull's stuff and where it was ----
-func has_save():
-	return FileAccess.file_exists(SAVE_PATH)
+# round 16: two save slots. Slot 1 keeps the old file name (an older save simply is slot 1).
+const SLOTS = 2
+func save_path(sl = 0):
+	var n = slot if sl <= 0 else sl
+	if OS.get_cmdline_user_args().size() > 0:
+		return "user://dev_savegame%d.json" % n        # the test bots never touch a real player's saves
+	return SAVE_PATH if n == 1 else "user://savegame%d.json" % n
 
-func delete_save():
-	if has_save():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+func has_save(sl = 0):
+	return FileAccess.file_exists(save_path(sl))
 
-func write_save(pos, yaw):
-	if ordinary_eaten:
+func has_any_save():
+	for i in range(1, SLOTS + 1):
+		if has_save(i):
+			return true
+	return false
+
+func delete_save(sl = 0):
+	if has_save(sl):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path(sl)))
+
+# what a slot card shows: {} when the slot is empty
+func slot_info(sl):
+	var d = read_save(sl)
+	if d == null:
+		return {}
+	var l = d.get("lv", {})
+	var n = int(d.get("sense", 0)) if int(d.get("sense", 0)) < 3 else 3
+	for k in l:
+		n += int(l[k])
+	var secs = int(float(d.get("run", 0.0)))
+	return {"fries": n, "time": "%02d:%02d" % [secs / 60, secs % 60], "free": bool(d.get("free", false)), "fish": d.get("fish", {}).size()}
+
+# the end of a run: the gull is on the roof next to its big brother and may keep playing from there (the save is marked "free")
+func write_end_save(pos, yaw):
+	return write_save(pos, yaw, true)
+
+func write_save(pos, yaw, ended = false):
+	if ordinary_eaten and not ended:
 		return false
 	var d = {"v": 1, "sense": gull_sense_count, "tut": tutorial_done.keys(), "lv": lv.duplicate(), "rb": rainbow.duplicate(), "stars": star_got.keys(),
 		"worn": worn.keys(), "eq": equipped.keys(), "mis": mischief_counts.duplicate(), "ach": achievements_done.keys(), "eaten": fries_eaten,
 		"hunger": hunger_t, "run": run_time, "stats": stats.duplicate(), "phase": int(phase), "pos": [pos.x, pos.y, pos.z], "yaw": yaw,
-		"seen": menu_seen.keys(), "quests": quests.duplicate(), "fish": fish_book.duplicate(true), "starn": star_total, "cine": cine_seen.keys(), "mem": memories.duplicate(true), "sky": sky_got.keys(), "clouds": clouds_got.keys(), "sight": sight_time, "tabl": tab_lesson}
-	var f = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+		"seen": menu_seen.keys(), "quests": quests.duplicate(), "fish": fish_book.duplicate(true), "starn": star_total, "cine": cine_seen.keys(), "mem": memories.duplicate(true), "sky": sky_got.keys(), "clouds": clouds_got.keys(), "sight": sight_time, "tabl": tab_lesson,
+		"free": free_play or ended}
+	if ended:
+		d["phase"] = int(Phase.STILL_HUNGRY) if special_count() >= FRY_TYPES.size() else (int(Phase.SPECIAL_HUNT) if gull_sense_count >= 3 else int(Phase.TUTORIAL))
+	var f = FileAccess.open(save_path(), FileAccess.WRITE)
 	if f == null:
 		return false
 	f.store_string(JSON.stringify(d))
 	f.close()
 	return true
 
-func read_save():
-	if not has_save():
+func read_save(sl = 0):
+	if not has_save(sl):
 		return null
-	var f = FileAccess.open(SAVE_PATH, FileAccess.READ)
+	var f = FileAccess.open(save_path(sl), FileAccess.READ)
 	if f == null:
 		return null
 	var txt = f.get_as_text()
@@ -959,6 +1087,7 @@ func read_save():
 # put a loaded save into the state (the world is rebuilt from it by main.gd)
 func apply_save(d):
 	reset()
+	free_play = bool(d.get("free", false))
 	gull_sense_count = int(d.get("sense", 0))
 	for id in d.get("tut", []):
 		tutorial_done[id] = true
@@ -1015,8 +1144,10 @@ func apply_save(d):
 		cine_seen["meteor"] = true
 	if fry_total() >= FRY_CAP:
 		cine_seen["all24"] = true
-	for k in ["sun", "skybow", "cloud", "moon"]:
-		cine_seen[k] = true             # (the sky no longer has film moments: a save from before simply has nothing to replay)
+	for k in sky_got:                   # what the sky already gave has had its moment
+		cine_seen[{"rainbow": "skybow", "star": "meteor"}.get(k, k)] = true
+	for k in clouds_got:
+		cine_seen[k] = true
 
 	var p = d.get("pos", [-9.5, 6.0, -0.8])
 	saved_pos = {"pos": Vector3(p[0], p[1], p[2]), "yaw": float(d.get("yaw", PI))}

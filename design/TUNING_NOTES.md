@@ -170,3 +170,7 @@
 - User-authorised fallback after failed overlay: `Terrain.HEADLAND_HEIGHT=12` (was24), original cap/influence radii and every non-headland H sample retained. Structures,68 collider origins,keeper/fiveNPCs and two anchors follow ground; thermals unchanged. Three original gameplay turbines retained rather than creating invisible solid remnants.
 - Regenerate `game/assets/models/s7/*.res` with `run_s7.ps1 -Mode Bake` after terrain/person-source changes. Person cache verifies source arrays/version; unknown styles/missing resources use the original generator. Cached noise pixels and171 person styles are exact. Terrain render trim is valid only with the optional headland shell; collision uses full terrain.
 - Five native fresh-process build median600ms vs freshS6 1022ms/preS6 target916ms. This is not disk-cold, total-load-time or browser throughput evidence. No web export. S7 STOP after four art iterations; remaining defects and all evidence in docs/36.
+
+
+## Round 16 (2026-10-12)
+See `docs/46_ROUND16_CHANGES.md`. Build: `BUILD.bat`, `python tools/make_zip.py` (Windows zip), `godot --headless --path game --export-release "Web" ../web/index.html` then `python tools/web/patch_index.py web/index.html film/poster_new.jpg`. Art: `python tools/cut_r16.py [a b c d e g]`, `tools/cut_r16_icons.py`; music: `python tools/audio/music16.py` (then `godot --headless --path game --import`). Dev tests `--r16a .. --r16f`, `--r16s`.

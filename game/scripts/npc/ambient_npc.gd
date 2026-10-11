@@ -120,6 +120,7 @@ func _process(delta):
 	_chase(delta)
 	_kind(delta)
 	_friendly(delta)
+	_shoo(delta)
 
 # round 10: nobody stands half inside a wall or a table: lifted to the nearest free spot (never more than 2.4 m away)
 func _unstick():
@@ -558,6 +559,57 @@ func _chase_end(booed):
 	chase_cd = 16.0 if booed else 9.0
 	rig.set_mode("walk")
 	rig.walk_rate = 1.2
+
+# round 16: the squawk (F) on the ground. +1 = a hello (the crowd is calm), -1 = the person sets off after the noisy gull (the crowd is wary), 0 = busy / not interested
+var shoo_t = 0.0
+var shoo_state = ""           # "" | run | home
+var shoo_was_grumpy = false
+const SHOOS = ["SHOO!", "QUIET, YOU!", "OUT! OUT!", "NOT AGAIN!", "GO AWAY, BIRD!"]
+func answer_call():
+	if not active or alarm_t > 0.0 or swing_state != "" or chase_state != "" or kk_state != "" or shoo_state != "" or rig == null or rig.seated:
+		return 0
+	if GS.watch < 1.6:
+		_hello()
+		return 1
+	shoo_state = "run"
+	shoo_t = 0.0
+	shoo_was_grumpy = grumpy
+	grumpy = true
+	swing_cd = 0.0
+	trail.clear()
+	rig.set_mode("jog")
+	rig.walk_rate = 1.5
+	RestEvents.say(get_tree().current_scene, self, SHOOS[randi() % SHOOS.size()], 2.2, 2.4)
+	Sfx.play("oh", -10.0, 0.8)
+	return -1
+
+func _shoo(delta):
+	if shoo_state == "":
+		return
+	shoo_t += delta
+	var flat = Vector2(player.global_position.x - global_position.x, player.global_position.z - global_position.z)
+	match shoo_state:
+		"run":
+			if swing_state == "":
+				_face_player(delta, 10.0)
+				if flat.length() > 2.1 and shoo_t < 6.0 and player.mode != 2:
+					_run_step(Vector3(flat.x, 0, flat.y).normalized(), 3.4, delta)
+			if shoo_t > 6.0 or (player.global_position.y - global_position.y > 4.0 and flat.length() > 4.0):
+				shoo_state = "home"
+				shoo_t = 0.0
+				grumpy = shoo_was_grumpy
+				swing_cd = 6.0
+				rig.override_arm_r = null
+				rig.set_mode("walk")
+				rig.walk_rate = 1.2
+		"home":
+			if _home_step(2.6, delta) or shoo_t > 20.0:
+				if shoo_t > 20.0:
+					position = home_pos
+					trail.clear()
+				shoo_state = ""
+				rig.set_mode(mode if mode != "stand" else "idle")
+				rotation.y = base_yaw
 
 # people wave at a gull that sits quietly near them
 func _friendly(delta):

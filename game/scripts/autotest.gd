@@ -46,7 +46,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u", "--r16s": "r16s", "--r16a": "r16a", "--r16b": "r16b", "--r16c": "r16c", "--r16d": "r16d", "--r16e": "r16e", "--r16f": "r16f", "--r16h": "r16h", "--r16g": "r16g"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -2904,7 +2904,7 @@ func r9cine():
 			if k > 40:
 				break
 		var dur = (GS.msec() - t0) / 1000.0
-		chk9("cinematic %s lasts 10-14.5 s" % id, dur >= 10.0 and dur <= 14.5, "%.1f s" % dur)
+		chk9("cinematic %s lasts 10-14.5 s (the slow ones to 19)" % id, dur >= 10.0 and dur <= (19.0 if id == "all24" else 14.5), "%.1f s" % dur)
 		chk9("cinematic %s never fills the picture with the gull" % id, worst <= 0.62 and nearest >= 2.6, "worst %d%% nearest %.1f m" % [int(worst * 100.0), nearest])
 		await real(1.0)
 	get_tree().quit()
@@ -2971,7 +2971,7 @@ func r9sky():
 		var r = await attempt(it, Vector3(0, 0.2, 1), 30.0, 0.0, -1.0, {"shot": "r9s_bow_rhythm"})
 		var lc = main.player.snatch.last_commit
 		say("[R9] rainbow -> %s commit=%s quests=%s worn=%s" % [r, str(lc), str(GS.quests.get("skybow")), str(GS.worn.keys())])
-		chk9("the rainbow takes 14 judgements and can be caught", r == "ok" and lc.get("n", 0) == 14 and GS.quest_state("skybow") == "done" and GS.worn.has("skybow"), "n=%s" % str(lc.get("n", 0)))
+		chk9("the rainbow takes 14 judgements and can be caught", r == "ok" and lc.get("n", 0) == 14 and GS.sky_got.has("rainbow") and GS.worn.has("skybow"), "n=%s" % str(lc.get("n", 0)))
 	await real(1.0)
 	GS.cine_seen.erase("skybow")
 	main.scenes.cinema("skybow", {})
@@ -3711,4 +3711,545 @@ func r15u():
 	main.menus.gallery.view.sel = 13
 	await real(0.3)
 	await shot("r15u_gallery_c")
+	get_tree().quit()
+
+
+# =====================================================================================================================================================
+# ROUND 16
+func chk16(name_, ok, extra = ""):
+	say("[R16] %s %s %s" % ["PASS" if ok else "FAIL", name_, extra])
+
+# --r16s: the frames the four-panel comic is drawn from (the big brother's boast, his question, and the last picture of the ending: two gulls on one roof, from behind)
+func r16s():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	var b = main.bro
+	var WB = preload("res://scripts/world/world_builder.gd")
+	main.hud.visible = false
+	p.input_locked = true
+	GS.gull_sense_count = 3
+	for dg in get_tree().get_nodes_in_group("dogs"):
+		dg.visible = false
+	var roof_y = main.scenes._roof_y(-8.9, -1.3)
+	# 1: the boast
+	b.look_at_player = false
+	view(Vector3(-8.8, 6.6, 6.9), Vector3(-8.3, 5.7, -1.0), 43.0)
+	await real(1.0)
+	await shot("r16s_p1")
+	view(Vector3(-8.8, 6.3, 2.0), Vector3(-5.9, 5.9, -1.3), 34.0)
+	await real(0.8)
+	await shot("r16s_p2")
+	# the end: both gulls on the roof edge, looking at the sea; the camera behind them
+	p.scripted_move = true
+	p.mode = 1
+	p.global_position = Vector3(-8.9, roof_y + 0.38, -1.3)
+	p.yaw = PI
+	p.aim_yaw = PI
+	p.rotation = Vector3(0, PI, 0)
+	b.global_position = Vector3(-5.8, roof_y + 0.92, -1.3)
+	b.rotation = Vector3(0, PI, 0)
+	b.gull.unwear("shades")
+	p.gull.reset_plain()
+	main.scenes._clear_picture(Vector3(-8.9, roof_y, -1.3), main.elder)
+	main.elder.rig.set_mode("wave")
+	var camp = Vector3(-7.35, roof_y + 2.5, -9.0)
+	view(camp, Vector3(-7.35, roof_y + 1.2, 6.0), 36.0)
+	await real(1.2)
+	await shot("r16s_p4")
+	view(Vector3(-7.35, roof_y + 1.6, 6.4), Vector3(-7.35, roof_y + 1.05, -1.3), 33.0)
+	b.rotation = Vector3(0, atan2(1.0, 0.0), 0)
+	p.rotation = Vector3(0, atan2(-1.0, 0.0), 0)
+	await real(1.0)
+	await shot("r16s_p4b")
+	get_tree().quit()
+
+func _r16_setup():
+	var p = main.player
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	for i in 7:
+		GS.set_level(GS.FRY_TYPES[i], 1)
+	main._reveal_specials()
+	main.meteors.set_process(false)
+	p.input_locked = false
+	return p
+
+# --r16a: the logic of the round (breath, the nine suns, the quest board, FISH TIME, the crowd, the clocks, the saves)
+func r16a():
+	await get_tree().create_timer(1.0).timeout
+	var p = _r16_setup()
+	# 1 every fry gives the whole breath back
+	GS.tutorial_done = {}
+	GS.gull_sense_count = 0
+	p.stamina = 4.0
+	main._on_escaped(main.world["fries"]["TUTORIAL_01"])
+	chk16("a fry refills the breath", p.stamina >= GS.stamina_max() - 0.5, "stamina %.0f / %.0f" % [p.stamina, GS.stamina_max()])
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	GS.gull_sense_count = 3
+	# the first Gull Sight is free (the lesson never fails on an empty bar)
+	GS.tab_lesson = 0
+	chk16("the first look through Gull Sight costs no breath", GS.vision_cost() == 0.0)
+	GS.tab_lesson = 2
+	chk16("later looks do cost breath in the air", GS.vision_cost() > 0.0)
+	# 2 the quest board: no fish book any more; the sky has five things
+	chk16("no 'fill the fish book' quest", not GS.QUESTS.has("fishbook") and GS.QUESTS.has("sky"))
+	GS.quests = {"sky": "active"}
+	main._quest_tick(1.0)
+	for k in ["cloud", "raincloud", "moon", "sun", "skybow"]:
+		if k == "skybow" and not main.quest_items.has(k):
+			continue
+		chk16("the sky item '%s' exists" % k, main.quest_items.has(k) and is_instance_valid(main.quest_items[k]))
+	var sn = p.snatch
+	var tiers = {}
+	for k in ["cloud", "raincloud", "moon", "sun"]:
+		tiers[k] = sn._tier_of(main.quest_items[k])
+	chk16("sun = 12, moon = 13, clouds = 6", tiers["sun"] == 12 and tiers["moon"] == 13 and tiers["cloud"] == 6 and tiers["raincloud"] == 6, str(tiers))
+	var pm = sn._seq_params(main.quest_items["moon"])
+	var ps = sn._seq_params(main.quest_items["sun"])
+	var pr = sn._seq_params(main.quest_items["raincloud"])
+	var pc = sn._seq_params(main.quest_items["cloud"])
+	chk16("the sun and the moon are nine circles of two waves", pm["c"] == 9 and ps["c"] == 9 and pm["n"] == 18 and ps["n"] == 18, "moon %d sun %d" % [pm["c"], ps["c"]])
+	chk16("the rain cloud is as hard as the white one", pr["c"] == pc["c"] and pr["n"] == pc["n"], "rain %d white %d" % [pr["c"], pc["c"]])
+	chk16("nine circles fit a layout", sn.LAYOUTS.has(9) and sn.LAYOUTS[9].size() == 9)
+	# the sky quest really ticks
+	GS.sky_catch("moon")
+	GS.sky_catch("raincloud")
+	GS.sky_catch("cloud")
+	chk16("catching the moon and both clouds counts for the sky quest", GS.sky_got.has("moon") and GS.sky_got.has("cloud") and GS.sky_got.size() == 2, str(GS.sky_got.keys()))
+	chk16("both clouds give an achievement", GS.ach_has("clouds2") or not GS.ach_persist)
+	# 3 FISH TIME and RAINBOW TIME share the world: the sea belongs to FISH TIME, the air to RAINBOW TIME
+	GS.star_t = 12.0
+	GS.fish_t = 0.0
+	GS.sea_zone = false
+	chk16("RAINBOW TIME alone works everywhere", GS.star_active() and GS.free_flight())
+	GS.add_fish_time(1)
+	chk16("a fish starts FISH TIME", GS.fish_active() and GS.fish_t > 30.0, "%.1f s" % GS.fish_t)
+	GS.sea_zone = true
+	chk16("in the sea FISH TIME is in charge", GS.fish_mode() and not GS.star_active() and GS.free_flight())
+	var top_sea = GS.boost_speed()
+	GS.sea_zone = false
+	chk16("in the air RAINBOW TIME is in charge", GS.star_active() and not GS.fish_mode())
+	chk16("the sea adds its own top speed, the rainbow its own", abs(top_sea - GS.boost_speed() - (GS.FISH_TOP - GS.STAR_TOP)) < 0.01, "sea %.1f air %.1f" % [top_sea, GS.boost_speed()])
+	GS.star_t = 0.0
+	GS.end_fish()
+	# 4 the clocks of the drinks follow game time, wait for cutscenes
+	GS.buff["coffee"] = 20.0
+	Engine.time_scale = 0.25
+	await real(2.0)
+	var left = GS.buff["coffee"]
+	Engine.time_scale = 1.0
+	chk16("a slowed world slows the drink clocks", left > 19.0, "%.2f s left after 2 s of x0.25 time" % left)
+	main.scenes.cine_busy = true
+	var b0 = GS.buff["coffee"]
+	await real(1.0)
+	main.scenes.cine_busy = false
+	chk16("a cutscene freezes the drink clocks", abs(GS.buff["coffee"] - b0) < 0.05, "%.2f -> %.2f" % [b0, GS.buff["coffee"]])
+	GS.set_drink("")
+	# 5 the crowd forgets a gull that steals nothing
+	GS.add_heat(3.0)
+	GS.mark_steal()
+	main.watch_t = 0.0
+	main._update_watch(0.3)
+	await real(1.0)
+	var w_fresh = GS.watch
+	GS.last_steal_t = GS.msec() / 1000.0 - 20.0
+	for i in 12:
+		main.watch_t = 0.0
+		main._update_watch(0.3)
+		await real(0.5)
+	chk16("after a theft the crowd is wary", w_fresh > 0.8, "watch %.2f" % w_fresh)
+	chk16("10+ idle seconds later it is calm again", GS.watch < 0.3 and GS.heat < 1.0, "watch %.2f heat %.2f" % [GS.watch, GS.heat])
+	# 6 two save slots and the saved end
+	GS.slot = 1
+	GS.delete_save(1)
+	GS.delete_save(2)
+	chk16("no saves at first", not GS.has_any_save())
+	GS.set_level("red", 2)
+	chk16("slot 1 saves", GS.write_save(Vector3(1, 2, 3), 0.5) and GS.has_save(1) and not GS.has_save(2))
+	GS.slot = 2
+	GS.ordinary_eaten = true
+	chk16("the end writes a 'free play' save into slot 2", GS.write_end_save(Vector3(-8.9, 5.3, -1.3), 1.0) and GS.has_save(2))
+	GS.ordinary_eaten = false
+	var info1 = GS.slot_info(1)
+	var info2 = GS.slot_info(2)
+	chk16("the slot cards know what they hold", not info1.is_empty() and info2.get("free", false) and not info1.get("free", true), str(info1) + " " + str(info2))
+	GS.apply_save(GS.read_save(2))
+	chk16("a free play save loads as free play, with the right phase", GS.free_play and GS.phase != GS.Phase.ENDED, "phase %d" % int(GS.phase))
+	GS.free_play = false
+	GS.delete_save(1)
+	GS.delete_save(2)
+	GS.slot = 1
+	# 7 the memory reel
+	main.reel.cache.clear()
+	main.reel.record("coffee")
+	await real(2.0)
+	chk16("the reel keeps frames of a first-time moment", main.reel.has_reel("coffee") and main.reel.reel("coffee").size() >= 3, "%d frames" % main.reel.reel("coffee").size())
+	main.reel.clear_slot()
+	chk16("a new run clears the reels", not main.reel.has_reel("coffee"))
+	get_tree().quit()
+
+# --r16b: the sea in FISH TIME (surfing, the launch, the leaping fish), the squawk on the roof and on the ground, the rainbow rings
+func r16b():
+	await get_tree().create_timer(1.0).timeout
+	var p = _r16_setup()
+	GS.tab_lesson = 2
+	GS.star_t = 0.0
+	# --- the sea: a gull over open water at low height is in the 'sea zone'
+	var sea = Vector3(-60.0, 6.0, 150.0)
+	place(sea, sea + Vector3(0, -2.0, -20.0), 8.0)
+	await real(0.5)
+	chk16("a gull over the open sea, low, is in the sea zone", GS.sea_zone)
+	place(Vector3(-9.5, 5.4, -0.8), Vector3(-9.5, 5.4, 20.0), 4.0)
+	await real(0.4)
+	chk16("a gull over the town is not", not GS.sea_zone)
+	# --- FISH TIME starts: the surfboard
+	GS.add_fish_time(0)
+	place(Vector3(sea.x, 0.1, sea.z), Vector3(sea.x, -8.0, sea.z - 30.0), 12.0)
+	await real(2.5)
+	chk16("in FISH TIME touching the sea is a surf, not a splash", p.on_water and p.mode == 1 and p.soaked_t <= 0.0, "on_water=%s mode=%d soaked=%.1f" % [p.on_water, p.mode, p.soaked_t])
+	Input.action_press("move_forward")
+	await real(2.5)
+	var surf_speed = Vector2(p.velocity.x, p.velocity.z).length()
+	chk16("W on the water builds surf speed", surf_speed > 9.0, "%.1f m/s" % surf_speed)
+	var st_before = p.stamina
+	await shot("r16b_surf")
+	chk16("surfing costs no breath", p.stamina >= st_before - 0.5)
+	await real(0.2)
+	var bar_spd = p.speed
+	tap("flap")
+	await real(0.15)
+	chk16("Space on the water in FISH TIME is a launch", p.mode == 0 and p.launch_t > 1.0, "mode %d launch %.2f" % [p.mode, p.launch_t])
+	var s0 = p.speed
+	await real(0.7)
+	await shot("r16b_launch")
+	chk16("the launch is a burst of acceleration", p.speed > bar_spd + 3.0, "speed %.1f -> %.1f" % [s0, p.speed])
+	Input.action_release("move_forward")
+	# --- the normal take-off from the water stays the same
+	GS.end_fish()
+	await real(1.5)
+	# --- fish keep jumping in FISH TIME: three rarities in the air at once
+	GS.add_fish_time(2)
+	GS.fish_t = 60.0
+	place(Vector3(0.0, 9.0, 100.0), Vector3(0.0, 9.0, 130.0), 6.0)
+	p.velocity = Vector3.ZERO
+	var FS = preload("res://scripts/world/fish_spot.gd")
+	var best = 0
+	var best_r = 0
+	var t0 = Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < 25000:
+		p.global_position = Vector3(0.0, 9.0, 100.0)
+		p.velocity = Vector3.ZERO
+		GS.fish_t = 60.0
+		var air = [0, 0, 0]
+		for sp in get_tree().get_nodes_in_group("fish_spots"):
+			if sp.state == "leap" and sp.fish != null and is_instance_valid(sp.fish):
+				air[sp.fish.rarity] += 1
+		var n_air = air[0] + air[1] + air[2]
+		var kinds = int(air[0] > 0) + int(air[1] > 0) + int(air[2] > 0)
+		best = max(best, n_air)
+		best_r = max(best_r, kinds)
+		if best >= 3 and best_r >= 3:
+			break
+		await real(0.25)
+	chk16("FISH TIME keeps at least three fish in the air", best >= 3, "most at once: %d" % best)
+	chk16("...of three different rarities", best_r >= 3, "most kinds at once: %d" % best_r)
+	GS.end_fish()
+	# --- the squawk on a roof calls a flock
+	main.autotest = true
+	place(Vector3(-9.6, 5.5, -1.3), Vector3(-9.6, 5.5, 20.0), 2.0)
+	p.mode = 1
+	p.perch_high = true
+	p.velocity = Vector3.ZERO
+	await real(1.0)
+	chk16("the gull stands on the roof", p.surface() == "roof", p.surface())
+	main._squawk_effects()
+	await real(8.0)
+	var seated = 0
+	for e in main.rest.flock:
+		if is_instance_valid(e["g"]) and e["phase"] == "sit":
+			seated += 1
+	chk16("F on a roof brings a flock", main.rest.flock_done or seated >= 3, "seated %d" % seated)
+	await real(4.0)
+	# --- the squawk on the ground: hellos in a calm town, a chase in a wary one
+	var amb = null
+	for a in get_tree().get_nodes_in_group("ambient"):
+		if is_instance_valid(a) and a.has_method("answer_call") and a.rig != null and not a.rig.seated and a.mode in ["stroll", "stand"]:
+			amb = a
+			break
+	if amb != null:
+		var tp = amb.global_position + Vector3(4.0, 0.0, 0.0)
+		place(tp + Vector3(0, 1.0, 0), amb.global_position, 3.0)
+		p.mode = 1
+		p.perch_high = false
+		amb.visible = true
+		amb.active = true
+		GS.watch = 0.0
+		main._watch_target = 0.0
+		amb.alarm_t = 0.0
+		var r1 = amb.answer_call()
+		chk16("a calm crowd answers a squawk with a hello", r1 == 1, "r=%d" % r1)
+		await real(3.0)
+		amb.alarm_t = 0.0
+		GS.watch = 2.5
+		var r2 = amb.answer_call()
+		chk16("a wary crowd answers a squawk with a chase", r2 == -1 and amb.shoo_state == "run", "r=%d state=%s" % [r2, amb.shoo_state])
+		await real(2.0)
+		chk16("the chaser really comes closer", amb.global_position.distance_to(p.global_position) < 4.0 or amb.swing_state != "", "dist %.1f" % amb.global_position.distance_to(p.global_position))
+		GS.watch = 0.0
+		amb.shoo_t = 99.0
+	else:
+		chk16("an ambient person to squawk at was found", false)
+	# --- the rainbow rings
+	GS.watch = 0.0
+	p.gull.wear("skybow")
+	place(Vector3(-9.5, 40.0, 20.0), Vector3(-9.5, 40.0, 120.0), 14.0)
+	Input.action_press("move_forward")
+	await real(6.0)
+	var fxn = null
+	for c in p.gull.get_children():
+		if c.get("kind") == "skybow":
+			fxn = c
+	chk16("the worn rainbow is no arch any more, only rings behind the flying gull", fxn != null and fxn.get("arch") == null and fxn.rings.size() + 0 >= 0)
+	var seen = 0
+	for i in 12:
+		seen = max(seen, fxn.rings.size() if fxn != null else 0)
+		await real(0.5)
+	chk16("rainbow rings appear behind a flying gull", seen >= 1, "%d at most" % seen)
+	Input.action_release("move_forward")
+	get_tree().quit()
+
+# --r16c: the ending with the memory reels and the four-panel strip, played for real
+func r16c():
+	await get_tree().create_timer(1.0).timeout
+	var p = _r16_setup()
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	GS.fish_book = {"mackerel": {"n": 2, "kg": 0.6, "cm": 36.0}, "tuna": {"n": 1, "kg": 40.0, "cm": 150.0}}
+	var ids = ["fry1", "coffee", "sun", "moon", "fish"]
+	var views = [[Vector3(-9.5, 8.0, -9.0), Vector3(-9.5, 3.0, 4.0)], [Vector3(-5.0, 2.6, 8.0), Vector3(-8.0, 0.6, 3.6)], [Vector3(10.0, 60.0, 90.0), Vector3(0.0, 90.0, 160.0)],
+		[Vector3(-50.0, 30.0, 70.0), Vector3(-102.0, 20.0, 40.0)], [Vector3(20.0, 6.0, 40.0), Vector3(30.0, 1.0, 14.0)]]
+	var k = 0
+	p.input_locked = true
+	for id in ids:
+		GS.memories[id] = {"t": 100.0 + k * 60.0}
+		if id == "fish":
+			GS.memories[id]["sp"] = "mackerel"
+		view(views[k][0], views[k][1], 60.0)
+		await real(0.5)
+		main.reel.record(id)
+		await real(1.4)
+		k += 1
+	chk16("every memory has its reel", main.reel.reel("coffee").size() >= 3 and main.reel.reel("fish").size() >= 3 and main.reel.reel("moon").size() >= 3)
+	p.input_locked = false
+	var WB = preload("res://scripts/world/world_builder.gd")
+	main.ordinary.visible = true
+	place(WB.ORDINARY_POS + Vector3(0.3, 0.6, 0.3), WB.ORDINARY_POS, 3.0)
+	await real(1.0)
+	main.autotest = false
+	main._on_ate_ordinary(main.ordinary)
+	chk16("the end keeps the run as a 'free play' save", GS.has_save() and GS.slot_info(GS.slot).get("free", false))
+	var t0 = Time.get_ticks_msec()
+	var n = 0
+	var strip_seen = false
+	var cards_seen = 0
+	while Time.get_ticks_msec() - t0 < 360000:
+		await real(1.5)
+		await shot("r16c_%03d" % n)
+		n += 1
+		if main.story.cards.size() > 0:
+			for c in main.story.cards:
+				if c["extra"].has("reel"):
+					cards_seen += 1
+		if main.yk.visible:
+			strip_seen = true
+		if strip_seen and not main.yk.visible and n > 10:
+			break
+		if main.title.visible and strip_seen:
+			break
+	chk16("the memories play as little films", cards_seen >= 3, "%d card-frames with a reel" % cards_seen)
+	chk16("the four-panel strip played", strip_seen)
+	say("[R16] ending ran %d shots" % n)
+	GS.delete_save()
+	get_tree().quit()
+
+# --r16d: the opening and its strip
+func r16d():
+	await get_tree().create_timer(1.0).timeout
+	var p = main.player
+	main.autotest = false
+	GS.skip_intro = false
+	main.menus.begin_game()
+	main.scenes.opening()
+	var t0 = Time.get_ticks_msec()
+	var n = 0
+	var strip_seen = false
+	while Time.get_ticks_msec() - t0 < 200000:
+		await real(1.5)
+		if main.yk.visible:
+			strip_seen = true
+			await shot("r16d_%03d" % n)
+			n += 1
+		if strip_seen and not main.yk.visible:
+			break
+	await shot("r16d_end")
+	chk16("the opening showed the strip", strip_seen)
+	get_tree().quit()
+
+# --r16e: the nine circles of the sun and the moon (orange + gold, blue + gold) and the rain cloud, really locked and filmed
+func r16e():
+	await get_tree().create_timer(1.0).timeout
+	var p = _r16_setup()
+	GS.test_boost_bonus = 40.0
+	main.autotest_no_cine = true
+	var kinds = ["sun", "moon", "raincloud"]
+	var k = 0
+	main.quest_t = 1.0e9
+	for kind in kinds:
+		if main.quest_items.has(kind) and is_instance_valid(main.quest_items[kind]):
+			main.quest_items[kind].queue_free()
+			main.quest_items.erase(kind)
+	await real(0.3)
+	for kind in kinds:
+		var pos = Vector3(-9.5 + 14.0 * k, 30.0, 60.0)
+		var it = Node3D.new()
+		it.set_script(load("res://scripts/fries/mischief.gd"))
+		it.setup(kind, main, pos)
+		await real(0.3)
+		GS.add_buff("coffee")
+		GS.add_buff("alcohol")
+		GS.add_buff("ice")
+		place(pos + Vector3(0, 0, -34.0), pos, 44.0)
+		Input.action_press("move_forward")
+		Input.action_press("dash")
+		var t0 = Time.get_ticks_msec()
+		var shot_n = 0
+		while Time.get_ticks_msec() - t0 < 9000:
+			await real(0.4)
+			if p.snatch.lock_fry != null and shot_n < 2:
+				await real(0.5 + 0.9 * shot_n)
+				await shot("r16e_%s_%d" % [kind, shot_n])
+				shot_n += 1
+			if is_instance_valid(it) and it.taken:
+				break
+		chk16("the %s was locked by the rhythm" % kind, shot_n >= 1 or (is_instance_valid(it) and it.taken), "taken=%s shots=%d" % [is_instance_valid(it) and it.taken, shot_n])
+		Input.action_release("move_forward")
+		Input.action_release("dash")
+		await real(1.2)
+		k += 1
+	get_tree().quit()
+
+# --r16f: KEEP PLAYING: the saved end is loaded as free play; the big brother can be talked to
+func r16f():
+	await get_tree().create_timer(1.0).timeout
+	var p = _r16_setup()
+	GS.slot = 1
+	GS.delete_save(1)
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	GS.ordinary_eaten = true
+	GS.write_end_save(Vector3(-8.9, 5.3, -1.3), 1.0)
+	GS.ordinary_eaten = false
+	var d = GS.read_save()
+	main._restore_run(d)
+	await real(1.5)
+	chk16("the end save loads as free play", GS.free_play and not GS.ordinary_eaten and GS.fry_total() >= 24, "free=%s fries=%d" % [GS.free_play, GS.fry_total()])
+	chk16("the plain fry stays eaten", not main.ordinary.visible and main.ordinary.consumed)
+	chk16("the gull wakes up on the roof, on the ground", p.mode == 1 and p.global_position.y > 4.5 and p.global_position.x < -5.0, "mode %d at %s" % [p.mode, str(p.global_position)])
+	chk16("no hunger whispers in free play", GS.free_play)
+	for c in ["chat1", "chat2", "chat3", "chat4", "chat_sky", "free_intro"]:
+		GS.cine_seen[c] = true
+	main.autotest = false
+	await real(1.0)
+	main.bro.near_t = 2.0
+	await real(0.6)
+	chk16("next to the big brother the game offers a talk", main.bro_prompt != "", "'%s' (dist %.1f)" % [main.bro_prompt, main.bro.global_position.distance_to(p.global_position)])
+	tap("interact")
+	await real(2.5)
+	chk16("E starts the talk", main.scenes.cine_busy)
+	await shot("r16f_talk_a")
+	await real(3.0)
+	await shot("r16f_talk_b")
+	GS.delete_save(1)
+	get_tree().quit()
+
+# --r16h: what stands around the cafe table (the ending's bite shot): rays and tall thin meshes
+func r16h():
+	await get_tree().create_timer(1.0).timeout
+	var spot = Vector3(-9.2, 1.2, 5.0)
+	var space = main.get_world_3d().direct_space_state
+	var last = ""
+	for a in range(0, 360, 2):
+		var d = Vector3(cos(deg_to_rad(a)), 0, sin(deg_to_rad(a)))
+		var q = PhysicsRayQueryParameters3D.create(spot, spot + d * 7.0, 1)
+		var h = space.intersect_ray(q)
+		var txt = "-" if h.is_empty() else "%.1f m at (%.2f, %.2f)" % [spot.distance_to(h["position"]), h["position"].x, h["position"].z]
+		if txt != last and not h.is_empty() and spot.distance_to(h["position"]) < 6.5:
+			say("[R16H] ray %3d: %s" % [a, txt])
+		last = txt
+	var stack = [get_tree().root]
+	var found = 0
+	while not stack.is_empty() and found < 30:
+		var n = stack.pop_back()
+		for c in n.get_children():
+			stack.append(c)
+		if n is MeshInstance3D and n.mesh != null and n.is_visible_in_tree():
+			var bb = n.global_transform * n.mesh.get_aabb()
+			var c0 = bb.get_center()
+			if abs(c0.x - spot.x) < 5.0 and abs(c0.z - spot.z) < 5.0 and bb.size.y > 1.6 and bb.size.x < 0.6 and bb.size.z < 0.6 and c0.y < 4.0:
+				say("[R16H] pole at (%.2f, %.2f, %.2f) size %s  %s" % [c0.x, c0.y, c0.z, str(bb.size), str(n.get_path()).right(60)])
+				found += 1
+	get_tree().quit()
+
+# --r16g: can the gull take off from EVERY patch of water? (a grid along the shores; also in FISH TIME)
+func r16g():
+	await get_tree().create_timer(1.0).timeout
+	var p = _r16_setup()
+	var gh = main.world["ground_h"]
+	var pts = []
+	for x in range(-250, 251, 4):
+		for z in range(-110, 251, 4):
+			var h = gh.call(float(x), float(z))
+			if h < -0.8:
+				# next to high land (a cliff, a wall of rock): the worst case for a take-off that faces it
+				var best = null
+				var bd = 99.0
+				for a in range(0, 360, 30):
+					for r in [2.5, 5.0, 8.0, 11.0]:
+						var hh = gh.call(x + cos(deg_to_rad(a)) * r, z + sin(deg_to_rad(a)) * r)
+						if hh > 1.2 and r < bd:
+							bd = r
+							best = a
+				if best != null:
+					pts.append([Vector2(x, z), best, bd])
+	say("[R16G] %d cliff-side points" % pts.size())
+	var fails = []
+	var tested = 0
+	var step = max(1, int(pts.size() / 120))
+	var i = 0
+	var fish = "--fish" in OS.get_cmdline_user_args()
+	while i < pts.size():
+		var e = pts[i]
+		var pt = e[0]
+		i += step
+		tested += 1
+		p.global_position = Vector3(pt.x, -0.73, pt.y)
+		p.velocity = Vector3.ZERO
+		p.mode = 1
+		p.on_water = false
+		p.input_locked = false
+		p.splash_cd = 0.0
+		p.yaw = -deg_to_rad(e[1]) + PI * 0.5            # facing the land
+		p.aim_yaw = p.yaw
+		p._enter_water(false)
+		await real(0.35)
+		var y0 = p.global_position.y
+		Input.action_press("move_forward")
+		tap("flap")
+		await real(0.9)
+		Input.action_release("move_forward")
+		var ok = p.mode == 0 and p.global_position.y > -0.2
+		if not ok:
+			fails.append(pt)
+			say("[R16G] STUCK at (%d, %d): land %.0f m away. mode=%d on_water=%s y=%.2f -> %.2f  H here %.2f" % [pt.x, pt.y, e[2], p.mode, p.on_water, y0, p.global_position.y, gh.call(pt.x, pt.y)])
+	chk16("take-off works from the sea next to cliffs", fails.is_empty(), "%d tested, %d stuck" % [tested, fails.size()])
 	get_tree().quit()

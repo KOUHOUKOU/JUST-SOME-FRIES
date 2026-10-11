@@ -12,6 +12,28 @@ extends Node
 # Enough points = the fry is yours (the rhythm ends at once). The waves run in REAL time (the world only slows down for atmosphere); presses are time-stamped.
 # STEADY BEAK (green) fries widen the bands and slow the waves. The crowd's attention thins the bands. Coffee: wider bands and a deeper slow-motion.
 const LOCK_GRACE = 0.14         # presses in the first moments of a rhythm are ignored (that E was meant for something else)
+# ROUND 16: every good press plays the next note of a TUNE. The sequence of one catch is a little song, as long as the catch has judgements (every point is a note): a green
+# press plays one note, a gold press (worth two points) plays two (the second a breath later), so a perfect run still sings the whole tune. A miss is a hole in the song:
+# the tune waits for the next good press. Semitones above C (the pitch of the sample): 2 = sol-do, 4 = an arpeggio, 6 = a pentatonic climb, 10 = the first ten notes of
+# the Ode to Joy (the 5 circles), 14 = the Twinkle tune (the rainbow's 7 circles = 14 notes), 18 = the Ode's second phrase and a fanfare (the nine suns / the moon).
+const TUNES = {
+	2: [7, 12],
+	4: [0, 4, 7, 12],
+	6: [0, 2, 4, 7, 9, 12],
+	8: [0, 4, 7, 4, 9, 7, 12, 12],
+	10: [4, 4, 5, 7, 7, 5, 4, 2, 0, 0],
+	12: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 2, 0],
+	14: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0],
+	18: [4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0, 4, 7, 12],
+}
+
+func _tune_pitch(n, i):
+	var t = TUNES.get(n, null)
+	if t == null:
+		t = TUNES[10] if n > 8 else TUNES[6]
+	var semi = t[clamp(i, 0, t.size() - 1)] if i < t.size() else t[t.size() - 1] + 12
+	return pow(2.0, float(semi) / 12.0)
+
 const MISS_GRACE = 0.03         # a wave that has passed its gold by this much is a miss
 const GOLD_GRACE = 0.02         # ...and a gold press may be this late
 const SEQ_TS_MIN = 0.2
@@ -32,6 +54,8 @@ const SEQ_TIER = {
 	9: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.30, "gw": 0.04, "gg": 0.075},    # RAINBOW fry: five circles x 2
 	10: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.03, "gg": 0.06},    # a shooting star: five circles x 2
 	11: {"c": 7, "w": 2, "lead": 0.85, "gap": 0.28, "gw": 0.03, "gg": 0.06},    # the rainbow in the sky: seven circles x 2 = 14 judgements
+	12: {"c": 9, "w": 2, "lead": 0.85, "gap": 0.26, "gw": 0.03, "gg": 0.06},    # round 16: the SUN: nine suns, nine circles x 2 = 18 judgements (orange + gold)
+	13: {"c": 9, "w": 2, "lead": 0.85, "gap": 0.26, "gw": 0.03, "gg": 0.06},    # round 16: the MOON asks as much as the sun (blue + gold)
 }
 const TUT_SEQ = {"TUTORIAL_01": {"c": 1, "w": 2, "lead": 1.1, "gap": 0.55, "gw": 0.09, "gg": 0.2}, "TUTORIAL_02": {"c": 1, "w": 2, "lead": 1.0, "gap": 0.5, "gw": 0.075, "gg": 0.16},
 	"TUTORIAL_03": {"c": 1, "w": 2, "lead": 0.95, "gap": 0.46, "gw": 0.065, "gg": 0.13}}
@@ -43,6 +67,7 @@ const LAYOUTS = {
 	3: [[0.0, -1.0], [0.0, 0.0], [0.0, 1.0]],
 	5: [[-1.0, -0.5], [0.0, -0.5], [1.0, -0.5], [-0.5, 0.5], [0.5, 0.5]],       # the olympic rings: three on top, two between them below, none touching
 	7: [[-3.0, 0.6], [-2.0, -0.2], [-1.0, -0.7], [0.0, -0.9], [1.0, -0.7], [2.0, -0.2], [3.0, 0.6]],   # a rainbow: seven circles on an arch, left to right = red to violet
+	9: [[-1.0, -1.0], [0.0, -1.0], [1.0, -1.0], [-1.0, 0.0], [0.0, 0.0], [1.0, 0.0], [-1.0, 1.0], [0.0, 1.0], [1.0, 1.0]],   # round 16: nine suns in a 3 x 3 square
 }
 
 var player
@@ -247,7 +272,7 @@ func _is_tut(f):
 	return f != null and f.id.begins_with("TUTORIAL")
 
 # 0 common (tutorial / decorative), 1 silver, 2 gold, 3 diamond, 4 (old rainbow), 5 fish, 6 cloud / sun, 7-8 rare / legendary fish,
-# 9 rainbow fry, 10 shooting star, 11 the rainbow in the sky
+# 9 rainbow fry, 10 shooting star, 11 the rainbow in the sky, 12 the sun (9 circles), 13 the moon (9 circles)
 func _tier_of(f):
 	if f.ftype == "fish":
 		return [5, 7, 8][clamp(f.rarity, 0, 2)]
@@ -256,7 +281,11 @@ func _tier_of(f):
 			return 10
 		if f.kind == "skybow":
 			return 11
-		return 6 if f.kind in ["cloud", "sun"] else 0
+		if f.kind == "sun":
+			return 12
+		if f.kind == "moon":
+			return 13
+		return 6 if f.kind in ["cloud", "raincloud"] else 0
 	if f.ftype == "tutorial":
 		return 0
 	if f.tier >= 4:
@@ -365,14 +394,19 @@ func _note_result(s, idx, res, reason, tp):
 	match res:
 		"gold":
 			s["golds"] += 1
+			var i0 = s["points"]
 			s["points"] += 2
 			s["combo"] += 1
-			Sfx.play("ring_gold", -7.0, Sfx.PENTA[min(s["combo"] - 1, 7) % Sfx.PENTA.size()])
+			Sfx.play("ring_gold", -9.0, _tune_pitch(s["n"], i0) * 0.7937)          # (that sample sits on E, the others on C)
+			Sfx.play("ring_ok", -6.0, _tune_pitch(s["n"], i0))
+			var p2 = _tune_pitch(s["n"], i0 + 1)
+			get_tree().create_timer(0.085, true, false, true).timeout.connect(func(): Sfx.play("ring_ok", -10.0, p2))
 		"green":
 			s["greens"] += 1
+			var i1 = s["points"]
 			s["points"] += 1
 			s["combo"] += 1
-			Sfx.play("ring_ok", -8.0, Sfx.PENTA[min(s["combo"] - 1, 7) % Sfx.PENTA.size()])
+			Sfx.play("ring_ok", -8.0, _tune_pitch(s["n"], i1))
 		_:
 			s["misses"] += 1
 			s["combo"] = 0
@@ -671,6 +705,7 @@ func _finish_snatch(f):
 	if n != null:
 		n.on_escaped()
 	GS.stats["stolen"] += 1
+	GS.mark_steal()
 	GS.add_heat(0.3)
 	player.escaped.emit(f)
 	if clean and f.ftype != "mischief":

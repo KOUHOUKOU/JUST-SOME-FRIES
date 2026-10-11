@@ -364,6 +364,7 @@ func build_fish_spots():
 	var spots = []
 	# the water that a leaping fish must never touch: the pier with its wheel, the marina, the harbour boats, the sailing boats out at sea
 	FISH_SPOT.live = 0
+	FISH_SPOT.live_rar = [0, 0, 0]
 	FISH_SPOT.avoid_rects = [[-12.0, 16.0, 20.0, 78.0], [-36.0, -6.0, 24.0, 46.0], [108.0, 120.0, -30.0, -4.0], [92.0, 112.0, 14.0, 26.0]]
 	FISH_SPOT.avoid_discs = [[Vector3(16.0, 0.0, 74.0), 3.5]]
 	for sb in w.sea_boats:

@@ -42,8 +42,29 @@ func ray(a, b, mask = 1):
 func floor_y(p):
 	return max(Terrain.H(p.x, p.z), 0.0)
 
+# Thin posts that have no collision (the physics rays pass through them) but show up in a picture as a fat beige column when the camera stands next to one: the porch
+# columns and umbrella poles of the cafe, the lamps of the boardwalk. (x, z) of each.
+const POSTS = [[-14.5, 1.9], [-9.5, 1.9], [-4.5, 1.9], [-11.5, 6.2], [-5.0, 8.0], [-5.0, 8.4], [-1.0, 1.0], [-1.0, 1.4], [-13.5, 17.5], [-17.0, 2.0], [1.8, 6.0],
+	[-66.0, 9.2], [-54.0, 9.2], [-42.0, 9.2], [-30.0, 9.2], [-18.0, 9.2], [-6.0, 9.2], [6.0, 9.2], [18.0, 9.2]]
+
+func post_in_the_way(center, cam_pos):
+	var a = Vector2(center.x, center.z)
+	var b = Vector2(cam_pos.x, cam_pos.z)
+	var seg = b - a
+	var l2 = max(seg.length_squared(), 0.001)
+	for p in POSTS:
+		var q = Vector2(p[0], p[1])
+		if q.distance_to(b) < 1.5 and cam_pos.y < 4.5:
+			return true                                  # the camera is standing against it
+		var u = clamp((q - a).dot(seg) / l2, 0.0, 1.0)
+		if q.distance_to(a + seg * u) < 0.75 and u > 0.12:
+			return true                                  # it stands in the line between the camera and the subject
+	return false
+
 # is the straight line from the subject to the camera free?
 func clear(center, cam_pos, margin = 0.6):
+	if center.y < 5.0 and post_in_the_way(center, cam_pos):
+		return false
 	var h = ray(center, cam_pos)
 	if not (h.is_empty() or h["position"].distance_to(cam_pos) < margin):
 		return false

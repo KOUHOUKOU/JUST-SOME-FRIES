@@ -11,6 +11,8 @@ const FishArt = preload("res://scripts/ui/fish_art.gd")
 const COMMON_FRY = Color("F6C453")
 const GOLD = Color("F5C65A")
 const RING_GREEN = Color(0.32, 0.92, 0.42)
+const RING_ORANGE = Color(1.0, 0.52, 0.12)
+const RING_BLUE = Color(0.3, 0.55, 1.0)
 const RING_GOLD = Color(1.0, 0.82, 0.25)
 
 const HURT_CAPTIONS = {
@@ -40,8 +42,8 @@ const MISSION_HINTS = [
 	[0, "the old man's table is a good start."],
 	[3, "hold TAB. see what glows."],
 	[6, "fries glow in colours. the colours mean things."],
-	[10, "you are strong now. and still hungry. why?"],
-	[17, "silver, gold, diamond. in that order."],
+	[10, "you are strong now. where do you think you are headed?"],
+	[17, "you were going to get some fries. on the pier."],
 	[24, "everything is full. except you."],
 ]
 
@@ -194,7 +196,7 @@ class Reticle extends HC:
 		var layout = sq["layout"]
 		var multi = layout.size() > 1
 		# round 7: big, easy-to-read circles. Radius where the wave starts / where the gold band ends / spacing of the circles, per number of circles
-		var geo = {1: [172.0, 52.0, 0.0], 2: [120.0, 40.0, 262.0], 3: [100.0, 35.0, 208.0], 5: [106.0, 37.0, 228.0], 7: [76.0, 28.0, 148.0]}[layout.size()]
+		var geo = {1: [172.0, 52.0, 0.0], 2: [120.0, 40.0, 262.0], 3: [100.0, 35.0, 208.0], 5: [106.0, 37.0, 228.0], 7: [76.0, 28.0, 148.0], 9: [56.0, 21.0, 132.0]}[layout.size()]
 		var r_start = geo[0] * u
 		var r_ge = geo[1] * u                                 # the radius where the gold band ends
 		var sep = geo[2] * u
@@ -212,6 +214,12 @@ class Reticle extends HC:
 		var g_mid = (r_gold_out + r_green_out) * 0.5
 		var o_mid = (r_ge + r_gold_out) * 0.5
 		var next_i = s._first_pending(sq)
+		# round 16: the outer band of the sun is ORANGE, the moon's BLUE (everything else keeps its green); the halo, the pips and the shock rings follow
+		var band = RING_GREEN
+		if sq["tier"] == 12:
+			band = RING_ORANGE
+		elif sq["tier"] == 13:
+			band = RING_BLUE
 		# the target circles
 		for ci in layout.size():
 			var c = fc + Vector2(layout[ci][0], layout[ci][1]) * sep
@@ -227,7 +235,7 @@ class Reticle extends HC:
 			draw_circle(c, r_ge, Color(1, 1, 1, 0.05 * base_a))
 			draw_circle(c, 4.0 * u, Color(1, 1, 1, 0.55 * base_a))
 			draw_arc(c, r_ge * 0.5, 0, TAU, 24, Color(1, 1, 1, 0.3 * base_a), 2.0, true)
-			var gcol = RING_GREEN
+			var gcol = band
 			if sq["tier"] == 11:      # the rainbow in the sky: seven colours, each circle with its golden ring
 				gcol = RAINBOW_COLS[ci % RAINBOW_COLS.size()]
 			draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.14 * base_a), green_px + 12.0, true)
@@ -252,7 +260,7 @@ class Reticle extends HC:
 			var tt = nt["res_t"] if done else now
 			var r = r_ge + (nt["t"] - tt) * vpx
 			if done:
-				var rc2 = {"gold": RING_GOLD, "green": RING_GREEN, "miss": Color(1.0, 0.35, 0.3)}[nt["res"]]
+				var rc2 = {"gold": RING_GOLD, "green": band, "miss": Color(1.0, 0.35, 0.3)}[nt["res"]]
 				draw_arc(c2, max(r, 4.0) + age * 60.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, fade), 4.0, true)
 				if nt["res"] != "miss":
 					draw_arc(c2, r_green_out + age * 110.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, 0.6 * fade), 3.0, true)
@@ -271,7 +279,7 @@ class Reticle extends HC:
 				rw = 7.5 * u
 			elif zone == "green":
 				rw = 6.5 * u
-				draw_arc(c2, max(r, 4.0), 0, TAU, 60, Color(RING_GREEN.r, RING_GREEN.g, RING_GREEN.b, 0.3 * fade), 16.0 * u, true)
+				draw_arc(c2, max(r, 4.0), 0, TAU, 60, Color(band.r, band.g, band.b, 0.3 * fade), 16.0 * u, true)
 			elif dt > 0.02:
 				rc = Color(1.0, 0.45, 0.4, 0.8 * fade)
 			draw_arc(c2, max(r, 4.0), 0, TAU, 72, rc, rw, true)
@@ -287,7 +295,7 @@ class Reticle extends HC:
 			if res == "gold":
 				pc = RING_GOLD
 			elif res == "green":
-				pc = RING_GREEN
+				pc = band
 			elif res == "miss":
 				pc = Color(1.0, 0.35, 0.3)
 			var px = fc.x + (i - (n - 1) * 0.5) * 16.0 * u
@@ -383,6 +391,10 @@ class Tach extends HC:
 				tc = Color("BFEFFF")
 			elif s.need_tier == 11:
 				tc = Color.from_hsv(fmod(t * 0.5, 1.0), 0.5, 1.0)
+			elif s.need_tier == 12:
+				tc = RING_ORANGE
+			elif s.need_tier == 13:
+				tc = RING_BLUE
 			var ok = spd >= need - 0.2 and p.mode == 0
 			draw_line(Vector2(nx, yb - 44 * u), Vector2(nx, yb + 2 * u), Color(tc.r, tc.g, tc.b, 1.0 if ok else 0.8), 3.0 if ok else 2.0)
 			shadow(font, Vector2(nx - 30 * u, yb - 48 * u), "%d" % int(round(need)), int(13 * u), Color(tc.r, tc.g, tc.b, 0.95), HORIZONTAL_ALIGNMENT_CENTER, 60 * u)
@@ -521,7 +533,17 @@ class Status extends HC:
 			if GS.buff[k] > 0.0:
 				act.append(k)
 		var filled_w = bar_w * p.stamina / smax
-		if act.is_empty():
+		# round 16: FISH TIME turns the bar into deep ocean blue (in the air RAINBOW TIME, when it runs, wins)
+		var fishy = GS.fish_mode() or (GS.fish_active() and GS.star_t <= 0.0)
+		if act.is_empty() and fishy:
+			var segs2 = max(int(filled_w / 4.0), 1)
+			for i in segs2:
+				var sx2 = bx + i * 4.0
+				var cw3 = min(4.0, filled_w - i * 4.0)
+				var wv2 = 0.5 + 0.5 * sin(t * 3.2 - float(i) * 0.45)
+				draw_rect(Rect2(sx2, 20, cw3, 12), Color(0.03, 0.2, 0.52).lerp(Color(0.16, 0.56, 0.96), wv2))
+			draw_rect(Rect2(bx, 20, filled_w, 3), Color(0.7, 0.92, 1.0, 0.35))
+		elif act.is_empty():
 			draw_rect(Rect2(bx, 20, filled_w, 12), col)
 		else:
 			var kind = act[int(t * 1.3) % act.size()]
@@ -579,6 +601,18 @@ class Status extends HC:
 				draw_rect(Rect2(bx + 92 + i * 5.0, ry, 4.0, 8), Color.from_hsv(fmod(fr + t * 0.4, 1.0), 0.5, 1.0, 0.95))
 			shadow(font, Vector2(bx, ry + 9), "RAINBOW TIME", 12, Color.from_hsv(fmod(t * 0.5, 1.0), 0.35, 1.0, 1.0))
 			shadow(font, Vector2(bx + 208, ry + 9), "%d s" % int(ceil(GS.star_t)), 11, Color(1, 1, 1, 0.8))
+			ry += 15.0
+		if GS.fish_active():
+			var fc3 = Color(0.3, 0.68, 1.0)
+			var live_f = GS.fish_mode()
+			for i in 22:
+				var fr2 = float(i) / 22.0
+				if fr2 > GS.fish_t / 40.0:
+					break
+				draw_rect(Rect2(bx + 92 + i * 5.0, ry, 4.0, 8), Color(fc3.r, fc3.g, fc3.b, 0.95 if live_f else 0.45))
+			var fl = "FISH TIME" + ("  x%d" % GS.fish_streak if GS.fish_streak > 1 else "")
+			shadow(font, Vector2(bx, ry + 9), fl, 12, Color(fc3.r, fc3.g, fc3.b, 1.0 if live_f else 0.6))
+			shadow(font, Vector2(bx + 208, ry + 9), "%d s" % int(ceil(GS.fish_t)), 11, Color(1, 1, 1, 0.8))
 			ry += 15.0
 		if act.is_empty() and GS.has["blue"]:
 			shadow(font, Vector2(bx, 70), "ALT %d" % int(p.global_position.y), 13, Color(1, 1, 1, 0.75))

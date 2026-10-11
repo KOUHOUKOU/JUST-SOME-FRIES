@@ -13,7 +13,10 @@ const Terrain = preload("res://scripts/world/terrain.gd")
 static var avoid_rects = []      # [x0, x1, z0, z1] areas of water that must stay free of leaps (the pier, the marina, the harbour...)
 static var avoid_discs = []      # [Vector3 centre, radius] (sailing boats, buoys)
 static var live = 0              # leaps being prepared / flying right now (at most MAX_LIVE at a time)
+static var live_rar = [0, 0, 0]  # ...and how many of each rarity (round 16: FISH TIME always keeps one of every rarity in the air)
 const MAX_LIVE = 4
+const MAX_LIVE_FRENZY = 6
+const FRENZY_R = 150.0           # the spots this close to the gull join in
 const LEAP_SEC = [2.6, 3.0, 3.6]
 const LEAP_H = [3.2, 3.8, 4.4]
 
@@ -196,6 +199,7 @@ class Fish extends Node3D:
 		if rarity == 2:
 			GS.award("BIG FISH ENERGY")
 		var info = GS.fish_record({"sp": species, "len": len_cm, "kg": kg})
+		GS.add_fish_time(rarity)          # round 16: every fish starts / tops up FISH TIME and the streak
 		GS.quest_finish("fish")
 		GS.quests_check()
 		player.refill()
@@ -230,6 +234,9 @@ var plan = {}                  # the fish that is going to jump: {"sp", "len", "
 var plan_rarity = 0
 var forecast_t = 0.0           # real seconds left until the leap (forecast + bubbles): Gull Sight shows it
 var holds_live = false
+var holds_rar = -1
+var fc_len = 5.0               # seconds of forecast / of bubbles (FISH TIME: much shorter, so that fish keep jumping)
+var bub_len = 2.4
 
 func setup(p_player, pos, p_water_y = -0.75, p_radius = 9.0):
 	player = p_player
@@ -337,8 +344,16 @@ func _path_free(a, b, margin):
 			return false
 	return true
 
+func _frenzy_rarity():
+	# FISH TIME: the rarity that is missing in the air right now (rarest first); with all three up, any
+	for r in [2, 1, 0]:
+		if live_rar[r] <= 0:
+			return r
+	var x = randf()
+	return 0 if x < 0.45 else (1 if x < 0.8 else 2)
+
 func _plan_leap():
-	var sp = GS.fish_pick_species()
+	var sp = GS.fish_pick_species(_frenzy_rarity() if GS.fish_active() else -1)
 	plan = GS.fish_roll(sp)
 	plan_rarity = GS.FISH_SPECIES[sp][1]
 	leap_dur = LEAP_SEC[plan_rarity]
@@ -369,31 +384,40 @@ func _process(delta):
 		"idle":
 			if GS.gull_sense_count < 3 or GS.ordinary_eaten or d > 110.0:
 				return
+			if GS.fish_active() and wait > 1.2:
+				wait = randf_range(0.2, 1.2)          # FISH TIME: the whole sea wakes up
 			wait -= delta
 			if wait <= 0.0:
-				if live >= MAX_LIVE:
-					wait = 1.5
+				var frenzy = GS.fish_active()
+				if frenzy and d > FRENZY_R:
+					return
+				if live >= (MAX_LIVE_FRENZY if frenzy else MAX_LIVE):
+					wait = 0.5 if frenzy else 1.5
 					return
 				if _plan_leap():
 					state = "forecast"
 					st = 0.0
 					live += 1
 					holds_live = true
-					forecast_t = 5.0 + 2.4
+					holds_rar = plan_rarity
+					live_rar[holds_rar] += 1
+					fc_len = 1.0 if frenzy else 5.0
+					bub_len = 1.1 if frenzy else 2.4
+					forecast_t = fc_len + bub_len
 				else:
 					wait = 3.0
 			return
 		"forecast":
 			st += rdt
-			forecast_t = 5.0 + 2.4 - st
-			if st >= 5.0:
+			forecast_t = fc_len + bub_len - st
+			if st >= fc_len:
 				_begin_bubbles()
 			return
 	st += delta
 	match state:
 		"bubbles":
-			var k = st / 2.4
-			forecast_t = max(2.4 - st, 0.0)
+			var k = st / bub_len
+			forecast_t = max(bub_len - st, 0.0)
 			ripple.visible = true
 			var phase = fmod(st, 0.9) / 0.9
 			ripple.scale = Vector3(0.4 + phase * 5.0, 1.0, 0.4 + phase * 5.0)
@@ -405,7 +429,7 @@ func _process(delta):
 			if st - last_bubble > 0.5:
 				last_bubble = st
 				_bubble_sound(d, 0.7 + 0.5 * k)
-			if st >= 2.4:
+			if st >= bub_len:
 				_begin_leap()
 		"leap":
 			_leap_step()
@@ -475,6 +499,9 @@ func _release():
 	if holds_live:
 		holds_live = false
 		live = max(live - 1, 0)
+		if holds_rar >= 0:
+			live_rar[holds_rar] = max(live_rar[holds_rar] - 1, 0)
+			holds_rar = -1
 
 # the fish is gone (caught, spooked, or it simply fell back in)
 func fish_gone(caught):
@@ -485,6 +512,8 @@ func fish_gone(caught):
 	state = "cooldown"
 	st = 0.0
 	wait = 20.0 if caught else randf_range(6.0, 14.0)
+	if GS.fish_active():
+		wait = randf_range(0.8, 2.2)         # FISH TIME: the next leap is already on its way
 
 func _splash(pos):
 	var p = CPUParticles3D.new()

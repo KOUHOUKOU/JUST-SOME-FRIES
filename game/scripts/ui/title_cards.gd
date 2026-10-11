@@ -344,7 +344,12 @@ func _lines():
 		["Claude Debussy  -  Clair de lune", 20, PAPER],
 		["Erik Satie  -  Gymnopedie No. 1", 20, PAPER],
 		["played by the Musopen Symphony and other musicians who gave their recordings to everyone", 17, Color(0.7, 0.7, 0.75)],
+		["and a nursery round, Row, Row, Row Your Boat, for the sea", 17, Color(0.7, 0.7, 0.75)],
 		["(thank you, Musopen. thank you, Wikimedia Commons.)", 17, Color(0.7, 0.7, 0.75)], ["", 48, PAPER],
+		["A TRIBUTE", 16, Color(0.7, 0.7, 0.75)],
+		["WHAT FRIES AHEAD  -  False Knees, by Joshua Barkman  (2018)", 20, PAPER],
+		["two gulls, one big question, and some fries on the pier.", 17, Color(0.7, 0.7, 0.75)],
+		["our page is drawn again, with our own gulls, in love and thanks.", 17, Color(0.7, 0.7, 0.75)], ["", 48, PAPER],
 		["BY THE NUMBERS", 16, Color(0.7, 0.7, 0.75)],
 		["TIME ON THE PIER   %02d:%02d" % [secs / 60, secs % 60], 24, PAPER],
 		["FRIES STOLEN   %d" % st["stolen"], 24, PAPER],
@@ -425,7 +430,7 @@ func play_credits():
 	scroll.position.y = vp.y * 0.5 - h + 40.0
 	skipping = false
 	can_input = true
-	hintl.text = "HOLD  E  -  fly again          ESC  -  menu"
+	hintl.text = "HOLD  E  -  KEEP PLAYING          ESC  -  menu"
 	hintl.modulate.a = 0.0
 	hintl.anchor_top = 0.9
 	hintl.anchor_bottom = 0.9

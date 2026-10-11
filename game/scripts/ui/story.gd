@@ -700,7 +700,7 @@ func _thoughts_draw(ci, R, u):
 	var n = d["n"]
 	var total = (d["lines"].size()) * lh
 	var cx = R.position.x + R.size.x * 0.5
-	var y0 = R.position.y + R.size.y * 0.47 - total * 0.5
+	var y0 = R.position.y + R.size.y * 0.43 - total * 0.5
 	var maxw = 0.0
 	for l in d["lines"]:
 		maxw = max(maxw, font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
@@ -1101,6 +1101,7 @@ const CARD_COL = {"fry": [Color("FFE9A8"), Color("F6C453")], "plain": [Color("F6
 	"ice": [Color("FFD6EC"), Color("BFEBD2")], "starlight": [Color("2A2E6A"), Color("C689E8")], "fish": [Color("BFE6F8"), Color("5FA8D8")], "bigfish": [Color("BFE6F8"), Color("4F86C8")],
 	"cloud": [Color("A9D4F5"), Color("E8F4FF")], "sun": [Color("FFE08A"), Color("FF9E4A")], "skybow": [Color("CFE8FF"), Color("FFD9EC")], "meteor": [Color("1B1F4E"), Color("5A63B8")], "friend": [Color("FFD3DE"), Color("FFB2C6")],
 	"gift": [Color("FFD3DE"), Color("FFE1A8")], "kid": [Color("FFD3DE"), Color("FFC8A8")], "rainbow": [Color("FFE1F2"), Color("BDE8FF")], "thermal": [Color("CFE9FF"), Color("FFE7B0")],
+	"moon": [Color("0F1B4D"), Color("5C78C8")], "raincloud": [Color("8E9BB4"), Color("C5D0E4")], "fishtime": [Color("2C7BC8"), Color("9ADCF6")],
 	"skim": [Color("BFE6F8"), Color("7FC3E4")], "wall": [Color("E9D8C4"), Color("C9AE94")], "armed": [Color("D8D8E6"), Color("A8A8C4")], "all24": [Color("FFF1C8"), Color("FFC9E8")]}
 
 func card(kind, title, life = 3.8, nx = 0.5, ny = 0.46, rot = -4.0, extra = {}):
@@ -1119,8 +1120,9 @@ func _cards(ci, R, u):
 		var e_in = clamp(age / 0.5, 0.0, 1.0)
 		var e = 1.0 - pow(1.0 - e_in, 3.0)
 		var a = clamp(min(age / 0.35, (c["life"] - age) / 0.6), 0.0, 1.0)
-		var w = 236.0 * u
-		var h = 288.0 * u
+		var reel = c["extra"].get("reel", null)
+		var w = (264.0 if reel != null else 236.0) * u
+		var h = (322.0 if reel != null else 288.0) * u
 		var centre = Vector2(R.position.x + R.size.x * c["pos"].x, R.position.y + R.size.y * c["pos"].y)
 		centre += Vector2((-1.0 if c["pos"].x > 0.5 else 1.0) * 46.0 * u * (1.0 - e), 36.0 * u * (1.0 - e) + sin(age * 1.2) * 3.0 * u)
 		ci.draw_set_transform(centre, deg_to_rad(c["rot"] + 5.0 * (1.0 - e)), Vector2.ONE * (0.92 + 0.08 * e))
@@ -1133,7 +1135,21 @@ func _cards(ci, R, u):
 		for k in strips:
 			var kk = float(k) / float(strips - 1)
 			ci.draw_rect(Rect2(photo.position + Vector2(0, photo.size.y * k / strips), Vector2(photo.size.x, photo.size.y / strips + 1.0)), Color(pc[0].r, pc[0].g, pc[0].b, a).lerp(Color(pc[1].r, pc[1].g, pc[1].b, a), kk))
-		_mem_icon(ci, c["kind"], photo.get_center() + Vector2(0, 4.0 * u), photo.size.x * 0.3, a, c["extra"], age)
+		if reel != null:
+			# a tiny film of the real moment: the frames, played forth and back (about seven pictures a second), with film-strip holes along the edges
+			var nf = reel.size()
+			var fi = int(age * 7.5)
+			var cyc = (nf - 1) * 2
+			var ph = fi % max(cyc, 1)
+			var idx = ph if ph < nf else cyc - ph
+			ci.draw_texture_rect(reel[clamp(idx, 0, nf - 1)], photo, false, Color(1.0, 0.97, 0.9, a))
+			var hole = 7.0 * u
+			for q in 7:
+				var yy = photo.position.y + (q + 0.5) * photo.size.y / 7.0 - hole * 0.5
+				ci.draw_rect(Rect2(photo.position.x + 2.0 * u, yy, hole, hole), Color(0.06, 0.05, 0.08, 0.7 * a))
+				ci.draw_rect(Rect2(photo.end.x - 2.0 * u - hole, yy, hole, hole), Color(0.06, 0.05, 0.08, 0.7 * a))
+		else:
+			_mem_icon(ci, c["kind"], photo.get_center() + Vector2(0, 4.0 * u), photo.size.x * 0.3, a, c["extra"], age)
 		ci.draw_rect(photo, Color(0.1, 0.08, 0.14, 0.55 * a), false, 2.0 * u)
 		# the title, like a pencil line on the white strip
 		ci.draw_string(bold, Vector2(rect.position.x, rect.end.y - 26.0 * u), c["title"], HORIZONTAL_ALIGNMENT_CENTER, w, int(18 * u), Color(0.16, 0.13, 0.18, a))
@@ -1245,6 +1261,21 @@ func _mem_icon(ci, kind, c, s, a, extra, age):
 				var tc = GS.TYPE_COLORS[GS.FRY_TYPES[k]]
 				ci.draw_circle(c + Vector2(cos(an), sin(an)) * s * 0.85, s * 0.24, Color(tc.r, tc.g, tc.b, a))
 			ci.draw_circle(c, s * 0.32, Color(1, 0.95, 0.7, a))
+		"moon":
+			ci.draw_circle(c, s * 0.7, Color(0.93, 0.95, 1.0, a))
+			ci.draw_circle(c + Vector2(-s * 0.22, -s * 0.1), s * 0.14, Color(0.78, 0.82, 0.92, a))
+			ci.draw_circle(c + Vector2(s * 0.2, s * 0.22), s * 0.1, Color(0.78, 0.82, 0.92, a))
+		"raincloud":
+			ci.draw_circle(c + Vector2(-s * 0.5, -s * 0.2), s * 0.42, Color(0.6, 0.64, 0.74, a))
+			ci.draw_circle(c + Vector2(0.0, -s * 0.45), s * 0.55, Color(0.6, 0.64, 0.74, a))
+			ci.draw_circle(c + Vector2(s * 0.55, -s * 0.2), s * 0.42, Color(0.6, 0.64, 0.74, a))
+			for k in 5:
+				var ry = fmod(age * 1.4 + k * 0.37, 1.0)
+				ci.draw_line(c + Vector2(-s * 0.6 + k * s * 0.3, s * 0.1 + ry * s * 0.7), c + Vector2(-s * 0.6 + k * s * 0.3, s * 0.3 + ry * s * 0.7), Color(0.7, 0.85, 1.0, a), lw * 0.8)
+		"fishtime":
+			for k in 3:
+				ci.draw_arc(c + Vector2(0, s * 0.5), s * (0.5 + 0.35 * k), PI * 1.05, PI * 1.95, 14, Color(1, 1, 1, a * (1.0 - 0.25 * k)), lw, true)
+			ci.draw_circle(c + Vector2(0, -s * 0.2), s * 0.28, Color(1, 1, 1, a))
 		_:
 			ci.draw_circle(c, s * 0.5, white)
 

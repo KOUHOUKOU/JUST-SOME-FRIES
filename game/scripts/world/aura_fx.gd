@@ -135,6 +135,58 @@ class FxNode extends Node3D:
 	var arch = null
 	var rain = null
 	var puffs = []
+	var ring_wait = 1.2
+	var last_pos = Vector3.ZERO
+	var rings = []                        # {node, mat, age, life, size, drift}
+
+	# round 16: the rainbow is not worn on the body any more (it hid the view). Now, while the gull flies, a small rainbow-coloured ring appears behind it every few seconds,
+	# grows a little, drifts after the gull and fades: a flight effect, never in the way.
+	func _skybow_rings(delta, grounded):
+		var gp = global_position
+		var spd = gp.distance_to(last_pos) / max(delta, 0.0001)
+		last_pos = gp
+		var i = 0
+		while i < rings.size():
+			var r = rings[i]
+			r["age"] += delta
+			var u = r["age"] / r["life"]
+			if u >= 1.0 or not is_instance_valid(r["node"]):
+				if is_instance_valid(r["node"]):
+					r["node"].queue_free()
+				rings.remove_at(i)
+				continue
+			r["node"].global_position += r["drift"] * delta
+			r["node"].scale = Vector3.ONE * lerp(0.35, r["size"], 1.0 - pow(1.0 - u, 2.0))
+			r["mat"].albedo_color = Color(1, 1, 1, 0.8 * sin(u * PI) * (1.0 if u > 0.0 else 0.0))
+			i += 1
+		if g == null or g.get("tracked") != true or grounded or spd < 3.0 or spd > 150.0:
+			return
+		ring_wait -= delta
+		if ring_wait > 0.0:
+			return
+		ring_wait = randf_range(2.0, 3.6)
+		var back = global_transform.basis.z.normalized()
+		var node = MeshInstance3D.new()
+		node.mesh = load("res://scripts/world/aura_fx.gd").rainbow_ring_mesh()
+		var mt = load("res://scripts/world/aura_fx.gd")._unshaded(Color(1, 1, 1, 0.0), true, true)
+		mt.vertex_color_use_as_albedo = true
+		mt.cull_mode = BaseMaterial3D.CULL_DISABLED
+		node.material_override = mt
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		get_tree().current_scene.add_child(node)
+		node.global_position = gp + back * 1.5 + Vector3(0, 0.1, 0)
+		# the ring stands across the gull's path (its axis along the flight direction)
+		var zb = back
+		var xb = Vector3.UP.cross(zb).normalized() if abs(zb.y) < 0.95 else Vector3.RIGHT
+		var yb = zb.cross(xb).normalized()
+		node.global_transform = Transform3D(Basis(xb, yb, zb), node.global_position)
+		rings.append({"node": node, "mat": mt, "age": 0.0, "life": 1.5, "size": 1.25, "drift": -back * min(spd * 0.55, 14.0)})
+
+	func _exit_tree():
+		for r in rings:
+			if is_instance_valid(r["node"]):
+				r["node"].queue_free()
+
 	func _process(delta):
 		t += delta
 		var grounded = g != null and g.get("on_ground") == true
@@ -150,9 +202,7 @@ class FxNode extends Node3D:
 				if veil != null:
 					veil.set_shader_parameter("strength", 0.34 + 0.07 * sin(t * 1.5 + 1.0))
 			"skybow":
-				if arch != null:
-					arch.rotation.z = sin(t * 0.8) * 0.05
-					arch.scale = Vector3.ONE * (1.0 + 0.025 * sin(t * 1.6))
+				_skybow_rings(delta, grounded)
 			"cloud", "raincloud":
 				if pad != null:
 					pad.visible = not grounded
@@ -186,23 +236,7 @@ static func build(g, kind):
 			_glow(n, Vector3(0, -0.34, 0.05), 1.7, Color(0.6, 0.82, 1.0, 0.2))
 			_sparks(n, Vector3(0, -0.2, 0.1), Color(0.7, 0.88, 1.0, 0.85), 22, 2.6, 0.45, -0.25, 0.1)
 		"skybow":
-			var am = RP.arc_mesh(Vector3(1, 0, 0), 1.0, 0.86, 0.052, 0.026, 28, 0.52)
-			var ma = StandardMaterial3D.new()
-			ma.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			ma.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			ma.vertex_color_use_as_albedo = true
-			ma.cull_mode = BaseMaterial3D.CULL_DISABLED
-			ma.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA
-			ma.distance_fade_min_distance = 1.0
-			ma.distance_fade_max_distance = 3.2
-			n.arch = _mi(n, am, Vector3(0, -0.12, 0.12), ma)
-			var sp = _sparks(n, Vector3(0, 0.3, 0.1), Color(1, 1, 1, 0.9), 26, 1.8, 0.8, 0.0, 0.25)
-			sp.hue_variation_min = -1.0
-			sp.hue_variation_max = 1.0
-			var gr2 = Gradient.new()
-			gr2.colors = PackedColorArray([Color("FF9AB8"), Color("FFE08A"), Color("9BF0FF"), Color("C6A8FF"), Color(1, 1, 1, 0)])
-			gr2.offsets = PackedFloat32Array([0.0, 0.3, 0.55, 0.8, 1.0])
-			sp.color_ramp = gr2
+			pass            # (round 16: no arch on the body; the rings are made by FxNode while the gull flies)
 		"cloud", "raincloud":
 			var rainy = kind == "raincloud"
 			var top = Color(0.6, 0.64, 0.74, 0.82) if rainy else Color(1.0, 1.0, 1.0, 0.8)
@@ -242,6 +276,35 @@ static func build(g, kind):
 				rn.emitting = true
 				n.rain = rn
 	return n
+
+# a flat ring whose colour runs through the rainbow all the way round (unit radius, in the XY plane)
+static var _rb_ring = null
+static func rainbow_ring_mesh():
+	if _rb_ring != null:
+		return _rb_ring
+	var n = 40
+	var verts = PackedVector3Array()
+	var cols = PackedColorArray()
+	var idx = PackedInt32Array()
+	for i in n + 1:
+		var an = TAU * i / n
+		var c = Color.from_hsv(fmod(float(i) / n * 1.0, 1.0), 0.55, 1.0, 1.0)
+		verts.append(Vector3(cos(an) * 0.88, sin(an) * 0.88, 0.0))
+		cols.append(c)
+		verts.append(Vector3(cos(an) * 1.0, sin(an) * 1.0, 0.0))
+		cols.append(c)
+	for i in n:
+		var b = i * 2
+		idx.append_array(PackedInt32Array([b, b + 1, b + 2, b + 1, b + 3, b + 2]))
+	var arr = []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_COLOR] = cols
+	arr[Mesh.ARRAY_INDEX] = idx
+	var am = ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	_rb_ring = am
+	return am
 
 static func _ring_mesh(r, t):
 	var tm = TorusMesh.new()

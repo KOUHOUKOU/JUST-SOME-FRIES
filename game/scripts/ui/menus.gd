@@ -22,6 +22,11 @@ var save_btn
 var save_note
 var cover
 var gallery
+var slot_panel = null            # round 16: two save slots: START picks a slot for a new run, CONTINUE picks one to go on with
+var slot_btns = []
+var slot_mode = "new"
+var slot_title = null
+var slot_pending = 0             # a filled slot that START has asked to overwrite (a second press confirms)
 
 # ---------------------------------------------------------------- the cover
 class Cover extends Control:
@@ -241,7 +246,9 @@ func _ready():
 			"Circles appear around it. Press E when a white wave shrinks onto the green ring; the gold ring inside it counts double.",
 			"E while flying free - points out the nearest fry that you can really catch.",
 			"Hold Tab - Gull Sight (free on the ground). Everything that glows is worth stealing; the number is the speed it needs.",
-			"C - Codex (fries, wardrobe, fish book; right-click a taken item to wear it)          F - yell",
+			"C - Codex (fries, wardrobe, fish book; right-click a taken item to wear it)",
+				"F - squawk: on a roof it calls the gulls, on the ground a calm crowd says hello and a wary one chases you off.",
+				"Catch a fish: FISH TIME. On the sea W surfs, Space launches you at the fish that keep jumping.",
 			"Every drink gives breath back and adds its time. All three drinks at once: RAINBOW TIME.",
 			"Land anywhere to rest - higher is faster. Trees and roofs count."]:
 		c.add_child(_lbl(line, 20))
@@ -287,6 +294,21 @@ func _ready():
 		set_paused(false)
 		quit_to_menu_pressed.emit()))
 	pause_panel.visible = false
+	slot_panel = _panel(0.78)
+	slot_panel.theme = ui_theme
+	var sv = _vbox(slot_panel)
+	slot_title = _lbl("", 52, Color(1, 0.93, 0.7))
+	sv.add_child(slot_title)
+	sv.add_child(_spacer(10))
+	for i in range(1, GS.SLOTS + 1):
+		var b = _btn("", func(): _slot_pressed(i))
+		b.custom_minimum_size = Vector2(560, 112)
+		b.add_theme_font_size_override("font_size", 24)
+		slot_btns.append(b)
+		sv.add_child(b)
+	sv.add_child(_spacer(10))
+	sv.add_child(_btn("BACK", func(): _close_slots()))
+	slot_panel.visible = false
 	# a stand-in for the old CONTINUE button so that the test bots can still read `.disabled`
 	continue_btn = Button.new()
 	continue_btn.disabled = true
@@ -294,19 +316,74 @@ func _ready():
 func _on_cover_chosen(id):
 	match id:
 		"start":
-			start_pressed.emit()
+			_open_slots("new")
 		"continue":
-			continue_pressed.emit()
+			_open_slots("load")
 		"gallery":
 			gallery.open()
 		"quit":
 			get_tree().quit()
 
+# ---- the slot cards
+func _slot_text(i):
+	var info = GS.slot_info(i)
+	if info.is_empty():
+		return "SLOT %d\n-  EMPTY  -" % i
+	var t = "SLOT %d\n%d / 24 FRIES    %s    %d FISH KINDS" % [i, info["fries"], info["time"], info["fish"]]
+	if info["free"]:
+		t += "\nTHE END, AND KEEP PLAYING"
+	return t
+
+func _open_slots(mode):
+	slot_mode = mode
+	slot_pending = 0
+	cover.visible = false
+	slot_panel.visible = true
+	slot_title.text = "NEW RUN  -  WHICH SLOT?" if mode == "new" else "CONTINUE  -  WHICH SLOT?"
+	_refresh_slots()
+
+func _refresh_slots():
+	for i in range(1, GS.SLOTS + 1):
+		var b = slot_btns[i - 1]
+		b.text = _slot_text(i)
+		if slot_mode == "load":
+			b.disabled = not GS.has_save(i)
+		else:
+			b.disabled = false
+			if slot_pending == i:
+				b.text = "SLOT %d\nTHIS ERASES THE OLD RUN.   PRESS AGAIN TO START" % i
+
+func _close_slots():
+	slot_panel.visible = false
+	cover.visible = true
+	slot_pending = 0
+	cover.reset_intro()
+	cover.set_save(GS.has_any_save())
+
+func _slot_pressed(i):
+	if slot_mode == "load":
+		if not GS.has_save(i):
+			return
+		GS.slot = i
+		slot_panel.visible = false
+		continue_pressed.emit()
+		return
+	if GS.has_save(i) and slot_pending != i:
+		slot_pending = i
+		_refresh_slots()
+		return
+	GS.slot = i
+	GS.delete_save(i)
+	slot_panel.visible = false
+	start_pressed.emit()
+
 func show_main():
 	in_game = false
 	main_panel.visible = true
+	if slot_panel != null:
+		slot_panel.visible = false
 	cover.reset_intro()
-	var has = GS.has_save()
+	var has = GS.has_any_save()
 	cover.set_save(has)
 	continue_btn.disabled = not has
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -314,6 +391,8 @@ func show_main():
 func begin_game():
 	in_game = true
 	main_panel.visible = false
+	if slot_panel != null:
+		slot_panel.visible = false
 	controls_panel.visible = false
 	pause_panel.visible = false
 
@@ -339,6 +418,10 @@ func _notification(what):
 		set_paused(true)
 
 func _unhandled_input(event):
+	if slot_panel != null and slot_panel.visible and event.is_action_pressed("pause_game"):
+		_close_slots()
+		get_viewport().set_input_as_handled()
+		return
 	if in_game and not GS.showcase_active and event.is_action_pressed("pause_game"):
 		if gallery != null and gallery.is_open():
 			return

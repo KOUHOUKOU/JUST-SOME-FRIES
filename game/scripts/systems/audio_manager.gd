@@ -12,7 +12,7 @@ const MRATE = 11025
 # the pitch ladder of a streak of good presses (a major pentatonic climb)
 const PENTA = [1.0, 1.1225, 1.2599, 1.4983, 1.6818, 2.0, 2.2449, 2.5198]
 # how loud each piece plays (dB): they are all normalised to the same loudness, so this is only taste
-const MUSIC_DB = {"title": -7.0, "boardwalk": -9.5, "beach": -10.0, "hill": -9.0, "sea": -9.0, "summit": -9.5, "sky": -10.0, "star": -9.5, "ending": -7.0, "ending_mem": -9.0,
+const MUSIC_DB = {"title": -7.0, "boardwalk": -9.5, "beach": -10.0, "hill": -9.0, "sea": -9.0, "summit": -9.5, "sky": -10.0, "star": -9.5, "fish": -9.0, "ending": -7.0, "ending_mem": -9.0,
 	"cine_joy": -9.0, "cine_wish": -8.0, "cine_home": -8.0, "cine_sun": -8.0}
 const ALT = {"flap": ["flap", "flap2"]}
 
@@ -44,6 +44,7 @@ var themes = {}
 var zone = ""                  # the piece that is playing in the world right now
 var world_zone = "boardwalk"
 var star_on = false
+var fish_on = false             # round 16: FISH TIME in the sea has its own piece (an arrangement of a sailors' hornpipe)
 var cur = 0
 var zone_tw = []
 var hush = false
@@ -90,6 +91,13 @@ func _load_assets():
 			music_streams[n] = st
 		else:
 			ok = false
+	for n in ["fish"]:            # optional pieces: the game plays without them
+		var opath = "res://assets/audio/music/%s.ogg" % n
+		if ResourceLoader.exists(opath):
+			var ost = load(opath)
+			if ost != null and "loop" in ost:
+				ost.loop = true
+			music_streams[n] = ost
 	for n in ["wind", "waves", "murmur"]:
 		if sounds.has(n) and sounds[n] is AudioStreamWAV:
 			sounds[n].loop_mode = AudioStreamWAV.LOOP_FORWARD
@@ -217,7 +225,7 @@ func set_world_zone(z):
 	if z == world_zone:
 		return
 	world_zone = z
-	if music_wanted and not star_on:
+	if music_wanted and not star_on and not fish_on:
 		_zone_changed(false)
 
 func set_star(on):
@@ -227,8 +235,17 @@ func set_star(on):
 	if music_wanted:
 		_zone_changed(false)
 
+func set_fish(on):
+	if on == fish_on:
+		return
+	if on and not music_streams.has("fish"):
+		return
+	fish_on = on
+	if music_wanted:
+		_zone_changed(false)
+
 func _zone_changed(first):
-	var want = "star" if star_on else world_zone
+	var want = "fish" if fish_on else ("star" if star_on else world_zone)
 	if not music_streams.has(want) or music_streams[want] == null:
 		return
 	if want == zone and music[cur].playing and not first:
@@ -241,7 +258,7 @@ func _zone_changed(first):
 	nw.volume_db = -60.0
 	nw.play()
 	var target = MUSIC_DB.get(want, -10.0) + hush_db
-	var sec = 2.4 if want == "star" else 3.8
+	var sec = 2.4 if (want == "star" or want == "fish") else 3.8
 	if zone_tw[cur] != null:
 		zone_tw[cur].kill()
 	zone_tw[cur] = create_tween().set_ignore_time_scale(true)

@@ -413,20 +413,19 @@ func stolen(player):
 	if owner_amb != null and is_instance_valid(owner_amb):
 		owner_amb.theft_reaction()
 	GS.add_heat(0.3)
+	GS.mark_steal()
 	GS.mischief_counts[kind] = GS.mischief_counts.get(kind, 0) + 1
 	if is_wearable():
 		player.gull.wear(kind)
 		GS.award(AWARDS[kind])
-		if kind == "cloud":
-			GS.quest_finish("cloud")
-		elif kind == "sun":
-			GS.quest_finish("sun")
-		elif kind == "skybow":
+		if kind in ["cloud", "raincloud", "moon", "sun"]:
+			GS.sky_catch(kind)           # round 16: the sky quest ticks here (the rainbow and the star report themselves)
+		if kind == "skybow":
+			GS.sky_catch("rainbow")
 			var rp = player.get_tree().get_first_node_in_group("rainbow_pair")
 			if rp != null:
 				rp.taken = true
 				rp.taken_t = 0.0
-			GS.quest_finish("skybow")
 	else:
 		match kind:
 			"coffee":

@@ -49,9 +49,11 @@ const PREF_DIAMOND = {"red": ["ferris"], "orange": ["clock_tower", "church"], "g
 const HUNGER_STEPS = [
 	[180.0, "something is still missing."],
 	[420.0, "...what was it, again?"],
+	[780.0, "i was going to get some fries. wasn't i."],
 ]
 const HUNGER_COUNT_STEPS = [
 	[18, "stronger. faster. still hungry."],
+	[22, "where does this path end?"],
 ]
 
 var player
@@ -104,10 +106,17 @@ var rb_holders = []
 var meteors
 var cine_queue = []
 var cine_wait = 0.0
+var bro_prompt = ""             # round 16: "E - TALK" next to the big brother in free play
+var yk = null                    # round 16: the four-panel strip layer (ui/yonkoma.gd)
+var reel = null                  # round 16: records a few frames of every first-time moment (the ending plays them back)
 
 func _ready():
 	GS.reset()
 	Engine.time_scale = 1.0
+	if not GS.web:
+		var ico = load("res://icon.png")            # round 16: the game's own icon (the gull with a fry) on the window and the task bar
+		if ico != null:
+			DisplayServer.set_icon(ico.get_image())
 	get_tree().paused = false
 	player = CharacterBody3D.new()
 	player.set_script(PLAYER_SCRIPT)
@@ -164,6 +173,9 @@ func _ready():
 	story = CanvasLayer.new()
 	story.set_script(STORY_SCRIPT)
 	add_child(story)
+	yk = CanvasLayer.new()
+	yk.set_script(load("res://scripts/ui/yonkoma.gd"))
+	add_child(yk)
 	scenes = Node.new()
 	scenes.set_script(SCENES_SCRIPT)
 	scenes.main = self
@@ -173,7 +185,7 @@ func _ready():
 	add_child(bro)
 	bro.main = self
 	bro.setup(player, WB.BRO_POS, Vector3(WB.SPAWN_POS.x, 5.4, WB.SPAWN_POS.z))
-	title.restart_requested.connect(func(): _reload(true))
+	title.restart_requested.connect(func(): _reload(true, GS.slot))        # round 16: after the credits, HOLD E = keep playing (free flight in the same save)
 	title.menu_requested.connect(func(): _reload(false))
 	menus = CanvasLayer.new()
 	menus.set_script(MENU_SCRIPT)
@@ -221,6 +233,16 @@ func _ready():
 	GS.fish_caught.connect(func(info): queue_cine("fish", info))
 	GS.buff_started.connect(func(kind): queue_cine("drink_" + kind))
 	GS.sky_caught.connect(_sky_reward)
+	GS.fish_started.connect(func(): GS.comic.emit("fishtime", "THE SEA GAVE YOU A RIDE. SPACE ON THE WATER = LAUNCH.", {"tier": 0}))
+	GS.fish_added.connect(func(streak, _r):
+		if streak >= 2:
+			hud._show_center("FISH  x%d" % streak, 0.9, 38)
+		if streak == 3:
+			GS.comic.emit("fishcombo", "THREE IN A ROW. THE FISH ARE ORGANISING.", {"tier": 0}))
+	GS.memory_added.connect(_on_memory_added)
+	reel = Node.new()
+	reel.set_script(load("res://scripts/systems/memory_reel.gd"))
+	add_child(reel)
 	GS.star_ended.connect(func(): Sfx.set_star(false))
 	GS.still_hungry_started.connect(_begin_star_phase)
 	player.update_camera(0.0, true)
@@ -236,7 +258,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u", "--r16s", "--r16a", "--r16b", "--r16c", "--r16d", "--r16e", "--r16f", "--r16g", "--r16h"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -281,6 +303,12 @@ func _ready():
 	elif GS.skip_menu:
 		GS.skip_menu = false
 		GS.skip_intro = true
+		if GS.autoload_slot > 0:
+			GS.slot = GS.autoload_slot
+			GS.autoload_slot = 0
+			var d0 = GS.read_save()
+			if d0 != null:
+				_restore_run(d0)
 		await _web_warm_up()
 		_start_game()
 	else:
@@ -336,15 +364,16 @@ func _web_warm_up():
 	print("[PERF] graphics prepared in %d ms (per view: %s)" % [Time.get_ticks_msec() - tw0, str(times)])
 	JavaScriptBridge.eval("window.JSF && JSF.gameReady && JSF.gameReady()")
 
-func _reload(skip):
+func _reload(skip, slot = 0):
 	GS.skip_menu = skip
+	GS.autoload_slot = slot
 	Engine.time_scale = 1.0
 	get_tree().paused = false
 	Sfx.muffle(false, 0.01)
 	# the browser build: a second island built on top of the first one fragments the wasm heap (which only ever grows): the classic way a long session ends in
 	# a crash. A page reload gives a clean heap; the 0.8 s lets a save that was just written reach the browser's storage first.
 	if GS.web and not autotest:
-		var ok = JavaScriptBridge.eval("(function(){ try { sessionStorage.setItem('jsf_skip_menu', '%s'); setTimeout(function(){ location.reload(); }, 800); return 1; } catch (e) { return 0; } })()" % ("1" if skip else "0"))
+		var ok = JavaScriptBridge.eval("(function(){ try { sessionStorage.setItem('jsf_skip_menu', '%s'); sessionStorage.setItem('jsf_slot', '%d'); setTimeout(function(){ location.reload(); }, 800); return 1; } catch (e) { return 0; } })()" % [("1" if skip else "0"), slot])
 		if ok != null and float(ok) > 0.5:
 			return
 	get_tree().reload_current_scene()
@@ -374,6 +403,8 @@ func start_after_opening():
 	get_tree().create_timer(1.0, true, false, true).timeout.connect(story.finish)
 
 func _start_game():
+	if not loaded_run and not autotest and reel != null:
+		reel.clear_slot()                 # round 16: a new run in this slot: the old memories' pictures go
 	get_tree().paused = false
 	Engine.max_fps = 60
 	menus.begin_game()
@@ -421,7 +452,7 @@ func _finish_intro():
 	if not loaded_run:
 		_face_first_fry()
 	# the plain fry has been lying on the table since the old man dropped it in the opening: no glow, no prompt, no reaction until the three starter fries are in
-	ordinary.visible = true
+	ordinary.visible = not GS.free_play          # (round 16: in free play it has been eaten)
 	ordinary.global_position = WB.ORDINARY_POS
 	ordinary.rotation = Vector3.ZERO
 	elder.rig.override_arm_r = null
@@ -593,6 +624,33 @@ func _restore_run(d):
 		hunger_cstep += 1
 	GS.progress_changed.emit(GS.progress_value(), GS.TOTAL_BASE)
 	save_sig = _sig()
+	if GS.free_play:
+		_free_play_start()
+
+# round 16: the end of a run is not the end of the game. The plain fry has been eaten (it stays eaten); everything else is still out there: the fries that are missing, the
+# fish, the nine suns, the achievements. The gull wakes up on the big brother's roof, and he has something to say about it.
+func _free_play_start():
+	ordinary.consumed = true
+	ordinary.available = false
+	ordinary.visible = false
+	ordinary.remove_from_group("fries")
+	GS.ach_unlock("freeplay")
+	GS.comic.emit("free_play", "THE FRY IS GONE. THE SKY IS NOT.", {"tier": 0})
+	var land = WB.BRO_POS + Vector3(-3.8, 0.0, 0.0)
+	player.global_position = Vector3(land.x, WB.SPAWN_POS.y + 0.2, land.z)
+	player.yaw = atan2(-1.0, 0.0)
+	player.aim_yaw = player.yaw
+	player.cam_yaw = player.yaw
+	player.mode = 1
+	player.perch_high = true
+	player.velocity = Vector3.ZERO
+	player.speed = 0.0
+	player.update_camera(0.0, true)
+	if not autotest:
+		get_tree().create_timer(1.6, true, false, true).timeout.connect(func():
+			if not GS.cine_seen.has("free_intro") and scenes != null and not scenes.cine_busy:
+				GS.cine_seen["free_intro"] = true
+				scenes.bro_chat("free_intro"))
 
 # ------------------------------------------------------------------ the cinematic moments (story_scenes.gd `cinema`): queued, then shown when the gull is free
 func queue_cine(id, extra = {}):
@@ -670,6 +728,7 @@ func _perf_log():
 
 func _process(delta):
 	_perf_log()
+	GS.cutscene = intro_active or scenes.cine_busy or ending_started or story.active
 	if intro_active:
 		_intro_step(delta)
 		return
@@ -729,6 +788,7 @@ func _zone_tick(rdt):
 	if zone_check > 0.0:
 		return
 	zone_check = 0.4
+	Sfx.set_fish(GS.fish_mode())          # round 16: the sea has its own music while FISH TIME runs
 	var z = _zone_of(player.global_position)
 	if z == Sfx.world_zone:
 		zone_cand = ""
@@ -756,7 +816,7 @@ func _hints():
 	if GS.tab_lesson >= 2 and tab_hint_t < 0.0:
 		tab_hint_t = play_t + 14.0
 	if tab_hint_t > 0.0 and play_t > tab_hint_t:
-		hud.hint("tab", "C - CODEX          F - SQUAWK", 4.0)
+		hud.hint("tab", "C - CODEX          F - SQUAWK (TRY IT ON A ROOF)", 4.0)
 	if tab_hint_t > 0.0 and play_t > tab_hint_t + 12.0 and player.mode == 0:
 		hud.hint("sniff", "E WHILE FLYING - POINTS TO THE NEAREST FRY YOU CAN CATCH", 4.5)
 
@@ -801,6 +861,8 @@ func _tutorial_director():
 						prompt = "HOLD  W  OR  SHIFT  -  REACH THE GRAB LINE  (%d)" % int(GS.need_speed(best) * GS.SPEED_UNIT)
 					else:
 						prompt = "KEEP AIMING AT THE FRY"
+	if prompt == "" and bro_prompt != "":
+		prompt = bro_prompt
 	hud.set_prompt(prompt)
 
 # crowd WATCH: global memory of the thieving gull + the people who are actually looking at it right now
@@ -842,6 +904,13 @@ func _update_watch(delta):
 	var still = player.mode == 1 and player.still_t > 3.0 and player.carry_fry == null
 	GS.heat_decay_mult = 9.0 if away else (5.0 if still else 1.0)
 	_watch_target = clamp(GS.heat * (0.15 if away else (0.4 if still else 1.0)) + local * (0.55 if still else 1.0), 0.0, 4.0)
+	# round 16: a gull that has stolen NOTHING for 8 seconds is forgotten fast (the target fades to zero over the next 4 s and the memory of the thief melts away),
+	# and the watch stays down until the next theft
+	var idle = GS.idle_steal_s()
+	if idle > GS.IDLE_CALM:
+		var calm_k = clamp(1.0 - (idle - GS.IDLE_CALM) / 4.0, 0.0, 1.0)
+		_watch_target *= calm_k
+		GS.heat_decay_mult = max(GS.heat_decay_mult, 14.0)
 
 var _watch_target = 0.0
 
@@ -887,11 +956,46 @@ func _unhandled_input(event):
 		if now - last_yell > 1.2:
 			last_yell = now
 			Sfx.play("lure", -2.0)
-			rivals.scare(player.global_position)
-			for n in get_tree().get_nodes_in_group("npcs"):
-				n.hear(player.global_position)
 			player.fov_kick = 2.0
 			get_tree().create_timer(0.9).timeout.connect(func(): Sfx.play("gull_far", -12.0, 1.1))
+			_squawk_effects()
+
+# round 16, the squawk has its own little world. ON A ROOF it calls the gulls of the neighbourhood (a flock lands around the gull, hearts, a short visit). ON THE GROUND
+# a calm crowd (watch < 1.6) answers with hellos and waves; a wary one (watch >= 1.6) answers by chasing the noisy gull off. In the air it is the old yell.
+func _squawk_effects():
+	var pl = player
+	var on_roof = pl.mode == 1 and not pl.on_water and pl.perch_high and pl.surface() == "roof"
+	if on_roof:
+		rest.call_flock()
+		return
+	rivals.scare(pl.global_position)
+	for n in get_tree().get_nodes_in_group("npcs"):
+		n.hear(pl.global_position)
+	if pl.mode == 1 and not pl.on_water:
+		var near = []
+		for a in get_tree().get_nodes_in_group("ambient"):
+			if is_instance_valid(a) and a.visible and a.has_method("answer_call") and a.global_position.distance_to(pl.global_position) < 16.0:
+				near.append(a)
+		near.sort_custom(func(x, y): return x.global_position.distance_squared_to(pl.global_position) < y.global_position.distance_squared_to(pl.global_position))
+		var n_ans = 0
+		var kind_n = 0
+		var shoo_n = 0
+		for a in near:
+			if n_ans >= 3:
+				break
+			var r = a.answer_call()
+			if r != 0:
+				n_ans += 1
+				if r > 0:
+					kind_n += 1
+				else:
+					shoo_n += 1
+		if kind_n > 0:
+			GS.ach_unlock("callkind")
+			GS.comic.emit("call_hello", "A STRANGER WAVED BACK. THE SQUAWK WORKS.", {"tier": 0})
+		elif shoo_n > 0:
+			GS.ach_unlock("callshoo")
+			GS.comic.emit("call_shoo", "SQUAWKING AT A SUSPICIOUS CROWD: RUDE.", {"tier": 0})
 
 # ---- Gull Sight: hold TAB. Slow motion, dark screen, every fry in range shines, everything else gets a number. Free on the ground. ----
 func _try_open_vision():
@@ -1018,6 +1122,7 @@ func _tab_lesson_tick(rdt):
 		hud.lesson_line = "THE NUMBER = THE SPEED YOU NEED"
 	if not GS.sense_active and GS.sight_time >= 3.4:
 		GS.tab_lesson = 2
+		GS.comic.emit("tablesson", "SQUINT HARDER. SEE EVERYTHING.", {"tier": 0})
 		hud.lesson_done_t = 3.6
 		Sfx.play("reward_1", -8.0, 1.3)
 
@@ -1104,8 +1209,118 @@ func _sky_reward(kind, n):
 	player.refill()
 	Sfx.play("prism_%d" % clamp(n - 1, 0, 6), -5.0)
 	Sfx.play("reward_2", -8.0, 1.0 + 0.06 * n)
+	_sky_show(kind, col)
 	var caps = SKY_CAPS.get(kind, ["CAUGHT."])
 	GS.comic.emit(kind, caps[randi() % caps.size()], {"tier": 0})
+	# round 16: and the words and the white space (a film moment, once per run for each thing; the gull keeps flying)
+	var cid = {"cloud": "cloud", "raincloud": "raincloud", "moon": "moon", "sun": "sun", "rainbow": "skybow", "star": "meteor"}.get(kind, "")
+	if cid != "":
+		queue_cine(cid)
+
+# round 16: every thing of the sky is caught with a little show of its own (no camera games, the gull keeps flying)
+func _sky_show(kind, col):
+	var pl = player
+	match kind:
+		"sun":
+			# nine suns: nine little golden rings leave the gull one after the other, round the circle
+			for i in 9:
+				var a = TAU * i / 9.0
+				get_tree().create_timer(0.09 * i, true, false, true).timeout.connect(func():
+					if is_instance_valid(pl):
+						var off = Vector3(cos(a) * 2.4, sin(a) * 1.7, 0.0)
+						_sky_ring(pl.global_position + off, Color(1.0, 0.62 + 0.04 * i, 0.15), 4.0, 0.7)
+						_burst(pl.global_position + off, Color(1.0, 0.8, 0.3), 8, 2.5))
+			pl.shake = max(pl.shake, 0.35)
+			Sfx.play("meteor_get", -6.0, 0.8)
+			hud.flash_screen(Color(1.0, 0.75, 0.25), 0.32, 0.9)
+		"moon":
+			# a slow, wide, silver-blue ring, falling moon-dust, the notes of a lullaby climbing down
+			_sky_ring(pl.global_position, Color(0.7, 0.85, 1.0), 26.0, 1.8)
+			for i in 5:
+				get_tree().create_timer(0.35 * i, true, false, true).timeout.connect(func():
+					Sfx.play("chime", -12.0, 1.6 - 0.12 * i))
+			_dust_fall(pl, Color(0.75, 0.88, 1.0), 4.0)
+			hud.flash_screen(Color(0.45, 0.62, 1.0), 0.3, 1.8)
+		"raincloud":
+			# its own weather: a drizzle that follows the gull for a few seconds, a grey-blue ring, a rumble
+			_sky_ring(pl.global_position, Color(0.55, 0.62, 0.78), 14.0, 1.2)
+			_rain_on(pl, 4.5)
+			Sfx.play("thud", -9.0, 0.5)
+			get_tree().create_timer(0.35, true, false, true).timeout.connect(func(): hud.flash_screen(Color(0.9, 0.95, 1.0), 0.28, 0.2))
+			Sfx.play("squirt", -12.0, 0.7)
+		"cloud":
+			_burst(pl.global_position, Color(1, 1, 1), 40, 2.4)
+			_dust_fall(pl, Color(1, 1, 1), 2.6)
+		"rainbow":
+			for i in 7:
+				get_tree().create_timer(0.08 * i, true, false, true).timeout.connect(func():
+					if is_instance_valid(pl):
+						_sky_ring(pl.global_position, Color.from_hsv(float(i) / 7.0, 0.6, 1.0), 6.0 + 1.6 * i, 0.9))
+		"star":
+			_burst(pl.global_position, Color(1.0, 0.95, 0.5), 30, 5.0)
+
+func _rain_on(pl, secs):
+	var p = CPUParticles3D.new()
+	p.amount = 90
+	p.lifetime = 0.75
+	p.local_coords = false
+	p.direction = Vector3.DOWN
+	p.spread = 6.0
+	p.initial_velocity_min = 9.0
+	p.initial_velocity_max = 12.0
+	p.gravity = Vector3(0, -6, 0)
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	p.emission_box_extents = Vector3(3.2, 0.1, 3.2)
+	var q = QuadMesh.new()
+	q.size = Vector2(0.035, 0.55)
+	var mt = StandardMaterial3D.new()
+	mt.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mt.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mt.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mt.albedo_color = Color(0.75, 0.86, 1.0, 0.8)
+	q.material = mt
+	p.mesh = q
+	pl.add_child(p)
+	p.position = Vector3(0, 3.0, 0)
+	p.emitting = true
+	get_tree().create_timer(secs, true, false, true).timeout.connect(func():
+		p.emitting = false
+		get_tree().create_timer(1.0, true, false, true).timeout.connect(p.queue_free))
+
+func _dust_fall(pl, col, secs):
+	var p = CPUParticles3D.new()
+	p.amount = 60
+	p.lifetime = 1.8
+	p.local_coords = false
+	p.direction = Vector3.DOWN
+	p.spread = 25.0
+	p.initial_velocity_min = 0.4
+	p.initial_velocity_max = 1.2
+	p.gravity = Vector3(0, -0.6, 0)
+	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+	p.emission_sphere_radius = 2.2
+	var q = QuadMesh.new()
+	q.size = Vector2(0.16, 0.16)
+	var mt = StandardMaterial3D.new()
+	mt.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mt.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mt.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mt.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mt.albedo_texture = preload("res://scripts/player/gull_visual.gd").star_tex()
+	mt.albedo_color = Color(col.r, col.g, col.b, 0.9)
+	q.material = mt
+	p.mesh = q
+	pl.add_child(p)
+	p.position = Vector3(0, 1.0, 0)
+	p.emitting = true
+	get_tree().create_timer(secs, true, false, true).timeout.connect(func():
+		p.emitting = false
+		get_tree().create_timer(2.0, true, false, true).timeout.connect(p.queue_free))
+
+# a first-time moment: the memory reel keeps a few frames of it for the ending
+func _on_memory_added(id):
+	if reel != null and not autotest:
+		reel.record(id)
 
 # ---- Fry Codex: key C (map + stats + fries with tiers) ----
 func _can_open_codex():
@@ -1172,6 +1387,7 @@ func _show_fry(key, n, done, extra = {}):
 # ------------------------------------------------------------------ progression
 func _on_escaped(f):
 	GS.fries_eaten += 1
+	player.refill()                 # round 16: every fry gives the whole breath back (the first TAB and every flight after a fry never starts on an empty bar)
 	var kind = f.ftype
 	match kind:
 		"tutorial":
@@ -1456,7 +1672,7 @@ func _rainbow_tick(rdt):
 
 # ------------------------------------------------------------------ "where is it?": guidance towards the plain fry
 func _hunger_tick(rdt):
-	if GS.phase != GS.Phase.STILL_HUNGRY or GS.ordinary_eaten:
+	if GS.phase != GS.Phase.STILL_HUNGRY or GS.ordinary_eaten or GS.free_play:
 		hud.hint_pos = null
 		return
 	if showcase.active:
@@ -1491,7 +1707,7 @@ func _on_ate_ordinary(f):
 	elif GS.phase == GS.Phase.STILL_HUNGRY:
 		GS.award("ENOUGH")
 	GS.phase = GS.Phase.ENDED
-	GS.delete_save()
+	GS.write_end_save(Vector3(-8.9, 5.3, -1.3), atan2(-1.0, 0.0))       # round 16: the ending keeps the run: KEEP PLAYING after the credits goes on from the roof
 	GS.ordinary_fry_eaten.emit()
 	hud.hint_pos = null
 	elder_waving = false

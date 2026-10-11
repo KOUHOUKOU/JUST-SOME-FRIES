@@ -62,6 +62,7 @@ func _process(delta):
 	if player == null or not player.active or get_tree().paused:
 		return
 	var dt = delta / max(Engine.time_scale, 0.1)
+	_step_flock(dt)
 	cd = max(cd - dt, 0.0)
 	gift_cd = max(gift_cd - dt, 0.0)
 	kid_cd = max(kid_cd - dt, 0.0)
@@ -114,6 +115,119 @@ func _end(cool):
 	ev = null
 	cd = cool
 	rest_t = 0.0
+
+# ------------------------------------------------------------------ round 16: the squawk on a roof (F) calls a flock of gulls: they come from every side, land (or hover) round the
+# gull, a few hearts rise, and after a short visit they fly off again
+var flock = []
+var flock_t = 0.0
+var flock_done = false
+
+func call_flock():
+	if not flock.is_empty():
+		return
+	var pp = player.global_position
+	var n = 4 + randi() % 2
+	flock_t = 0.0
+	flock_done = false
+	var right = Vector3(cos(player.yaw), 0, -sin(player.yaw))
+	var fwd = Vector3(-sin(player.yaw), 0, -cos(player.yaw))
+	for i in n:
+		var ang = TAU * (float(i) + randf() * 0.3) / n
+		var ring = Vector3(cos(ang), 0, sin(ang))
+		var spot = _ground_pos(ang, 1.7 + 0.55 * (i % 3))
+		var hover = false
+		if spot == null:
+			spot = pp + ring * (2.0 + 0.45 * (i % 3)) + Vector3(0, 0.5 + 0.18 * (i % 2), 0)
+			hover = true
+			if not _free_air(spot):
+				spot = pp + Vector3(0, 1.4 + 0.5 * i, 0) + fwd * (-1.5)
+		var g = Node3D.new()
+		g.set_script(GullVisual)
+		g.plain = true
+		get_tree().current_scene.add_child(g)
+		g.build()
+		g.tint_pale(GullVisual.pale_color(randi() + i))
+		g.scale = Vector3.ONE * 1.2
+		var a2 = randf() * TAU
+		var from = spot + Vector3(cos(a2) * 40.0, 10.0 + randf() * 8.0, sin(a2) * 40.0)
+		g.global_position = from
+		flock.append({"g": g, "from": from, "to": spot + (Vector3.ZERO if hover else Vector3(0, 0.4, 0)), "hover": hover, "delay": 0.25 * i + randf() * 0.2, "t": 0.0,
+			"phase": "wait", "hearts": 0})
+	Sfx.play("rival_call", -9.0, 1.3)
+	for i in 3:
+		get_tree().create_timer(0.4 * i + 0.3, true, false, true).timeout.connect(func(): Sfx.play("gull_far", -12.0 + 2.0 * i, randf_range(0.95, 1.3)))
+
+func _step_flock(dt):
+	if flock.is_empty():
+		return
+	flock_t += dt
+	var pp = player.global_position
+	var seated = 0
+	var alive = 0
+	for e in flock:
+		var g = e["g"]
+		if not is_instance_valid(g):
+			continue
+		alive += 1
+		e["t"] += dt
+		match e["phase"]:
+			"wait":
+				g.visible = false
+				if e["t"] >= e["delay"]:
+					e["phase"] = "fly"
+					e["t"] = 0.0
+					g.visible = true
+			"fly":
+				var u = clamp(e["t"] / 2.6, 0.0, 1.0)
+				var ee = u * u * (3.0 - 2.0 * u)
+				var p = e["from"].lerp(e["to"], ee)
+				p.y += sin(u * PI) * 1.2
+				var look = e["to"] - e["from"]
+				g.look_at(g.global_position + Vector3(look.x, look.y * 0.4, look.z), Vector3.UP)
+				g.global_position = p
+				g.pose("glide" if u < 0.82 else "brake", 0.0, false, dt)
+				if u >= 1.0:
+					e["phase"] = "sit"
+					e["t"] = 0.0
+					Sfx.play("land", -16.0, randf_range(1.2, 1.6))
+			"sit":
+				seated += 1
+				if e["hover"]:
+					g.pose("throttle", 0.0, true, dt)
+					g.global_position = e["to"] + Vector3(0, sin(e["t"] * 4.0 + e["delay"] * 9.0) * 0.08, 0)
+				else:
+					g.pose("ground", 0.0, false, dt)
+					g.global_position = e["to"] + Vector3(0, sin(e["t"] * 6.0) * 0.015, 0)
+				g.look_at(Vector3(pp.x, g.global_position.y, pp.z), Vector3.UP)
+				g.head.rotation.x = sin(e["t"] * 5.0 + e["delay"] * 7.0) * 0.25
+				if e["hearts"] < 3 and e["t"] > 0.5 + e["hearts"] * 0.7:
+					e["hearts"] += 1
+					_heart(g.global_position + Vector3(0, 0.9, 0))
+				if player.mode != 1 or flock_t > 9.5:
+					e["phase"] = "leave"
+					e["t"] = 0.0
+			"leave":
+				var dir = (g.global_position - pp)
+				dir.y = 0.0
+				dir = dir.normalized() if dir.length() > 0.1 else Vector3(1, 0, 0)
+				g.pose("throttle", 0.0, true, dt)
+				g.global_position += (dir * 7.0 + Vector3(0, 4.5, 0)) * dt * (0.4 + clamp(e["t"] / 3.0, 0.0, 1.0))
+				g.look_at(g.global_position + dir * 3.0 + Vector3(0, 1.5, 0), Vector3.UP)
+				if e["t"] > 4.0:
+					g.queue_free()
+	if seated >= 3 and not flock_done:
+		flock_done = true
+		GS.ach_unlock("callgulls")
+		GS.comic.emit("call_roof", "YOU CALLED. A FLOCK CAME. NOBODY ASKED WHY.", {"tier": 0})
+		player.show_toast("A FLOCK. BREATH BACK.", 1.4)
+		player.refill()
+		GS.stats["friends"] = GS.stats.get("friends", 0) + 1
+	var left = 0
+	for e in flock:
+		if is_instance_valid(e["g"]):
+			left += 1
+	if left == 0:
+		flock.clear()
 
 # ------------------------------------------------------------------ the friendly gull
 func _start_buddy():
