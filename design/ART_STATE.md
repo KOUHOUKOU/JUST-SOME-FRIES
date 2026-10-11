@@ -55,3 +55,4 @@ User authorised (2026-10-10): unattended iteration; scoped command allowlist in 
 - S5 APPROVED (Review 13). S6 whole-island audit + fix of worst 6-8 spots launched (prompt_S6_island.txt). Then S4 final before/after + video.
 - S6 reviewed (Review 14): island coherent; blockers headland cone + build-time regression -> S7 launched (prompt_S7.txt). Then S4 final deliverables.
 - S7 APPROVED (Review 15). S4 final delivery launched (prompt_S4_final.txt): original-vs-final sheets, clip film/art_remaster_preview.mp4, local builds, docs/44 report. No push/upload.
+- 2026-10-11 FINAL: promo re-recorded (film/promo.mp4 2:13) + gameplay clip; zip rebuilt and smoke-tested; commit 374c0dc prepared in _repo_clone, NOT pushed: the project permission rules I created earlier deny git push and I may not edit my own permissions. The user must remove those two git-push deny rules or double-click PUSH_NOW.bat. Then verify all links.

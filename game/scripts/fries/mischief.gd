@@ -7,7 +7,7 @@ extends Node3D
 const Pattern = preload("res://scripts/world/pattern.gd")
 
 # kinds that exist once per world (the first one the world builder places wins, the rest are quietly dropped)
-const UNIQUE = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "ball", "cloud", "sun", "skybow"]
+const UNIQUE = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "ball", "cloud", "raincloud", "moon", "sun", "skybow"]
 const ICE_COLORS = ["F7C7D4", "BFEBD2", "FFF1C7", "8A5636", "FFB36B", "9DB5F5", "FF6F91", "D6B6FF"]
 static var claimed = {}
 static var ice_count = 0
@@ -316,6 +316,10 @@ func _build():
 		min_speed = 13.0
 	elif kind == "cloud":
 		min_speed = GS.CLOUD_NEED / GS.SPEED_UNIT
+	elif kind == "raincloud":
+		min_speed = GS.RAINCLOUD_NEED / GS.SPEED_UNIT
+	elif kind == "moon":
+		min_speed = GS.MOON_NEED / GS.SPEED_UNIT
 	elif kind == "sun":
 		min_speed = GS.SUN_NEED / GS.SPEED_UNIT
 	elif kind == "skybow":
@@ -400,7 +404,7 @@ func attach(socket):
 
 const AWARDS = {"hat": "HAT TRICK", "pipe": "PIPE DREAMS", "shades": "TOO COOL", "necklace": "BLING", "bowtie": "BLACK TIE (BLACK-BEAKED)", "scarf": "COZY",
 	"sailor": "SEA LEGS", "topper": "A GENTLEBIRD", "beret": "VERY ARTISTIC", "glasses": "WELL READ", "hawaii": "WEEKEND MODE", "stripes": "MARINE LIFE",
-	"coat": "DETECTIVE GULL", "socks": "SOCKED AWAY", "balloon": "UP, UP AND AWAY", "cloud": "HEAD IN THE CLOUDS", "sun": "TOO HOT TO HANDLE", "skybow": "OVER THE RAINBOW"}
+	"coat": "DETECTIVE GULL", "socks": "SOCKED AWAY", "balloon": "UP, UP AND AWAY", "cloud": "HEAD IN THE CLOUDS", "raincloud": "RAIN ON MY PARADE", "moon": "OVER THE MOON", "sun": "TOO HOT TO HANDLE", "skybow": "OVER THE RAINBOW"}
 
 func stolen(player):
 	taken = true
@@ -472,8 +476,10 @@ func _process(delta):
 		visual.rotation.z = sin(t * 1.5) * 0.08
 	elif kind == "ball":
 		visual.position.y = abs(sin(t * 1.2)) * 0.03
-	elif kind == "cloud":
+	elif kind == "cloud" or kind == "raincloud":
 		visual.position.y = sin(t * 0.6) * 0.5
 	elif kind == "sun":
 		visual.rotation.z += delta * 0.25
 		visual.scale = Vector3.ONE * (2.2 + 0.08 * sin(t * 2.2))
+	elif kind == "moon":
+		visual.scale = Vector3.ONE * (2.2 + 0.06 * sin(t * 1.6))

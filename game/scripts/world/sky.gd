@@ -233,6 +233,65 @@ static func build_sun(parent):
 	root.set_script(load("res://scripts/world/sun_spin.gd"))
 	return root
 
+# the moon (round 15): it hangs in the sky all the time (pale by day, bright at night) and is as hard to catch as the sun
+static func build_moon(parent):
+	var root = Node3D.new()
+	root.name = "MoonDisc"
+	parent.add_child(root)
+	var core = MeshInstance3D.new()
+	var sm = SphereMesh.new()
+	sm.radius = 6.5
+	sm.height = 13.0
+	sm.radial_segments = 20
+	sm.rings = 10
+	core.mesh = sm
+	var cm = StandardMaterial3D.new()
+	cm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	cm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	cm.albedo_color = Color(0.86, 0.93, 1.0, 0.6)
+	core.material_override = cm
+	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(core)
+	root.set_meta("core_mat", cm)
+	for cr in [[-3.4, 2.6, 4.6, 1.15], [2.9, -0.8, 5.1, 1.7], [0.3, 3.9, 4.6, 0.7], [-1.6, -3.5, 4.8, 0.95], [4.0, 3.0, 3.9, 0.55], [-4.2, -0.6, 4.4, 0.6]]:
+		var c = MeshInstance3D.new()
+		var cs = SphereMesh.new()
+		cs.radius = cr[3]
+		cs.height = cr[3] * 2.0
+		cs.radial_segments = 10
+		cs.rings = 5
+		c.mesh = cs
+		c.position = Vector3(cr[0], cr[1], cr[2]).normalized() * 6.1
+		c.scale = Vector3(1, 1, 0.25)
+		var cmat = StandardMaterial3D.new()
+		cmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		cmat.albedo_color = Color(0.74, 0.85, 0.96)
+		c.material_override = cmat
+		c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(c)
+	var soft = preload("res://scripts/player/gull_visual.gd").soft_tex()
+	var halo_mats = []
+	for spec in [[40.0, Color(0.6, 0.78, 1.0, 0.2)], [90.0, Color(0.55, 0.72, 1.0, 0.07)]]:
+		var g = MeshInstance3D.new()
+		var q = QuadMesh.new()
+		q.size = Vector2(spec[0], spec[0])
+		g.mesh = q
+		var gm = StandardMaterial3D.new()
+		gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		gm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		gm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		gm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		gm.billboard_keep_scale = true
+		gm.albedo_texture = soft
+		gm.albedo_color = spec[1]
+		g.material_override = gm
+		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		root.add_child(g)
+		halo_mats.append([gm, spec[1]])
+	root.set_meta("halo_mats", halo_mats)
+	root.set_script(load("res://scripts/world/sun_spin.gd"))
+	return root
+
 static var _ray = null
 
 static func ray_texture():

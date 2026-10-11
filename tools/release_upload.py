@@ -1,0 +1,84 @@
+"""Replace the assets of the GitHub release `version1` with the freshly built files and update its notes.
+
+    python tools/release_upload.py
+
+Uses the GitHub token from the Git Credential Manager (`git credential fill`); the token is never printed.
+Assets: submission/JustSomeFries_Windows.zip, submission/JustSomeFries_walkthrough.mp4, film/art_remaster_preview.mp4 (uploaded as JustSomeFries_gameplay_preview.mp4).
+"""
+import json
+import subprocess
+import sys
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+REPO = "KOUHOUKOU/JUST-SOME-FRIES"
+TAG = "version1"
+
+FILES = [
+    (ROOT / "submission" / "JustSomeFries_Windows.zip", "JustSomeFries_Windows.zip", "application/zip"),
+    (ROOT / "submission" / "JustSomeFries_walkthrough.mp4", "JustSomeFries_walkthrough.mp4", "video/mp4"),
+    (ROOT / "film" / "art_remaster_preview.mp4", "JustSomeFries_gameplay_preview.mp4", "video/mp4"),
+]
+
+NOTES = (
+    "**Recommended: download `JustSomeFries_Windows.zip` and play locally.** Unzip, double-click `JustSomeFries.exe` (keep the `.pck` next to it). "
+    "The in-browser page is only a light trial and may not run stably; the local version has clearer graphics and runs much more smoothly.\n\n"
+    "Round 15 (final content pass): a TAB lesson for Gull Sight, RAINBOW TIME first on the board, a SKY HIGH quest (cloud, star, moon, sun, rainbow, plus a rain cloud), "
+    "new drink effects, a friendlier town (strangers leave you drinks, puppies run circles), a rewritten ending on the roof, 24 achievements with a gallery, "
+    "redrawn comic panels, a balanced gull and tailored outfits. Round 14: art remaster to match the cover (some props adapted from Kenney's CC0 packs).
+
+"
+    "Windows 版推荐下载到本地游玩：网页版可能无法稳定运行，本地版画质更清晰、运行更流畅。"
+)
+
+
+def token():
+    p = subprocess.run(["git", "credential", "fill"], input="protocol=https\nhost=github.com\n\n", capture_output=True, text=True, timeout=60)
+    for line in p.stdout.splitlines():
+        if line.startswith("password="):
+            return line[9:]
+    sys.exit("no GitHub token from the credential helper")
+
+
+def api(method, url, tok, body=None):
+    req = urllib.request.Request(url, method=method, data=(json.dumps(body).encode() if body is not None else None))
+    req.add_header("Authorization", "Bearer " + tok)
+    req.add_header("Accept", "application/vnd.github+json")
+    req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    if body is not None:
+        req.add_header("Content-Type", "application/json")
+    with urllib.request.urlopen(req, timeout=120) as r:
+        data = r.read()
+        return json.loads(data) if data else {}
+
+
+def main():
+    for f, _, _ in FILES:
+        if not f.exists():
+            sys.exit("missing " + str(f))
+    tok = token()
+    rel = api("GET", "https://api.github.com/repos/%s/releases/tags/%s" % (REPO, TAG), tok)
+    rid = rel["id"]
+    print("release", rid, rel["name"])
+    names = {n for _, n, _ in FILES}
+    for a in rel.get("assets", []):
+        if a["name"] in names:
+            api("DELETE", "https://api.github.com/repos/%s/releases/assets/%d" % (REPO, a["id"]), tok)
+            print("deleted old asset", a["name"])
+    for f, name, ctype in FILES:
+        url = "https://uploads.github.com/repos/%s/releases/%d/assets?name=%s" % (REPO, rid, name)
+        print("uploading", name, round(f.stat().st_size / 1e6, 1), "MB ...", flush=True)
+        r = subprocess.run(["curl", "-sS", "--fail-with-body", "-X", "POST", "-H", "Authorization: Bearer " + tok,
+                            "-H", "Accept: application/vnd.github+json", "-H", "Content-Type: " + ctype,
+                            "--data-binary", "@" + str(f), url, "-o", "NUL"], capture_output=True, text=True, timeout=3000)
+        print("  exit", r.returncode, (r.stderr or "")[:200].replace(tok, "***"))
+        if r.returncode != 0:
+            sys.exit(1)
+    api("PATCH", "https://api.github.com/repos/%s/releases/%d" % (REPO, rid), tok, {"body": NOTES})
+    rel = api("GET", "https://api.github.com/repos/%s/releases/%d" % (REPO, rid), tok)
+    for a in rel["assets"]:
+        print("asset", a["name"], a["size"], a.get("digest", ""))
+
+
+main()

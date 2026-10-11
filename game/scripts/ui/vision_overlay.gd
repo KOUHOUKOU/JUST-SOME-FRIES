@@ -205,7 +205,7 @@ func draw_glows(ci):
 				n_labels += 1
 		else:
 			# a thing (a drink, an ice cream, something to wear, a fish, a cloud...): a small picture of what it is, so the gull can decide whether it wants it
-			if (onscreen and n_labels < 22 and d < 110.0) or f.ftype == "mischief" and f.kind in ["cloud", "sun", "skybow"] and onscreen:
+			if (onscreen and n_labels < 22 and d < 110.0) or f.ftype == "mischief" and f.kind in ["cloud", "raincloud", "moon", "sun", "skybow"] and onscreen:
 				var kind = f.kind if "kind" in f else f.ftype
 				var tint = _tint_of(kind)
 				var tag = _tag_of(kind)
@@ -487,7 +487,7 @@ func _nearest_pointer(ci, cam, font, u, rect, pl):
 # ---------------------------------------------------------------- the pictures of the things
 const KIND_TAG = {"coffee": "COFFEE", "alcohol": "COCKTAIL", "icecream": "ICE CREAM", "hawaii": "SHIRT", "stripes": "SHIRT", "coat": "COAT", "socks": "SOCK", "hat": "HAT", "sailor": "HAT",
 	"topper": "HAT", "beret": "HAT", "glasses": "GLASSES", "shades": "SHADES", "necklace": "CHAIN", "bowtie": "BOW TIE", "scarf": "SCARF", "pipe": "PIPE", "balloon": "BALLOON",
-	"ball": "BALL", "fish": "FISH", "cloud": "CLOUD", "sun": "THE SUN", "meteor": "STAR", "skybow": "RAINBOW"}
+	"ball": "BALL", "fish": "FISH", "cloud": "CLOUD", "raincloud": "RAIN CLOUD", "moon": "THE MOON", "sun": "THE SUN", "meteor": "STAR", "skybow": "RAINBOW"}
 
 func _tag_of(kind):
 	return KIND_TAG.get(kind, "THING")
@@ -499,11 +499,15 @@ func _tint_of(kind):
 		"alcohol":
 			return Color("FF9A5A")
 		"icecream":
-			return Color.from_hsv(fmod(t * 0.4, 1.0), 0.45, 1.0)
+			return Color("8FE3F2")
 		"fish":
 			return Color("5FC8F5")
 		"cloud":
 			return Color("FFFFFF")
+		"raincloud":
+			return Color("A9BBD6")
+		"moon":
+			return Color("9FD2FF")
 		"sun":
 			return Color("FFC83A")
 		"skybow":
@@ -558,10 +562,16 @@ func _icon(ci, kind, c, s, col):
 		"fish":
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.9, 0), c + Vector2(-s * 0.1, -s * 0.5), c + Vector2(s * 0.5, 0), c + Vector2(-s * 0.1, s * 0.5)]), col)
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(s * 0.4, 0), c + Vector2(s * 0.95, -s * 0.45), c + Vector2(s * 0.95, s * 0.45)]), col)
-		"cloud":
+		"moon":
+			ci.draw_circle(c, s * 0.62, col)
+			ci.draw_circle(c + Vector2(s * 0.3, -s * 0.1), s * 0.5, Color(0.02, 0.03, 0.07, col.a * 0.85))
+		"cloud", "raincloud":
 			ci.draw_circle(c + Vector2(-s * 0.4, s * 0.1), s * 0.45, col)
 			ci.draw_circle(c + Vector2(s * 0.1, -s * 0.15), s * 0.55, col)
 			ci.draw_circle(c + Vector2(s * 0.5, s * 0.15), s * 0.4, col)
+			if kind == "raincloud":
+				for q in 3:
+					ci.draw_line(c + Vector2(-s * 0.3 + q * s * 0.35, s * 0.55), c + Vector2(-s * 0.4 + q * s * 0.35, s * 0.95), Color(0.7, 0.85, 1.0, col.a), lw * 0.7)
 		"skybow":
 			for k in 5:
 				ci.draw_arc(c + Vector2(0, s * 0.5), s * (1.0 - k * 0.15), PI, TAU, 14, Color.from_hsv(float(k) / 6.0, 0.6, 1.0, col.a), lw, true)

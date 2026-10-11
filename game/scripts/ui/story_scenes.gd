@@ -211,7 +211,7 @@ const MEM_TEXT = {
 	"coffee": ["A COFFEE", "coffee. my heart did a little drum solo.", "coffee"],
 	"alcohol": ["A COCKTAIL", "a cocktail. the clouds were giggling at me.", "alcohol"],
 	"ice": ["ICE CREAM", "ice cream. cold, sweet, extremely questionable.", "ice"],
-	"starlight": ["STARLIGHT", "the afternoon i could see the wind.", "starlight"],
+	"starlight": ["RAINBOW TIME", "the afternoon i could see the wind.", "starlight"],
 	"cloud": ["A CLOUD", "i wore a whole cloud. it was softer than i expected.", "cloud"],
 	"sun": ["THE SUN", "i held the sun. it was so warm.", "sun"],
 	"skybow": ["A RAINBOW", "i flew right through a rainbow. it tasted of every colour.", "skybow"],
@@ -403,55 +403,125 @@ func ending(fry):
 	await st.wait(0.4)
 	orbit_id += 1
 	await st.bars_out(1.0)
-	# --- the big brother comes down from his roof
+	# --- ROUND 15, the last part. The old man drops one more. The little gull does not eat it: it takes it up to the roof, to the one who has everything and is still hungry.
+	# Everything below happens on ONE flat roof, side-on: both gulls on the same line, the same plane, nothing between the camera and their faces.
 	Engine.time_scale = 1.0
 	st.frame_in(0.8)
 	var b = m.bro
-	var land = Vector3(-5.5, fp.y + 0.2, 5.1)
-	st.cam_set(Vector3(-7.8, 2.4, 14.6), Vector3(-7.7, 1.3, 5.0), 40.0, Vector3(-7.8, 2.0, 13.8), Vector3(-7.7, 0.95, 5.0), 38.0, 9.0)
-	await st.wait(0.8)
-	Sfx.crossfade_theme("theme_end", false, -8.0, 3.0)       # the memories melt into the Largo as he lands (it climbs to its high note at "...just some fries.")
-	var largo_t0 = GS.msec()
-	await _fly_bro_to(land, 3.0)
-	b._face(spot, 1.0)
-	await st.wait(0.5)
-	st.cam_set(Vector3(-7.7, 1.8, 14.2), Vector3(-7.7, 0.8, 5.0), 34.0, Vector3(-7.7, 1.7, 13.4), Vector3(-7.7, 0.8, 5.0), 32.0, 10.0)
-	await _bro_say("Word on the roof is you found it. The thing.", 0.7, {"dist": 1.05, "yaw": 0.5, "up": 0.07, "fov": 34.0})
-	await _bro_say("Chain. Shades. Hat. Coat.  I got everything.", 0.7)
-	await _bro_say("So why am I still hungry?", 0.75, {"dist": 1.0, "yaw": 0.42, "up": 0.04, "fov": 34.0, "roll": 0.05})
-	await st.vn_end(0.3)
-	# --- the old man, who has been there all along, drops another one
-	el.look_at_pos(el.global_position + Vector3(0, 0, 8), 2.0)
+	b.look_at_player = false
+	b.calm_head = true
+	var drop_at = Vector3(-8.0, fp.y, 4.3)
+	st.cam_set(Vector3(-4.6, 1.3, 9.8), Vector3(-8.2, 0.8, 4.3), 36.0, Vector3(-5.0, 1.2, 9.2), Vector3(-8.2, 0.8, 4.3), 34.0, 8.0)
+	await st.wait(0.4)
 	var f2 = _new_plain_fry(Vector3(0, -5, 0))
-	var drop_at = Vector3(-7.7, fp.y, 5.0)
 	await _old_man_drops(f2, drop_at, false)
-	st.cam_set(drop_at + Vector3(0.9, 0.7, 1.5), drop_at + Vector3(0, 0.1, 0), 26.0, drop_at + Vector3(0.8, 0.65, 1.4), drop_at + Vector3(0, 0.12, 0), 24.0, 6.0, 0.003)
-	await st.wait(1.2)
-	st.cam_set(Vector3(-7.7, 1.8, 14.2), Vector3(-7.7, 0.8, 5.0), 34.0, Vector3(-7.7, 1.7, 13.4), Vector3(-7.7, 0.8, 5.0), 32.0, 10.0)
-	await _bro_say("...What do YOU want?", 0.7)
-	print("[ENDING] 'just some fries' typed %.1f s after the Largo starts" % ((GS.msec() - largo_t0) / 1000.0))
+	await st.caption("he dropped another one.", 1.8)
+	f2.attach(pl.beak_socket)
+	Sfx.play("snatch", -8.0, 1.3)
+	await st.wait(0.35)
+	await st.caption("i know who is still hungry.", 1.8)
+	# the flight up to the roof: filmed from the street, a smooth arc, the fry in its beak
+	var roof_y = _roof_y(-8.9, -1.3)
+	var land = Vector3(-8.9, roof_y + 0.38, -1.3)
+	var from = pl.global_position
+	pl.mode = 0
+	pl.speed = 7.0
+	pl.throttling = true
+	var t0 = GS.msec()
+	var dur = 3.4
+	st.cam_set(Vector3(-13.0, 2.0, 9.5), Vector3(-9.0, 3.2, 1.8), 42.0, Vector3(-12.0, 4.4, 8.0), Vector3(-8.9, roof_y + 0.6, -1.0), 38.0, dur + 0.4)
+	b._face(Vector3(-30.0, 0.0, -1.3), 1.0)
+	while true:
+		var u = clamp((GS.msec() - t0) / 1000.0 / dur, 0.0, 1.0)
+		var e = u * u * (3.0 - 2.0 * u)
+		var pos = from.lerp(land, e)
+		pos.y += sin(e * PI) * 1.8
+		var dirv = land - from
+		dirv.y = 0.0
+		pl.global_position = pos
+		pl.yaw = lerp_angle(pl.yaw, atan2(-dirv.x, -dirv.z), 0.1)
+		pl.rotation = Vector3(-0.12 * sin(e * PI), pl.yaw, 0.0)
+		if u >= 1.0:
+			break
+		await get_tree().process_frame
+	pl.throttling = false
+	pl.mode = 1
+	pl.speed = 0.0
+	var yaw_e = atan2(-1.0, 0.0)               # facing east, to the big brother
+	pl.global_position = land
+	pl.yaw = yaw_e
+	pl.aim_yaw = yaw_e
+	pl.rotation = Vector3(0, yaw_e, 0)
+	Sfx.play("land", -8.0)
+	# the two of them on one line, facing each other, 3.1 m apart, in the same plane of the picture
+	b.global_position = Vector3(-5.8, roof_y + 0.92, -1.3)
+	b.rotation = Vector3(0, atan2(1.0, 0.0), 0)       # facing west
+	b.pose_mode = "ground"
+	var side = Vector3(-7.35, roof_y + 1.6, 6.4)
+	var tgt = Vector3(-7.35, roof_y + 1.05, -1.3)
+	st.cam_set(side, tgt, 33.0, side + Vector3(0.25, 0.0, -0.5), tgt, 31.5, 22.0, 0.004)
+	await st.wait(1.0)
+	await _bro_say("...You brought it all the way up here.", 0.7, {"dist": 1.05, "yaw": 0.5, "up": 0.07, "fov": 34.0})
+	await _bro_say("The coat. The hat. The chain. I got everything.", 0.7)
+	await _bro_say("...and you're the one who looks full.", 0.75, {"dist": 1.0, "yaw": 0.42, "up": 0.04, "fov": 34.0, "roll": 0.05})
+	await st.vn_end(0.3)
+	# the little gull puts the fry down between them
+	var mid_spot = Vector3(-7.35, roof_y + 0.04, -1.3)
+	f2.reparent(m, true)
+	var tw = create_tween()
+	tw.tween_property(f2, "global_position", mid_spot + Vector3(0, 0.5, 0), 0.4).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(f2, "global_position", mid_spot, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(f2, "rotation", Vector3.ZERO, 0.6)
+	f2.scale = Vector3.ONE
+	await st.wait(0.7)
+	Sfx.play("drop_tick", -9.0, 1.0)
+	await st.wait(0.5)
+	await _you_say("...it's just a fry.", 1.4, {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0})
 	await _you_say("...just some fries.", 1.4, {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0})
 	await st.vn_end(0.3)
-	# --- he takes his shades off and eats
-	_ground_shot(b.gull, {"az": 45, "spread": 40, "h": 0.05, "fov": 34, "size": 0.26, "push": 0.08, "side": -1.0}, 8.0, b.global_rotation.y)
+	# everything the little gull wore falls away: it never needed any of it
+	if not pl.gull.worn.is_empty():
+		m._burst(pl.global_position + Vector3(0, 0.5, 0), Color(1.0, 0.9, 0.6), 60, 4.0)
+		pl.gull.reset_plain()
+		Sfx.play("equip", -6.0, 0.6)
+		Sfx.play("whoosh", -9.0, 1.4)
+		await st.wait(1.0)
+	# the big brother takes his shades off: his eyes, for the first time
+	_ground_shot(b.gull, {"az": 40, "spread": 36, "h": 0.04, "fov": 33, "size": 0.27, "push": 0.07, "side": -1.0}, 8.0, b.global_rotation.y)
+	await st.wait(0.9)
 	b.gull.unwear("shades")
 	Sfx.play("equip", -8.0, 0.6)
-	await st.wait(1.0)
+	await st.wait(1.1)
+	await _bro_say("...same.", 0.8, {"dist": 1.0, "yaw": 0.35, "up": 0.05, "fov": 32.0})
+	await st.vn_end(0.3)
+	# he eats it, slowly
 	var bt = b.gull.create_tween()
 	bt.tween_property(b.gull, "head_lunge", 0.1, 0.12)
 	bt.tween_property(b.gull, "head_lunge", 0.0, 0.3)
 	Sfx.play("crunch", -9.0, 0.9)
+	await st.wait(0.35)
 	if is_instance_valid(f2):
 		f2.consume()
 	await st.wait(1.4)
-	print("[ENDING] '...same.' %.1f s after the Largo starts" % ((GS.msec() - largo_t0) / 1000.0))
-	await _bro_say("...same.", 0.8, {"dist": 1.0, "yaw": 0.35, "up": 0.05, "fov": 32.0})
+	await _bro_say("...warm.", 0.75, {"dist": 1.0, "yaw": 0.35, "up": 0.05, "fov": 32.0})
+	await _you_say("...yeah.", 1.4, {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0})
 	await st.vn_end(0.3)
+	# both turn to the sea and sit there: the old man waves from far below, the sun goes down on a town that was always plain
+	var t1 = GS.msec()
+	var yaw_s = PI
+	var camp = Vector3(-7.35, roof_y + 2.5, -9.0)
+	st.cam_set(camp, Vector3(-7.35, roof_y + 1.2, 6.0), 36.0, camp + Vector3(0.6, 0.6, 0.0), Vector3(-7.35, roof_y + 1.5, 6.0), 40.0, 11.0, 0.004)
+	while GS.msec() - t1 < 1600:
+		pl.yaw = lerp_angle(pl.yaw, yaw_s, 0.08)
+		pl.aim_yaw = pl.yaw
+		pl.rotation = Vector3(0, pl.yaw, 0)
+		b.rotation.y = lerp_angle(b.rotation.y, yaw_s, 0.08)
+		await get_tree().process_frame
 	el.rig.set_mode("wave")
-	await st.wait(0.2)
-	# --- pull back: a gull, a gull, an old man and a plain morning
-	st.cam_set(Vector3(-7.8, 1.9, 10.8), Vector3(-7.8, 1.0, 4.8), 38.0, Vector3(-7.4, 3.6, 17.0), Vector3(-7.8, 1.2, 4.6), 46.0, 12.0, 0.004)
-	await st.wait(3.0)
+	await st.wait(1.2)
+	await st.caption("nothing shiny. nothing fast.", 2.0)
+	await st.caption("just a fry, and somebody to eat it with.", 2.8)
+	await st.wait(0.6)
 	await st.frame_out(0.8)
 	await st.fade_black(1.0, 1.6)
 	el.rig.set_mode("idle")
@@ -461,6 +531,13 @@ func ending(fry):
 	m.title.play_ending()
 	await get_tree().create_timer(2.2, true, false, true).timeout
 	st.finish()
+
+# the height of the roof under (x, z): a ray from above (the little gull and the big brother both stand on it)
+func _roof_y(x, z):
+	var space = main.get_world_3d().direct_space_state
+	var q = PhysicsRayQueryParameters3D.create(Vector3(x, 14.0, z), Vector3(x, 0.0, z), 1)
+	var hit = space.intersect_ray(q)
+	return hit["position"].y if not hit.is_empty() else 4.84
 
 # ------------------------------------------------------------------ the big brother, on his roof (round 8): three short talks, each the first time the gull sits next to him
 func bro_chat(id):
@@ -498,17 +575,26 @@ func bro_chat(id):
 	await st.wait(0.5)
 	match id:
 		"chat1":
-			await _bro_say("Saw you land. Three fries, and not one of them dropped.")
-			await _bro_say("That's either talent or a very sleepy old man.")
-			await _bro_say("Fast beats strong. Strong beats loud.  Go make the sky nervous.", 0.7)
+			await _bro_say("Saw you land. Clean. Not bad, kid.")
+			await _bro_say("Fast beats strong. Strong beats loud.")
+			await _bro_say("Go make the sky nervous. I'll be here. Looking expensive.", 0.7)
 		"chat2":
-			await _bro_say("Ten fries. I can hear the sound barrier clearing its throat.")
-			await _bro_say("I was fast like that once. Then I discovered accessories.")
-			await _bro_say("...Hats are heavier than they look. So is wanting things.", 0.8)
+			await _bro_say("Ten fries. You fly like you're late for something.")
+			await _bro_say("I was fast like that once. Then I found accessories.")
+			await _bro_say("...Hats are heavy. So is wanting things.", 0.8)
 		"chat3":
-			await _bro_say("Eighteen. You're starting to look like me. Same squint. Same hunger.", 0.75)
-			await _bro_say("Funny thing about having everything: it needs a lot of room. In here.")
-			await _bro_say("Come find me when you've eaten the lot. I'll be here. Cool, and slightly peckish.", 0.8)
+			await _bro_say("Eighteen. You've got the squint now. Same as mine.", 0.75)
+			await _bro_say("Funny thing about having everything: it takes up room. In here.")
+			await _bro_say("Still hungry? ...Yeah. Me too.", 0.8)
+		"chat4":
+			await _bro_say("All twenty-four. The whole spectrum.", 0.75)
+			await _bro_say("So. What does the stomach say?")
+			await _bro_say("...Right. Mine too. Funny, that.", 0.8)
+			await _bro_say("Go look at the table you started at. I never did.", 0.7)
+		"chat_sky":
+			await _bro_say("You caught the moon. I tried once. It laughed.", 0.75)
+			await _bro_say("Cloud, star, sun, rainbow. The lot.")
+			await _bro_say("And you came back to a roof. ...Interesting.", 0.8)
 	await st.vn_end(0.25)
 	b.look_at_player = true
 	pl.input_locked = false
@@ -538,6 +624,8 @@ const BEATS = {
 		{"rot": -4.0, "shake": 0.9, "pitch": 1.6, "sfx": "buff_ice", "pos": Vector2(0.64, 0.34),
 		"extra": [["*shiver*", 0.84, 0.5, 6.0, Color("CFF3E4"), 32.0, 1.8]]}],
 	"quest_cloud": ["FLUFF!", Color("DDEBFF"), ["i caught a cloud.", "it was softer than i expected.", "and somehow... i'm still hungry."],
+		{"rot": -5.0, "shake": 0.3, "pitch": 1.1, "pos": Vector2(0.64, 0.34), "size": 130.0, "life": 2.2}],
+	"quest_sky": ["WHOOSH!", Color("BFE3FF"), ["the whole sky, in my beak.", "it was softer, warmer and louder than i expected.", "and somehow... i'm still hungry."],
 		{"rot": -5.0, "shake": 0.3, "pitch": 1.1, "pos": Vector2(0.64, 0.34), "size": 130.0, "life": 2.2}],
 	"quest_fishbook": ["GULP.", Color("7FC3E4"), ["the whole sea, written down.", "every one of them wetter than i expected.", "and somehow... i'm still hungry."],
 		{"rot": 4.0, "shake": 0.3, "pitch": 0.9, "pos": Vector2(0.64, 0.34), "size": 130.0, "life": 2.2}],
@@ -748,7 +836,7 @@ func _cine_drinks3():
 	for k in ["a", "b", "c"]:
 		st.inset_close(k)
 	Sfx.play("star_riser", -6.0)
-	_word("STARLIGHT", 0.5, 0.34, 118.0, Color("FFF6D8"), -3.0, Color("C27BEA"))
+	_word("RAINBOW TIME", 0.5, 0.34, 96.0, Color("FFF6D8"), -3.0, Color("C27BEA"))
 	st.flash = 0.5
 	st.flash_col = Color(1, 0.95, 0.85)
 	m._burst(gp + Vector3(0, 0.4, 0), Color(1, 0.9, 0.7), 80, 7.0)

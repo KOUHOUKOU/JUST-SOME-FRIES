@@ -18,6 +18,10 @@ var head
 var tail
 var legs = []
 var bark_t = 0.0
+var circled = false           # round 15: a friendly dog that has run a full circle round the gull
+var friend_a = 0.0
+var friend_t = 0.0
+var heart_t = 0.0
 var base_yaw = 0.0
 const Warn = preload("res://scripts/world/warn.gd")
 
@@ -88,7 +92,14 @@ func _physics_process(delta):
 			body.scale.x = 1.0 + sin(GS.msec() * 0.002) * 0.02
 			tail.rotation.y = 0.0
 			var landed = player.mode == 1 and d < 8.5 and GS.gull_sense_count >= 3
-			if ((d < 9.0 and (player.speed > 9.0 or carrying)) or landed) and cd <= 0.0:
+			if landed and not carrying and GS.watch < 1.6 and cd <= 0.0 and player.snatch.state == "idle":
+				# round 15: nobody is watching the gull, so the dog just wants to play
+				state = "friend"
+				friend_a = atan2(-to.z, -to.x)
+				friend_t = 0.0
+				circled = false
+				Sfx.play("bark", -12.0, 1.7)
+			elif ((d < 9.0 and (player.speed > 9.0 or carrying)) or landed) and cd <= 0.0:
 				state = "bark"
 				st = 0.0
 				Sfx.play("bark", -4.0)
@@ -107,7 +118,7 @@ func _physics_process(delta):
 			tail.rotation.y = sin(GS.msec() * 0.03) * 0.6
 			if int(st * 3.0) != int((st - delta) * 3.0) and st < 1.4:
 				Sfx.play("bark", -8.0, randf_range(0.9, 1.1))
-			if (carrying or (player.mode == 1 and GS.gull_sense_count >= 3)) and d < 6.5 and cd <= 0.0:
+			if (carrying or (player.mode == 1 and GS.gull_sense_count >= 3 and GS.watch >= 1.6)) and d < 6.5 and cd <= 0.0:
 				state = "crouch"
 				st = 0.0
 				# the warning: a "!" over the dog and a red patch where it will land
@@ -118,6 +129,33 @@ func _physics_process(delta):
 			elif st > 2.5 or d > 14.0:
 				state = "sleep"
 				cd = 6.0
+		"friend":
+			# trots to the gull and runs circles round it, a heart over its head now and then
+			friend_t += delta
+			heart_t -= delta
+			var ang_speed = 2.6
+			friend_a += ang_speed * delta
+			var want = player.global_position + Vector3(cos(friend_a), 0, sin(friend_a)) * 2.1
+			want.y = home.y
+			var step = want - global_position
+			step.y = 0.0
+			var sp = 4.8 if step.length() > 0.6 else 3.0
+			if step.length() > 0.05:
+				Nav.step(self, step.normalized() * min(sp * delta, step.length()))
+				rotation.y = lerp_angle(rotation.y, atan2(step.x, step.z), 10.0 * delta)
+			global_position.y = home.y
+			body.position.y = abs(sin(friend_t * 12.0)) * 0.08
+			body.scale.y = lerp(body.scale.y, 1.0, 8.0 * delta)
+			head.rotation.x = lerp(head.rotation.x, -0.1, 8.0 * delta)
+			tail.rotation.y = sin(GS.msec() * 0.04) * 0.8
+			if heart_t <= 0.0:
+				heart_t = 0.9
+				load("res://scripts/world/rest_events.gd").heart_fx(get_tree().current_scene, global_position + Vector3(0, 1.1, 0))
+			if friend_t > 2.2 and global_position.distance_to(player.global_position) < 3.4:
+				circled = true
+			if friend_t > 8.0 or player.mode != 1 or GS.watch >= 1.6 or carrying:
+				state = "return"
+				cd = 25.0
 		"crouch":
 			st += delta
 			body.position.y = lerp(body.position.y, -0.12, 14.0 * delta)

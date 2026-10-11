@@ -14,6 +14,9 @@ var storm_mat
 var sun_disc = null
 var sun_pos = Vector3(0, 110, 170)     # where the sun is in the sky (it is also what the "catch the sun" quest flies to)
 var sun_caught = false
+const MOON_POS = Vector3(-135.0, 108.0, 118.0)      # the moon hangs out over the western sea (it is as hard to catch as the sun)
+var moon_disc = null
+var moon_caught = false
 var player
 var t = 0.0
 var target = 0.0
@@ -76,6 +79,13 @@ func _apply(delta):
 		storm_mat.set_shader_parameter("glow", lerp(0.16, 0.1, u))
 	if sun_disc != null:
 		sun_disc.caught = sun_caught
+	if moon_disc != null:
+		moon_disc.global_position = MOON_POS
+		moon_disc.caught = moon_caught
+		var nt = smoothstep(0.35, 0.95, u)
+		moon_disc.get_meta("core_mat").albedo_color.a = lerp(0.5, 1.0, nt)
+		for hm in moon_disc.get_meta("halo_mats"):
+			hm[0].albedo_color = Color(hm[1].r, hm[1].g, hm[1].b, hm[1].a * lerp(0.5, 1.6, nt))
 	# colour: richer with every special fry, back to natural at the ending, muted in Gull Sense view
 	var sat_t = 1.0 + min(0.012 * GS.special_count(), 0.08)
 	if player != null:

@@ -139,6 +139,7 @@ func _ready():
 	day.cloud_mat = world.get("cloud_mat")
 	day.storm_mat = world.get("storm_mat")
 	day.sun_disc = world.get("sun_disc")
+	day.moon_disc = world.get("moon_disc")
 	day.player = player
 	day.atmosphere = world.get("cover_atmosphere")
 	add_child(day)
@@ -219,10 +220,7 @@ func _ready():
 		queue_cine("drinks3"))
 	GS.fish_caught.connect(func(info): queue_cine("fish", info))
 	GS.buff_started.connect(func(kind): queue_cine("drink_" + kind))
-	GS.meteor_caught.connect(func(): queue_cine("meteor"))
-	GS.quest_done.connect(func(id):
-		if id == "sun" or id == "skybow" or id == "cloud":
-			queue_cine(id))
+	GS.sky_caught.connect(_sky_reward)
 	GS.star_ended.connect(func(): Sfx.set_star(false))
 	GS.still_hungry_started.connect(_begin_star_phase)
 	player.update_camera(0.0, true)
@@ -238,7 +236,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -582,6 +580,8 @@ func _restore_run(d):
 		player.speed = 5.0
 		player.velocity = Vector3.ZERO
 		player.update_camera(0.0, true)
+	if GS.tab_lesson == 0 and GS.fry_total() >= 10:
+		GS.tab_lesson = 2
 	day.t = day.compute_target()
 	hud.hint_shown = {"e": true, "e2": true, "shift": true, "rest": true, "tab": true, "yell": true, "roll": true}
 	tab_hint_t = 0.0
@@ -700,6 +700,8 @@ func _process(delta):
 		_hunger_tick(rdt)
 		_autosave_tick(rdt)
 		_quest_tick(rdt)
+		_tab_lesson_tick(rdt)
+		_ach_tick(rdt)
 		_bow_tick()
 		_cine_tick(rdt)
 
@@ -750,10 +752,11 @@ func _hints():
 		hud.hint("e", "E - WHEN A WHITE RING HITS THE GREEN.  GOLD COUNTS DOUBLE.", 3.5)
 	if player.low_stamina and player.mode == 0:
 		hud.hint("rest", "CTRL - LAND AND REST", 3.0)
-	if GS.gull_sense_count >= 3 and tab_hint_t < 0.0:
-		tab_hint_t = play_t + 5.0
+	# round 15: the TAB lesson (see _tab_lesson_tick) replaces the old one-line hint; after it, the codex is mentioned once
+	if GS.tab_lesson >= 2 and tab_hint_t < 0.0:
+		tab_hint_t = play_t + 14.0
 	if tab_hint_t > 0.0 and play_t > tab_hint_t:
-		hud.hint("tab", "HOLD TAB - LOOK AROUND          C - CODEX", 4.0)
+		hud.hint("tab", "C - CODEX          F - SQUAWK", 4.0)
 	if tab_hint_t > 0.0 and play_t > tab_hint_t + 12.0 and player.mode == 0:
 		hud.hint("sniff", "E WHILE FLYING - POINTS TO THE NEAREST FRY YOU CAN CATCH", 4.5)
 
@@ -835,8 +838,10 @@ func _update_watch(delta):
 			if is_instance_valid(a) and not a.get("gone"):
 				nearest = min(nearest, a.global_position.distance_to(pp))
 	var away = player.mode == 0 and (pp.y > 20.0 or nearest > 45.0) and nearest > 14.0
-	GS.heat_decay_mult = 9.0 if away else 1.0
-	_watch_target = clamp(GS.heat * (0.2 if away else 1.0) + local, 0.0, 4.0)
+	# round 15: a gull that sits still and bothers nobody is forgotten quickly, one that is high and far away even faster: down to zero
+	var still = player.mode == 1 and player.still_t > 3.0 and player.carry_fry == null
+	GS.heat_decay_mult = 9.0 if away else (5.0 if still else 1.0)
+	_watch_target = clamp(GS.heat * (0.15 if away else (0.4 if still else 1.0)) + local * (0.55 if still else 1.0), 0.0, 4.0)
 
 var _watch_target = 0.0
 
@@ -927,6 +932,7 @@ func _close_sense_if_open():
 var quest_items = {}
 var quest_t = 0.0
 const CLOUD_POS = Vector3(22.0, 92.0, 74.0)
+const RAINCLOUD_POS = Vector3(-85.0, 86.0, 150.0)
 
 func _quest_tick(rdt):
 	quest_t -= rdt
@@ -947,29 +953,159 @@ func _quest_tick(rdt):
 	elif fresh.size() > 0:
 		hud.whisper("new on the board: %s." % GS.QUESTS[fresh[0]][1].to_lower(), 4.0)
 		Sfx.play("chime", -14.0, 1.3)
-	if GS.quest_state("cloud") == "active" and not quest_items.has("cloud"):
-		var c = Node3D.new()
-		c.set_script(load("res://scripts/fries/mischief.gd"))
-		c.setup("cloud", self, CLOUD_POS)
-		quest_items["cloud"] = c
-	if GS.quest_state("sun") == "active" and not quest_items.has("sun"):
-		var s2 = Node3D.new()
-		s2.set_script(load("res://scripts/fries/mischief.gd"))
-		s2.setup("sun", self, day.sun_pos if day != null else Vector3(0, 110, 160))
-		quest_items["sun"] = s2
-	if GS.quest_state("skybow") == "active" and not quest_items.has("skybow"):
-		var rp0 = get_tree().get_first_node_in_group("rainbow_pair")
-		if rp0 != null:
-			var b0 = Node3D.new()
-			b0.set_script(load("res://scripts/fries/mischief.gd"))
-			b0.setup("skybow", self, rp0.apex())
-			quest_items["skybow"] = b0
-	# the sun item rides along with the sun in the sky; once it is caught the sky sun is gone
+	# the five things of the sky (and the grey rain cloud) hang up there once the quest is on the board
+	var sky_on = GS.quest_state("sky") != ""
+	if sky_on:
+		for spec in [["cloud", CLOUD_POS], ["raincloud", RAINCLOUD_POS]]:
+			if not quest_items.has(spec[0]):
+				var c = Node3D.new()
+				c.set_script(load("res://scripts/fries/mischief.gd"))
+				c.setup(spec[0], self, spec[1])
+				quest_items[spec[0]] = c
+		if not quest_items.has("moon"):
+			var mo = Node3D.new()
+			mo.set_script(load("res://scripts/fries/mischief.gd"))
+			mo.setup("moon", self, DAY_SCRIPT.MOON_POS)
+			quest_items["moon"] = mo
+		if not quest_items.has("sun"):
+			var s2 = Node3D.new()
+			s2.set_script(load("res://scripts/fries/mischief.gd"))
+			s2.setup("sun", self, day.sun_pos if day != null else Vector3(0, 110, 160))
+			quest_items["sun"] = s2
+		if not quest_items.has("skybow"):
+			var rp0 = get_tree().get_first_node_in_group("rainbow_pair")
+			if rp0 != null:
+				var b0 = Node3D.new()
+				b0.set_script(load("res://scripts/fries/mischief.gd"))
+				b0.setup("skybow", self, rp0.apex())
+				quest_items["skybow"] = b0
+	# the sun item rides along with the sun in the sky; once it is caught the sky sun is gone (and the same for the moon)
 	var sun_item = quest_items.get("sun", null)
 	if sun_item != null and is_instance_valid(sun_item) and not sun_item.taken and day != null:
 		sun_item.global_position = day.sun_pos
-	if GS.quest_state("sun") == "done" and day != null:
-		day.sun_caught = true
+	var moon_item = quest_items.get("moon", null)
+	if moon_item != null and is_instance_valid(moon_item) and not moon_item.taken and day != null:
+		moon_item.global_position = DAY_SCRIPT.MOON_POS
+	if day != null:
+		day.sun_caught = GS.sky_got.has("sun")
+		day.moon_caught = GS.sky_got.has("moon")
+
+# ---- the TAB lesson (round 15). The most important key of the game gets a lesson of its own, by doing: a big keycap presses itself at the bottom of the screen
+# ("HOLD TAB") from the moment the third fry has opened Gull Sight; once the player holds it, the lines change with the seconds of holding (what glows, what the number
+# means), a ring closes, and after about three seconds the card thanks the player and goes. If the player ignores it, it shrinks, but it stays.
+var lesson_wait = 0.0
+func _tab_lesson_tick(rdt):
+	if GS.tab_lesson >= 2 or GS.gull_sense_count < 3 or GS.ordinary_eaten or intro_active or ending_started:
+		return
+	if GS.sense_active:
+		GS.sight_time += rdt
+	if GS.tab_lesson == 0:
+		var sn = player.snatch
+		if showcase.active or sn.state != "idle" or sn.lock_fry != null or scenes.cine_busy or scenes.beat_busy or codex_open or player.input_locked:
+			lesson_wait = 0.0
+			return
+		lesson_wait += rdt
+		if lesson_wait > 3.0:
+			GS.tab_lesson = 1
+			Sfx.play("chime", -10.0, 1.5)
+		return
+	var t = GS.sight_time
+	if t < 1.0:
+		hud.lesson_line = "THE WORLD SLOWS DOWN"
+	elif t < 2.2:
+		hud.lesson_line = "EVERYTHING THAT GLOWS IS A FRY TO STEAL"
+	else:
+		hud.lesson_line = "THE NUMBER = THE SPEED YOU NEED"
+	if not GS.sense_active and GS.sight_time >= 3.4:
+		GS.tab_lesson = 2
+		hud.lesson_done_t = 3.6
+		Sfx.play("reward_1", -8.0, 1.3)
+
+var ach_t = 0.0
+var calm_after_alarm = 0.0
+var was_all_eyes = false
+func _ach_tick(rdt):
+	ach_t -= rdt
+	if ach_t > 0.0:
+		return
+	ach_t = 1.0
+	GS.ach_tick()
+	# INNOCENT AS A SEAGULL: the crowd was on full alert, and now nobody is watching
+	if GS.watch >= 3.0:
+		was_all_eyes = true
+	if was_all_eyes and GS.watch < 0.08:
+		calm_after_alarm += 1.0
+		if calm_after_alarm >= 2.0:
+			if GS.ach_unlock("innocent"):
+				GS.comic.emit("calm", "NOBODY IS WATCHING. SUSPICIOUSLY PERFECT.", {"tier": 0})
+	else:
+		calm_after_alarm = 0.0
+
+# ---- a thing of the sky was caught (round 15): NO camera change and NO slow time. A ring of light leaves the gull, sparkles in the colour of the thing, a note that
+# climbs with every new one, the little panel in the lower left, and a word + five pips at the top. The gull keeps flying and the player keeps looking where they were looking.
+const SKY_COLS = {"cloud": Color("EAF2FF"), "raincloud": Color("B9C8E0"), "star": Color("FFE27A"), "moon": Color("9FD2FF"), "sun": Color("FFD66B"), "rainbow": Color("FF9AD0")}
+const SKY_CAPS = {
+	"cloud": ["A WHOLE CLOUD. SOFTER THAN EXPECTED.", "CLOUD: CAUGHT. DAMP: SLIGHTLY."],
+	"raincloud": ["A RAIN CLOUD. IT DRIZZLES ON PURPOSE.", "RAIN, BUT PORTABLE."],
+	"star": ["A SHOOTING STAR. THE WISH IS FRIES.", "THE STAR WAS FAST. YOU WERE FASTER."],
+	"moon": ["THE MOON. NO CHEESE FOUND.", "OVER THE MOON. LITERALLY."],
+	"sun": ["THE SUN. WARM. SLIGHTLY STUBBORN.", "YOU HELD THE SUN. YOUR BEAK IS FINE."],
+	"rainbow": ["A RAINBOW. ALL SEVEN FLAVOURS OF NOTHING.", "THROUGH THE RAINBOW AND OUT THE OTHER COLOUR."],
+}
+var _ring_tex_cache = null
+
+func _ring_tex():
+	if _ring_tex_cache == null:
+		var S = 128
+		var img = Image.create(S, S, false, Image.FORMAT_RGBA8)
+		for y in S:
+			for x in S:
+				var r = Vector2(x - S * 0.5 + 0.5, y - S * 0.5 + 0.5).length() / (S * 0.5)
+				var a = exp(-pow((r - 0.8) / 0.075, 2.0)) * clamp((1.0 - r) * 8.0 + 0.2, 0.0, 1.0)
+				img.set_pixel(x, y, Color(1, 1, 1, clamp(a, 0.0, 1.0)))
+		_ring_tex_cache = ImageTexture.create_from_image(img)
+	return _ring_tex_cache
+
+func _sky_ring(pos, col, size_to, secs, delay = 0.0):
+	var mi = MeshInstance3D.new()
+	var q = QuadMesh.new()
+	q.size = Vector2(1, 1)
+	var m = StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	m.billboard_keep_scale = true
+	m.albedo_texture = _ring_tex()
+	m.albedo_color = Color(col.r, col.g, col.b, 0.0)
+	m.no_depth_test = true
+	q.material = m
+	mi.mesh = q
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mi)
+	mi.global_position = pos
+	mi.scale = Vector3.ONE * 0.8
+	var tw = mi.create_tween()
+	if delay > 0.0:
+		tw.tween_interval(delay)
+	tw.tween_property(m, "albedo_color:a", 0.85, 0.08)
+	tw.parallel().tween_property(mi, "scale", Vector3.ONE * size_to, secs).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(m, "albedo_color:a", 0.0, secs).set_delay(0.08)
+	tw.tween_callback(mi.queue_free)
+
+func _sky_reward(kind, n):
+	var col = SKY_COLS.get(kind, Color.WHITE)
+	var pos = player.global_position
+	_sky_ring(pos, col, 11.0, 0.8)
+	_sky_ring(pos, col.lightened(0.4), 17.0, 1.05, 0.14)
+	_burst(pos, col, 54, 6.5)
+	_burst(pos + Vector3(0, 0.5, 0), Color(1, 1, 1), 22, 4.0)
+	player.fov_kick = 4.5
+	player.refill()
+	Sfx.play("prism_%d" % clamp(n - 1, 0, 6), -5.0)
+	Sfx.play("reward_2", -8.0, 1.0 + 0.06 * n)
+	var caps = SKY_CAPS.get(kind, ["CAUGHT."])
+	GS.comic.emit(kind, caps[randi() % caps.size()], {"tier": 0})
 
 # ---- Fry Codex: key C (map + stats + fries with tiers) ----
 func _can_open_codex():
@@ -1046,6 +1182,7 @@ func _on_escaped(f):
 			var n = GS.gull_sense_count
 			if n == 1:
 				GS.remember("fry1")
+				GS.ach_unlock("first_fry")
 			_burst(player.global_position, Color(1.0, 0.9, 0.55), 22 if n < 3 else 60, 4.0 if n < 3 else 7.0)
 			Sfx.play("reward_1", -6.0, 1.0 + 0.12 * n)
 			GS.fry_got.emit("tutorial", 0)

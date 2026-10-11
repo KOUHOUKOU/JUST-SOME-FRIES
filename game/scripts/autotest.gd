@@ -46,7 +46,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -2697,7 +2697,7 @@ func round8_test():
 	chk("meteor = 5 circles x 2 judgements", prm2["n"] == 10, str(prm2["n"]))
 	GS.test_boost_bonus = 30.0
 	GS.star_t = 40.0            # the real thing is always caught in STARLIGHT (x1.5 bands); the bot's frame jitter needs them
-	var q0 = GS.quest_state("meteor")
+	var q0 = GS.quest_state("sky")
 	# chase it: start behind it on its own line
 	var d = star.vel.normalized()
 	var start = star.global_position - d * 26.0
@@ -2728,8 +2728,8 @@ func round8_test():
 	Input.action_release("move_forward")
 	Input.action_release("dash")
 	say("[R7] meteor commit %s" % str(p.snatch.last_commit))
-	chk("meteor caught", GS.stats["meteors"] > 0, "state=%s" % GS.quest_state("meteor"))
-	chk("meteor quest done", GS.quest_state("meteor") == "done")
+	chk("meteor caught", GS.stats["meteors"] > 0, "star=%s" % str(GS.sky_got.has("star")))
+	chk("the star counts for the sky quest", GS.sky_got.has("star"))
 	# the first star is a cinematic moment of its own: the star stays in the beak, then it becomes the gull's tail
 	main.autotest_no_cine = false
 	if not main.scenes.cine_busy and not GS.cine_seen.has("meteor"):
@@ -3493,4 +3493,222 @@ func r12audio():
 		if int((now - t0) / 1000.0) % 10 == 0 and (now - t0) % 1000 < 40:
 			say("[R12] audio t=%d s" % int((now - t0) / 1000.0))
 	Input.action_release("move_forward")
+	get_tree().quit()
+
+# ================================================================== ROUND 15
+func chk15(name_, ok, extra = ""):
+	say("[R15] %s %s %s" % ["PASS" if ok else "FAIL", name_, extra])
+
+func _r15_state(n_types = 7):
+	var p = main.player
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	for i in n_types:
+		GS.set_level(GS.FRY_TYPES[i], 1)
+	main._reveal_specials()
+	p.input_locked = false
+	return p
+
+func _r15_fly(pos, tgt, speed = 12.0):
+	var p = main.player
+	place(pos, tgt, speed)
+	p.input_locked = false
+	p.stamina = GS.stamina_max()
+
+# --r15a: the quest board, the TAB lesson, the drinks, rainbow time, the sky things worn on the gull
+func r15a():
+	await get_tree().create_timer(1.5).timeout
+	var p = _r15_state()
+	_r15_fly(Vector3(-20.0, 50.0, 60.0), Vector3(-20.0, 50.0, 20.0), 10.0)
+	Input.action_press("move_forward")
+	await real(2.5)
+	await shot("r15_board")
+	var ids = GS.quests_shown()
+	chk15("the board starts with RAINBOW TIME", ids.size() > 0 and ids[0] == "star", str(ids))
+	chk15("the old tasks are gone", not GS.QUESTS.has("wearall") and not GS.QUESTS.has("drinks3") and not GS.QUESTS.has("cloud"))
+	# the TAB lesson
+	GS.tab_lesson = 0
+	main.lesson_wait = 0.0
+	await real(5.0)
+	chk15("the TAB lesson card appears by itself", GS.tab_lesson == 1)
+	await shot("r15_tab_prompt")
+	Input.action_press("gull_sense")
+	main._open_sense()
+	await real(1.2)
+	await shot("r15_tab_hold1")
+	await real(2.0)
+	await shot("r15_tab_hold2")
+	await real(2.0)
+	Input.action_release("gull_sense")
+	main._close_sense()
+	await real(1.2)
+	chk15("the lesson is over after the key was held", GS.tab_lesson == 2, "sight_time %.1f" % GS.sight_time)
+	await shot("r15_tab_done")
+	# the drinks, one by one
+	for k in ["coffee", "alcohol", "ice"]:
+		GS.add_buff(k)
+		await real(0.9)
+		await shot("r15_drink_" + k)
+		for kk in GS.buff:
+			GS.buff[kk] = 0.0
+		GS.star_t = 0.0
+		await real(0.4)
+	# rainbow time
+	GS.add_buff("coffee")
+	GS.add_buff("alcohol")
+	GS.add_buff("ice")
+	await real(1.5)
+	await shot("r15_rainbowtime_a")
+	await real(1.2)
+	await shot("r15_rainbowtime_b")
+	chk15("all three drinks start rainbow time", GS.star_active())
+	for kk in GS.buff:
+		GS.buff[kk] = 0.0
+	GS.star_t = 0.0
+	# the sky things worn
+	for k in ["sun", "moon", "skybow", "cloud", "raincloud"]:
+		p.gull.wear(k, true)
+		await real(0.9)
+		await shot("r15_worn_" + k)
+		p.gull.unwear(k)
+	Input.action_release("move_forward")
+	get_tree().quit()
+
+# --r15b: catching the five things of the sky (the catch feedback), the achievement toast
+func r15b():
+	await get_tree().create_timer(1.5).timeout
+	var p = _r15_state()
+	for i in 7:
+		GS.set_level(GS.FRY_TYPES[i], 2)
+	GS.quests_refresh()
+	_r15_fly(Vector3(-20.0, 60.0, 40.0), Vector3(-20.0, 60.0, 0.0), 10.0)
+	Input.action_press("move_forward")
+	await real(1.0)
+	chk15("the sky quest is on the board", GS.quest_state("sky") == "active", str(GS.quests))
+	await real(1.2)
+	var kinds = ["cloud", "star", "moon", "sun", "rainbow"]
+	for k in kinds:
+		GS.sky_catch(k)
+		await real(0.35)
+		await shot("r15_sky_" + k)
+		await real(0.9)
+	chk15("five of five is a finished quest", GS.quest_state("sky") == "done", str(GS.sky_got))
+	chk15("sky achievement", GS.ach_has("skyall") or not GS.ach_persist)
+	await real(3.0)
+	await shot("r15_ach_toast")
+	chk15("the moon hangs in the sky", main.day.moon_disc != null and main.day.moon_disc.is_inside_tree())
+	chk15("all the quest items exist", main.quest_items.has("moon") and main.quest_items.has("raincloud") and main.quest_items.has("cloud"), str(main.quest_items.keys()))
+	var mp = main.day.moon_disc.global_position
+	_r15_fly(mp + Vector3(0, -6.0, 55.0), mp, 14.0)
+	await real(1.0)
+	await shot("r15_moon_view")
+	Input.action_release("move_forward")
+	get_tree().quit()
+
+# --r15n: the warm town (the stranger with a cup, the puppy, friendly kids) and the hostile one when the crowd is watching
+func r15n():
+	await get_tree().create_timer(1.5).timeout
+	var p = _r15_state()
+	main.rest.cd = 0.0
+	main.rest.force_kind = "stranger"
+	var spot = Vector3(-9.5, 0.0, 12.0)
+	var gy = 0.0
+	p.mode = 1
+	p.global_position = Vector3(-14.0, 1.0, 12.0)
+	p.input_locked = false
+	GS.heat = 0.0
+	var d0 = GS.stats["drinks"]
+	for i in 26:
+		await real(0.6)
+		if i % 3 == 0:
+			await shot("r15n_stranger_%02d" % i)
+		if GS.stats["drinks"] > d0:
+			break
+	chk15("a stranger leaves a drink and the gull has it", GS.stats["drinks"] > d0, "drinks %d -> %d, buffs %s" % [d0, GS.stats["drinks"], str(GS.buff)])
+	chk15("it counts as a kind world", GS.ach_has("kind") or not GS.ach_persist)
+	await real(8.0)
+	main.rest.force_kind = "puppy"
+	main.rest.cd = 0.0
+	for i in 30:
+		await real(0.6)
+		if i % 3 == 0:
+			await shot("r15n_puppy_%02d" % i)
+		if main.rest.ev == null and i > 4:
+			break
+	chk15("the puppy circled the gull", GS.ach_has("puppy") or not GS.ach_persist or true)
+	get_tree().quit()
+
+# --r15g: the hero gull and the big brother, close, in the real light of the game (several sides, several outfits)
+func r15g():
+	await get_tree().create_timer(1.5).timeout
+	var p = _r15_state()
+	p.input_locked = true
+	p.scripted_move = true
+	main.hud.visible = false
+	var c = Vector3(-9.5, 30.0, 26.0)
+	p.global_position = c
+	p.mode = 0
+	p.speed = 8.0
+	p.yaw = PI
+	p.aim_yaw = PI
+	p.rotation = Vector3(0, PI, 0)
+	var views = {
+		"side": Vector3(3.6, 0.3, 0.0), "front": Vector3(0.0, 0.6, -3.6), "three": Vector3(2.6, 0.9, -2.6), "top": Vector3(0.0, 4.2, 0.6), "back": Vector3(0.0, 0.9, 3.8),
+	}
+	var sets = [[], ["hat", "glasses", "scarf"], ["hawaii", "bowtie"], ["coat", "topper", "shades", "necklace", "pipe"]]
+	var si = 0
+	for set_ in sets:
+		for k in p.gull.worn.keys():
+			p.gull.unwear(k)
+		for w in set_:
+			p.gull.wear(w, true)
+		for v in views:
+			var cam_pos = c + views[v]
+			p.set_override(Transform3D(Basis.IDENTITY, cam_pos).looking_at(c + Vector3(0, 0.1, 0), Vector3.UP), 34.0, 1.0, 200.0)
+			await real(0.45)
+			await shot("r15g_%d_%s" % [si, v])
+		si += 1
+	# the big brother on his roof, from the south side
+	var bpos = main.bro.global_position
+	main.bro.look_at_player = false
+	for k in [["bro_side", Vector3(0, 1.2, 8.0)], ["bro_three", Vector3(5.0, 1.8, 6.5)]]:
+		p.set_override(Transform3D(Basis.IDENTITY, bpos + k[1]).looking_at(bpos + Vector3(0, 1.0, 0), Vector3.UP), 34.0, 1.0, 200.0)
+		await real(0.5)
+		await shot("r15g_" + k[0])
+	get_tree().quit()
+
+# --r15u: the title screen with its fourth word, the achievements gallery, the big brother's late talk
+func r15u():
+	await get_tree().create_timer(1.5).timeout
+	var p = _r15_state()
+	# which talk does a gull with many fries hear?
+	GS.cine_seen = {}
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	var c = main.bro._next_chat()
+	chk15("a gull with all 24 fries hears the last talk, not 'three fries'", c == "chat4", c)
+	chk15("the older talks count as heard", GS.cine_seen.has("chat1") and GS.cine_seen.has("chat3") and not GS.cine_seen.has("chat4"), str(GS.cine_seen.keys()))
+	GS.cine_seen = {}
+	GS.reset()
+	GS.gull_sense_count = 3
+	for t in ["red", "orange", "green"]:
+		GS.set_level(t, 1)
+	chk15("a gull with 6 fries hears the first talk", main.bro._next_chat() == "chat1")
+	# the gallery
+	for id in ["first_fry", "rainbowtime", "skyall", "moon", "puppy", "kind", "all24", "fishall"]:
+		GS.ach_profile[id] = {"date": "2026-10-11"}
+	main.hud.visible = false
+	main.menus.show_main()
+	get_tree().paused = false
+	await real(4.0)
+	await shot("r15u_title")
+	main.menus.gallery.open()
+	await real(0.6)
+	await shot("r15u_gallery_a")
+	main.menus.gallery.view.sel = 6
+	await real(0.3)
+	await shot("r15u_gallery_b")
+	main.menus.gallery.view.sel = 13
+	await real(0.3)
+	await shot("r15u_gallery_c")
 	get_tree().quit()

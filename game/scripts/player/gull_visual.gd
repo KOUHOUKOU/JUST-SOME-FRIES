@@ -37,6 +37,7 @@ var bro_style = false          # the big brother's grand versions of the coat, t
 var tracked = false            # the player gull: wearing changes the game state (GS.worn = owned, GS.equipped = on)
 var body_mi
 var white_mat
+var on_ground = false           # standing on the ground (the cloud under the gull only shows in the air)
 var comet_k = 0.5               # how hard the star's tail blows: it grows with the speed
 
 func _mat(c, rough = 0.95):
@@ -206,7 +207,7 @@ func tint_pale(c):
 
 func _make_trail():
 	var p = CPUParticles3D.new()
-	p.amount = 40
+	p.amount = 90
 	p.lifetime = 0.55
 	p.local_coords = false
 	p.emitting = false
@@ -439,7 +440,7 @@ func _comet_tick(mode, delta):
 
 # ---- wearables: every kind lives in one slot; putting something on replaces whatever sat in that slot ----
 const SLOTS = {"hat": "head", "sailor": "head", "topper": "head", "beret": "head", "glasses": "eyes", "shades": "eyes", "necklace": "neck", "bowtie": "neck",
-	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float", "socks": "tail", "cloud": "cloud", "sun": "halo", "meteor": "comet", "skybow": "halo2"}
+	"scarf": "neck", "pipe": "mouth", "hawaii": "body", "stripes": "body", "coat": "body", "balloon": "float", "socks": "tail", "cloud": "cloud", "raincloud": "cloud", "sun": "halo", "moon": "lunar", "meteor": "comet", "skybow": "halo2"}
 
 static func slot_of(kind):
 	return SLOTS.get(kind, "head")
@@ -450,8 +451,12 @@ func wear(kind, silent = false):
 	for k in worn.keys():
 		if slot_of(k) == slot:
 			_remove(k)
-	var n = _build_item(kind)
-	preload("res://scripts/art/p2_parts.gd").wear(self, n, kind)
+	var n
+	if kind in ["sun", "moon", "skybow", "cloud", "raincloud"]:
+		n = load("res://scripts/world/aura_fx.gd").build(self, kind)       # round 15: the sky leaves see-through light on the gull (code, not a model)
+	else:
+		n = _build_item(kind)
+		preload("res://scripts/art/p2_parts.gd").wear(self, n, kind)
 	worn[kind] = n
 	if tracked and not silent:
 		GS.worn[kind] = true

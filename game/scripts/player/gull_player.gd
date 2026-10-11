@@ -40,6 +40,7 @@ var ground_drink_t = 0.0
 var star_fx
 var star_t_vis = 0.0         # 0..1 blend of the STARLIGHT look (camera, trails, glow)
 var star_hue = 0.0
+var ring_t = 0.0
 var was_ground = true
 var ride = 0.0               # wind-riding sway of the camera
 var trees = []               # the round trees of the world (main.gd fills this in: their crowns are a "grass" surface for the footsteps)
@@ -244,7 +245,7 @@ func _on_buff_added(kind, stacked):
 		fov_kick = 3.0
 	_burst_ring(BUFF_COL_FX[kind])
 
-const BUFF_COL_FX = {"coffee": Color("C98A4B"), "alcohol": Color("FFD23A"), "ice": Color("FF8AD8")}
+const BUFF_COL_FX = {"coffee": Color("B9783C"), "alcohol": Color("FFD23A"), "ice": Color("8FE3F2")}
 
 func _burst_ring(col):
 	var p = _make_particles(Color(col.r, col.g, col.b, 0.95), 0.16, 26, 0.8)
@@ -263,7 +264,7 @@ func _burst_ring(col):
 
 func _on_star_started():
 	refill()
-	GS.say_buff("STARLIGHT.   NOTHING COSTS ANYTHING. NOTHING CAN HURT YOU.")
+	GS.say_buff("RAINBOW TIME.   NOTHING COSTS ANYTHING. NOTHING CAN HURT YOU.")
 	Sfx.play("star_on", -3.0)
 	fov_kick = 10.0
 	shake = max(shake, 0.4)
@@ -310,6 +311,64 @@ func _make_aura():
 	aura_fx.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	aura_fx.emission_sphere_radius = 0.5
 	visual_root.add_child(aura_fx)
+	_make_buff_fx()
+
+# round 15: every drink has its own little weather around the gull. COFFEE: brown steam curling off it and a jittery heartbeat glow. COCKTAIL: golden bubbles that rise
+# and wobble. ICE CREAM: a cool mint-blue frost of tiny crystals that drift down, and a slow breathing glow.
+var buff_fx = {}
+func _make_buff_fx():
+	var cfg = {
+		"coffee": {"col": Color(0.72, 0.45, 0.22, 0.8), "amount": 40, "life": 1.0, "size": 0.38, "vmin": 0.8, "vmax": 1.9, "grav": 1.6, "tan": 2.5, "rad": 0.5, "tex": "soft"},
+		"alcohol": {"col": Color(1.0, 0.85, 0.3, 0.9), "amount": 34, "life": 1.8, "size": 0.2, "vmin": 0.5, "vmax": 1.1, "grav": 0.7, "tan": 0.0, "rad": 0.55, "tex": "bubble"},
+		"ice": {"col": Color(0.6, 0.92, 1.0, 0.95), "amount": 36, "life": 2.0, "size": 0.36, "vmin": 0.2, "vmax": 0.7, "grav": -0.35, "tan": 0.0, "rad": 0.6, "tex": "star"},
+	}
+	for k in cfg:
+		var c = cfg[k]
+		var p = _make_particles(c["col"], c["size"], c["amount"], c["life"])
+		p.local_coords = false
+		p.direction = Vector3.UP
+		p.spread = 180.0
+		p.initial_velocity_min = c["vmin"]
+		p.initial_velocity_max = c["vmax"]
+		p.gravity = Vector3(0, c["grav"], 0)
+		p.tangential_accel_min = -c["tan"]
+		p.tangential_accel_max = c["tan"]
+		p.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+		p.emission_sphere_radius = c["rad"]
+		p.scale_amount_min = 0.5
+		p.scale_amount_max = 1.3
+		var cv = Curve.new()
+		cv.add_point(Vector2(0.0, 0.2))
+		cv.add_point(Vector2(0.25, 1.0))
+		cv.add_point(Vector2(1.0, 0.0))
+		p.scale_amount_curve = cv
+		var m = p.mesh.material
+		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD if k != "coffee" else BaseMaterial3D.BLEND_MODE_MIX
+		m.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA
+		m.distance_fade_min_distance = 0.8
+		m.distance_fade_max_distance = 2.6
+		if c["tex"] == "star":
+			m.albedo_texture = VisualScript.star_tex()
+			p.angle_min = -90.0
+			p.angle_max = 90.0
+		elif c["tex"] == "bubble":
+			m.albedo_texture = _bubble_tex()
+		visual_root.add_child(p)
+		buff_fx[k] = p
+
+static var _bubble = null
+static func _bubble_tex():
+	if _bubble == null:
+		var S = 48
+		var img = Image.create(S, S, false, Image.FORMAT_RGBA8)
+		for y in S:
+			for x in S:
+				var r = Vector2(x - S * 0.5 + 0.5, y - S * 0.5 + 0.5).length() / (S * 0.5)
+				var ring = exp(-pow((r - 0.82) / 0.1, 2.0))
+				var hl = exp(-pow((Vector2(x - S * 0.36, y - S * 0.34).length()) / 5.0, 2.0)) * 0.9
+				img.set_pixel(x, y, Color(1, 1, 1, clamp(ring * 0.9 + hl + (0.08 if r < 0.82 else 0.0), 0.0, 1.0)))
+		_bubble = ImageTexture.create_from_image(img)
+	return _bubble
 
 # the colour of what the gull is on right now: coffee brown, cocktail yellow, ice cream every colour (several at once cycle)
 func buff_color(t):
@@ -320,8 +379,6 @@ func buff_color(t):
 	if act.is_empty():
 		return null
 	var k2 = act[int(t * 1.3) % act.size()]
-	if k2 == "ice":
-		return Color.from_hsv(fmod(t * 0.5, 1.0), 0.5, 1.0)
 	return GS.BUFF_COL[k2]
 
 func _update_aura(delta):
@@ -330,6 +387,9 @@ func _update_aura(delta):
 	var strong = 0.0
 	for k in GS.buff:
 		strong = max(strong, min(GS.buff[k] / 3.0, 1.0))
+	for k in buff_fx:
+		var on = GS.buff[k] > 0.0
+		buff_fx[k].emitting = on
 	if GS.star_active():
 		c = Color.from_hsv(star_hue, 0.4, 1.0)
 		strong = 1.0
@@ -342,10 +402,23 @@ func _update_aura(delta):
 	for k in GS.buff:
 		if GS.buff[k] > 0.0 and GS.buff[k] < 3.5:
 			flick = 0.65 + 0.35 * sin(aura_t * 16.0)
+	# each drink has its own rhythm: coffee a quick jittery heartbeat, the cocktail a lazy sway, the ice cream a slow cool breath
+	var beat = 0.5 + 0.12 * sin(aura_t * 7.0)
+	var swell = 0.85 + 0.08 * sin(aura_t * 5.0)
+	if not GS.star_active():
+		if GS.buff["coffee"] > 0.0 and c.is_equal_approx(GS.BUFF_COL["coffee"]):
+			beat = 0.5 + 0.2 * pow(max(sin(aura_t * 9.0), 0.0), 3.0) + 0.04 * sin(aura_t * 31.0)
+			swell = 0.85 + 0.1 * pow(max(sin(aura_t * 9.0), 0.0), 2.0)
+		elif GS.buff["alcohol"] > 0.0 and c.is_equal_approx(GS.BUFF_COL["alcohol"]):
+			beat = 0.5 + 0.1 * sin(aura_t * 2.6)
+			swell = 0.9 + 0.1 * sin(aura_t * 2.6 + 1.0)
+		elif GS.buff["ice"] > 0.0 and c.is_equal_approx(GS.BUFF_COL["ice"]):
+			beat = 0.48 + 0.08 * sin(aura_t * 2.0)
+			swell = 0.95 + 0.12 * sin(aura_t * 2.0)
 	aura.visible = true
-	var pulse = (0.5 + 0.12 * sin(aura_t * 7.0)) * strong * flick
+	var pulse = beat * strong * flick
 	aura.material_override.albedo_color = Color(c.r, c.g, c.b, pulse)
-	aura.scale = Vector3.ONE * (0.85 + 0.08 * sin(aura_t * 5.0)) * (1.0 + 0.9 * star_t_vis)
+	aura.scale = Vector3.ONE * swell * (1.0 + 0.9 * star_t_vis)
 	aura_light.light_color = c
 	aura_light.light_energy = (1.1 + 1.6 * star_t_vis) * strong * flick
 	aura_fx.emitting = true
@@ -1074,6 +1147,7 @@ func _process(delta):
 		mname = "brake"
 	elif throttling:
 		mname = "throttle"
+	gull.on_ground = mode == M.GROUND and not on_water
 	gull.pose(mname, flap_anim / 0.4 if flap_anim > 0.0 else 0.0, throttling, delta)
 	_update_star(delta)
 	gull.set_trails((boosting and speed > 14.0) or (star_t_vis > 0.3 and speed > 6.0))
@@ -1123,6 +1197,22 @@ func _update_star(delta):
 	star_fx.emitting = star_t_vis > 0.05
 	if star_t_vis > 0.05:
 		gull.trail_color = Color.from_hsv(star_hue, 0.55, 1.0)
+		# round 15: RAINBOW TIME feels like it: fatter rainbow ribbons off the wings, a ring of coloured light that leaves the gull every second or so, more sparkles
+		for tr in [gull.trail_l, gull.trail_r]:
+			tr.scale_amount_min = 0.9 + 1.0 * star_t_vis
+			tr.scale_amount_max = 1.6 + 1.8 * star_t_vis
+			tr.lifetime = 0.55 + 0.45 * star_t_vis
+		star_fx.amount = 110
+		star_fx.mesh.size = Vector2(0.5, 0.5)
+		ring_t -= dt_r
+		if ring_t <= 0.0 and star_t_vis > 0.6:
+			ring_t = 1.25
+			var m = get_tree().current_scene
+			if m != null and m.has_method("_sky_ring"):
+				m._sky_ring(global_position, Color.from_hsv(star_hue, 0.5, 1.0), 8.0, 0.9)
+	else:
+		for tr in [gull.trail_l, gull.trail_r]:
+			tr.lifetime = 0.55
 
 func update_camera(delta, snap):
 	var boost_n = clamp((speed - 11.0) / 12.0, 0.0, 1.0)

@@ -294,10 +294,11 @@ func _environment():
 	out["sun"] = sun
 	out["env"] = env
 	out["sky_mat"] = sky_mat
-	var clouds = SkyBuilder.build_clouds(map, rng, [Vector3(22.0, 92.0, 74.0)])
+	var clouds = SkyBuilder.build_clouds(map, rng, [Vector3(22.0, 92.0, 74.0), Vector3(-85.0, 86.0, 150.0), Vector3(-135.0, 108.0, 118.0)])
 	out["cloud_mat"] = clouds["mat"]
 	out["storm_mat"] = clouds["storm"]
 	out["sun_disc"] = SkyBuilder.build_sun(root)
+	out["moon_disc"] = SkyBuilder.build_moon(root)
 	for child in out["sun_disc"].get_children().slice(1):atmosphere.heavy_nodes.append(child)
 
 func _terrain():

@@ -328,7 +328,7 @@ func _grump(delta):
 	var d = reach_c.distance_to(player.global_position)
 	match swing_state:
 		"":
-			if swing_cd <= 0.0 and GS.gull_sense_count >= 3 and d < 2.9 and player.mode != 2 and player.invuln_t <= 0.0 and player.speed < 9.5 \
+			if swing_cd <= 0.0 and GS.watch >= 1.6 and GS.gull_sense_count >= 3 and d < 2.9 and player.mode != 2 and player.invuln_t <= 0.0 and player.speed < 9.5 \
 					and player.snatch.state == "idle" and alarm_t <= 0.0:
 				swing_state = "wind"
 				swing_t = 0.0
@@ -520,6 +520,10 @@ func _chase(delta):
 				_chase_end(false)              # a wall in the way: no use running into it
 				return
 			if flat.length() < 1.8:
+				if GS.watch < 1.6:
+					_hello()
+					_chase_end(false)
+					return
 				# BOO!
 				Sfx.play("boo", -9.0, randf_range(1.15, 1.35))
 				rig.emote("surprise", 0.9)
@@ -538,6 +542,16 @@ func _chase(delta):
 				rotation.y = base_yaw
 				return
 
+# round 15: a calm town greets a gull that sits down nearby: a heart, a wave and a few friendly words (the kid that used to run up and shout BOO)
+const HELLOS = ["hi, seagull!", "hello, you.", "nice wings!", "gull! gull! gull!", "you're so fluffy.", "good morning, bird."]
+func _hello():
+	RestEvents.heart_fx(get_tree().current_scene, global_position + Vector3(0, 2.0, 0))
+	RestEvents.say(get_tree().current_scene, self, HELLOS[randi() % HELLOS.size()], 2.4, 2.4)
+	rig.set_mode("wave")
+	alarm_t = 2.2
+	Sfx.play("oh", -12.0, 1.4)
+	GS.stats["friends"] = GS.stats.get("friends", 0) + 0
+
 func _chase_end(booed):
 	chase_state = "home"
 	chase_t = 0.0
@@ -548,7 +562,7 @@ func _chase_end(booed):
 # people wave at a gull that sits quietly near them
 func _friendly(delta):
 	wave_cd = max(wave_cd - delta, 0.0)
-	if wave_cd > 0.0 or grumpy or chaser or alarm_t > 0.0 or swing_state != "" or chase_state != "":
+	if wave_cd > 0.0 or ((grumpy or chaser) and GS.watch >= 1.6) or alarm_t > 0.0 or swing_state != "" or chase_state != "":
 		return
 	if player.mode == 1 and player.calm > 0.6 and mode in ["stand", "stroll", "chat", "lie"]:
 		if global_position.distance_to(player.global_position) < 9.0 and randf() < 0.03:

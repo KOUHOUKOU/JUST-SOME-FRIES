@@ -17,6 +17,7 @@ def canonical_finish(objects,name,*args,**kwargs):
  return _original_finish(objects,name,*args,**kwargs)
 P.finish=canonical_finish
 
+TORSO=['hawaii','stripes','coat','bro_coat']
 it=int(sys.argv[sys.argv.index('--')+1]) if '--' in sys.argv else 1
 s1='--legacy-fit' not in sys.argv
 folder=Path('art_src/s1/round_2/wardrobe' if '--round2' in sys.argv else (f'art_src/s1/iteration_{it}/wardrobe' if s1 else f'art_src/p2/iteration_{it}/wardrobe'));C.clean_scene();items={};stats={}
@@ -39,28 +40,30 @@ def finish(kind,groups,paint=None):
    for ob in objs:
     for v in ob.data.vertices:
      p=P.g(v.co)
-     if base in ['hat','sailor','topper','beret']:
-      p.x*=1.65;p.z=p.z*1.65+.075;p.y+=.27
+     if kind in TORSO:pass
+     elif base in ['hat','sailor','topper','beret']:
+      # round 15: the head is 26 % smaller (radius .255 -> .188), centre (0,.30,-.30); item origin = gull (0,.2,-.36)
+      p.x*=1.22;p.z=p.z*1.22+.062;p.y+=.204
      elif base in ['glasses','shades']:
-      p.x*=1.82;p.y+=.173;p.z=p.z*1.7+.044
-     elif base=='pipe':p.y+=.06;p.z-=.095
-     elif base=='bowtie':p.x*=1.3;p.y+=.06;p.z-=.095
+      p.x*=1.37;p.y+=.192;p.z=p.z*1.25+.057
+     elif base=='pipe':p.y+=.115;p.z-=.043
+     elif base=='bowtie':p.x*=1.5;p.y=p.y*1.5+.098;p.z+=.045
      elif base=='necklace':
       # Original neck root remains (0,-.015,-.27). Wrap the chain around the
       # actual chest/coat ellipsoid, instead of leaving it on a floating plane.
       p.x*=1.65;p.y=p.y*1.05+.055
       yy=p.y-.015
-      rx,ry,rz,cy,cz=(.351,.251,.431,.017,.045) if kind=='bro_necklace' else (.30,.23,.38,.015,.075)
+      rx,ry,rz,cy,cz=(.256,.217,.245,.01,-.175) if kind=='bro_necklace' else (.232,.196,.222,.01,-.175)
       surface=cz-rz*math.sqrt(max(.04,1-(p.x/rx)**2-((yy-cy)/ry)**2))
       p.z=surface+.27-.008+(p.z+.043)*.5
-     elif base=='scarf':p.x*=1.8;p.y+=.12;p.z*=1.6
-     elif base in ['hawaii','stripes','coat']:
-      p.x*=1.42;p.y*=1.23
+     elif base=='scarf':
+      if ob.name.startswith('Collar'):p.x*=1.4;p.y+=.18;p.z=p.z*1.3-.037
+      else:p.x=p.x*1.7;p.y+=.27;p.z=p.z*.8-.12
      v.co=P.b(p)
  parts=[]
  for n,objs in groups.items():parts.append(P.finish(objs,n,folder/'parts'/f'{kind}_{n}.glb',paint)[0])
  C.export_glb(parts,f'game/assets/models/wear_{kind}.glb',texcoords=True)
- count=C.triangle_count(parts);assert count<=250,(kind,count)
+ count=C.triangle_count(parts);assert count<=(700 if kind in TORSO else 300),(kind,count)
  items[kind]=parts;stats[kind]={'tris':count,'draws':len(parts)}
 for kind in ['hat','sailor','topper','beret','bro_topper']:
  if kind=='beret':
@@ -83,12 +86,12 @@ for kind in ['glasses','shades','bro_shades']:
 for kind in ['necklace','bro_necklace']:
  objs=[]
  for i in range(8):
-  a=i*math.tau/8;objs.append(egg('Bead',(.112*math.cos(a),-.055+.08*math.sin(a),-.043),(.019,.017,.015),'E8DDC6' if kind=='necklace' else 'C6A878',5,3))
- objs.append(ring('Thread',(0,-.055,-.043),.112,.08,.005,'C5AD89',8))
- if kind=='bro_necklace':objs.append(egg('Medal',(0,-.158,-.053),(.04,.04,.015),'BBA06B',6,3))
+  a=i*math.tau/8;objs.append(egg('Bead',(.112*math.cos(a),-.055+.08*math.sin(a),-.043),(.03,.027,.024),'F0C94A' if kind=='necklace' else 'E2B73C',6,3))
+ objs.append(ring('Thread',(0,-.055,-.043),.112,.08,.009,'D9A92E',8))
+ if kind=='bro_necklace':objs.append(egg('Medal',(0,-.158,-.053),(.05,.05,.02),'E8BE3A',6,3))
  finish(kind,{'Item':objs})
 finish('bowtie',{'Item':[egg('Bow',(-.046,-.025,.045),(.048,.03,.02),'BC686C'),egg('Bow',(.046,-.025,.045),(.048,.03,.02),'BC686C'),egg('Knot',(0,-.025,.030),(.021,.024,.021),'824754',6,3)]})
-scarf=[ring('Collar',(0,.005,-.01),.12,.11,.025,'BA6860',12,'Y')]
+scarf=[ring('Collar',(0,.005,-.01),.12,.11,.036,'BA6860',12,'Y')]
 tail=[P.panel('Tail',(.07,-.078,.145),(.072,.28,.018),'BA6860',.02)]
 # Tail lies along the body/back, fringe emerges from its end.
 for o in tail:
@@ -98,23 +101,78 @@ for i in range(4):tail.append(P.box('Fringe',(.043+i*.017,-.068,.29),(.009,.012,
 finish('scarf',{'Item':scarf,'ScarfTail':tail})
 finish('pipe',{'Item':[P.panel('Stem',(.05,-.065,-.16),(.016,.016,.15),'775A47',.004),P.lathe('Bowl',[(-.074,.023),(-.06,.033),(-.018,.035),(-.012,.028)],8,'785342',centre=(.05,0,-.215)),egg('Ash',(.05,-.017,-.215),(.022,.004,.022),'3E3540',6,3)]})
 
-for kind in ['hawaii','stripes','coat','bro_coat']:
- col={'hawaii':'629A92','stripes':'E7E4DC','coat':'505369','bro_coat':'85415B'}[kind]
- body=egg('Cloth',(0,.014,.045),(.247,.204,.431),col,12,9 if kind in ['hawaii','stripes'] else 6)
- for v in body.data.vertices:
-  p=P.g(v.co);t=max(0,p.z/.4);p.x*=1-.28*t;p.y+=.048*t*t;v.co=P.b(p)
- objs=[body]
- if 'coat' in kind:
-  for side in [-1,1]:objs.append(P.panel('Tail',(side*.087,-.045,.425),(.145,.03,.33),col,.012))
-  for j in range(3):objs.append(egg('Button',(0,.053-j*.047,-.335+j*.015),(.012,.012,.012),'C5AB7B',3,3))
+# ROUND 15: the shirts and coats are shells that follow the real body + chest exactly (a few mm outside the feathers), with a hole where the head comes out.
+# Every pattern is a function of (band along the body, sector around it), so stripes / flowers / plaid run in one piece over the whole garment.
+BODY=((0,.015,.075),(.30,.23,.38));CHEST=((0,.01,-.175),(.225,.19,.215));HEAD=((0,.30,-.30),(.188,.188,.184))
+ZF=-.39;ZB=.455;NB=14;NS=18;DZ=(ZB-ZF)/NB
+def section(z):
+ lo=1e9;hi=-1e9;rx=0
+ for c,r in (BODY,CHEST):
+  f=1-((z-c[2])/r[2])**2
+  if f<=0:continue
+  f=math.sqrt(f);lo=min(lo,c[1]-r[1]*f);hi=max(hi,c[1]+r[1]*f);rx=max(rx,r[0]*f)
+ return None if hi<lo else ((lo+hi)/2,rx,(hi-lo)/2)
+def pattern(kind,kb,sec):
+ if kind=='stripes':return 'F1EEE4' if kb%2==0 else '2F527F'
+ if kind=='hawaii':
+  if kb%2==1 and (sec+kb//2*2)%4==0:return 'E39AA0'
+  if kb%2==0 and (sec+kb//2*2)%4==2:return 'F0CF82'
+  return '4F9A92'
+ if kind=='coat':
+  if kb%4==0 and sec%3==0:return 'D2AD4C'
+  if kb%4==0 or sec%3==0:return '7A7E9A'
+  return '3F4260'
+ return '985D72' if sec%2==0 else '85415B'          # bro_coat: pinstripes along the body
+def paint_torso(kind,scale):
  def paint(o,p):
-  pp=P.g(p);base=o['colour']
-  if o.name.startswith('Cloth'):
-   if kind=='stripes' and int((pp.y+.3)*39)%3==0:base='557293'
-   if kind=='hawaii' and math.sin(pp.z*46)*math.cos(pp.x*43)>.30:base='D9A7A1'
-   if kind=='bro_coat' and int((pp.x+.4)*50)%4==0:base='985D72'
-  return C.linear_rgb(base)
- finish(kind,{'Item':objs},paint)
+  x,y,z=P.g(p);sc=section(min(max(z,ZF+.001),ZB-.001))
+  kb=int(math.floor((z-ZF)/DZ));cy=sc[0] if sc else .02
+  sec=int(math.floor((math.atan2(x,y-cy)%math.tau)/(math.tau/NS)))
+  return C.linear_rgb(pattern(kind,kb,sec))
+ return paint
+def shell(kind,grow,tails):
+ verts=[];faces=[];nudge=.008
+ rings=[]
+ for k in range(NB+1):
+  z=ZF+k*DZ;sc=section(min(max(z,ZF+1e-4),ZB-1e-4))
+  rings.append([(grow*sc[1]*math.sin(2*math.pi*i/NS)+0,sc[0]+grow*sc[2]*math.cos(2*math.pi*i/NS)+(.006 if grow>1.06 else 0),z) for i in range(NS)])
+ def inside_head(c):
+  return ((c[0]/(HEAD[1][0]*1.2))**2+((c[1]-HEAD[0][1])/(HEAD[1][1]*1.2))**2+((c[2]-HEAD[0][2])/(HEAD[1][2]*1.2))**2)<1
+ def add(quad):
+  c=[sum(v[j] for v in quad)/len(quad) for j in range(3)]
+  if inside_head(c):return
+  base=len(verts)
+  for v in quad:verts.append(tuple(v[j]+(c[j]-v[j])*nudge for j in range(3)))
+  faces.append(tuple(range(base,base+len(quad))))
+ for k in range(NB):
+  for i in range(NS):
+   a=rings[k][i];b2=rings[k][(i+1)%NS];c2=rings[k+1][(i+1)%NS];d=rings[k+1][i]
+   if k==0:add([a,c2,d])
+   elif k==NB-1:add([a,b2,d])
+   else:add([a,b2,c2,d])
+ # every facet is its own island (so its colour can be read from its position): orient each one outward by hand (a normals recalculation works per island and would flip them at random)
+ fixed=[]
+ for f in faces:
+  pts=[Vector(verts[i]) for i in f];c=sum(pts,Vector())/len(pts)
+  n=(pts[1]-pts[0]).cross(pts[2]-pts[0])
+  mid=Vector((0,.02,.03))
+  fixed.append(tuple(reversed(f)) if n.dot(c-mid)<0 else f)
+ m=bpy.data.meshes.new('Cloth');m.from_pydata([P.b(v) for v in verts],[],fixed);m.update()
+ body=bpy.data.objects.new('Cloth',m);bpy.context.scene.collection.objects.link(body)
+ P.register(body,'Cloth','FFFFFF',0)
+ objs=[body]
+ if tails:
+  # the long coat: two skirts that hang behind and under the tail
+  for side in [-1,1]:
+   fl=P.panel('Tail',(side*.095,-.055,.52),(.17,.03,.36),'FFFFFF',.012)
+   objs.append(fl)
+ return objs
+for kind in TORSO:
+ grow={'hawaii':1.045,'stripes':1.045,'coat':1.06,'bro_coat':1.12}[kind]
+ objs=shell(kind,grow,'coat' in kind)
+ if 'coat' in kind:
+  for j in range(3):objs.append(egg('Button',(0,.05-j*.045,-.382+j*.018),(.012,.012,.012),'C5AB7B',3,3))
+ finish(kind,{'Item':objs},paint_torso(kind,grow))
 finish('balloon',{'Item':[P.lathe('String',[(.05,.0028),(.72,.0028)],5,'DDD6C7')],'Balloon':[egg('Balloon',(0,.83,.02),(.158,.19,.154),'C98680',12,6),P.lathe('Knot',[(.641,.014),(.668,.008)],5,'B36D70')]})
 sock=egg('Sock',(0,0,.13),(.159,.065,.222),'D7DACA',10,6)
 def sockpaint(o,p):return C.linear_rgb('B96E69' if int((P.g(p).z+.2)*35)%3==0 else 'E6DED0')

@@ -168,26 +168,19 @@ class Star extends Comet:
 		GS.stats["meteors"] += 1
 		GS.mischief_counts["meteor"] = GS.mischief_counts.get("meteor", 0) + 1
 		GS.award("WISHFUL THINKING")
-		GS.quest_finish("meteor")
-		GS.quests_check()
+		GS.sky_catch("star")
 		pl.refill()
 		if GS.star_t > 0.0:
 			GS.star_t = min(GS.star_t + 10.0, 60.0)
 		Sfx.play("meteor_get", -3.0)
 		Sfx.play("happy", -5.0, 1.25)
 		GS.meteor_caught.emit()
-		if GS.cine_seen.has("meteor"):
-			if not GS.worn.has("meteor"):
-				pl.gull.wear("meteor")           # it stays: from now on the gull trails a tail of light
-			var tw = create_tween()
-			tw.tween_interval(0.5)
-			tw.tween_property(self, "scale", Vector3.ZERO, 0.6)
-			tw.tween_callback(queue_free)
-		else:
-			GS.cine_hold = self
-			get_tree().create_timer(40.0).timeout.connect(func():
-				if is_instance_valid(self):
-					queue_free())
+		if not GS.worn.has("meteor"):
+			pl.gull.wear("meteor")           # it stays: from now on the gull trails a tail of light
+		var tw = create_tween()
+		tw.tween_interval(0.5)
+		tw.tween_property(self, "scale", Vector3.ZERO, 0.6)
+		tw.tween_callback(queue_free)
 
 func _ready():
 	add_to_group("meteor_mgr")

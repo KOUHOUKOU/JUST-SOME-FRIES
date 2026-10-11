@@ -27,23 +27,18 @@ const HURT_CAPTIONS = {
 
 # where / how to do each side task (the line under the task that is "up next")
 const QUEST_HINTS = {
+	"star": "coffee + cocktail + ice cream running together: the best flying there is",
 	"drink": "a cup or a cone in somebody's hand: take it",
 	"wear": "hats, scarves, balloons: things strangers carry",
 	"fish": "fish leap where the water bubbles",
-	"drinks3": "coffee, cocktail, ice cream: one of each",
-	"star": "all three drinks running at once",
 	"rainbow": "a passer-by far from town holds one",
-	"wearall": "every hat, coat and balloon on the island",
 	"fishbook": "nine kinds of fish, three sizes of luck",
-	"meteor": "a falling star: you need top speed and STARLIGHT",
-	"cloud": "a white cloud high up: STARLIGHT and speed",
-	"sun": "the sun itself. only the fastest gull",
-	"skybow": "when it rains over the sea, a rainbow stands there",
+	"sky": "a cloud, a star, the moon, the sun, a rainbow: you need RAINBOW TIME",
 }
 # the mission board's small print: [fries needed, line]
 const MISSION_HINTS = [
 	[0, "the old man's table is a good start."],
-	[3, "hold TAB. look around."],
+	[3, "hold TAB. see what glows."],
 	[6, "fries glow in colours. the colours mean things."],
 	[10, "you are strong now. and still hungry. why?"],
 	[17, "silver, gold, diamond. in that order."],
@@ -98,6 +93,16 @@ var quiet_back
 var quiet_lines = []
 var starfx
 var fishcard
+var lesson_ui
+var skypop
+var achui
+var lesson_line = ""            # what the TAB lesson says while Gull Sight is held (main.gd fills it in)
+var lesson_done_t = 0.0
+var lesson_idle = 0.0
+var sky_pops = []               # {kind, n, t}
+var ach_toasts = []             # {id, t}
+const SKY_COL = {"cloud": Color("EAF2FF"), "raincloud": Color("A9BBD6"), "star": Color("FFE27A"), "moon": Color("9FD2FF"), "sun": Color("FFD66B"), "rainbow": Color("FF9AD0")}
+const SKY_WORD = {"cloud": "CLOUD!", "raincloud": "RAIN CLOUD!", "star": "STAR!", "moon": "MOON!", "sun": "SUN!", "rainbow": "RAINBOW!"}
 var fish_cards = []              # the "you caught a fish" cards: {info, t}
 
 # ---------------------------------------------------------------- inner draw classes
@@ -520,14 +525,14 @@ class Status extends HC:
 			draw_rect(Rect2(bx, 20, filled_w, 12), col)
 		else:
 			var kind = act[int(t * 1.3) % act.size()]
-			var fc2 = {"coffee": Color(1.0, 0.2, 0.1), "alcohol": Color(1.0, 0.8, 0.12), "ice": Color(1, 0.6, 0.9)}[kind]
+			var fc2 = {"coffee": Color(1.0, 0.2, 0.1), "alcohol": Color(1.0, 0.8, 0.12), "ice": Color(0.45, 0.88, 1.0)}[kind]
 			if kind == "ice":
 				var segs = max(int(filled_w / 5.0), 1)
 				for i in segs:
 					var sx = bx + i * 5.0
 					var cw2 = min(5.0, filled_w - i * 5.0)
-					draw_rect(Rect2(sx, 20, cw2, 12), Color.from_hsv(fmod(float(i) / 18.0 + t * 0.6, 1.0), 0.55, 1.0))
-				fc2 = Color.from_hsv(fmod(t * 0.7, 1.0), 0.5, 1.0)
+					draw_rect(Rect2(sx, 20, cw2, 12), Color(0.45, 0.85, 1.0).lerp(Color(0.92, 1.0, 1.0), 0.5 + 0.5 * sin(t * 3.0 - float(i) * 0.5)))
+				fc2 = Color(0.55, 0.9, 1.0)
 			else:
 				draw_rect(Rect2(bx, 20, filled_w, 12), fc2.lerp(Color(1, 0.55, 0.2) if kind == "coffee" else Color(1, 0.95, 0.5), 0.35 + 0.25 * sin(t * 12.0)))
 			_flames(bx, 20.0, filled_w, fc2, 1.0, t, 1.0)
@@ -557,7 +562,7 @@ class Status extends HC:
 		for k in act:
 			var dc = GS.BUFF_COL[k]
 			if k == "ice":
-				dc = Color.from_hsv(fmod(t * 0.6, 1.0), 0.5, 1.0)
+				dc = GS.BUFF_COL["ice"]
 			var blink = 1.0 if GS.buff[k] > 3.5 else 0.55 + 0.45 * sin(t * 14.0)
 			shadow(font, Vector2(bx, ry + 9), GS.BUFF_NAME[k], 12, Color(dc.r, dc.g, dc.b, blink))
 			draw_rect(Rect2(bx + 92, ry, 110, 8), Color(0, 0, 0, 0.4))
@@ -572,7 +577,7 @@ class Status extends HC:
 				if fr > GS.star_t / GS.STAR_SEC:
 					break
 				draw_rect(Rect2(bx + 92 + i * 5.0, ry, 4.0, 8), Color.from_hsv(fmod(fr + t * 0.4, 1.0), 0.5, 1.0, 0.95))
-			shadow(font, Vector2(bx, ry + 9), "STARLIGHT", 12, Color.from_hsv(fmod(t * 0.5, 1.0), 0.35, 1.0, 1.0))
+			shadow(font, Vector2(bx, ry + 9), "RAINBOW TIME", 12, Color.from_hsv(fmod(t * 0.5, 1.0), 0.35, 1.0, 1.0))
 			shadow(font, Vector2(bx + 208, ry + 9), "%d s" % int(ceil(GS.star_t)), 11, Color(1, 1, 1, 0.8))
 			ry += 15.0
 		if act.is_empty() and GS.has["blue"]:
@@ -600,7 +605,7 @@ class Banner extends HC:
 		if GS.drink != "":
 			col = GS.BUFF_COL[GS.drink].lightened(0.35)
 			if GS.drink == "ice":
-				col = Color.from_hsv(fmod(GS.msec() * 0.0005, 1.0), 0.3, 1.0)
+				col = GS.BUFF_COL["ice"].lightened(0.2)
 		draw_rect(Rect2(Vector2(x - 10.0 * u, y - 19.0 * u), Vector2(wtxt + 24.0 * u, 28.0 * u)), Color(0.04, 0.05, 0.09, 0.62 * a))
 		draw_rect(Rect2(Vector2(x - 10.0 * u, y - 19.0 * u), Vector2(4.0 * u, 28.0 * u)), Color(col.r, col.g, col.b, a))
 		shadow(font, Vector2(x + 4.0 * u, y), txt, int(16 * u), Color(col.r, col.g, col.b, a))
@@ -818,7 +823,7 @@ class FryGrid extends HC:
 				focus_id = id0
 				break
 		var panel_h = (30.0 + 21.0 * qn + (22.0 if focus_id != "" else 0.0) + 40.0) * u
-		var panel = Rect2(Vector2(mx - 12.0 * u, my - 24.0 * u), Vector2(330.0 * u, panel_h))
+		var panel = Rect2(Vector2(mx - 12.0 * u, my - 24.0 * u), Vector2(392.0 * u, panel_h))
 		draw_rect(panel, Color(0.03, 0.05, 0.1, 0.42))
 		draw_rect(Rect2(panel.position, Vector2(4.0 * u, panel.size.y)), Color(1.0, 0.84, 0.4, 0.8 + 0.15 * sin(t * 2.4)))
 		shadow(font, Vector2(mx, my), line1, int(16 * u), c1)
@@ -830,7 +835,7 @@ class FryGrid extends HC:
 					prev = m
 			var fr = clamp(float(tot - prev) / float(max(tgt - prev, 1)), 0.0, 1.0)
 			draw_rect(Rect2(Vector2(mx, my + 6.0 * u), Vector2(290.0 * u, 4.0 * u)), Color(1, 1, 1, 0.16))
-			draw_rect(Rect2(Vector2(mx, my + 6.0 * u), Vector2(290.0 * u * fr, 4.0 * u)), Color(1.0, 0.84, 0.4, 0.95))
+			draw_rect(Rect2(Vector2(mx, my + 6.0 * u), Vector2(350.0 * u * fr, 4.0 * u)), Color(1.0, 0.84, 0.4, 0.95))
 		var yy = my + 30.0 * u
 		for id in shown_q:
 			var st = GS.quest_state(id)
@@ -856,6 +861,158 @@ class FryGrid extends HC:
 			if tot >= h[0]:
 				hint = h[1]
 		shadow(font, Vector2(mx, yy + 20.0 * u), hint, int(12 * u), Color(1, 1, 1, 0.55))
+
+# BOTTOM MIDDLE (round 15): THE LESSON OF THE MOST IMPORTANT KEY. A big TAB keycap that presses itself with a ring of "hold", the words HOLD TAB, and - once the player
+# does hold it - what to look at while the sight is open. It stays (smaller when ignored) until Gull Sight has been held for a few seconds, then thanks the player.
+class TabLesson extends HC:
+	var hud
+	var a = 0.0
+	func _cap(c, u, press, tt):
+		var kw = 132.0 * u
+		var kh = 80.0 * u
+		var base = Rect2(c - Vector2(kw * 0.5, kh * 0.5 - 12.0 * u), Vector2(kw, kh))
+		draw_rect(Rect2(base.position + Vector2(0, 8.0 * u), base.size), Color(0, 0, 0, 0.35 * a))
+		draw_rect(base, Color(0.16, 0.18, 0.26, 0.96 * a))
+		var capr = Rect2(base.position + Vector2(5.0 * u, (4.0 + 9.0 * press) * u), base.size - Vector2(10.0 * u, 16.0 * u))
+		var face = Color(0.97, 0.95, 0.88, a).lerp(Color(1.0, 0.9, 0.55, a), press)
+		draw_rect(capr, face)
+		draw_rect(capr, Color(0.1, 0.1, 0.16, a), false, 3.0)
+		var font = ThemeDB.fallback_font
+		var tw_ = font.get_string_size("TAB", HORIZONTAL_ALIGNMENT_LEFT, -1, int(34 * u)).x
+		draw_string(font, capr.position + Vector2((capr.size.x - tw_) * 0.5, capr.size.y * 0.66), "TAB", HORIZONTAL_ALIGNMENT_LEFT, -1, int(34 * u), Color(0.12, 0.13, 0.2, a))
+		return capr
+	func _draw():
+		var dt = get_process_delta_time() / max(Engine.time_scale, 0.05)
+		var showing = (GS.tab_lesson == 1 or hud.lesson_done_t > 0.0) and not hud.quiet_busy and hud.quiet_bar < 0.02 and not GS.codex_open
+		a = move_toward(a, 1.0 if showing else 0.0, 3.0 * dt)
+		if a <= 0.01:
+			return
+		var u = size.y / 720.0
+		var t = GS.msec() * 0.001
+		var font = ThemeDB.fallback_font
+		var holding = GS.sense_active
+		var done = hud.lesson_done_t > 0.0
+		var small = hud.lesson_idle > 50.0 and not holding and not done
+		if small:
+			u *= 0.62
+		var cx = size.x * 0.5
+		var cy = size.y * (0.80 if holding else (0.865 if done else 0.84))
+		var press = 0.0
+		if holding or done:
+			press = 1.0
+		else:
+			var ph = fmod(t, 2.8) / 2.8
+			press = smoothstep(0.08, 0.16, ph) * (1.0 - smoothstep(0.78, 0.86, ph))
+			# a ring of attention that opens from the key whenever it is pressed
+			var rr = fmod(t, 2.8) / 2.8
+			draw_arc(Vector2(cx, cy), (50.0 + 90.0 * rr) * u, 0, TAU, 48, Color(1.0, 0.9, 0.5, 0.5 * (1.0 - rr) * a), 3.0 * u, true)
+		var capr = _cap(Vector2(cx, cy), u, press, t)
+		# the progress of the lesson: a ring that closes while the key is held
+		var prog = clamp(GS.sight_time / 3.4, 0.0, 1.0)
+		if holding and not done:
+			draw_arc(capr.get_center(), 62.0 * u, -PI * 0.5, -PI * 0.5 + TAU * prog, 48, Color(0.65, 0.9, 1.0, 0.95 * a), 5.0 * u, true)
+			draw_arc(capr.get_center(), 62.0 * u, 0, TAU, 48, Color(1, 1, 1, 0.15 * a), 5.0 * u, true)
+		# the words
+		var l1 = "HOLD  TAB"
+		var l2 = "GULL SIGHT: SEE EVERYTHING WORTH STEALING"
+		var c1 = Color(1.0, 0.96, 0.8, a)
+		if done:
+			l1 = "GOOD.  TAB IS YOURS."
+			l2 = "HOLD IT ANY TIME. IT IS FREE ON THE GROUND."
+			c1 = Color(0.7, 1.0, 0.8, a)
+		elif holding:
+			l1 = hud.lesson_line
+			l2 = "KEEP HOLDING..." if prog < 1.0 else "NOW LET GO."
+			c1 = Color(0.8, 0.95, 1.0, a)
+		var s1 = int((30 if not holding else 22) * u)
+		var w1 = font.get_string_size(l1, HORIZONTAL_ALIGNMENT_LEFT, -1, s1).x
+		var py = cy - 76.0 * u
+		var pill = Rect2(Vector2(cx - w1 * 0.5 - 22.0 * u, py - 30.0 * u), Vector2(w1 + 44.0 * u, 58.0 * u))
+		draw_rect(pill, Color(0.03, 0.05, 0.1, 0.5 * a))
+		draw_rect(Rect2(pill.position, Vector2(4.0 * u, pill.size.y)), Color(c1.r, c1.g, c1.b, 0.9 * a))
+		shadow(font, Vector2(cx - w1 * 0.5, py), l1, s1, c1)
+		var s2 = int(13 * u)
+		var w2 = font.get_string_size(l2, HORIZONTAL_ALIGNMENT_LEFT, -1, s2).x
+		shadow(font, Vector2(cx - w2 * 0.5, py + 21.0 * u), l2, s2, Color(1, 1, 1, 0.7 * a))
+
+# TOP MIDDLE (round 15): a thing of the sky was caught. A word in its colour, five pips (the sky quest), and nothing else: the gull keeps flying, nothing is covered.
+class SkyPop extends HC:
+	var hud
+	func _draw():
+		var dt = get_process_delta_time() / max(Engine.time_scale, 0.05)
+		var u = size.y / 720.0
+		var font = ThemeDB.fallback_font
+		var i = 0
+		var y0 = 112.0 * u
+		while i < hud.sky_pops.size():
+			var p = hud.sky_pops[i]
+			p["t"] += dt
+			var t = p["t"]
+			var dur = 2.8
+			var a = clamp(min(t / 0.18, (dur - t) / 0.6), 0.0, 1.0)
+			var col = hud.SKY_COL.get(p["kind"], Color.WHITE)
+			var pop = 1.0 + 0.35 * max(0.0, 1.0 - t / 0.35)
+			var sz = int(40.0 * u * pop)
+			var word = hud.SKY_WORD.get(p["kind"], "!")
+			var ww = font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
+			var cx = size.x * 0.5
+			var y = y0 + float(i) * 70.0 * u
+			draw_string(font, Vector2(cx - ww * 0.5 + 2.0, y + 2.0), word, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(0, 0, 0, 0.55 * a))
+			draw_string(font, Vector2(cx - ww * 0.5, y), word, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(col.r, col.g, col.b, a))
+			for k in 5:
+				var pc = Vector2(cx + (k - 2) * 26.0 * u, y + 24.0 * u)
+				var lit = k < p["n"]
+				var newest = k == p["n"] - 1
+				var r = (7.0 + (5.0 * max(0.0, 1.0 - t / 0.5) if newest else 0.0)) * u
+				draw_circle(pc, r + 2.0, Color(0.02, 0.03, 0.08, 0.6 * a))
+				draw_circle(pc, r, Color(col.r, col.g, col.b, a) if lit else Color(1, 1, 1, 0.18 * a))
+			if t > dur:
+				hud.sky_pops.remove_at(i)
+			else:
+				i += 1
+
+# BOTTOM RIGHT (round 15): an achievement of the gallery: its picture, its name and a line of the game's opinion
+class AchToast extends HC:
+	var hud
+	var tex_cache = {}
+	func _icon(id):
+		if tex_cache.has(id):
+			return tex_cache[id]
+		var p = "res://assets/ui/achv/%s.png" % id
+		var t = load(p) if ResourceLoader.exists(p) else null
+		tex_cache[id] = t
+		return t
+	func _draw():
+		if hud.ach_toasts.is_empty():
+			return
+		var dt = get_process_delta_time() / max(Engine.time_scale, 0.05)
+		var g = hud.ach_toasts[0]
+		g["t"] += dt
+		var t = g["t"]
+		var dur = 4.6
+		var a = clamp(min(t / 0.3, (dur - t) / 0.6), 0.0, 1.0)
+		var u = size.y / 720.0
+		var font = ThemeDB.fallback_font
+		var w = 430.0 * u
+		var h = 92.0 * u
+		var slide = (1.0 - clamp(t / 0.35, 0.0, 1.0)) * 60.0 * u
+		var r = Rect2(Vector2(size.x - w - 26.0 * u + slide, size.y - h - 30.0 * u), Vector2(w, h))
+		draw_rect(Rect2(r.position + Vector2(5, 6), r.size), Color(0, 0, 0, 0.3 * a))
+		draw_rect(r, Color(0.07, 0.08, 0.13, 0.9 * a))
+		draw_rect(r, Color(1.0, 0.84, 0.4, 0.9 * a), false, 2.5)
+		var ir = Rect2(r.position + Vector2(10, 10) * u, Vector2(72, 72) * u)
+		var tex = _icon(g["id"])
+		if tex != null:
+			draw_texture_rect(tex, ir, false, Color(1, 1, 1, a))
+		else:
+			draw_rect(ir, Color(1.0, 0.84, 0.4, 0.5 * a))
+		var d = GS.ACH[g["id"]]
+		shadow(font, r.position + Vector2(94, 26) * u, "ACHIEVEMENT UNLOCKED", int(11 * u), Color(1.0, 0.84, 0.4, a))
+		shadow(font, r.position + Vector2(94, 49) * u, d[0], int(18 * u), Color(1, 0.98, 0.9, a))
+		shadow(font, r.position + Vector2(94, 70) * u, d[2], int(11 * u), Color(1, 1, 1, 0.65 * a), HORIZONTAL_ALIGNMENT_LEFT, w - 104.0 * u)
+		if t > dur:
+			hud.ach_toasts.pop_front()
+			Sfx.play("chime", -14.0, 1.1)
 
 # TOP-RIGHT, STARLIGHT: the corner fills with starlight (a rainbow glow, slow rays, twinkling four-pointed stars) while all three drinks are at work,
 # and a rainbow bar runs along the top edge to show how long it lasts.
@@ -889,6 +1046,18 @@ class StarCorner extends HC:
 			var tw = 0.5 + 0.5 * sin(t * (1.5 + sd[2] * 3.0) + sd[3] * 6.0)
 			var r = (3.0 + 9.0 * sd[2]) * u * (0.4 + tw)
 			_star(Vector2(px, py), r, Color.from_hsv(fmod(sd[3] + t * 0.1, 1.0), 0.3, 1.0, (0.35 + 0.6 * tw) * a))
+		# round 15: the two side edges glow in running rainbow colours (never in the middle of the picture)
+		for sx in [0, 1]:
+			var x_out = 0.0 if sx == 0 else size.x
+			var x_in = (46.0 if sx == 0 else size.x - 46.0) * u if false else (60.0 * u if sx == 0 else size.x - 60.0 * u)
+			var n = 8
+			for k in n:
+				var y0 = size.y * k / n
+				var y1 = size.y * (k + 1) / n
+				var c0 = Color.from_hsv(fmod(t * 0.25 + float(k) / n, 1.0), 0.55, 1.0, 0.17 * a)
+				var c1 = Color.from_hsv(fmod(t * 0.25 + float(k + 1) / n, 1.0), 0.55, 1.0, 0.17 * a)
+				draw_polygon(PackedVector2Array([Vector2(x_out, y0), Vector2(x_in, y0), Vector2(x_in, y1), Vector2(x_out, y1)]),
+					PackedColorArray([c0, Color(c0.r, c0.g, c0.b, 0.0), Color(c1.r, c1.g, c1.b, 0.0), c1]))
 		# the time left: a rainbow thread along the top edge
 		var frac = clamp(GS.star_t / GS.STAR_SEC, 0.0, 1.0)
 		var segs = 48
@@ -1076,6 +1245,18 @@ func _ready():
 	fishcard.hud = self
 	_full(fishcard)
 	ui_root.add_child(fishcard)
+	lesson_ui = TabLesson.new()
+	lesson_ui.hud = self
+	_full(lesson_ui)
+	ui_root.add_child(lesson_ui)
+	skypop = SkyPop.new()
+	skypop.hud = self
+	_full(skypop)
+	ui_root.add_child(skypop)
+	achui = AchToast.new()
+	achui.hud = self
+	_full(achui)
+	ui_root.add_child(achui)
 	status = Status.new()
 	status.hud = self
 	status.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -1169,6 +1350,8 @@ func _ready():
 	GS.gull_sense_changed.connect(_on_gull_sense)
 	GS.progress_changed.connect(_on_progress)
 	GS.achievement.connect(_on_achievement)
+	GS.achievement_unlocked.connect(func(id): ach_toasts.append({"id": id, "t": 0.0}); Sfx.play("reward_2", -10.0, 1.3))
+	GS.sky_caught.connect(func(kind, n): sky_pops.append({"kind": kind, "n": n, "t": 0.0}))
 	GS.player_hurt.connect(_on_hurt)
 	GS.fry_got.connect(_on_fry_got)
 	GS.quest_done.connect(_on_quest_done)
@@ -1219,6 +1402,11 @@ func _process(delta):
 	banner.queue_redraw()
 	starfx.queue_redraw()
 	fishcard.queue_redraw()
+	lesson_ui.queue_redraw()
+	skypop.queue_redraw()
+	achui.queue_redraw()
+	lesson_done_t = max(lesson_done_t - real_dt, 0.0)
+	lesson_idle = lesson_idle + real_dt if (GS.tab_lesson == 1 and not GS.sense_active) else 0.0
 	var pa = 1.0 if prompt_text != "" else 0.0
 	prompt_label.modulate.a = move_toward(prompt_label.modulate.a, pa, 4.0 * real_dt)
 	if prompt_text != "" and prompt_label.text != prompt_text:

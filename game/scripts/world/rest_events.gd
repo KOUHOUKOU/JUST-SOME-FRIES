@@ -14,7 +14,7 @@ const Terrain = preload("res://scripts/world/terrain.gd")
 
 var player = null
 var rest_t = 0.0
-var cd = 12.0
+var cd = 6.0
 var kid_cd = 30.0
 var ev = null
 var force_kind = ""          # dev tests
@@ -69,18 +69,27 @@ func _process(delta):
 		and not GS.codex_open and player.snatch.state == "idle"
 	if ev == null:
 		rest_t = rest_t + dt if resting else 0.0
-		if resting and cd <= 0.0 and rest_t > (1.0 if force_kind != "" else 4.5):
+		if resting and cd <= 0.0 and rest_t > (1.0 if force_kind != "" else 3.0):
 			_start()
 	else:
 		_step(dt)
 
 func _start():
-	var kinds = ["buddy", "buddy", "kid", "kid", "dog"]
-	if GS.watch < 0.7 and GS.fry_total() >= 4:
-		kinds = ["kid", "kid", "kid", "buddy", "buddy", "dog"]       # a calm town: being fed by the children is the normal thing
-	if (kid_cd > 0.0 and GS.watch >= 0.7) or GS.fry_total() < 4:
-		kinds = ["buddy", "buddy", "dog"]
-	if GS.watch_high() or player.perch_high:
+	# a calm town is a warm town: other gulls, children with a heart, a stranger with a cup, a puppy that wants to play. A hostile dog only comes when the crowd is wary.
+	var kinds = ["buddy", "buddy", "stranger", "puppy"]
+	if GS.fry_total() >= 4:
+		kinds.append("kid")
+		if kid_cd <= 0.0:
+			kinds.append("kid")
+		if GS.watch < 1.0:
+			kinds.append_array(["stranger", "puppy", "kid"])
+	if GS.watch >= 1.6:
+		kinds = ["buddy", "dog", "dog"]
+	elif GS.watch >= 1.0:
+		kinds = ["buddy", "puppy", "kid"]
+	if stranger_cd > 0.0:
+		kinds = kinds.filter(func(k): return k != "stranger")
+	if player.perch_high:
 		kinds = ["buddy"]          # on a roof or a tree top only another gull can come to visit
 	var kind = kinds[randi() % kinds.size()]
 	if force_kind != "":
@@ -92,8 +101,14 @@ func _start():
 			_start_kid()
 		"dog":
 			_start_dog()
+		"stranger":
+			_start_stranger()
+		"puppy":
+			_start_puppy()
 	if ev == null:
 		cd = 3.0      # nothing fit here: try again soon
+
+var stranger_cd = 25.0
 
 func _end(cool):
 	ev = null
@@ -162,6 +177,9 @@ func _free_air(p):
 	return player.get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
 
 func _heart(pos):
+	heart_fx(get_tree().current_scene, pos)
+
+static func heart_fx(root, pos):
 	var s = Sprite3D.new()
 	s.texture = heart_tex()
 	s.pixel_size = 0.012
@@ -169,7 +187,7 @@ func _heart(pos):
 	s.no_depth_test = true
 	s.modulate = Color(1, 1, 1, 1)
 	s.shaded = false
-	get_tree().current_scene.add_child(s)
+	root.add_child(s)
 	s.global_position = pos
 	s.scale = Vector3(0.3, 0.3, 0.3)
 	var tw = s.create_tween().set_parallel(true)
@@ -178,6 +196,28 @@ func _heart(pos):
 	tw.tween_property(s, "modulate:a", 0.0, 1.4).set_delay(0.5)
 	tw.chain().tween_callback(s.queue_free)
 	Sfx.play("heart", -10.0, randf_range(0.95, 1.15))
+
+# a few words over somebody's head (fades by itself)
+static func say(root, who, text, sec = 3.0, height = 2.2):
+	var l = Label3D.new()
+	l.text = text
+	l.font_size = 56
+	l.pixel_size = 0.0075
+	l.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	l.no_depth_test = true
+	l.modulate = Color(1, 0.96, 0.82, 0.0)
+	l.outline_size = 12
+	l.outline_modulate = Color(0.05, 0.04, 0.07, 0.9)
+	l.render_priority = 120
+	l.outline_render_priority = 119
+	l.position = Vector3(0, height, 0)
+	who.add_child(l)
+	var tw = l.create_tween()
+	tw.tween_property(l, "modulate:a", 1.0, 0.25)
+	tw.tween_interval(sec)
+	tw.tween_property(l, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(l.queue_free)
+	return l
 
 func _step_buddy(dt):
 	var g = ev["g"]
@@ -255,6 +295,7 @@ func _step_buddy(dt):
 					player.stamina = min(player.stamina + 14.0, GS.stamina_max())
 					GS.stats["friends"] += 1
 					GS.award("NEW FRIEND")
+					GS.comic.emit("friend", "A FRIEND. HEARTS WERE EXCHANGED.", {"tier": 0})
 					player.show_toast("A FRIEND. BREATH BACK.", 1.4)
 		"leave":
 			var u2 = clamp(ev["t"] / 3.0, 0.0, 1.0)
@@ -266,7 +307,7 @@ func _step_buddy(dt):
 			g.look_at(g.global_position + dir * 3.0 + Vector3(0, 1.5, 0), Vector3.UP)
 			if ev["t"] > 4.0:
 				g.queue_free()
-				_end(randf_range(14.0, 20.0))
+				_end(randf_range(9.0, 14.0))
 
 # ------------------------------------------------------------------ the kid who feeds you
 func _start_kid():
@@ -368,7 +409,7 @@ func _step_kid(dt):
 				ev["t"] = 0.0
 				ev["rig"].override_arm_r = null
 				ev["rig"].set_mode("wave")
-				kid_cd = 90.0 if GS.watch >= 0.7 else 35.0
+				kid_cd = 70.0 if GS.watch >= 0.7 else 30.0
 		"leave":
 			if ev["t"] > 1.4:
 				ev["rig"].set_mode("jog")
@@ -379,7 +420,7 @@ func _step_kid(dt):
 					_face(kid, kid.global_position + away)
 			if ev["t"] > 5.0:
 				kid.queue_free()
-				_end(randf_range(14.0, 20.0))
+				_end(randf_range(9.0, 14.0))
 
 # ------------------------------------------------------------------ the stray dog
 func _start_dog():
@@ -414,8 +455,183 @@ func _step_dog(dt):
 		d.queue_free()
 		_end(randf_range(16.0, 22.0))
 
+# ------------------------------------------------------------------ the stranger with a cup (round 15)
+# A passer-by with a heart over the head walks up to a gull that sits quietly, sets a cup down in front of it and says "this might suit a gull." The cup is a drink
+# (coffee, a cocktail or ice cream: one the gull is not drinking yet, if possible); the gull sips it, the buff starts like any other drink.
+const DRINK_OF = {"coffee": "coffee", "alcohol": "alcohol", "icecream": "ice"}
+
+func _start_stranger():
+	var spot = _pick_spot(12.0)
+	if spot == null:
+		return
+	var who = Node3D.new()
+	var rig = Node3D.new()
+	rig.set_script(HumanRig)
+	who.add_child(rig)
+	get_tree().current_scene.add_child(who)
+	rig.build({"scale": 1.0, "shirt": ["E8573A", "3D8CD9", "F1C94B", "4FB56D", "B58CF0"][randi() % 5], "hair_style": ["cap", "short", "bun"][randi() % 3], "hat": "E8D9A8", "skin": ["F0C6A0", "D9A77A", "B98462"][randi() % 3]})
+	rig.set_mode("walk")
+	rig.walk_rate = 1.3
+	who.global_position = spot
+	var hs = Sprite3D.new()
+	hs.texture = heart_tex()
+	hs.pixel_size = 0.014
+	hs.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	hs.no_depth_test = true
+	hs.shaded = false
+	hs.position = Vector3(0, 2.1, 0)
+	who.add_child(hs)
+	# a drink the gull is not running yet
+	var want = []
+	for k in ["coffee", "alcohol", "icecream"]:
+		if GS.buff[DRINK_OF[k]] <= 0.0:
+			want.append(k)
+	if want.is_empty():
+		want = ["coffee", "alcohol", "icecream"]
+	ev = {"kind": "stranger", "t": 0.0, "who": who, "rig": rig, "phase": "walk", "drink": want[randi() % want.size()], "cup": null, "from": Vector3.ZERO, "heart": hs}
+	Sfx.play("oh", -14.0, 1.2)
+
+func _step_stranger(dt):
+	var who = ev["who"]
+	if not is_instance_valid(who):
+		_end(10.0)
+		return
+	ev["t"] += dt
+	var pp = player.global_position
+	var rig = ev["rig"]
+	match ev["phase"]:
+		"walk":
+			var to = pp - who.global_position
+			to.y = 0.0
+			var d = to.length()
+			_face(who, pp)
+			if d > 2.4:
+				who.global_position += to.normalized() * 2.5 * dt
+				who.global_position.y = lerp(who.global_position.y, pp.y - 0.35, 0.2)
+			else:
+				ev["phase"] = "give"
+				ev["t"] = 0.0
+				rig.set_mode("idle")
+				rig.override_arm_r = -1.5
+				var m = Node3D.new()
+				m.set_script(load("res://scripts/fries/mischief.gd"))
+				m.setup(ev["drink"], get_tree().current_scene, who.global_position + Vector3(0, 1.0, 0))
+				m.remove_from_group("mischief")
+				m.available = false
+				m.respawn_sec = 0.0
+				m.scale = Vector3.ONE * 0.9
+				ev["cup"] = m
+				var dirv = (pp - who.global_position)
+				dirv.y = 0.0
+				ev["spot"] = pp + (-dirv.normalized() * 1.0 if dirv.length() > 0.1 else Vector3(0, 0, 1)) + Vector3(0, -0.25, 0)
+				ev["from"] = m.global_position
+				say(get_tree().current_scene, who, "this might suit a gull.", 3.2, 2.35)
+				Sfx.play("feed", -9.0)
+			if player.mode != 1 and d > 9.0:
+				ev["phase"] = "leave"
+				ev["t"] = 0.0
+		"give":
+			var cup = ev["cup"]
+			_face(who, pp)
+			if cup == null or not is_instance_valid(cup):
+				ev["phase"] = "leave"
+				ev["t"] = 0.0
+				return
+			if ev["t"] < 0.9:
+				# the cup is set down on the ground in front of the gull
+				var u0 = clamp(ev["t"] / 0.9, 0.0, 1.0)
+				var gp = ev["from"].lerp(ev["spot"], u0)
+				gp.y += sin(u0 * PI) * 0.25
+				cup.global_position = gp
+			elif ev["t"] < 1.9:
+				cup.global_position = ev["spot"]
+				if ev["t"] > 0.95 and ev["t"] < 1.0:
+					rig.override_arm_r = null
+			else:
+				var u = clamp((ev["t"] - 1.9) / 0.5, 0.0, 1.0)
+				var tgt = player.beak_socket.global_position
+				var p = ev["spot"].lerp(tgt, u)
+				p.y += sin(u * PI) * 0.4
+				cup.global_position = p
+				if u >= 1.0:
+					_drink_given(cup, ev["drink"])
+					ev["cup"] = null
+					ev["phase"] = "leave"
+					ev["t"] = 0.0
+					rig.override_arm_r = null
+					rig.set_mode("wave")
+					stranger_cd = 70.0
+		"leave":
+			var hs = ev["heart"]
+			if is_instance_valid(hs) and ev["t"] < 0.2:
+				heart_fx(get_tree().current_scene, who.global_position + Vector3(0, 2.2, 0))
+			if ev["t"] > 1.6:
+				rig.set_mode("walk")
+				var away = who.global_position - pp
+				away.y = 0.0
+				if away.length() > 0.1:
+					who.global_position += away.normalized() * 2.2 * dt
+					_face(who, who.global_position + away)
+			if ev["t"] > 6.0:
+				who.queue_free()
+				_end(randf_range(9.0, 14.0))
+
+# a drink that was GIVEN (it does not make the town more wary, and it is not a theft)
+func _drink_given(cup, kind):
+	var bk = DRINK_OF[kind]
+	GS.stats["drinks"] += 1
+	GS.mischief_counts[kind] = GS.mischief_counts.get(kind, 0) + 1
+	GS.add_buff(bk)
+	GS.award({"coffee": "ESPRESSO", "alcohol": "LAST ORDERS", "icecream": "SWEET TOOTH"}[kind])
+	GS.ach_unlock("kind")
+	Sfx.play("sip" if kind != "icecream" else "crunch", -5.0, 1.0 if kind != "icecream" else 1.3)
+	player.fov_kick = 3.0
+	heart_fx(get_tree().current_scene, player.global_position + Vector3(0, 0.9, 0))
+	GS.comic.emit("gift", "A STRANGER LEFT A DRINK. HOW KIND.", {"tier": 0})
+	GS.quests_check()
+	if is_instance_valid(cup):
+		cup.queue_free()
+
+# ------------------------------------------------------------------ the puppy (round 15)
+func _start_puppy():
+	var spot = _pick_spot(10.0)
+	if spot == null:
+		return
+	var d = Node3D.new()
+	d.set_script(DOG)
+	get_tree().current_scene.add_child(d)
+	d.setup(player, spot, 0.0, ["B58A4B", "C98A4B", "F1E6D2", "8A6A4A"][randi() % 4], null)
+	d.state = "friend"
+	d.cd = 0.0
+	d.scale = Vector3.ONE * 0.8
+	ev = {"kind": "puppy", "t": 0.0, "dog": d, "spot": spot}
+	Sfx.play("bark", -12.0, 1.7)
+
+func _step_puppy(dt):
+	var d = ev["dog"]
+	if not is_instance_valid(d):
+		_end(10.0)
+		return
+	ev["t"] += dt
+	if d.state != "friend" and ev["t"] < 3.0:
+		d.state = "friend"
+	if ev["t"] > 9.5 or (player.mode != 1 and ev["t"] > 2.0):
+		d.queue_free()
+		_end(randf_range(11.0, 16.0))
+		return
+	if d.circled and not ev.get("done", false):
+		ev["done"] = true
+		GS.ach_unlock("puppy")
+		GS.comic.emit("puppy", "A PUPPY CIRCLED YOU. FOR NO REASON. HEARTS.", {"tier": 0})
+		player.stamina = min(player.stamina + 10.0, GS.stamina_max())
+
+
 func _step(dt):
 	match ev["kind"]:
+		"stranger":
+			_step_stranger(dt)
+		"puppy":
+			_step_puppy(dt)
 		"buddy":
 			_step_buddy(dt)
 		"kid":

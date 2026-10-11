@@ -21,6 +21,7 @@ var continue_btn = null           # kept for old call sites (tests ask for .disa
 var save_btn
 var save_note
 var cover
+var gallery
 
 # ---------------------------------------------------------------- the cover
 class Cover extends Control:
@@ -31,7 +32,7 @@ class Cover extends Control:
 	var intro_t = 0.0
 	var items = []               # [{"id", "label", "on"}]
 	var sel = 0
-	var anim = [0.0, 0.0, 0.0]
+	var anim = [0.0, 0.0, 0.0, 0.0]
 	var rects = []
 	var motes = []
 	var mpos = Vector2(0.5, 0.5)
@@ -50,7 +51,7 @@ class Cover extends Control:
 		bold = fv
 		for i in 54:
 			motes.append([randf(), randf(), randf(), randf()])
-		items = [{"id": "start", "label": "START", "on": true}, {"id": "continue", "label": "CONTINUE", "on": false}]
+		items = [{"id": "start", "label": "START", "on": true}, {"id": "continue", "label": "CONTINUE", "on": false}, {"id": "gallery", "label": "ACHIEVEMENTS", "on": true}]
 		if not OS.has_feature("web"):
 			items.append({"id": "quit", "label": "QUIT", "on": true})
 
@@ -227,6 +228,8 @@ func _ready():
 	cover = Cover.new()
 	cover.chosen.connect(_on_cover_chosen)
 	add_child(cover)
+	gallery = load("res://scripts/ui/achievements_ui.gd").new()
+	add_child(gallery)
 	main_panel = cover
 	controls_panel = _panel(0.8)
 	controls_panel.theme = ui_theme
@@ -237,9 +240,9 @@ func _ready():
 			"Reach the speed a fry needs (the number on the speed meter) and fly straight at it.",
 			"Circles appear around it. Press E when a white wave shrinks onto the green ring; the gold ring inside it counts double.",
 			"E while flying free - points out the nearest fry that you can really catch.",
-			"Hold Tab - Gull Sight (free on the ground). It shows fries, things to take, and where a fish is about to jump.",
+			"Hold Tab - Gull Sight (free on the ground). Everything that glows is worth stealing; the number is the speed it needs.",
 			"C - Codex (fries, wardrobe, fish book; right-click a taken item to wear it)          F - yell",
-			"Every drink gives breath back and adds its time. All three drinks at once: STARLIGHT.",
+			"Every drink gives breath back and adds its time. All three drinks at once: RAINBOW TIME.",
 			"Land anywhere to rest - higher is faster. Trees and roofs count."]:
 		c.add_child(_lbl(line, 20))
 	c.add_child(_spacer(20))
@@ -275,6 +278,7 @@ func _ready():
 	inv.button_pressed = GS.invert_y
 	inv.toggled.connect(func(on): GS.invert_y = on)
 	p.add_child(inv)
+	p.add_child(_btn("ACHIEVEMENTS", func(): gallery.open()))
 	p.add_child(_btn("CONTROLS", func():
 		pause_panel.visible = false
 		controls_panel.visible = true))
@@ -293,6 +297,8 @@ func _on_cover_chosen(id):
 			start_pressed.emit()
 		"continue":
 			continue_pressed.emit()
+		"gallery":
+			gallery.open()
 		"quit":
 			get_tree().quit()
 
@@ -334,6 +340,8 @@ func _notification(what):
 
 func _unhandled_input(event):
 	if in_game and not GS.showcase_active and event.is_action_pressed("pause_game"):
+		if gallery != null and gallery.is_open():
+			return
 		if controls_panel.visible:
 			controls_panel.visible = false
 			pause_panel.visible = true

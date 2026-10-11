@@ -32,6 +32,8 @@ signal star_started                   # all three drinks at once: STARLIGHT, 30 
 signal star_ended
 signal fish_caught(info)              # {"sp": id, "len": cm, "kg": x, "new": bool, "rec_len": bool, "rec_kg": bool}
 signal meteor_caught                  # a shooting star was caught (round 8)
+signal sky_caught(kind, count)        # round 15: cloud | raincloud | star | moon | sun | rainbow; count = how many of the five are in
+signal achievement_unlocked(id)       # round 15: a gallery achievement (icon, name, date)
 
 enum Phase { TUTORIAL, SPECIAL_HUNT, STILL_HUNGRY, ENDED }
 
@@ -43,10 +45,10 @@ const STAR_TOTAL = 14                 # gold + diamond of every type
 const RAINBOW_MAX = 8
 const SAVE_PATH = "user://savegame.json"
 # every kind exists ONCE in the world and can be taken ONCE (only fries, rainbow fries and the drinks come back)
-const WEARABLES = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "cloud", "sun", "meteor", "skybow"]
+const WEARABLES = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "cloud", "raincloud", "sun", "moon", "meteor", "skybow"]
 const WEAR_NAMES = {"hat": "STRAW HAT", "sailor": "SAILOR CAP", "topper": "TOP HAT", "beret": "RED BERET", "glasses": "READING GLASSES", "shades": "SUNGLASSES", "necklace": "GOLD CHAIN",
 	"bowtie": "BOW TIE", "scarf": "RED SCARF", "pipe": "PIPE", "hawaii": "FLOWER SHIRT", "stripes": "STRIPED SHIRT", "coat": "LONG COAT", "socks": "STRIPED SOCK", "balloon": "BALLOON",
-	"cloud": "A WHOLE CLOUD", "sun": "A LITTLE SUN", "meteor": "A SHOOTING STAR", "skybow": "A WHOLE RAINBOW"}
+	"cloud": "A WHOLE CLOUD", "raincloud": "A RAIN CLOUD", "moon": "A WHOLE MOON", "sun": "A LITTLE SUN", "meteor": "A SHOOTING STAR", "skybow": "A WHOLE RAINBOW"}
 const TUT_NEED = {"TUTORIAL_01": 7.5, "TUTORIAL_02": 8.5, "TUTORIAL_03": 9.5}   # m/s: the first three fries, a gentle ramp (gauge 45 / 51 / 57)
 # gauge speed needed to lock a fry of this type: [silver, gold, diamond]. The gull starts with a top speed of 90:
 # silvers need 78-84 (a boost run-up), golds need SONIC (96-114 - a silver SONIC fry gives 105, a gold one 123), diamonds need 120-138 (SONIC gold 123 / diamond 144).
@@ -61,7 +63,9 @@ const RAINBOW_NEED = 150.0           # round 8: a rainbow fry is five judgements
 const METEOR_NEED = 232.0            # a shooting star
 const CLOUD_NEED = 225.0             # a whole cloud
 const SKYBOW_NEED = 238.0            # the rainbow in the sky
-const SUN_NEED = 244.0               # the sun
+const SUN_NEED = 244.0               # the sun (the moon asks for exactly the same)
+const MOON_NEED = 244.0
+const RAINCLOUD_NEED = 225.0         # the grey cloud, as hard as the white one
 const DECOR_NEED = 11.0               # m/s for borrowed hats, balloons... (mischief objects set their own)
 const SPEED_UNIT = 6.0                # gauge number = m/s * SPEED_UNIT
 const RARITY_NAMES = ["COMMON", "SILVER", "GOLD", "DIAMOND", "RAINBOW"]
@@ -77,26 +81,22 @@ const BUFF_CAP = 300.0                # drinks stack their time (and their state
 const BUFF_TOP = {"coffee": 4.2, "alcohol": 5.0, "ice": 3.0}      # m/s of extra top speed (x6 for the gauge)
 const STAR_SEC = 30.0
 const STAR_TOP = 9.0                  # STARLIGHT: top speed on top of everything else
-const BUFF_COL = {"coffee": Color("C98A4B"), "alcohol": Color("FFD23A"), "ice": Color("FF8AD8")}
+const BUFF_COL = {"coffee": Color("B9783C"), "alcohol": Color("FFD23A"), "ice": Color("8FE3F2")}
 const BUFF_NAME = {"coffee": "COFFEE", "alcohol": "COCKTAIL", "ice": "ICE CREAM"}
 # the side quests on the mission board: id -> [fries needed before it shows up, text on the board, "still hungry" line shown afterwards (big quests only)]
 # BIG quests (fish book, cloud, sun) end with the quiet moment; the small ones just tick off with a chime.
 const QUESTS = {
+	"star": [3, "RAINBOW TIME: ALL THREE DRINKS AT ONCE", ""],
 	"drink": [3, "GET A DRINK", ""],
 	"wear": [3, "GET AN ACCESSORY", ""],
 	"fish": [3, "CATCH A FISH", ""],
-	"drinks3": [3, "TASTE ALL THREE DRINKS", ""],
-	"star": [3, "ALL THREE DRINKS AT ONCE", ""],
 	"rainbow": [6, "GET A RAINBOW FRY", ""],
-	"wearall": [6, "ALL ACCESSORIES", ""],
 	"fishbook": [6, "FILL THE FISH BOOK", "the whole sea, written down.|every one of them wetter than i expected.|and somehow... i'm still hungry."],
-	"meteor": [10, "CATCH A SHOOTING STAR", ""],
-	"cloud": [10, "CATCH A CLOUD", "i caught a cloud.|it was softer than i expected.|and somehow... i'm still hungry."],
-	"sun": [17, "CATCH THE SUN", "i caught the sun.|it was warm. something in me changed.|and somehow... i'm still hungry."],
-	"skybow": [17, "CATCH A RAINBOW", "i caught a rainbow.|from the inside it has more colours than i thought.|and somehow... i'm still hungry."],
+	"sky": [10, "SKY HIGH! CLOUD, STAR, MOON, SUN, RAINBOW", "the whole sky, in my beak.|it was softer, warmer and louder than i expected.|and somehow... i'm still hungry."],
 }
-const BIG_QUESTS = ["fishbook", "cloud", "sun", "skybow"]
-const QUEST_SHOWN = 4                 # lines on the board at once
+const BIG_QUESTS = ["fishbook", "sky"]
+const SKY_KINDS = ["cloud", "star", "moon", "sun", "rainbow"]      # the five things of the sky quest (a rain cloud counts as the cloud; catching both is an achievement of its own)
+const QUEST_SHOWN = 5                 # lines on the board at once
 
 # ---- the fish book: nine kinds in three rarities (2 / 3 / 5 judgements, faster gull needed). Length in cm, weight in kg (rolled per fish) ----
 # [name, rarity, len_min, len_max, kg_min, kg_max, body colour, belly colour]
@@ -197,6 +197,10 @@ var star_total = 0                    # how many times the gull has been in it
 var fish_book = {}                    # species id -> {"n": caught, "kg": heaviest, "cm": longest}
 var quest_done_at = {}                # quest id -> game seconds when it was ticked off (the board drops it a little later)
 var cine_hold = null                  # a caught thing (a fish, a star) that the cinematic moment keeps alive until it is over
+var sky_got = {}                      # round 15: the five sky things caught this run: cloud | star | moon | sun | rainbow
+var clouds_got = {}                   # ...which clouds: cloud | raincloud
+var sight_time = 0.0                  # seconds Gull Sight has been held in total (the TAB lesson ends after a few)
+var tab_lesson = 0                    # 0 = not shown yet, 1 = prompt on screen, 2 = done
 var cine_seen = {}                    # the cinematic moments that have been shown already (each plays once per run): drinks3, fish, meteor, all24
 
 func _ready():
@@ -205,6 +209,7 @@ func _ready():
 	# 60 fps is plenty: physics already runs at 60 Hz.
 	Engine.max_fps = 60
 	_init_clock()
+	ach_load()
 	var keys = {"move_forward": KEY_W, "move_back": KEY_S, "bank_left": KEY_A, "bank_right": KEY_D,
 		"flap": KEY_SPACE, "dash": KEY_SHIFT, "land": KEY_CTRL, "interact": KEY_E, "squawk": KEY_F,
 		"gull_sense": KEY_TAB, "codex": KEY_C, "pause_game": KEY_ESCAPE}
@@ -307,6 +312,10 @@ func reset():
 	star_t = 0.0
 	star_total = 0
 	cine_seen = {}
+	sky_got = {}
+	clouds_got = {}
+	sight_time = 0.0
+	tab_lesson = 0
 	memories = {}
 	cine_hold = null
 	fish_book = {}
@@ -343,7 +352,105 @@ func award(title):
 	achievements_done[title] = true
 	if AWARD_MEM.has(title):
 		remember(AWARD_MEM[title])
+	if AWARD_ID.has(title):
+		ach_unlock(AWARD_ID[title])
+		return
 	achievement.emit(title)
+
+# ---- ROUND 15: the achievements (a gallery that lives in the player's profile, not in one run): id -> [name, what to do, the game's comment]
+const ACH = {
+	"first_fry": ["FIRST BITE", "Steal your very first fry.", "It was warm, it was salty, and it was somebody else's."],
+	"plain_first": ["THE FIRST ONE IS THE LAST ONE", "Eat the plain fry before you take a single magic one.", "A very short game. A very full gull."],
+	"enough": ["JUST SOME FRIES", "Eat the plain fry at the very end.", "Everything you needed was on the table. It usually is."],
+	"all24": ["ALL 24", "Own every fry: silver, gold and diamond of all seven colours.", "A complete set. The pier is nervous."],
+	"seven": ["SEVEN COLOURS", "Get a fry of every colour.", "A taste for the whole spectrum. Mostly salt, though."],
+	"rainbowfry": ["TASTE THE RAINBOW", "Get your first rainbow fry.", "It is, regrettably, not fruit flavoured."],
+	"rainbowtime": ["RAINBOW TIME", "Run coffee, cocktail and ice cream at the same time.", "The sky made room. So did the laws of physics."],
+	"happyhour": ["HAPPY HOUR", "Taste coffee, a cocktail and ice cream.", "Three drinks, zero regrets, one very busy beak."],
+	"skyall": ["SKY HIGH!", "Catch a cloud, a star, the moon, the sun and a rainbow.", "You own the sky now. Please do not tell the airlines."],
+	"clouds2": ["FAIR WEATHER, FOUL WEATHER", "Catch the white cloud and the rain cloud.", "A gull for every season. And every umbrella."],
+	"moon": ["OVER THE MOON", "Catch the moon.", "Cheese was never confirmed."],
+	"sun": ["TOO HOT TO HANDLE", "Catch the sun.", "Warm, brilliant, and a little hard on the beak."],
+	"star": ["WISHFUL THINKING", "Catch a shooting star.", "Wish granted: more speed. Wish pending: more fries."],
+	"fishall": ["THE WHOLE SEA", "Catch every kind of fish.", "Nine species. One extremely smug gull."],
+	"bigfish": ["BIG FISH ENERGY", "Catch a legendary fish.", "The pier saw it. The pier will exaggerate."],
+	"wearall": ["FASHION WEEK", "Wear every kind of clothing on the island.", "More hats than a gull has heads. Mathematically concerning."],
+	"brolook": ["SAME BIG BRO ENERGY", "Wear a top hat, shades, a chain, a pipe and a long coat at once.", "Spot the difference. Hint: it is the squint."],
+	"friend": ["NEW FRIEND", "Let another gull sit down next to you.", "Hearts were exchanged. No fries were shared."],
+	"kind": ["A KIND WORLD", "Be given a gift by a stranger or a child.", "Turns out the town was never against you. Just busy."],
+	"puppy": ["GOOD BOY", "Be circled by a happy puppy.", "He is not guarding anything. He just likes you."],
+	"thermal": ["THERMAL RIDER", "Soar up on a column of warm air.", "Free altitude. Freer than free."],
+	"skim": ["SKIMMER", "Skim the sea at speed.", "Wet feet, dry wit."],
+	"wall": ["WALL KISS", "Fly into a wall at full speed.", "The wall is fine. The wall is always fine."],
+	"innocent": ["INNOCENT AS A SEAGULL", "Calm a crowd that was on full alert, until nobody is watching you.", "Whistle. Look at the clouds. Works every time."],
+}
+const AWARD_ID = {"EARLY BIRD": "plain_first", "ENOUGH": "enough", "ALL 24": "all24", "RAINBOW": "rainbowfry", "BIG FISH ENERGY": "bigfish", "NEW FRIEND": "friend",
+	"A FRIEND WHO SHARES": "kind", "A KIND CHILD": "kind", "THERMAL RIDER": "thermal", "SKIMMER": "skim", "WALL KISS": "wall", "WISHFUL THINKING": "star", "TOO HOT TO HANDLE": "sun"}
+const ACH_PATH = "user://achievements.json"
+var ach_profile = {}                  # id -> {"date": "2026-10-11"}
+var ach_persist = true
+
+func ach_load():
+	ach_persist = OS.get_cmdline_user_args().size() == 0           # the dev / test runs never touch the real profile
+	if not ach_persist or not FileAccess.file_exists(ACH_PATH):
+		return
+	var f = FileAccess.open(ACH_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var d = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(d) == TYPE_DICTIONARY:
+		for k in d:
+			if ACH.has(k) and typeof(d[k]) == TYPE_DICTIONARY:
+				ach_profile[k] = d[k]
+
+func ach_save():
+	if not ach_persist:
+		return
+	var f = FileAccess.open(ACH_PATH, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(ach_profile))
+		f.close()
+
+func ach_has(id):
+	return ach_profile.has(id)
+
+func ach_date(id):
+	return str(ach_profile.get(id, {}).get("date", ""))
+
+func ach_count():
+	return ach_profile.size()
+
+func ach_unlock(id):
+	if not ACH.has(id) or ach_profile.has(id):
+		return false
+	var d = Time.get_date_dict_from_system()
+	ach_profile[id] = {"date": "%04d-%02d-%02d" % [d["year"], d["month"], d["day"]]}
+	ach_save()
+	achievement_unlocked.emit(id)
+	return true
+
+# the achievements that are a state of the run, not an event: looked at every second or so
+const BRO_LOOK = ["topper", "shades", "necklace", "pipe", "coat"]
+func ach_tick():
+	if special_count() >= FRY_TYPES.size():
+		ach_unlock("seven")
+	if mischief_counts.get("coffee", 0) > 0 and mischief_counts.get("alcohol", 0) > 0 and mischief_counts.get("icecream", 0) > 0:
+		ach_unlock("happyhour")
+	var n = 0
+	for k in WEARABLES:
+		if not (k in ["cloud", "raincloud", "sun", "moon", "meteor", "skybow"]) and worn.has(k):
+			n += 1
+	if n >= WEARABLES.size() - 6:
+		ach_unlock("wearall")
+	var all_on = true
+	for k in BRO_LOOK:
+		if not equipped.has(k):
+			all_on = false
+	if all_on:
+		ach_unlock("brolook")
+	if fish_book.size() >= FISH_ORDER.size():
+		ach_unlock("fishall")
 
 # ---- the gull's memories (round 8): the things it really did, in the order it did them. The ending plays them back while the plain fry is being chewed.
 const AWARD_MEM = {"ESPRESSO": "coffee", "LAST ORDERS": "alcohol", "SWEET TOOTH": "ice", "GONE FISHING": "fish", "BIG FISH ENERGY": "bigfish", "HEAD IN THE CLOUDS": "cloud",
@@ -442,6 +549,7 @@ func buffs_die(_include_ice = true):
 
 func start_star():
 	remember("starlight")
+	ach_unlock("rainbowtime")
 	star_t = STAR_SEC
 	star_total += 1
 	stats["star"] = stats.get("star", 0) + 1
@@ -642,14 +750,8 @@ func quest_finish(id):
 # [now, total] of a quest that counts (m / n on the board), or [] when it does not count
 func quest_progress(id):
 	match id:
-		"drinks3":
-			var n = 0
-			for k in ["coffee", "alcohol", "icecream"]:
-				if mischief_counts.get(k, 0) > 0:
-					n += 1
-			return [n, 3]
-		"wearall":
-			return [worn.size(), WEARABLES.size()]
+		"sky":
+			return [sky_got.size(), SKY_KINDS.size()]
 		"fishbook":
 			return [fish_book.size(), FISH_ORDER.size()]
 	return []
@@ -665,7 +767,7 @@ func _quest_ok(id):
 	match id:
 		"drink":
 			return stats.get("drinks", 0) >= 1
-		"drinks3", "wearall", "fishbook":
+		"sky", "fishbook":
 			var pr = quest_progress(id)
 			return pr[0] >= pr[1]
 		"star":
@@ -677,6 +779,29 @@ func _quest_ok(id):
 		"fish":
 			return not fish_book.is_empty()
 	return false
+
+# round 15: one of the five things of the sky was caught. `kind` = cloud | raincloud | star | moon | sun | rainbow
+func sky_catch(kind):
+	var key = "cloud" if kind == "raincloud" else kind
+	var fresh = not sky_got.has(key)
+	sky_got[key] = true
+	if kind == "cloud" or kind == "raincloud":
+		clouds_got[kind] = true
+	remember("sky_" + kind)
+	sky_caught.emit(kind, sky_got.size())
+	if clouds_got.size() >= 2:
+		ach_unlock("clouds2")
+	match kind:
+		"moon":
+			ach_unlock("moon")
+		"sun":
+			ach_unlock("sun")
+		"star":
+			ach_unlock("star")
+	quests_check()
+	if sky_got.size() >= SKY_KINDS.size():
+		ach_unlock("skyall")
+	return fresh
 
 # tick off every quest whose condition is met (the sky quests are ticked off by the cloud and the sun themselves)
 func quests_check():
@@ -810,7 +935,7 @@ func write_save(pos, yaw):
 	var d = {"v": 1, "sense": gull_sense_count, "tut": tutorial_done.keys(), "lv": lv.duplicate(), "rb": rainbow.duplicate(), "stars": star_got.keys(),
 		"worn": worn.keys(), "eq": equipped.keys(), "mis": mischief_counts.duplicate(), "ach": achievements_done.keys(), "eaten": fries_eaten,
 		"hunger": hunger_t, "run": run_time, "stats": stats.duplicate(), "phase": int(phase), "pos": [pos.x, pos.y, pos.z], "yaw": yaw,
-		"seen": menu_seen.keys(), "quests": quests.duplicate(), "fish": fish_book.duplicate(true), "starn": star_total, "cine": cine_seen.keys(), "mem": memories.duplicate(true)}
+		"seen": menu_seen.keys(), "quests": quests.duplicate(), "fish": fish_book.duplicate(true), "starn": star_total, "cine": cine_seen.keys(), "mem": memories.duplicate(true), "sky": sky_got.keys(), "clouds": clouds_got.keys(), "sight": sight_time, "tabl": tab_lesson}
 	var f = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
 		return false
@@ -856,6 +981,12 @@ func apply_save(d):
 		if FISH_SPECIES.has(k):
 			fish_book[k] = {"n": int(fb[k].get("n", 1)), "kg": float(fb[k].get("kg", 0.0)), "cm": float(fb[k].get("cm", 0.0))}
 	star_total = int(d.get("starn", 0))
+	for k in d.get("sky", []):
+		sky_got[k] = true
+	for k in d.get("clouds", []):
+		clouds_got[k] = true
+	sight_time = float(d.get("sight", 0.0))
+	tab_lesson = int(d.get("tabl", 0))
 	for k in d.get("cine", []):
 		cine_seen[k] = true
 	var mm = d.get("mem", {})
@@ -884,12 +1015,8 @@ func apply_save(d):
 		cine_seen["meteor"] = true
 	if fry_total() >= FRY_CAP:
 		cine_seen["all24"] = true
-	if quests.get("sun", "") == "done":
-		cine_seen["sun"] = true
-	if quests.get("skybow", "") == "done":
-		cine_seen["skybow"] = true
-	if quests.get("cloud", "") == "done":
-		cine_seen["cloud"] = true
+	for k in ["sun", "skybow", "cloud", "moon"]:
+		cine_seen[k] = true             # (the sky no longer has film moments: a save from before simply has nothing to replay)
 
 	var p = d.get("pos", [-9.5, 6.0, -0.8])
 	saved_pos = {"pos": Vector3(p[0], p[1], p[2]), "yaw": float(d.get("yaw", PI))}

@@ -201,7 +201,10 @@ class Pane extends Control:
 				draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.35, -s * 0.8), c + Vector2(s * 0.3, -s * 0.8), c + Vector2(s * 0.3, s * 0.15), c + Vector2(s * 0.9, s * 0.25), c + Vector2(s * 0.9, s * 0.8), c + Vector2(-s * 0.35, s * 0.8)]), col)
 				for q in 4:
 					draw_line(c + Vector2(-s * 0.35, -s * 0.6 + q * s * 0.3), c + Vector2(s * 0.3, -s * 0.6 + q * s * 0.3), Color(1, 0.96, 0.88, col.a), 3.0)
-			"cloud":
+			"moon":
+				draw_circle(c, s * 0.7, col)
+				draw_circle(c + Vector2(s * 0.35, -s * 0.1), s * 0.58, Color(0.12, 0.14, 0.22, col.a))
+			"cloud", "raincloud":
 				draw_circle(c + Vector2(-s * 0.5, s * 0.15), s * 0.5, col)
 				draw_circle(c + Vector2(s * 0.1, -s * 0.2), s * 0.65, col)
 				draw_circle(c + Vector2(s * 0.65, s * 0.2), s * 0.45, col)
@@ -396,7 +399,7 @@ class Pane extends Control:
 				draw_rect(r, Color(1.0, 0.85, 0.35, 0.95), false, 3.0)
 			var base = {"hat": Color("F0D9A0"), "sailor": Color("F4F4F0"), "topper": Color("2A2D36"), "beret": Color("C23B3B"), "glasses": Color("DDE3EA"), "shades": Color("15151A"),
 				"necklace": Color("F2B53A"), "bowtie": Color("C9202E"), "scarf": Color("D9442E"), "pipe": Color("5A3A1E"), "hawaii": Color("2BA7A0"), "stripes": Color("F4F4F0"),
-				"coat": Color("3A4155"), "balloon": Color("E85745"), "socks": Color("E85745"), "cloud": Color("FFFFFF"), "sun": Color("FFC83A"), "meteor": Color("FFE08A"), "skybow": Color("FFB6E8")}[k3]
+				"coat": Color("3A4155"), "balloon": Color("E85745"), "socks": Color("E85745"), "cloud": Color("FFFFFF"), "raincloud": Color("9AA6BC"), "moon": Color("BFE3FF"), "sun": Color("FFC83A"), "meteor": Color("FFE08A"), "skybow": Color("FFB6E8")}[k3]
 			var pc = base if owned else Color(0.4, 0.42, 0.5, 0.35)
 			if owned and k3 in ["topper", "shades", "pipe", "coat"]:
 				draw_rect(Rect2(r.position + Vector2(5, 5), r.size - Vector2(10, 10)), Color(0.8, 0.82, 0.9, 0.22))

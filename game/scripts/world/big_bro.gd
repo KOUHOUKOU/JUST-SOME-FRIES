@@ -16,12 +16,32 @@ var look_at_player = true
 var puff_t = 4.0
 var main = null
 var scripted_talk = false      # the ending: the line is part of the scene, whatever the distance
+var calm_head = false          # the ending: his head stays turned to whoever he talks to
 var pose_mode = "ground"      # "throttle" while he flies down to the cafe in the ending
 
 const EARLY = ["Chin up, kid. The wind's free.", "Fly like the sea owes you rent.", "Careful. The old man's watching. Or sleeping. Hard to tell.", "Nice landing. I'd give it a 7. I'm a tough crowd."]
 const MID = ["Still hungry. Still fabulous.", "Everything's shinier. Nothing's tastier.", "I'd say don't copy me. But look at that hat.", "The view's great up here. The menu isn't."]
 const LATE = ["...you too?", "The sky's full of things. Nothing's quite it.", "Hungry suits you. Don't tell anyone I said so.", "You've got the squint now. Welcome."]
 const OUTFIT = ["topper", "shades", "necklace", "pipe", "coat"]
+
+# round 15: the talk he has for the gull NOW. If the gull comes to see him late (a lot of fries already), the early talks are out of date: it hears the newest one it has
+# earned and the older ones count as heard. The sky talk is its own thing (after the whole sky has been caught).
+const CHATS = ["chat1", "chat2", "chat3", "chat4"]
+const CHAT_AT = [3, 10, 18, 24]
+func _next_chat():
+	var n0 = GS.fry_total()
+	var best = -1
+	for i in CHATS.size():
+		if n0 >= CHAT_AT[i]:
+			best = i
+	if best >= 0 and not GS.cine_seen.has(CHATS[best]):
+		for j in best + 1:
+			GS.cine_seen[CHATS[j]] = true        # (the last one is set again by the caller; the older ones are simply out of date)
+		GS.cine_seen.erase(CHATS[best])
+		return CHATS[best]
+	if GS.sky_got.size() >= 5 and not GS.cine_seen.has("chat_sky"):
+		return "chat_sky"
+	return ""
 
 func setup(p_player, pos, face_pos):
 	player = p_player
@@ -69,8 +89,8 @@ func _process(delta):
 		return
 	gull.pose(pose_mode, 0.0, pose_mode == "throttle", delta)
 	# idle life: a slow head turn, now and then a puff on the pipe
-	gull.head.rotation.y = sin(t * 0.4) * 0.35
-	gull.head.rotation.x = sin(t * 0.23) * 0.06
+	gull.head.rotation.y = lerp(gull.head.rotation.y, 0.0, 0.1) if calm_head else sin(t * 0.4) * 0.35
+	gull.head.rotation.x = 0.0 if calm_head else sin(t * 0.23) * 0.06
 	if bubble_t > 0.0:
 		bubble_t -= delta
 		var ba = clamp(min(bubble_t, 0.6) / 0.6, 0.0, 1.0) * 0.95
@@ -92,14 +112,7 @@ func _process(delta):
 	near_t = near_t + delta if d < 7.0 else 0.0
 	# a little talk the first time the gull sits next to him after three / ten / eighteen fries (round 8: he is part of the story, not a prop)
 	if near_t > 1.0 and player.mode == 1 and main != null and not main.autotest and not GS.showcase_active and not main.scenes.cine_busy and GS.gull_sense_count >= 3 and not GS.ordinary_eaten:
-		var n0 = GS.fry_total()
-		var cid = ""
-		if n0 >= 18 and not GS.cine_seen.has("chat3"):
-			cid = "chat3"
-		elif n0 >= 10 and not GS.cine_seen.has("chat2"):
-			cid = "chat2"
-		elif n0 >= 3 and not GS.cine_seen.has("chat1"):
-			cid = "chat1"
+		var cid = _next_chat()
 		if cid != "":
 			GS.cine_seen[cid] = true
 			main.scenes.bro_chat(cid)
