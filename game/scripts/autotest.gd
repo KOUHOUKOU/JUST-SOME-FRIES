@@ -936,10 +936,11 @@ func attempt(f, from_dir, dist = 24.0, offset = 0.0, spd = 11.0, opts = {}):
 	var start = tgt + from_dir.normalized() * dist + Vector3(0, 2.0, 0)
 	if f.id == "TUTORIAL_01":
 		start = Vector3(-8.0, 3.2, 17.0)  # the caf茅 awning blocks every dive from the roof: come in from the south
-	place(start, tgt, spd)
+	if not opts.get("no_place", false):
+		place(start, tgt, spd)
 	p.stamina = GS.stamina_max()
 	Input.action_press("move_forward")
-	if spd > 11.5:
+	if spd > 11.5 or opts.get("no_place", false):
 		Input.action_press("dash")
 	var pressed_key = {}
 	var any_press = false
@@ -1843,6 +1844,8 @@ func film():
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--seg="):
 			seg = int(a.substr(6))
+		if a == "--nomusic":
+			film_music_off()
 	say("[film] segment %d" % seg)
 	match seg:
 		1:
@@ -1863,6 +1866,18 @@ func film():
 			await film_seg13()
 		14:
 			await film_seg14()
+		20:
+			await film_seg20()
+		21:
+			await film_seg21()
+		22:
+			await film_seg22()
+		23:
+			await film_seg23()
+		24:
+			await film_seg24()
+		25:
+			await film_seg25()
 		6:
 			var preview=load("res://scripts/art/s4_film.gd").new();add_child(preview)
 			await preview.run(self)
@@ -4275,6 +4290,9 @@ func film16_ready(levels = 2):
 		GS.cine_seen[id] = true
 	GS.tab_lesson = 2
 	p.input_locked = false
+	main.hud.film_clean = true
+	for c in GS.achievement_unlocked.get_connections():          # the trailer shows the flight, not the pop-ups
+		GS.achievement_unlocked.disconnect(c["callable"])
 	return p
 
 # 11: FISH TIME. A fish leaps, the gull takes it, the sea becomes a surfboard, Space launches, the fish keep coming
@@ -4299,13 +4317,14 @@ func film_seg11():
 	# the surf: low over the open sea (the heading with the longest run of water), W and Shift, then the launch
 	GS.fish_t = max(GS.fish_t, 80.0)
 	var gh = main.world["ground_h"]
-	var sp0 = spot.global_position
+	var sp0 = Vector3(-60.0, 0.0, 150.0)
 	var best_d = Vector3(0, 0, -1)
 	var best_n = -1
 	for a in range(0, 360, 10):
 		var dv = Vector3(cos(deg_to_rad(a)), 0, sin(deg_to_rad(a)))
+		var sd = Vector3(-dv.z, 0, dv.x)
 		var n = 0
-		while n < 60 and gh.call(sp0.x + dv.x * (n * 6.0 + 8.0), sp0.z + dv.z * (n * 6.0 + 8.0)) < -1.0:
+		while n < 60 and gh.call(sp0.x + dv.x * (n * 6.0 + 8.0), sp0.z + dv.z * (n * 6.0 + 8.0)) < -2.0 and gh.call(sp0.x + dv.x * (n * 6.0 + 8.0) + sd.x * 12.0, sp0.z + dv.z * (n * 6.0 + 8.0) + sd.z * 12.0) < -2.0 and gh.call(sp0.x + dv.x * (n * 6.0 + 8.0) - sd.x * 12.0, sp0.z + dv.z * (n * 6.0 + 8.0) - sd.z * 12.0) < -2.0:
 			n += 1
 		if n > best_n:
 			best_n = n
@@ -4513,3 +4532,162 @@ func film_seg14():
 			break
 	clock("ending talk done")
 	await real(14.0)
+
+# ================================================================== the 2-minute trailer (segments 20+)
+func film_music_off():
+	# the recording keeps the sound effects and the ambience, but not the music (the trailer has its own score)
+	AudioServer.add_bus()
+	var idx = AudioServer.bus_count - 1
+	AudioServer.set_bus_name(idx, "FilmMusic")
+	AudioServer.set_bus_mute(idx, true)
+	for pl in Sfx.music + [Sfx.theme_player, Sfx.theme_player2]:
+		if pl != null:
+			pl.bus = "FilmMusic"
+
+# 20: where are the cups? (a scout, no recording)
+func film_seg20():
+	await film_start_game()
+	await real(1.0)
+	for m in get_tree().get_nodes_in_group("mischief"):
+		if is_instance_valid(m) and "kind" in m and m.kind in ["coffee", "alcohol", "icecream"]:
+			say("[scout] %s at %s" % [m.kind, str(m.global_position)])
+	var sp = main.world["fish_spots"]
+	for i in sp.size():
+		say("[scout] fish spot %d at %s" % [i, str(sp[i].global_position)])
+	say("[scout] roof spot %s" % str(Vector3(-9.6, 5.5, -1.3)))
+	get_tree().quit()
+func film_seg23(): pass
+func film_seg24(): pass
+func film_seg25(): pass
+
+
+# a smooth steer towards a point (the way a hand on the mouse turns), flown with whatever keys are held
+func fly_to(tp, tmax = 6.0, near = 6.0, turn = 0.07):
+	var p = main.player
+	var t0 = GS.msec()
+	while GS.msec() - t0 < tmax * 1000.0:
+		await real(1.0 / 30.0)
+		var v = tp - p.global_position
+		if v.length() < near:
+			break
+		var hd = Vector2(v.x, v.z).length()
+		p.yaw = lerp_angle(p.yaw, atan2(-v.x, -v.z), turn)
+		p.pitch = lerp(p.pitch, clamp(atan2(v.y, hd), -0.8, 0.8), turn * 1.2)
+		p.aim_yaw = p.yaw
+		p.aim_pitch = p.pitch
+
+func nearest_cup(kind, pos):
+	var best = null
+	var bd = 1.0e9
+	for m in get_tree().get_nodes_in_group("mischief"):
+		if is_instance_valid(m) and "kind" in m and m.kind == kind and not m.taken:
+			var d = m.global_position.distance_to(pos)
+			if d < bd:
+				bd = d
+				best = m
+	return best
+
+func gull_sight_peek(sec = 1.5):
+	Input.action_press("gull_sense")
+	main._open_sense()
+	await real(sec)
+	Input.action_release("gull_sense")
+	main._close_sense()
+	await real(0.2)
+
+# 21: THE FLIGHT. One run, no cuts to speak of: the roof, a look through Gull Sight, a take-off, ice cream, a climb, a second look, a dive on the coffee, the cocktail on the boardwalk, RAINBOW TIME, and away
+func film_seg21():
+	var p = await film_start_game_p()
+	Engine.max_fps = 30
+	film16_ready(1)
+	for id in ["drinks3"]:
+		GS.cine_seen.erase(id)
+	for id in ["drink_coffee", "drink_alcohol", "drink_ice"]:
+		GS.cine_seen[id] = true
+	main.meteors.set_process(false)
+	var roof = Vector3(-9.6, 5.5, -1.3)
+	place(roof, Vector3(-30.0, 3.0, -14.0), 2.0)
+	p.mode = 1
+	p.perch_high = true
+	p.velocity = Vector3.ZERO
+	aim_at(p, Vector3(-30.0, 4.0, -14.0))
+	await real(1.2)
+	clock("on the roof")
+	await gull_sight_peek(1.8)
+	# take off, W + Shift, ice cream
+	tap("flap")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var ic = nearest_cup("icecream", Vector3(-23.0, 1.2, -12.3))
+	await fly_to(ic.global_position + Vector3(0, 6.0, 0), 3.0, 14.0, 0.09)
+	var r1 = await attempt(ic, Vector3(0, 0.2, 1), 20.0, 0.0, -1.0, {"no_place": true})
+	if r1 != "ok":
+		r1 = await attempt(ic, Vector3(0, 0.2, 1), 20.0, 0.0, -1.0, {})
+	clock("ice cream %s" % str(r1))
+	# up and over
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	await fly_to(Vector3(-2.0, 20.0, -4.0), 2.6, 6.0, 0.09)
+	await gull_sight_peek(1.1)
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var cf = nearest_cup("coffee", Vector3(10.8, 0.84, -0.4))
+	await fly_to(cf.global_position + Vector3(-10.0, 8.0, 0.0), 2.2, 8.0, 0.1)
+	var r2 = await attempt(cf, Vector3(-1, 0.2, 0), 20.0, 0.0, -1.0, {"no_place": true})
+	if r2 != "ok":
+		r2 = await attempt(cf, Vector3(-1, 0.2, 0), 18.0, 0.0, -1.0, {})
+	clock("coffee %s" % str(r2))
+	# low and fast along the boardwalk to the cocktail
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var al = nearest_cup("alcohol", Vector3(35.0, 0.84, -6.4))
+	await fly_to(al.global_position + Vector3(-9.0, 4.0, 0.0), 2.4, 8.0, 0.12)
+	var r3 = await attempt(al, Vector3(-1, 0.2, 0), 20.0, 0.0, -1.0, {"no_place": true})
+	if r3 != "ok":
+		r3 = await attempt(al, Vector3(-1, 0.2, 0), 18.0, 0.0, -1.0, {})
+	clock("cocktail %s  drinks: %s" % [str(r3), str(GS.buff)])
+	# RAINBOW TIME (the film moment plays by itself while the gull keeps flying), then flat out over the sea
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var t0 = GS.msec()
+	var k = 0
+	while GS.msec() - t0 < 26000:
+		await fly_to(Vector3(130.0, 22.0, 80.0 + 40.0 * sin(k * 0.9)), 1.0, 4.0, 0.05)
+		k += 1
+	clock("rainbow time flight done")
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+	await real(1.0)
+
+
+# 22: RAINBOW TIME over the town: low and fast along the pier, round the Ferris wheel, past the church, out over the sea, the whole island sliding by
+func film_seg22():
+	var p = await film_start_game_p()
+	Engine.max_fps = 30
+	film16_ready(1)
+	GS.cine_seen["drinks3"] = true
+	main.meteors.set_process(false)
+	var an = main.world["anchors"]
+	var fe = an["ferris"]
+	var ch = an.get("church", Vector3(-30.0, 8.0, -40.0))
+	var lh = an.get("lighthouse", Vector3(0.0, 8.0, 100.0))
+	var roof = Vector3(-9.6, 5.5, -1.3)
+	place(roof + Vector3(0, 6.0, 0), fe, 12.0)
+	p.input_locked = false
+	GS.add_buff("coffee")
+	GS.add_buff("alcohol")
+	GS.add_buff("ice")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var route = [fe + Vector3(-30, 7, 12), fe + Vector3(0, 12, 26), fe + Vector3(26, 22, 0), fe + Vector3(0, 30, -26), fe + Vector3(-28, 14, 0),
+		ch + Vector3(0, 12, 20), ch + Vector3(-18, 9, 0), Vector3(20.0, 5.0, -10.0), Vector3(60.0, 4.0, 10.0), Vector3(95.0, 3.0, 45.0), lh + Vector3(20, 6, 0), Vector3(40.0, 3.0, 150.0)]
+	var t0 = GS.msec()
+	for i in route.size():
+		GS.add_buff("coffee")
+		GS.add_buff("alcohol")
+		GS.add_buff("ice")
+		clock("waypoint %d %s" % [i, str(route[i])])
+		await fly_to(route[i], 5.0, 9.0, 0.10)
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+	await real(0.5)

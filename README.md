@@ -25,12 +25,12 @@ A small 3D flight game made for **Tripothon**, theme *"A Gift for ____"*.
 
 | | Link |
 |---|---|
-| **Walkthrough video** (3 min, English narration + subtitles) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
+| **Trailer** (1.5 min, English voice-over + subtitles) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
 | **Play in the browser** (light trial, may not run stably; the Windows version is clearer and smoother) | [kouhoukou.github.io/JUST-SOME-FRIES](https://kouhoukou.github.io/JUST-SOME-FRIES/) |
 | **Download for Windows** (recommended: the full experience) | **[Releases → JustSomeFries_Windows.zip](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest)** · [direct download](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/download/version1/JustSomeFries_Windows.zip) |
 | Source (Godot 4 project) | [`game/`](game/) in this repository |
 
-The walkthrough (3 minutes) was recorded straight from the game with Godot's Movie Maker (a test bot does the flying), then cut with an English voice-over. The narration is AI-generated (Microsoft Edge neural text-to-speech, voice *Andrew*) and the subtitles are burned in; the script is in [`docs/walkthrough.srt`](docs/walkthrough.srt). It shows the four-panel-comic opening, the first fry and its rhythm, Gull Sight, RAINBOW TIME, FISH TIME (surf and launch), the moon, the sun, a rainbow fry and a falling star, the dressed-up gull on the roof calling a flock, and the ending: the memories, the comic page that answers its question, and the credits.
+The trailer (about 90 seconds) was recorded straight from the game with Godot's Movie Maker (a test bot does the flying: Gull Sight, a take-off, ice cream, coffee and a cocktail on one flight, RAINBOW TIME, the moon, the sun, a rainbow fry, a fish, the dressed-up gull on the roof) and cut with the game's own music and a few spoken lines. The voice is AI-generated (Microsoft Edge neural text-to-speech, voice *Andrew*); the script is in [`docs/walkthrough.srt`](docs/walkthrough.srt). It does not show the ending.
 
 ## How to play
 

@@ -50,7 +50,7 @@ if "--skip-record" not in sys.argv:
         t0 = time.time()
         log("record seg%d ..." % n)
         cmd = [GODOT, "--position", "-30000,-30000", "--path", str(ROOT / "game"), "--resolution", "1280x720", "--max-fps", "30",
-               "--write-movie", str(out), "--fixed-fps", "30", "--", "--film", "--seg=%d" % n, "--movie-fps=30"]
+               "--write-movie", str(out), "--fixed-fps", "30", "--", "--film", "--seg=%d" % n, "--movie-fps=30", "--nomusic"]
         with open(FILM / ("seg%d_godot.log" % n), "w", encoding="utf-8", errors="replace") as lf:
             try:
                 subprocess.run(cmd, cwd=str(ROOT), env=env, stdout=lf, stderr=subprocess.STDOUT, timeout=45 * 60, creationflags=0x00004000)   # BELOW_NORMAL priority, window far off screen

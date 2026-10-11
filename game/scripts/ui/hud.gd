@@ -67,6 +67,7 @@ var ending_fry
 var ending_text
 var fade_rect
 var slots_visible = false
+var film_clean = false              # the trailer: no task board over the picture
 var collected = {}
 var msg_tween
 var hint_shown = {}
@@ -836,6 +837,8 @@ class FryGrid extends HC:
 				hud.fry_arrived(g)
 			else:
 				i2 += 1
+		if hud.film_clean:
+			return
 		# ---- the mission board (round 10): a readable panel. The first open task is the one to do now: bigger, pulsing, with a line that says where or how.
 		var my = 12.0 * u + 2.0 * 76.0 * u + 30.0 * u if unlocked else 12.0 * u + 76.0 * u + 30.0 * u
 		var mx = 24.0 * u
