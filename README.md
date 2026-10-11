@@ -25,12 +25,12 @@ A small 3D flight game made for **Tripothon**, theme *"A Gift for ____"*.
 
 | | Link |
 |---|---|
-| **Trailer** (1.5 min, English voice-over + subtitles) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
+| **Trailer** (under 2 min, English voice-over + subtitles) | **[▶ Watch the walkthrough](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html)** · [direct .mp4](https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.mp4) |
 | **Play in the browser** (light trial, may not run stably; the Windows version is clearer and smoother) | [kouhoukou.github.io/JUST-SOME-FRIES](https://kouhoukou.github.io/JUST-SOME-FRIES/) |
 | **Download for Windows** (recommended: the full experience) | **[Releases → JustSomeFries_Windows.zip](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest)** · [direct download](https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/download/version1/JustSomeFries_Windows.zip) |
 | Source (Godot 4 project) | [`game/`](game/) in this repository |
 
-The trailer (about 90 seconds) was recorded straight from the game with Godot's Movie Maker (a test bot does the flying: Gull Sight, a take-off, ice cream, coffee and a cocktail on one flight, RAINBOW TIME, the moon, the sun, a rainbow fry, a fish, the dressed-up gull on the roof) and cut with the game's own music and a few spoken lines. The voice is AI-generated (Microsoft Edge neural text-to-speech, voice *Andrew*); the script is in [`docs/walkthrough.srt`](docs/walkthrough.srt). It does not show the ending.
+The trailer (about 1 minute 50) was recorded straight from the game with Godot's Movie Maker (a test bot does the flying, with the game's own steering: speed-limited turns, banking, TAB, Shift) and cut with the game's own music and a few spoken lines: the four-panel-comic opening, the first fry and its rhythm, Gull Sight, one long run (ice cream, coffee, fries, a cocktail) into RAINBOW TIME, the moon, the sun, a rainbow fry, a fish and the dressed-up gull on the roof. The voice is AI-generated (Microsoft Edge neural text-to-speech, voice *Andrew*); the script is in [`docs/walkthrough.srt`](docs/walkthrough.srt). It does not show the ending.
 
 ## How to play
 

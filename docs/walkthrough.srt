@@ -1,28 +1,44 @@
 1
-00:00:09,999 --> 00:00:12,575
-Hold Tab. Find what's worth stealing.
+00:00:00,150 --> 00:00:02,222
+Just Some Fries.
 
 2
-00:00:13,699 --> 00:00:15,771
-Then go and get it.
+00:00:02,899 --> 00:00:09,195
+A sleepy island. A cafe. One fry nobody notices... and one very hungry seagull.
 
 3
-00:00:27,599 --> 00:00:30,751
-Drink all three... and nothing can catch you.
+00:00:20,279 --> 00:00:25,087
+Dive. Lock on. When the world slows down, find the rhythm.
 
 4
-00:00:44,899 --> 00:00:47,140
-If it's up there, you can catch it.
+00:00:25,779 --> 00:00:28,115
+Steal one. Then the next.
 
 5
-00:01:01,476 --> 00:01:03,428
-Fish. Why not.
+00:00:34,579 --> 00:00:38,428
+Hold Tab. The island shows you everything worth stealing.
 
 6
-00:01:07,876 --> 00:01:11,556
-Hat. Shades. Chain. The whole sky.
+00:00:38,479 --> 00:00:41,271
+Dive. Grab. Don't stop.
 
 7
-00:01:20,276 --> 00:01:22,732
+00:00:58,879 --> 00:01:04,287
+Coffee. A cocktail. Ice cream. All three... and nothing can catch you.
+
+8
+00:01:09,480 --> 00:01:12,656
+Then go higher. The moon. The sun.
+
+9
+00:01:26,056 --> 00:01:28,128
+Fish. Why not.
+
+10
+00:01:32,056 --> 00:01:35,736
+Hat. Shades. Chain. The whole sky.
+
+11
+00:01:44,456 --> 00:01:46,912
 You came here for some fries... right?
 

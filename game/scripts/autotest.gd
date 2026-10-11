@@ -949,7 +949,7 @@ func attempt(f, from_dir, dist = 24.0, offset = 0.0, spd = 11.0, opts = {}):
 	var result = "timeout"
 	var shot_done = false
 	var notes_seen = 0
-	for i in 3600:
+	for i in opts.get("max_frames", 3600):
 		await get_tree().process_frame
 		if opts.get("debug", false) and i % 20 == 0 and i < 400:
 			say("   i=%d state=%s hud=%s lock=%s spd=%.1f d=%.1f ts=%.2f stam=%.0f cine_t=%.2f pf=%d paused=%s" % [i, s.state, s.hud_state, str(s.lock_fry != null), p.speed, p.global_position.distance_to(f.aim_point()) if is_instance_valid(f) else -1.0, Engine.time_scale, p.stamina, s.cine.get("t", -1.0), Engine.get_physics_frames(), str(get_tree().paused)])
@@ -961,7 +961,10 @@ func attempt(f, from_dir, dist = 24.0, offset = 0.0, spd = 11.0, opts = {}):
 		if s.state == "idle" and s.lock_fry == null:
 			var tg = f.aim_point()
 			if (tg - p.global_position).length() > 1.0:
-				aim_at(p, tg)
+				if opts.get("soft", false):
+					soft_aim(tg)
+				else:
+					aim_at(p, tg)
 		var sq = s.seq
 		if sq != null:
 			var kind = sq["kind"]
@@ -1003,7 +1006,10 @@ func attempt(f, from_dir, dist = 24.0, offset = 0.0, spd = 11.0, opts = {}):
 			away.y = 0.0
 			if away.length() < 0.1:
 				away = Vector3(0, 0, 1)
-			aim_at(p, p.global_position + away.normalized() * 12.0 + Vector3(0, 12.0, 0))
+			if opts.get("soft", false):
+				soft_aim(p.global_position + away.normalized() * 30.0 + Vector3(0, 9.0, 0))
+			else:
+				aim_at(p, p.global_position + away.normalized() * 12.0 + Vector3(0, 12.0, 0))
 		if p.mode == 2 and any_press:
 			result = "hit"
 			break
@@ -1878,6 +1884,10 @@ func film():
 			await film_seg24()
 		25:
 			await film_seg25()
+		30:
+			await film_seg30()
+		31:
+			await film_seg31()
 		6:
 			var preview=load("res://scripts/art/s4_film.gd").new();add_child(preview)
 			await preview.run(self)
@@ -4555,6 +4565,14 @@ func film_seg20():
 	for i in sp.size():
 		say("[scout] fish spot %d at %s" % [i, str(sp[i].global_position)])
 	say("[scout] roof spot %s" % str(Vector3(-9.6, 5.5, -1.3)))
+	GS.gull_sense_count = 3
+	main._reveal_specials()
+	var fr = main.world["fries"]
+	for k in fr.keys():
+		var f = fr[k]
+		say("[scout] fry %s type %s tier %s at %s owner %s" % [k, str(f.ftype), str(f.tier), str(f.global_position), str(f.npc.name if f.npc != null else "-")])
+	for k in main.world["anchors"].keys():
+		say("[scout] anchor %s %s" % [k, str(main.world["anchors"][k])])
 	get_tree().quit()
 func film_seg23(): pass
 func film_seg24(): pass
@@ -4691,3 +4709,170 @@ func film_seg22():
 	Input.action_release("dash")
 	Input.action_release("move_forward")
 	await real(0.5)
+
+
+# the "mouse": only the TARGET heading is set; the gull's own steering follows it (speed-limited turns, banking), the way a hand on the mouse does it
+func soft_aim(tgt, max_pitch = 0.5, avoid = true):
+	var p = main.player
+	var v = tgt - p.global_position
+	if v.length() < 0.5:
+		return
+	var hd = Vector2(v.x, v.z).length()
+	var wy = atan2(-v.x, -v.z)
+	var wp = clamp(atan2(v.y, max(hd, 0.5)), -max_pitch, max_pitch)
+	if avoid and p.speed > 6.0:
+		# a pilot looks where it is going: a tree, an awning or a wall in the way -> climb and swing to the clearer side
+		var space = p.get_world_3d().direct_space_state
+		var L = clamp(p.speed * 0.75, 9.0, 24.0)
+		var here = p.global_position
+		var hit = _ray_len(space, here, wy, wp, L)
+		if hit < L and v.length() > hit + 4.0:
+			var best_a = 0.0
+			var best_l = hit
+			for da in [0.35, -0.35, 0.7, -0.7, 1.1, -1.1]:
+				var ll = _ray_len(space, here, wy + da, wp, L)
+				if ll > best_l + 1.0:
+					best_l = ll
+					best_a = da
+					if ll >= L:
+						break
+			wy += best_a
+			wp = max(wp, 0.3 if best_l < L else 0.12)
+	p.aim_yaw = p.yaw + clamp(angle_difference(p.yaw, wy), -1.2, 1.2)
+	p.aim_pitch = clamp(wp, -max_pitch, 0.7)
+
+func _ray_len(space, here, yaw, pitch, L):
+	var d = Vector3(-sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch))
+	var q = PhysicsRayQueryParameters3D.create(here, here + d * L, 1)
+	var h = space.intersect_ray(q)
+	return L if h.is_empty() else here.distance_to(h["position"])
+
+# fly through a list of points (W + Shift held by the caller); `near` = how close counts as passed
+func pilot(points, near = 8.0, tmax = 6.0, max_pitch = 0.5):
+	var p = main.player
+	for tp in points:
+		var t0 = GS.msec()
+		while GS.msec() - t0 < tmax * 1000.0:
+			await real(1.0 / 30.0)
+			soft_aim(tp, max_pitch)
+			if (tp - p.global_position).length() < near:
+				break
+
+
+func film_clean_start():
+	var p = await film_start_game_p()
+	Engine.max_fps = 30
+	main.hud.film_clean = true
+	for c in GS.achievement_unlocked.get_connections():
+		GS.achievement_unlocked.disconnect(c["callable"])
+	main.meteors.set_process(false)
+	return p
+
+func bump_watch(tag):
+	var p = main.player
+	if p.mode == 2:
+		say("[film] BUMP at %s %s" % [tag, str(p.global_position)])
+
+# 30: THE FIRST FRY. A fresh run: the roof, the big brother, a take-off, a swing round the cafe, the dive on the first fry, the second, the third, and Gull Sight wakes up
+func film_seg30():
+	var p = await film_clean_start()
+	var fr = main.world["fries"]
+	await real(2.4)
+	clock("on the roof")
+	tap("flap")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	await pilot([Vector3(-26.0, 10.0, 8.0), Vector3(-20.0, 6.0, 24.0), Vector3(-9.0, 3.6, 19.0)], 7.0, 4.0, 0.45)
+	bump_watch("swing")
+	var r1 = await attempt(fr["TUTORIAL_01"], Vector3(0, 0.2, 1), 20.0, 0.0, -1.0, {"soft": true, "no_place": true})
+	clock("first fry %s" % str(r1))
+	bump_watch("first fry")
+	await real(1.6)
+	var r2 = await attempt(fr["TUTORIAL_02"], Vector3(0.3, 0.2, 1), 26.0, 0.0, 12.0, {"soft": true})
+	clock("second fry %s" % str(r2))
+	await real(1.4)
+	var r3 = await attempt(fr["TUTORIAL_03"], Vector3(0.4, 0.2, 1), 26.0, 0.0, 12.0, {"soft": true, "gold": true})
+	clock("third fry %s" % str(r3))
+	Input.action_press("move_forward")
+	await real(5.0)
+	await gull_sight_peek(2.4)
+	Input.action_press("move_forward")
+	await real(2.0)
+	Input.action_release("move_forward")
+	Input.action_release("dash")
+
+# 31: THE COMBO. Gull Sight from the roof, then one run: the coffee, a blue fry, a green fry, the cocktail, a long turn back for the ice cream, and RAINBOW TIME
+func film_seg31():
+	var p = await film_clean_start()
+	film16_ready(1)
+	main.hud.film_clean = true
+	GS.cine_seen.erase("drinks3")
+	for id in ["drink_coffee", "drink_alcohol", "drink_ice"]:
+		GS.cine_seen[id] = true
+	var fr = main.world["fries"]
+	var roof = Vector3(-9.6, 5.5, -1.3)
+	place(roof, Vector3(10.0, 3.0, 4.0), 2.0)
+	p.mode = 1
+	p.perch_high = true
+	p.velocity = Vector3.ZERO
+	soft_aim(Vector3(12.0, 4.0, 6.0))
+	await real(1.6)
+	await gull_sight_peek(1.8)
+	tap("flap")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var ic = nearest_cup("icecream", Vector3(-23.0, 1.2, -12.3))
+	var ap = approach_point(ic)
+	await pilot([Vector3(-16.0, 12.0, -6.0), ap[0], ap[1]], 7.0, 4.0, 0.4)
+	var r0 = await attempt(ic, Vector3(1, 0.2, 0), 20.0, 0.0, -1.0, {"soft": true, "no_place": true, "max_frames": 420})
+	clock("ice cream %s" % str(r0))
+	bump_watch("ice cream")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var cf = nearest_cup("coffee", Vector3(10.8, 0.84, -0.4))
+	ap = approach_point(cf)
+	await pilot([Vector3(-6.0, 12.0, -10.0), ap[0], ap[1]], 7.0, 4.0, 0.4)
+	var r1 = await attempt(cf, Vector3(-1, 0.2, 0), 20.0, 0.0, -1.0, {"soft": true, "no_place": true, "max_frames": 420})
+	clock("coffee %s at %s" % [str(r1), str(cf.global_position)])
+	bump_watch("coffee")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var bl = fr["SPECIAL_BLUE"]
+	ap = approach_point(bl)
+	await pilot([Vector3(12.0, 13.0, 6.0), ap[0], ap[1]], 7.0, 4.0, 0.4)
+	var r2 = await attempt(bl, Vector3(-1, 0.2, -1), 20.0, 0.0, -1.0, {"soft": true, "no_place": true, "max_frames": 420})
+	clock("blue fry %s need %.1f" % [str(r2), GS.need_speed(bl)])
+	bump_watch("blue")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var gr = fr["SPECIAL_GREEN"]
+	ap = approach_point(gr)
+	await pilot([ap[0], ap[1]], 7.0, 4.0, 0.4)
+	var r3 = await attempt(gr, Vector3(-1, 0.2, 0), 20.0, 0.0, -1.0, {"soft": true, "no_place": true, "max_frames": 420})
+	clock("green fry %s need %.1f" % [str(r3), GS.need_speed(gr)])
+	bump_watch("green")
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	GS.add_buff("ice")                  # (the drinks run out after about 22 s; the run is long, so the first ones are kept topped up)
+	GS.add_buff("coffee")
+	var al = nearest_cup("alcohol", Vector3(35.0, 0.84, -6.4))
+	ap = approach_point(al)
+	await pilot([ap[0], ap[1]], 7.0, 4.0, 0.4)
+	var r4 = await attempt(al, Vector3(-1, 0.2, 0), 20.0, 0.0, -1.0, {"soft": true, "no_place": true, "max_frames": 420})
+	clock("cocktail %s  drinks %s" % [str(r4), str(GS.buff)])
+	bump_watch("cocktail")
+	# RAINBOW TIME: the film moment plays while the gull keeps flying; away over the beach and the sea
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	await pilot([Vector3(52.0, 14.0, 10.0), Vector3(80.0, 18.0, 40.0), Vector3(60.0, 22.0, 80.0), Vector3(10.0, 26.0, 90.0)], 9.0, 6.0, 0.35)
+	await real(2.0)
+	clock("rainbow time done")
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+
+
+# where to start the dive on `f`: 28 m out along the clearest line, cruising at roof height until then
+func approach_point(f, cruise = 12.0):
+	var d = pick_dir(f, Vector3(0, 0, 1))
+	var w = f.aim_point() + d * 28.0
+	return [Vector3(w.x, max(w.y, cruise), w.z), w]

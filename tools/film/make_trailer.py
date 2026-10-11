@@ -6,7 +6,7 @@ a few spoken lines (edge-tts, voice Andrew) and burned-in subtitles for those li
 Outputs film/trailer.mp4, film/trailer.srt, film/trailer_10MB.mp4
 The timeline is a list of SHOTS (source, in, out, speed, fades). Voice lines and music pieces hang on shots (shot index + offset), so re-cutting a shot moves them with it.
 """
-import asyncio, os, shutil, subprocess, sys
+import asyncio, hashlib, os, shutil, subprocess, sys
 import edge_tts
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -48,7 +48,7 @@ async def main():
     # --- voice
     cues = []
     for k, (shot, off, text) in enumerate(VOICE_LINES):
-        p = "tr_v%02d.mp3" % k
+        p = "tr_v_%s.mp3" % hashlib.md5((VOICE + RATE + text).encode()).hexdigest()[:10]
         if not os.path.exists(p) or os.path.getsize(p) == 0:
             await tts(text, p)
         cues.append((p, starts[shot] + off, text))
@@ -108,15 +108,6 @@ async def main():
     # --- subtitles (the voice lines only) + the end card text on the last shot
     prev = "cv"
     cnt = 0
-    for k, (p, st, text) in enumerate(cues):
-        fn = "tr_sub%02d.txt" % k
-        with open(fn, "w", encoding="utf-8", newline="") as f:
-            f.write(text)
-        d = dur(p)
-        nxt = "sv%d" % cnt
-        cnt += 1
-        F.append("[%s]drawtext=fontfile=arialbd.ttf:textfile=%s:fontcolor=white:fontsize=36:borderw=2:bordercolor=black@0.8:x=(w-text_w)/2:y=h-96:enable='between(t,%.3f,%.3f)'[%s]" % (prev, fn, st, st + d + 0.2, nxt))
-        prev = nxt
     for k, (shot, off, dur_s, text, size, y, color) in enumerate(CARD):
         fn = "tr_card%02d.txt" % k
         with open(fn, "w", encoding="utf-8", newline="") as f:
@@ -132,6 +123,8 @@ async def main():
     mus = []
     for k, ((shot, off, f, ss, length, vol, fi_, fo_), ii) in enumerate(zip(MUSIC_CUES, music_idx)):
         st = starts[shot] + off
+        if isinstance(length, str):                 # "to:shot" = until that shot starts (plus the tail of its fade)
+            length = starts[length[3:]] - st + 0.3
         ms = int(st * 1000)
         F.append("[%d:a]atrim=start=%s:end=%s,asetpts=PTS-STARTPTS,aresample=48000,volume=%s,afade=t=in:st=0:d=%s,afade=t=out:st=%.3f:d=%s,adelay=%d|%d[m%d]" % (ii, ss, ss + length, vol, fi_, length - fo_, fo_, ms, ms, k))
         mus.append("[m%d]" % k)
@@ -165,6 +158,9 @@ async def main():
     with open("trailer.srt", "w", encoding="utf-8") as f:
         for k, (p, st, text) in enumerate(cues, 1):
             f.write("%d\n%s --> %s\n%s\n\n" % (k, ts(st), ts(st + dur(p) + 0.2), text))
+    subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-i", "trailer.mp4", "-i", "trailer.srt", "-map", "0", "-map", "1", "-c", "copy", "-c:s", "mov_text",
+                           "-metadata:s:s:0", "language=eng", "-movflags", "+faststart", "trailer_s.mp4"])
+    os.replace("trailer_s.mp4", "trailer.mp4")
     print("done", round(dur("trailer.mp4"), 1), "s")
 
 

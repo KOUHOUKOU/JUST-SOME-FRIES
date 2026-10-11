@@ -24,7 +24,7 @@ FILES = [
 NOTES = (
     "**Recommended: download `JustSomeFries_Windows.zip` and play locally.** Unzip, double-click `JustSomeFries.exe` (keep the `.pck` next to it). "
     "The in-browser page is only a light trial and may not run stably; the local version has clearer graphics and runs much more smoothly.\n\n"
-    "Round 16: FISH TIME (surf the sea, launch with Space), the moon and sun as nine circles, F calls a flock, two save slots and KEEP PLAYING, an opening and ending drawn as a four-panel comic (a tribute to *What Fries Ahead*, False Knees #319, by Joshua Barkman), a fix for take-off from the water, and a new 90-second trailer. "
+    "Round 16: FISH TIME (surf the sea, launch with Space), the moon and sun as nine circles, F calls a flock, two save slots and KEEP PLAYING, an opening and ending drawn as a four-panel comic (a tribute to *What Fries Ahead*, False Knees #319, by Joshua Barkman), a fix for take-off from the water, and a new trailer. "
     "Round 15 (final content pass): a TAB lesson for Gull Sight, RAINBOW TIME first on the board, a SKY HIGH quest (cloud, star, moon, sun, rainbow, plus a rain cloud), "
     "new drink effects, a friendlier town (strangers leave you drinks, puppies run circles), a rewritten ending on the roof, 24 achievements with a gallery, "
     "redrawn comic panels, a balanced gull and tailored outfits. Round 14: art remaster to match the cover (some props adapted from Kenney's CC0 packs).\n\n"
