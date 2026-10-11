@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 FILM = ROOT / "film"
 GODOT = r"D:\Tools\Godot\4.7.1\Godot_v4.7.1-stable_win64_console.exe"
-ORDER = [1, 2, 3, 5, 4]
+ORDER = [1, 2, 3, 11, 12, 13, 14]
 LOG = FILM / "record_all.log"
 
 
@@ -49,11 +49,11 @@ if "--skip-record" not in sys.argv:
         out = FILM / ("seg%d.avi" % n)
         t0 = time.time()
         log("record seg%d ..." % n)
-        cmd = [GODOT, "--path", str(ROOT / "game"), "--resolution", "1280x720", "--max-fps", "30",
+        cmd = [GODOT, "--position", "-30000,-30000", "--path", str(ROOT / "game"), "--resolution", "1280x720", "--max-fps", "30",
                "--write-movie", str(out), "--fixed-fps", "30", "--", "--film", "--seg=%d" % n, "--movie-fps=30"]
         with open(FILM / ("seg%d_godot.log" % n), "w", encoding="utf-8", errors="replace") as lf:
             try:
-                subprocess.run(cmd, cwd=str(ROOT), env=env, stdout=lf, stderr=subprocess.STDOUT, timeout=45 * 60)
+                subprocess.run(cmd, cwd=str(ROOT), env=env, stdout=lf, stderr=subprocess.STDOUT, timeout=45 * 60, creationflags=0x00004000)   # BELOW_NORMAL priority, window far off screen
             except subprocess.TimeoutExpired:
                 log("seg%d TIMEOUT" % n)
         size = out.stat().st_size if out.exists() else 0
@@ -62,6 +62,8 @@ if "--skip-record" not in sys.argv:
             log("seg%d FAILED, stopping" % n)
             sys.exit(1)
 
+if "--no-promo" in sys.argv:
+    sys.exit(0)
 log("cutting the promo ...")
 py = shutil.which("python") or sys.executable
 r = subprocess.run([py, str(ROOT / "tools" / "film" / "make_promo.py")], cwd=str(ROOT))

@@ -1855,6 +1855,14 @@ func film():
 			await film_seg4()
 		5:
 			await film_seg5()
+		11:
+			await film_seg11()
+		12:
+			await film_seg12()
+		13:
+			await film_seg13()
+		14:
+			await film_seg14()
 		6:
 			var preview=load("res://scripts/art/s4_film.gd").new();add_child(preview)
 			await preview.run(self)
@@ -4253,3 +4261,255 @@ func r16g():
 			say("[R16G] STUCK at (%d, %d): land %.0f m away. mode=%d on_water=%s y=%.2f -> %.2f  H here %.2f" % [pt.x, pt.y, e[2], p.mode, p.on_water, y0, p.global_position.y, gh.call(pt.x, pt.y)])
 	chk16("take-off works from the sea next to cliffs", fails.is_empty(), "%d tested, %d stuck" % [tested, fails.size()])
 	get_tree().quit()
+
+
+# ================================================================== round 16: the new promo (segments 11-14)
+func film16_ready(levels = 2):
+	var p = main.player
+	GS.gull_sense_count = 3
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, levels)
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	for id in ["drink_coffee", "drink_alcohol", "drink_ice", "meteor", "drinks3", "skybow", "all24", "chat1", "chat2", "chat3", "chat4", "chat_sky", "cloud", "raincloud", "moon", "sun"]:
+		GS.cine_seen[id] = true
+	GS.tab_lesson = 2
+	p.input_locked = false
+	return p
+
+# 11: FISH TIME. A fish leaps, the gull takes it, the sea becomes a surfboard, Space launches, the fish keep coming
+func film_seg11():
+	var p = await film_start_game_p()
+	Engine.max_fps = 30
+	film16_ready(1)
+	GS.cine_seen["fish"] = true
+	main.meteors.set_process(false)
+	var spot = main.world["fish_spots"][3]
+	spot.wait = 0.2
+	place(Vector3(spot.global_position.x + 18, 12, spot.global_position.z + 28), spot.global_position, 8.0)
+	var t0 = GS.msec()
+	while spot.state != "leap" and GS.msec() - t0 < 25000:
+		await get_tree().physics_frame
+	clock("fish leaps")
+	var fish = spot.fish
+	if fish != null:
+		await film_steal(fish, Vector3(0.6, 0.15, 1.0), -1.0)
+	clock("fish taken, fish time %.1f" % GS.fish_t)
+	await real(2.5)
+	# the surf: low over the open sea (the heading with the longest run of water), W and Shift, then the launch
+	GS.fish_t = max(GS.fish_t, 80.0)
+	var gh = main.world["ground_h"]
+	var sp0 = spot.global_position
+	var best_d = Vector3(0, 0, -1)
+	var best_n = -1
+	for a in range(0, 360, 10):
+		var dv = Vector3(cos(deg_to_rad(a)), 0, sin(deg_to_rad(a)))
+		var n = 0
+		while n < 60 and gh.call(sp0.x + dv.x * (n * 6.0 + 8.0), sp0.z + dv.z * (n * 6.0 + 8.0)) < -1.0:
+			n += 1
+		if n > best_n:
+			best_n = n
+			best_d = dv
+	say("[film] open water %d x 6 m along %s" % [best_n, str(best_d)])
+	var sea = Vector3(sp0.x, 3.0, sp0.z)
+	place(sea, sea + best_d * 40.0 + Vector3(0, -3.0, 0), 10.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	var k = 0
+	while k < 150:
+		await real(1.0 / 30.0)
+		k += 1
+		if k > 70 and p.on_water:
+			break
+	clock("surfing %s" % str(p.on_water))
+	for i in 150:
+		p.yaw += 0.0025 * sin(i * 0.05)
+		await real(1.0 / 30.0)
+	clock("launch at %.1f m/s" % p.speed)
+	tap("flap")
+	await real(3.0)
+	Input.action_release("dash")
+	# the fish keep jumping: take two more on the way
+	GS.fish_t = max(GS.fish_t, 60.0)
+	for n in 2:
+		var t1 = GS.msec()
+		var tgt = null
+		while GS.msec() - t1 < 14000:
+			await real(0.2)
+			GS.fish_t = max(GS.fish_t, 40.0)
+			for sp in get_tree().get_nodes_in_group("fish_spots"):
+				if sp.state == "leap" and sp.fish != null and is_instance_valid(sp.fish) and sp.global_position.distance_to(p.global_position) < 140.0:
+					tgt = sp.fish
+					break
+			if tgt != null:
+				break
+		if tgt != null:
+			await film_steal(tgt, Vector3(0.6, 0.15, 1.0), -1.0)
+			await real(1.5)
+	clock("fish time done")
+	Input.action_release("move_forward")
+	await real(2.0)
+
+func film_start_game_p():
+	await film_start_game()
+	return main.player
+
+# 12: the sky: the moon, the sun, then a rainbow fry
+func film_seg12():
+	var p = await film_start_game_p()
+	Engine.max_fps = 30
+	film16_ready(3)
+	for id in ["moon", "sun", "cloud"]:
+		GS.cine_seen.erase(id)
+	GS.test_boost_bonus = 40.0
+	main.meteors.set_process(false)
+	main.hud.slots_visible = true
+	main.quest_t = 1.0e9
+	var kinds = ["moon", "sun"]
+	var k = 0
+	for kind in kinds:
+		var pos = Vector3(-30.0 + 40.0 * k, 38.0, 70.0)
+		var old = main.quest_items.get(kind, null)
+		if old != null and is_instance_valid(old):
+			old.queue_free()
+			main.quest_items.erase(kind)
+		var it = Node3D.new()
+		it.set_script(load("res://scripts/fries/mischief.gd"))
+		it.setup(kind, main, pos)
+		await real(0.5)
+		GS.add_buff("coffee")
+		GS.add_buff("alcohol")
+		GS.add_buff("ice")
+		p.input_locked = false
+		var r = await attempt(it, Vector3(0, 0.15, 1), 34.0, 0.0, -1.0)
+		clock("%s -> %s" % [kind, r])
+		var t0 = GS.msec()
+		var seen = false
+		Input.action_press("move_forward")
+		while GS.msec() - t0 < 30000:
+			await real(0.5)
+			if main.scenes.cine_busy:
+				seen = true
+			elif seen:
+				break
+			elif GS.msec() - t0 > 6000:
+				break
+		clock("%s film done" % kind)
+		k += 1
+	Input.action_release("move_forward")
+	# the rainbow fry
+	GS.test_boost_bonus = 0.0
+	var base = Vector3(10.0, 24.0, 40.0)
+	var rb = make_star("pink", 4, base + Vector3(0.0, 0.0, -18.0), "STAR_FILM_RB")
+	rb.revealed = true
+	rb.visible = true
+	rb.tier = 4
+	place(base, base + Vector3(0, 0, -20), 6.0)
+	p.input_locked = false
+	await real(1.0)
+	var r2 = await film_steal(rb, Vector3(0.2, 0.15, 1.0), -1.0, {"gold": true})
+	clock("rainbow fry %s" % str(r2))
+	await real(3.0)
+
+# 13: all dressed up, and still on the roof
+func film_seg13():
+	var p = await film_start_game_p()
+	Engine.max_fps = 30
+	film16_ready(3)
+	GS.cine_seen.erase("all24")
+	main.meteors.set_process(false)
+	for kk in ["topper", "shades", "necklace", "scarf", "bowtie", "meteor"]:
+		p.gull.wear(kk)
+	for t in GS.FRY_TYPES:
+		GS.set_level(t, 3)
+	var spot = Vector3(-9.6, 5.5, -1.3)
+	place(spot, spot + Vector3(0, 0, 20), 2.0)
+	p.mode = 1
+	p.perch_high = true
+	p.velocity = Vector3.ZERO
+	await real(1.0)
+	clock("on the roof %s" % p.surface())
+	# a slow orbit round the dressed gull
+	var gp = p.global_position
+	var total = 150
+	for i in total:
+		var an = deg_to_rad(200.0 - 150.0 * i / total)
+		var rad = 4.6 - 1.4 * i / total
+		view(gp + Vector3(cos(an) * rad, 1.2 + 0.5 * i / total, sin(an) * rad), gp + Vector3(0, 0.55, 0), 44.0)
+		if i == 40:
+			main._squawk_effects()
+		await real(1.0 / 30.0)
+	await real(1.0)
+	for i in 120:
+		var an2 = deg_to_rad(50.0 - 40.0 * i / 120.0)
+		view(gp + Vector3(cos(an2) * 3.2, 1.0 + 1.4 * i / 120.0, sin(an2) * 3.2), gp + Vector3(0, 0.6 + 0.4 * i / 120.0, 0), 50.0)
+		await real(1.0 / 30.0)
+	clock("flock %d" % main.rest.flock.size())
+	p.set_override(Transform3D.IDENTITY, 60.0, 0.0, 20.0)
+	await real(0.5)
+	# and the island is full of everything it had... and the stomach still rumbles
+	main.queue_cine("all24")
+	var t0 = GS.msec()
+	var seen = false
+	while GS.msec() - t0 < 40000:
+		await real(0.5)
+		if main.scenes.cine_busy:
+			seen = true
+		elif seen:
+			break
+	clock("all24 done")
+	await real(2.0)
+
+# 14: the ending: the memories play as little films, the comic page answers the question
+func film_seg14():
+	var p = await film_start_game_p()
+	Engine.max_fps = 30
+	film16_ready(3)
+	main.meteors.set_process(false)
+	# keep a few real frames of "memories" (the reels the ending plays back)
+	var stops = [
+		["fry1", Vector3(-8.0, 3.4, 17.0), Vector3(-8.0, 2.0, 0.0)],
+		["coffee", Vector3(14.0, 5.0, 10.0), Vector3(14.0, 1.4, -6.0)],
+		["fish", Vector3(-60.0, 3.0, 150.0), Vector3(-60.0, 0.0, 120.0)],
+		["starlight", Vector3(60.0, 60.0, 110.0), Vector3(60.0, 62.0, 40.0)],
+		["sun", Vector3(-40.0, 60.0, 90.0), Vector3(-40.0, 75.0, 20.0)],
+		["moon", Vector3(-20.0, 55.0, 110.0), Vector3(-20.0, 70.0, 40.0)],
+		["cloud", Vector3(20.0, 50.0, 100.0), Vector3(20.0, 55.0, 30.0)],
+		["friend", Vector3(28.0, 7.0, 10.0), Vector3(28.0, 1.8, -8.0)],
+	]
+	main.hud.ui_root.modulate.a = 0.0                 # clean pictures: no rings, no board
+	for s in stops:
+		place(s[1], s[2], 8.0)
+		p.input_locked = false
+		Input.action_press("move_forward")
+		await real(0.4)
+		main.reel.record(s[0])
+		await real(1.4)
+		Input.action_release("move_forward")
+	main.hud.ui_root.modulate.a = 1.0
+	var ids = ["fry1", "coffee", "alcohol", "ice", "starlight", "cloud", "sun", "moon", "meteor", "friend"]
+	for i in ids.size():
+		GS.memories[ids[i]] = {"t": 100.0 + i * 40.0}
+	GS.memories["fish"] = {"t": 340.0, "sp": "mackerel", "len": 31.0, "kg": 0.4}
+	GS.fish_book = {"mackerel": {"n": 2, "kg": 0.6, "cm": 36.0}, "tuna": {"n": 1, "kg": 40.0, "cm": 150.0}}
+	for kk in ["topper", "shades", "necklace", "scarf", "bowtie", "meteor"]:
+		p.gull.wear(kk)
+	var WB = preload("res://scripts/world/world_builder.gd")
+	main.ordinary.visible = true
+	place(WB.ORDINARY_POS + Vector3(0.3, 0.6, 0.3), WB.ORDINARY_POS, 3.0)
+	await real(1.5)
+	clock("ending start")
+	p.mode = 1
+	p.global_position = WB.ORDINARY_POS + Vector3(0.3, 0.45, 0.3)
+	await real(0.5)
+	await press("interact")
+	var t0 = GS.msec()
+	var k = 0
+	while GS.msec() - t0 < 300000:
+		await real(0.5)
+		k += 1
+		if k > 40 and not main.scenes.cine_busy and not main.title.visible:
+			break
+	clock("ending talk done")
+	await real(14.0)

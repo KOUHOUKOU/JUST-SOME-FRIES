@@ -59,3 +59,6 @@ Test runs now put the Godot window far off screen (`--position -30000,-30000`, m
 
 ## Numbers
 FISH_FIRST_SEC 22, FISH_ADD 10 / 15 / 24, FISH_CAP 90, FISH_TOP 3, SEA_ZONE_H 9, SURF 15 / 22 m/s, launch 2 s x7, IDLE_CALM 8 s, SUN_CIRCLES 9, MOON_NEED = SUN_NEED = 244.
+
+## 15  The new walkthrough (3 min 18 s)
+`--film --seg=N` segments (autotest.gd `film_seg*`): 1 cover + comic opening, 2 first fry + Gull Sight, 3 RAINBOW TIME + falling star, 11 FISH TIME (catch, surf, launch), 12 moon / sun / rainbow fry, 13 the dressed-up gull on the roof (flock, 24/24), 14 the ending (memory reels, comic page, credits). Record with `python -I tools/film/record_all.py --only=11,12 --no-promo` (the window is placed far off screen, below-normal priority), cut with `python tools/film/make_promo16.py` (edge-tts voice Andrew, burned-in subtitles, end card with the False Knees credit). Outputs: film/promo.mp4 -> submission/JustSomeFries_walkthrough.mp4 and docs/walkthrough.mp4 (41 MB), the 8.8 MB form version, the .srt.
