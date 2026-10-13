@@ -72,6 +72,7 @@ CARD = r"""
   <div class="jsf-box">
     <h1>JUST SOME FRIES</h1>
     <p class="tag">Be a gull. Steal magic fries off a seaside pier, and find out what you were really hungry for.</p>
+    <p class="tag">English &middot; &#31616;&#20307;&#20013;&#25991; &middot; &#32321;&#39636;&#20013;&#25991; &middot; &#26085;&#26412;&#35486; &mdash; the game asks for your language when it starts.</p>
     <div class="jsf-warn"><b>Recommended: download the Windows version and play it locally.</b> The browser page is only a light trial and may not run stably (slow first load, lower frame rate, simplified graphics). The local version has clearer graphics and runs much more smoothly.<br><b>&#25512;&#33616;&#19979;&#36733;&#21040;&#26412;&#22320;&#36827;&#34892;&#28216;&#29609;&#65306;</b>&#32593;&#39029;&#29256;&#21487;&#33021;&#26080;&#27861;&#31283;&#23450;&#36816;&#34892;&#65288;&#39318;&#27425;&#21152;&#36733;&#24456;&#24930;&#12289;&#24103;&#29575;&#36739;&#20302;&#12289;&#30011;&#36136;&#34987;&#31616;&#21270;&#65289;&#65292;&#26412;&#22320;&#29256;&#30011;&#36136;&#26356;&#28165;&#26224;&#12289;&#36816;&#34892;&#26356;&#27969;&#30021;&#12290;</div>
     <div class="jsf-row">
       <a class="jsf-btn jsf-go" href="https://github.com/KOUHOUKOU/JUST-SOME-FRIES/releases/latest" target="_blank" rel="noopener">&#11015; Download the full game (Windows) - recommended</a>

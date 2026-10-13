@@ -77,12 +77,13 @@ func say(who, text, hold = 1.4, col = Color(1, 0.97, 0.9)):
 		return
 	who_lbl.text = who
 	line_lbl.text = ""
+	text = Loc.t(text)
 	line_lbl.add_theme_color_override("font_color", col)
 	panel.modulate.a = 1.0
 	var n = text.length()
 	var t0 = GS.msec()
 	while not skipping:
-		var k = int((GS.msec() - t0) / 1000.0 * 42.0)
+		var k = int((GS.msec() - t0) / 1000.0 * Loc.cps(42.0))
 		line_lbl.text = text.substr(0, min(k, n))
 		if k >= n:
 			break

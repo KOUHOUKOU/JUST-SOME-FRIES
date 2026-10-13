@@ -82,11 +82,13 @@ func _tilt(i):
 	return sin(i * 2.3 + 0.7) * 0.007 + sin(wob_t * 0.9 + i) * 0.0015
 
 func _wrap(font, text, fs, maxw):
+	if Loc.cjk:
+		return Loc.wrap(text, font, fs, maxw)
 	var lines = []
 	var cur = ""
 	for w in text.split(" "):
 		var t = w if cur == "" else cur + " " + w
-		if font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > maxw and cur != "":
+		if font.get_string_size(Loc.t(t), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > maxw and cur != "":
 			lines.append(cur)
 			cur = w
 		else:
@@ -126,14 +128,14 @@ func _bubble(c, rr, b, alpha):
 	var fs = int(max(rr.size.x * 0.05, 10.0))
 	var inner = Rect2(r.position + r.size * Vector2(0.13, 0.15), r.size * Vector2(0.74, 0.7))
 	var lines = _wrap(font, b["text"], fs, inner.size.x)
-	var left = int(b["typed"])
+	var left = int(b["typed"]) if b["typed"] < b["text"].length() else 1 << 30
 	var lh = fs * 1.2
 	var y = inner.position.y + (inner.size.y - lines.size() * lh) * 0.5 + fs
 	for ln in lines:
 		var shown = ln.substr(0, left)
 		left = max(left - ln.length() - 1, 0)
 		if shown != "":
-			var w = font.get_string_size(ln, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			var w = font.get_string_size(Loc.t(ln), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 			c.draw_string(font, Vector2(cen.x - w * 0.5, y), shown, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(INK.r, INK.g, INK.b, alpha))
 		y += lh
 
@@ -220,7 +222,7 @@ func _ink(i, sec = 0.8):
 	pen = -1.0
 
 func _bubble_def(i, text, rect, tail, echo = false):
-	var b = {"text": text, "rect": rect, "tail": tail, "typed": 0.0, "a": 0.0, "echo": echo}
+	var b = {"text": Loc.t(text), "rect": rect, "tail": tail, "typed": 0.0, "a": 0.0, "echo": echo}
 	bubbles[i].append(b)
 	return b
 
@@ -236,7 +238,7 @@ func _say(b, hold = 1.0):
 	skip = false
 	var last = 0
 	while true:
-		var u = (GS.msec() - t0) / 1000.0 * 30.0
+		var u = (GS.msec() - t0) / 1000.0 * Loc.cps(30.0)
 		if skip or u >= n:
 			b["typed"] = float(n)
 			break
@@ -246,7 +248,7 @@ func _say(b, hold = 1.0):
 			Sfx.play("blip", -26.0, randf_range(1.25, 1.55))
 		await get_tree().process_frame
 	skip = false
-	await _wait(hold + 0.025 * n)
+	await _wait(hold + 0.025 * Loc.read_len(b["text"]))
 
 func _prep(shot_image):
 	skip = false

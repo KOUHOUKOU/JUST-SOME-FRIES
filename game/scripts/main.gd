@@ -288,7 +288,7 @@ func _ready():
 		t3.set_script(load("res://scripts/autotest.gd"))
 		t3.main = self
 		add_child(t3)
-	elif "--menu" in args:
+	elif "--menu" in args or "--r17" in args:
 		# dev: the real START path (menu -> opening title cards -> cafe shot), driven by the bot
 		autotest = false
 		GS.no_focus_pause = true

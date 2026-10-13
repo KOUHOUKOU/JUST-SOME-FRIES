@@ -27,6 +27,140 @@ var slot_btns = []
 var slot_mode = "new"
 var slot_title = null
 var slot_pending = 0             # a filled slot that START has asked to overwrite (a second press confirms)
+var lang_pick = null             # round 17: the language card before the cover (English / 简体中文 / 繁體中文 / 日本語)
+static var lang_asked = false    # it is shown once when the game starts; the small LANGUAGE link on the cover opens it again
+
+# ---------------------------------------------------------------- the language card
+class LangPick extends Control:
+	signal picked(code)
+	var tex = null
+	var bold
+	var t = 0.0
+	var sel = 0
+	var rects = []
+	var leaving = -1.0
+	var anim = [0.0, 0.0, 0.0, 0.0]
+
+	func _ready():
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		if ResourceLoader.exists("res://assets/ui/cover.jpg"):
+			tex = load("res://assets/ui/cover.jpg")
+		var fv = FontVariation.new()
+		fv.base_font = ThemeDB.fallback_font
+		fv.variation_embolden = 0.55
+		bold = fv
+
+	func open():
+		t = 0.0
+		leaving = -1.0
+		sel = max(Loc.LANGS.find(Loc.guess()), 0)
+		visible = true
+
+	func _process(delta):
+		if not visible:
+			return
+		t += delta
+		for i in anim.size():
+			anim[i] = move_toward(anim[i], 1.0 if i == sel else 0.0, delta * 6.0)
+		if leaving >= 0.0:
+			leaving += delta
+			if leaving > 0.55:
+				leaving = -1.0
+				visible = false
+				picked.emit(Loc.LANGS[sel])
+		queue_redraw()
+
+	func _go(i):
+		if leaving >= 0.0:
+			return
+		sel = i
+		leaving = 0.0
+		Loc.set_lang(Loc.LANGS[i])
+		Loc.save_lang()
+		Sfx.play("ui_go", -8.0)
+
+	func _input(event):
+		if not visible or leaving >= 0.0:
+			return
+		if event is InputEventKey and event.pressed and not event.echo:
+			match event.keycode:
+				KEY_DOWN, KEY_S, KEY_RIGHT, KEY_D, KEY_TAB:
+					sel = (sel + 1) % 4
+					Sfx.play("tick_ui", -16.0, 1.0)
+					get_viewport().set_input_as_handled()
+				KEY_UP, KEY_W, KEY_LEFT, KEY_A:
+					sel = (sel + 3) % 4
+					Sfx.play("tick_ui", -16.0, 1.0)
+					get_viewport().set_input_as_handled()
+				KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_E:
+					_go(sel)
+					get_viewport().set_input_as_handled()
+				KEY_1, KEY_2, KEY_3, KEY_4:
+					_go(event.keycode - KEY_1)
+					get_viewport().set_input_as_handled()
+
+	func _gui_input(event):
+		if leaving >= 0.0:
+			return
+		if event is InputEventMouseMotion:
+			for i in rects.size():
+				if rects[i].has_point(event.position) and sel != i:
+					sel = i
+					Sfx.play("tick_ui", -16.0, 1.0)
+		elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			for i in rects.size():
+				if rects[i].has_point(event.position):
+					_go(i)
+
+	func _draw():
+		var W = size.x
+		var H = size.y
+		if H < 20.0:
+			return
+		var u = H / 720.0
+		var fade = clamp(t / 0.6, 0.0, 1.0)
+		if tex != null:
+			var sc = max(W / 1672.0, H / 941.0) * 1.08
+			var ts = Vector2(1672.0, 941.0) * sc
+			draw_texture_rect(tex, Rect2((size - ts) * 0.5 + Vector2(sin(t * 0.17) * 6.0, cos(t * 0.11) * 4.0) * u, ts), false, Color(1, 1, 1, 1))
+		draw_rect(Rect2(Vector2.ZERO, size), Color(0.03, 0.04, 0.1, 0.62))
+		# a darker band under the words, so the cover's title stays above them
+		draw_polygon(PackedVector2Array([Vector2(0, H * 0.36), Vector2(W, H * 0.36), Vector2(W, H), Vector2(0, H)]),
+			PackedColorArray([Color(0.03, 0.04, 0.1, 0.0), Color(0.03, 0.04, 0.1, 0.0), Color(0.03, 0.04, 0.1, 0.8), Color(0.03, 0.04, 0.1, 0.8)]))
+		var cream = Color(0.97, 0.94, 0.86)
+		var gold = Color("F5C65A")
+		# the heading in all four languages
+		var head = "LANGUAGE   ·   语言   ·   語言   ·   言語"
+		var hs = int(22 * u)
+		var hw = bold.get_string_size(head, HORIZONTAL_ALIGNMENT_LEFT, -1, hs).x
+		draw_string(bold, Vector2((W - hw) * 0.5, H * 0.47), head, HORIZONTAL_ALIGNMENT_LEFT, -1, hs, Color(cream.r, cream.g, cream.b, 0.75 * fade))
+		rects.clear()
+		var fs = int(36 * u)
+		var lh = 60.0 * u
+		var y0 = H * 0.585
+		for i in 4:
+			var code = Loc.LANGS[i]
+			var name = Loc.NAMES[code]
+			var w = bold.get_string_size(name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			var s = anim[i]
+			var y = y0 + i * lh
+			var x = (W - w) * 0.5
+			var col = cream.lerp(gold, s)
+			col.a = fade * (0.62 + 0.38 * s)
+			draw_string(bold, Vector2(x + 2.0 * u, y + 2.0 * u), name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0, 0, 0, 0.5 * fade))
+			draw_string(bold, Vector2(x, y - s * 3.0 * u), name, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+			if s > 0.01:
+				var cx = W * 0.5
+				draw_line(Vector2(cx - w * 0.5 * s, y + 12.0 * u), Vector2(cx + w * 0.5 * s, y + 12.0 * u), Color(gold.r, gold.g, gold.b, 0.9 * fade), 2.5 * u)
+			rects.append(Rect2(Vector2(W * 0.5 - 220.0 * u, y - 42.0 * u), Vector2(440.0 * u, lh)))
+		var hint = "W / S   ·   E / Enter / click"
+		var hw2 = ThemeDB.fallback_font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, int(14 * u)).x
+		draw_string(ThemeDB.fallback_font, Vector2((W - hw2) * 0.5, H - 30.0 * u), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, int(14 * u), Color(1, 1, 1, 0.4 * fade))
+		if t < 0.6:
+			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 1.0 - fade))
+		if leaving >= 0.0:
+			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, clamp(leaving / 0.5, 0.0, 1.0)))
 
 # ---------------------------------------------------------------- the cover
 class Cover extends Control:
@@ -44,6 +178,8 @@ class Cover extends Control:
 	var leaving = -1.0
 	var leave_id = ""
 	var last_hover = -1
+	var lang_rect = Rect2()
+	var lang_hover = false
 
 	func _ready():
 		mouse_filter = Control.MOUSE_FILTER_STOP
@@ -114,11 +250,24 @@ class Cover extends Control:
 				KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_E:
 					_pick(sel)
 					get_viewport().set_input_as_handled()
+				KEY_L:
+					_lang()
+					get_viewport().set_input_as_handled()
+
+	func _lang():
+		if intro_t < 1.0:
+			return
+		Sfx.play("ui_go", -10.0)
+		chosen.emit("language")
 
 	func _gui_input(event):
 		if leaving >= 0.0:
 			return
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and lang_rect.has_point(event.position):
+			_lang()
+			return
 		if event is InputEventMouseMotion:
+			lang_hover = lang_rect.has_point(event.position)
 			mpos = Vector2(event.position.x / max(size.x, 1.0), event.position.y / max(size.y, 1.0))
 			for i in rects.size():
 				if rects[i].has_point(event.position) and items[i]["on"]:
@@ -193,7 +342,7 @@ class Cover extends Control:
 		var total = 0.0
 		var widths = []
 		for it in items:
-			var w = _width(it["label"], fs, gap)
+			var w = _width(Loc.t(it["label"]), fs, gap)
 			widths.append(w)
 			total += w
 		var spacing = 96.0 * u
@@ -208,7 +357,7 @@ class Cover extends Control:
 			var col = CREAM if it2["on"] else Color(0.7, 0.72, 0.8)
 			col = col.lerp(GOLD, s)
 			col.a = al * (1.0 if it2["on"] else 0.38)
-			_word(it2["label"], Vector2(x, yy - s * 3.0 * u), fs, col, gap)
+			_word(Loc.t(it2["label"]), Vector2(x, yy - s * 3.0 * u), fs, col, gap)
 			rects.append(Rect2(Vector2(x - 20.0 * u, y - 36.0 * u), Vector2(widths[i] + 40.0 * u, 54.0 * u)))
 			# the underline grows under the chosen word, a fry stick leans on it
 			if s > 0.01:
@@ -218,8 +367,15 @@ class Cover extends Control:
 			x += widths[i] + spacing
 		# footer: one line of small print
 		var fa = clamp((intro_t - 2.4) / 1.0, 0.0, 1.0)
-		draw_string(ThemeDB.fallback_font, Vector2(30.0 * u, H - 20.0 * u), "a game about one gull, one pier and one fry", HORIZONTAL_ALIGNMENT_LEFT, -1, int(13 * u), Color(1, 1, 1, 0.45 * fa))
-		draw_string(ThemeDB.fallback_font, Vector2(W - 330.0 * u, H - 20.0 * u), "W / S or mouse  -  E / click", HORIZONTAL_ALIGNMENT_RIGHT, 300.0 * u, int(13 * u), Color(1, 1, 1, 0.3 * fa))
+		draw_string(ThemeDB.fallback_font, Vector2(30.0 * u, H - 20.0 * u), Loc.t("a game about one gull, one pier and one fry"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(13 * u), Color(1, 1, 1, 0.45 * fa))
+		draw_string(ThemeDB.fallback_font, Vector2(W - 330.0 * u, H - 20.0 * u), Loc.t("W / S or mouse  -  E / click"), HORIZONTAL_ALIGNMENT_RIGHT, 300.0 * u, int(13 * u), Color(1, 1, 1, 0.3 * fa))
+		var ll = Loc.NAMES.get(Loc.lang, "English") + "   ·   L"
+		var lfs = int(15 * u)
+		var lw = ThemeDB.fallback_font.get_string_size(ll, HORIZONTAL_ALIGNMENT_LEFT, -1, lfs).x
+		lang_rect = Rect2(Vector2(W - lw - 44.0 * u, 14.0 * u), Vector2(lw + 30.0 * u, 34.0 * u))
+		draw_rect(lang_rect, Color(0.03, 0.04, 0.1, 0.35 * fa))
+		draw_rect(lang_rect, Color(1, 0.9, 0.6, (0.55 if lang_hover else 0.22) * fa), false, 1.5 * u)
+		draw_string(ThemeDB.fallback_font, lang_rect.position + Vector2(15.0 * u, 23.0 * u), ll, HORIZONTAL_ALIGNMENT_LEFT, -1, lfs, Color(1, 1, 1, (0.85 if lang_hover else 0.55) * fa))
 		# fade in from black, and out to black when a word is chosen
 		if fade_in < 1.0:
 			draw_rect(Rect2(Vector2.ZERO, size), Color(0, 0, 0, 1.0 - fade_in))
@@ -235,6 +391,10 @@ func _ready():
 	add_child(cover)
 	gallery = load("res://scripts/ui/achievements_ui.gd").new()
 	add_child(gallery)
+	lang_pick = LangPick.new()
+	lang_pick.visible = false
+	lang_pick.picked.connect(_on_lang_picked)
+	add_child(lang_pick)
 	main_panel = cover
 	controls_panel = _panel(0.8)
 	controls_panel.theme = ui_theme
@@ -321,6 +481,9 @@ func _on_cover_chosen(id):
 			_open_slots("load")
 		"gallery":
 			gallery.open()
+		"language":
+			cover.visible = false
+			lang_pick.open()
 		"quit":
 			get_tree().quit()
 
@@ -377,9 +540,20 @@ func _slot_pressed(i):
 	slot_panel.visible = false
 	start_pressed.emit()
 
+func _on_lang_picked(_code):
+	if not in_game:
+		cover.visible = true
+		cover.reset_intro()
+		cover.set_save(GS.has_any_save())
+
 func show_main():
 	in_game = false
 	main_panel.visible = true
+	# the language card comes first, once per start of the game (not in the dev / test runs, they pass --lang=..)
+	if not lang_asked and OS.get_cmdline_user_args().size() == 0 and not GS.web_reloaded:
+		lang_asked = true
+		cover.visible = false
+		lang_pick.open()
 	if slot_panel != null:
 		slot_panel.visible = false
 	cover.reset_intro()

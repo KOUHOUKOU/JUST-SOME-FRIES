@@ -111,8 +111,8 @@ var fish_cards = []              # the "you caught a fish" cards: {info, t}
 # ---------------------------------------------------------------- inner draw classes
 class HC extends Control:
 	func shadow(font, pos, text, size_, col, align = HORIZONTAL_ALIGNMENT_LEFT, width = -1.0):
-		draw_string(font, pos + Vector2(1.5, 1.5), text, align, width, size_, Color(0, 0, 0, col.a * 0.75))
-		draw_string(font, pos, text, align, width, size_, col)
+		draw_string(font, pos + Vector2(1.5, 1.5), Loc.t(text), align, width, size_, Color(0, 0, 0, col.a * 0.75))
+		draw_string(font, pos, Loc.t(text), align, width, size_, col)
 	func chevron(c, up, col, w = 12.0):
 		var s = -1.0 if up else 1.0
 		draw_polyline(PackedVector2Array([c + Vector2(-w, -s * w * 0.45), c + Vector2(0, s * w * 0.45), c + Vector2(w, -s * w * 0.45)]), col, 3.0, true)
@@ -432,11 +432,11 @@ class Vignette extends Control:
 		var newbie = GS.fry_total() < 6
 		var f = ThemeDB.fallback_font
 		var txt = "G U L L   T I M E"
-		var w = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x
+		var w = f.get_string_size(Loc.t(txt), HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x
 		var pulse = 0.78 + 0.22 * sin(GS.msec() * 0.004) if newbie else 1.0
 		var ta = a * (0.85 * pulse if newbie else 0.32)
-		draw_string(f, Vector2(size.x * 0.5 - w * 0.5 + 1.0, size.y * 0.045 + 1.0), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(0, 0, 0, ta * 0.7))
-		draw_string(f, Vector2(size.x * 0.5 - w * 0.5, size.y * 0.045), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(1.0, 0.9, 0.62, ta))
+		draw_string(f, Vector2(size.x * 0.5 - w * 0.5 + 1.0, size.y * 0.045 + 1.0), Loc.t(txt), HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(0, 0, 0, ta * 0.7))
+		draw_string(f, Vector2(size.x * 0.5 - w * 0.5, size.y * 0.045), Loc.t(txt), HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(1.0, 0.9, 0.62, ta))
 
 # World-to-screen pointers: the first fries ("where is it?") in gold, and the faint "go back there" hint for the plain fry.
 class Guide extends HC:
@@ -634,7 +634,7 @@ class Banner extends HC:
 		if hud.comic != null and hud.comic.slide > 0.05:
 			y = size.y - 250.0 * u
 		var txt = GS.buff_msg
-		var wtxt = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * u)).x
+		var wtxt = font.get_string_size(Loc.t(txt), HORIZONTAL_ALIGNMENT_LEFT, -1, int(16 * u)).x
 		var x = 22.0 * u + (1.0 - a) * -24.0 * u
 		var col = Color(1, 0.96, 0.8)
 		if GS.drink != "":
@@ -720,6 +720,7 @@ class FryGrid extends HC:
 			draw_arc(r.position + Vector2(wmax, s) * 0.5, s * (0.8 + 2.0 * (1.0 - flash)), 0, TAU, 20, Color(1, 0.8, 1, flash), 2.0, true)
 	func _spaced(font, pos, text, sz, col, gap):
 		# letter-spaced text, centred on pos
+		text = Loc.t(text)
 		var total = 0.0
 		for ch in text:
 			total += font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x + gap
@@ -915,8 +916,8 @@ class TabLesson extends HC:
 		draw_rect(capr, face)
 		draw_rect(capr, Color(0.1, 0.1, 0.16, a), false, 3.0)
 		var font = ThemeDB.fallback_font
-		var tw_ = font.get_string_size("TAB", HORIZONTAL_ALIGNMENT_LEFT, -1, int(34 * u)).x
-		draw_string(font, capr.position + Vector2((capr.size.x - tw_) * 0.5, capr.size.y * 0.66), "TAB", HORIZONTAL_ALIGNMENT_LEFT, -1, int(34 * u), Color(0.12, 0.13, 0.2, a))
+		var tw_ = font.get_string_size(Loc.t("TAB"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(34 * u)).x
+		draw_string(font, capr.position + Vector2((capr.size.x - tw_) * 0.5, capr.size.y * 0.66), Loc.t("TAB"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(34 * u), Color(0.12, 0.13, 0.2, a))
 		return capr
 	func _draw():
 		var dt = get_process_delta_time() / max(Engine.time_scale, 0.05)
@@ -962,14 +963,14 @@ class TabLesson extends HC:
 			l2 = "KEEP HOLDING..." if prog < 1.0 else "NOW LET GO."
 			c1 = Color(0.8, 0.95, 1.0, a)
 		var s1 = int((30 if not holding else 22) * u)
-		var w1 = font.get_string_size(l1, HORIZONTAL_ALIGNMENT_LEFT, -1, s1).x
+		var w1 = font.get_string_size(Loc.t(l1), HORIZONTAL_ALIGNMENT_LEFT, -1, s1).x
 		var py = cy - 76.0 * u
 		var pill = Rect2(Vector2(cx - w1 * 0.5 - 22.0 * u, py - 30.0 * u), Vector2(w1 + 44.0 * u, 58.0 * u))
 		draw_rect(pill, Color(0.03, 0.05, 0.1, 0.5 * a))
 		draw_rect(Rect2(pill.position, Vector2(4.0 * u, pill.size.y)), Color(c1.r, c1.g, c1.b, 0.9 * a))
 		shadow(font, Vector2(cx - w1 * 0.5, py), l1, s1, c1)
 		var s2 = int(13 * u)
-		var w2 = font.get_string_size(l2, HORIZONTAL_ALIGNMENT_LEFT, -1, s2).x
+		var w2 = font.get_string_size(Loc.t(l2), HORIZONTAL_ALIGNMENT_LEFT, -1, s2).x
 		shadow(font, Vector2(cx - w2 * 0.5, py + 21.0 * u), l2, s2, Color(1, 1, 1, 0.7 * a))
 
 # TOP MIDDLE (round 15): a thing of the sky was caught. A word in its colour, five pips (the sky quest), and nothing else: the gull keeps flying, nothing is covered.
@@ -991,11 +992,11 @@ class SkyPop extends HC:
 			var pop = 1.0 + 0.35 * max(0.0, 1.0 - t / 0.35)
 			var sz = int(40.0 * u * pop)
 			var word = hud.SKY_WORD.get(p["kind"], "!")
-			var ww = font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
+			var ww = font.get_string_size(Loc.t(word), HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
 			var cx = size.x * 0.5
 			var y = y0 + float(i) * 70.0 * u
-			draw_string(font, Vector2(cx - ww * 0.5 + 2.0, y + 2.0), word, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(0, 0, 0, 0.55 * a))
-			draw_string(font, Vector2(cx - ww * 0.5, y), word, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(col.r, col.g, col.b, a))
+			draw_string(font, Vector2(cx - ww * 0.5 + 2.0, y + 2.0), Loc.t(word), HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(0, 0, 0, 0.55 * a))
+			draw_string(font, Vector2(cx - ww * 0.5, y), Loc.t(word), HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(col.r, col.g, col.b, a))
 			for k in 5:
 				var pc = Vector2(cx + (k - 2) * 26.0 * u, y + 24.0 * u)
 				var lit = k < p["n"]
@@ -1108,6 +1109,7 @@ class StarCorner extends HC:
 class FishCard extends HC:
 	var hud
 	func _spaced(font, pos, text, sz, col, gap):
+		text = Loc.t(text)
 		var total = 0.0
 		for ch in text:
 			total += font.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x + gap

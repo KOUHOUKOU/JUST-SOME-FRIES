@@ -46,7 +46,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u", "--r16s": "r16s", "--r16a": "r16a", "--r16b": "r16b", "--r16c": "r16c", "--r16d": "r16d", "--r16e": "r16e", "--r16f": "r16f", "--r16h": "r16h", "--r16g": "r16g"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u", "--r16s": "r16s", "--r16a": "r16a", "--r16b": "r16b", "--r16c": "r16c", "--r16d": "r16d", "--r16e": "r16e", "--r16f": "r16f", "--r16h": "r16h", "--r16g": "r16g", "--r17": "r17_menus"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -599,6 +599,44 @@ func menu_test():
 	await get_tree().create_timer(2.5).timeout
 	await shot("mn_game")
 	await get_tree().create_timer(32.0).timeout        # a tail: does the memory of the opening come back?
+	get_tree().quit()
+
+# round 17: the language card, then the cover, the controls page, the pause menu, the slot cards and the achievements in every language
+func r17_menus():
+	var m = main.menus
+	await get_tree().create_timer(1.0).timeout
+	m.cover.visible = false
+	m.lang_pick.open()
+	await get_tree().create_timer(1.4).timeout
+	await shot("r17_lang")
+	m.lang_pick.visible = false
+	for code in Loc.LANGS:
+		Loc.set_lang(code)
+		m._on_lang_picked(code)
+		await get_tree().create_timer(3.8).timeout
+		await shot("r17_cover_" + code)
+		m.cover.visible = false
+		m.controls_panel.visible = true
+		await get_tree().create_timer(0.4).timeout
+		await shot("r17_controls_" + code)
+		m.controls_panel.visible = false
+		m.pause_panel.visible = true
+		m.save_note.text = "saved."
+		await get_tree().create_timer(0.4).timeout
+		await shot("r17_pause_" + code)
+		m.pause_panel.visible = false
+		m._open_slots("new")
+		m.slot_pending = 1
+		m._refresh_slots()
+		await get_tree().create_timer(0.4).timeout
+		await shot("r17_slots_" + code)
+		m._close_slots()
+		m.cover.visible = false
+		m.gallery.open()
+		await get_tree().create_timer(0.8).timeout
+		await shot("r17_gallery_" + code)
+		m.gallery.close()
+		say("r17 %s: cover / controls / pause / slots / gallery shot" % code)
 	get_tree().quit()
 
 func vp_screen(name_):

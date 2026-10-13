@@ -104,13 +104,13 @@ func _draw():
 		var rn = ["", "SILVER", "GOLD", "DIAMOND", "RAINBOW"][clamp(tier, 0, 4)]
 		if id == "fish":
 			rn = "PERFECT" if tier >= 3 else "FISH"
-		var ribbon = Rect2(frame.position + Vector2(-2, 10), Vector2(24 + rn.length() * 9.0, 22))
+		var ribbon = Rect2(frame.position + Vector2(-2, 10), Vector2(18 + font.get_string_size(Loc.t(rn), HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x, 22))
 		draw_rect(ribbon, tint)
 		draw_rect(ribbon, INK, false, 2.0)
-		draw_string(font, ribbon.position + Vector2(8, 16), rn, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, INK)
+		draw_string(font, ribbon.position + Vector2(8, 16), Loc.t(rn), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, INK)
 	var cap_y = o.y + 12.0 + FR * 2.0 + 20.0
-	draw_multiline_string(font, Vector2(o.x + 12.0, cap_y + 1.5), caption, HORIZONTAL_ALIGNMENT_CENTER, PW - 24.0, 17, 2, Color(0, 0, 0, 0.15))
-	draw_multiline_string(font, Vector2(o.x + 12.0, cap_y), caption, HORIZONTAL_ALIGNMENT_CENTER, PW - 24.0, 17, 2, INK)
+	draw_multiline_string(font, Vector2(o.x + 12.0, cap_y + 1.5), Loc.t(caption), HORIZONTAL_ALIGNMENT_CENTER, PW - 24.0, 17, 2, Color(0, 0, 0, 0.15))
+	draw_multiline_string(font, Vector2(o.x + 12.0, cap_y), Loc.t(caption), HORIZONTAL_ALIGNMENT_CENTER, PW - 24.0, 17, 2, INK)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ---- little drawing kit (all coordinates relative to the frame centre) ----
@@ -141,8 +141,8 @@ func _star(c, r, col, rot = 0.0):
 
 func _text(c, s, sz, col):
 	var font = ThemeDB.fallback_font
-	draw_string(font, c + Vector2(-90, 3), s, HORIZONTAL_ALIGNMENT_CENTER, 180, sz, Color(0, 0, 0, 0.9))
-	draw_string(font, c + Vector2(-90, -2), s, HORIZONTAL_ALIGNMENT_CENTER, 180, sz, col)
+	draw_string(font, c + Vector2(-90, 3), Loc.t(s), HORIZONTAL_ALIGNMENT_CENTER, 180, sz, Color(0, 0, 0, 0.9))
+	draw_string(font, c + Vector2(-90, -2), Loc.t(s), HORIZONTAL_ALIGNMENT_CENTER, 180, sz, col)
 
 # the hero: a round, slightly dim, very white gull head
 func _gull(c, r, mood):

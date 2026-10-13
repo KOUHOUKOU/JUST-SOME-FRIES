@@ -262,6 +262,7 @@ func wait(sec):
 # a sentence that is typed out. A press finishes the typing; the next press (or the reading time) goes on.
 func _speak(d, text, voice_pitch, hold = -1.0, cps = 34.0):
 	var n = text.length()
+	cps = Loc.cps(cps)
 	var t0 = GS.msec()
 	var p0 = last_press
 	d["shown"] = 0
@@ -278,10 +279,11 @@ func _speak(d, text, voice_pitch, hold = -1.0, cps = 34.0):
 			break
 		await get_tree().process_frame
 	d["shown"] = n
-	var auto = clamp(1.0 + n * 0.06, 1.9, 7.0) if hold < 0.0 else hold
+	var auto = clamp(1.0 + Loc.read_len(text) * 0.06, 1.9, 7.0) if hold < 0.0 else hold
 	await _wait_press(p0, 0.3, auto)
 
 func say(who, text, anchor_fn, side = "right", style = "speech", voice_pitch = 1.0):
+	text = Loc.t(text)
 	bal = {"who": who, "text": text, "anchor": anchor_fn, "side": side, "style": style, "shown": 0, "a": 0.0, "t0": GS.msec(), "closing": false}
 	var d = bal
 	var tw = create_tween().set_ignore_time_scale(true)
@@ -295,6 +297,7 @@ func say(who, text, anchor_fn, side = "right", style = "speech", voice_pitch = 1
 		bal = null
 
 func caption(text, hold = -1.0, cps = 34.0):
+	text = Loc.t(text)
 	cap = {"text": text, "shown": 0, "a": 0.0, "t0": GS.msec()}
 	var d = cap
 	var tw = create_tween().set_ignore_time_scale(true)
@@ -322,6 +325,7 @@ func say_vn(who, sub, text, head_fn, voice_pitch = 1.0, tint = GOLD, look = {}):
 	if d["who"] != who:
 		d["pop"] = GS.msec()
 		Sfx.play("vn_pop", -13.0, 0.9 if who == "YOU" else 1.0)
+	text = Loc.t(text)
 	d["who"] = who
 	d["sub"] = sub
 	d["text"] = text
@@ -654,11 +658,11 @@ func _insets_draw(ci, R, u):
 		ci.draw_texture_rect(s["vp"].get_texture(), rect, false, Color(1, 1, 1, a))
 		ci.draw_rect(rect, Color(INK.r, INK.g, INK.b, a), false, 3.0 * u)
 		if o.has("tag"):
-			var tw_ = bold.get_string_size(o["tag"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x + 18.0 * u
+			var tw_ = bold.get_string_size(Loc.t(o["tag"]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x + 18.0 * u
 			var tr = Rect2(rect.position + Vector2(-4.0 * u, -14.0 * u), Vector2(tw_, 24.0 * u))
 			ci.draw_rect(tr, Color(tint.r, tint.g, tint.b, a))
 			ci.draw_rect(tr, Color(INK.r, INK.g, INK.b, a), false, 2.0 * u)
-			ci.draw_string(bold, tr.position + Vector2(9.0 * u, 17.0 * u), o["tag"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(INK.r, INK.g, INK.b, a))
+			ci.draw_string(bold, tr.position + Vector2(9.0 * u, 17.0 * u), Loc.t(o["tag"]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(INK.r, INK.g, INK.b, a))
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 # ------------------------------------------------------------------ THOUGHTS (round 12): the gull's own words in the MIDDLE of the picture, 3-4 lines that stay
@@ -666,6 +670,8 @@ func _insets_draw(ci, R, u):
 var thoughts = null
 
 func think(lines, hold = 1.2, cps = 34.0, last_hold = 2.4, on_last = Callable()):
+	lines = Loc.ta(lines)
+	cps = Loc.cps(cps)
 	var d = {"lines": lines, "n": 0, "typed": 0, "a": 0.0}
 	thoughts = d
 	var tw = create_tween().set_ignore_time_scale(true)
@@ -703,7 +709,7 @@ func _thoughts_draw(ci, R, u):
 	var y0 = R.position.y + R.size.y * 0.43 - total * 0.5
 	var maxw = 0.0
 	for l in d["lines"]:
-		maxw = max(maxw, font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+		maxw = max(maxw, font.get_string_size(Loc.t(l), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
 	var band = Rect2(Vector2(cx - maxw * 0.5 - 40.0 * u, y0 - 12.0 * u), Vector2(maxw + 80.0 * u, total + 24.0 * u))
 	ci.draw_rect(band, Color(0.02, 0.04, 0.09, 0.34 * d["a"]))
 	ci.draw_rect(Rect2(band.position, Vector2(3.0 * u, band.size.y)), Color(GOLD.r, GOLD.g, GOLD.b, 0.7 * d["a"]))
@@ -711,7 +717,7 @@ func _thoughts_draw(ci, R, u):
 		var text = d["lines"][i]
 		var cur = i == n - 1
 		var shown = text.substr(0, d["typed"]) if cur else text
-		var w = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var w = font.get_string_size(Loc.t(text), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 		var a = d["a"] * (1.0 if cur else 0.68)
 		var pos = Vector2(cx - w * 0.5, y0 + i * lh + fs)
 		ci.draw_string_outline(font, pos, shown, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, 5, Color(0, 0, 0, 0.75 * a))
@@ -730,11 +736,12 @@ func bars_out(sec = 0.8):
 
 # the gull's own thought, typed under the picture. A press finishes the sentence; the next one goes on (or the reading time runs out).
 func narrate(text, tint = Color(1.0, 0.97, 0.88), pitch = 1.5, hold = -1.0, cps = 34.0):
+	text = Loc.t(text)
 	narr = {"text": text, "shown": 0, "a": 0.0, "t0": GS.msec(), "tint": tint}
 	var d = narr
 	var tw = create_tween().set_ignore_time_scale(true)
 	tw.tween_method(func(v): d["a"] = v, 0.0, 1.0, 0.2)
-	await _speak(d, text, pitch, clamp(0.55 + text.length() * 0.035, 1.3, 4.2) if hold < 0.0 else hold, cps)
+	await _speak(d, text, pitch, clamp(0.55 + Loc.read_len(text) * 0.035, 1.3, 4.2) if hold < 0.0 else hold, cps)
 	var tw2 = create_tween().set_ignore_time_scale(true)
 	tw2.tween_method(func(v): d["a"] = v, 1.0, 0.0, 0.2)
 	await tw2.finished
@@ -804,6 +811,8 @@ func inner_rect(ci):
 	return Rect2(m, ci.size - m * 2.0)
 
 func _wrap(text, f, fs, maxw):
+	if Loc.cjk:
+		return Loc.wrap(text, f, fs, maxw)
 	var out = []
 	for para in text.split("\n"):
 		var cur = ""
@@ -818,26 +827,39 @@ func _wrap(text, f, fs, maxw):
 	return out
 
 func _stroke_text(ci, f, pos, text, fs, col, outline, ink = INK, width = -1.0):
-	ci.draw_string_outline(f, pos, text, HORIZONTAL_ALIGNMENT_LEFT, width, fs, int(outline), ink)
-	ci.draw_string(f, pos, text, HORIZONTAL_ALIGNMENT_LEFT, width, fs, col)
+	ci.draw_string_outline(f, pos, Loc.t(text), HORIZONTAL_ALIGNMENT_LEFT, width, fs, int(outline), ink)
+	ci.draw_string(f, pos, Loc.t(text), HORIZONTAL_ALIGNMENT_LEFT, width, fs, col)
 
 # one big comic word: an extruded block of colour, an ink outline, a white sheen
+var bold_cjk = null
 func _lettering(ci, text, centre, fs, col, rot_deg, a, pop):
 	var u = ci.size.y / 720.0
 	# ONE font size per word (the pop is a scale of the drawing): every new size makes the text server bake a new set of glyph textures, and the old
 	# per-frame sizes cost hundreds of MB of video memory over the opening, the ending and the film moments
 	var sz = int(round(fs * u / 6.0)) * 6
-	var w = bold.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
+	# Chinese / Japanese letters have many small strokes: a lighter face and a thinner ink line keep them readable
+	var lf = bold
+	var ol = 0.12
+	if Loc.cjk:
+		if bold_cjk == null:
+			bold_cjk = FontVariation.new()
+			bold_cjk.base_font = ThemeDB.fallback_font
+			bold_cjk.variation_embolden = 0.2
+		lf = bold_cjk
+		ol = 0.06
+		sz = int(round(sz * 0.85 / 6.0)) * 6
+	text = Loc.t(text)
+	var w = lf.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
 	ci.draw_set_transform(centre, deg_to_rad(rot_deg), Vector2.ONE * pop)
 	var base = Vector2(-w * 0.5, sz * 0.34)
 	var depth = int(max(sz * 0.07, 4.0))
 	for k in range(depth, 0, -1):
-		ci.draw_string_outline(bold, base + Vector2(k, k) * 1.1, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, int(sz * 0.12), Color(INK.r, INK.g, INK.b, a))
-	ci.draw_string_outline(bold, base, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, int(sz * 0.12), Color(INK.r, INK.g, INK.b, a))
+		ci.draw_string_outline(lf, base + Vector2(k, k) * 1.1, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, int(sz * ol), Color(INK.r, INK.g, INK.b, a))
+	ci.draw_string_outline(lf, base, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, int(sz * ol), Color(INK.r, INK.g, INK.b, a))
 	for k in range(depth, 0, -1):
-		ci.draw_string(bold, base + Vector2(k, k) * 1.1, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(col.r * 0.55, col.g * 0.5, col.b * 0.45, a))
-	ci.draw_string(bold, base, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(col.r, col.g, col.b, a))
-	ci.draw_string(bold, base + Vector2(-sz * 0.015, -sz * 0.025), text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(1, 1, 1, 0.22 * a))
+		ci.draw_string(lf, base + Vector2(k, k) * 1.1, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(col.r * 0.55, col.g * 0.5, col.b * 0.45, a))
+	ci.draw_string(lf, base, text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(col.r, col.g, col.b, a))
+	ci.draw_string(lf, base + Vector2(-sz * 0.015, -sz * 0.025), text, HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(1, 1, 1, 0.22 * a))
 	ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _starburst(ci, c, r, spikes, col, a, rot = 0.0, jag = 0.62):
@@ -867,7 +889,7 @@ func _balloon(ci, R, u):
 	var lines = _wrap(b["text"], f, fs, maxw)
 	var lw = 0.0
 	for l in lines:
-		lw = max(lw, f.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+		lw = max(lw, f.get_string_size(Loc.t(l), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
 	var lh = fs * 1.22
 	var padx = 26.0 * u
 	var pady = 16.0 * u
@@ -934,9 +956,9 @@ func _balloon(ci, R, u):
 	# the words
 	var ty = rect.position.y + pady + fs * 0.9
 	if b["who"] != "":
-		ci.draw_string(bold, Vector2(rect.position.x + padx, ty - 6.0 * u), b["who"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(0.55, 0.32, 0.1, a))
+		ci.draw_string(bold, Vector2(rect.position.x + padx, ty - 6.0 * u), Loc.t(b["who"]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(0.55, 0.32, 0.1, a))
 		ty += 14.0 * u
-	var left = b["shown"]
+	var left = b["shown"] if b["shown"] < b["text"].length() else 1 << 30
 	for l in lines:
 		if left <= 0:
 			break
@@ -944,7 +966,7 @@ func _balloon(ci, R, u):
 		left -= l.length() + 1
 		var tx = rect.position.x + padx
 		if style == "shout":
-			tx = rect.get_center().x - f.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x * 0.5
+			tx = rect.get_center().x - f.get_string_size(Loc.t(l), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x * 0.5
 		ci.draw_string(f, Vector2(tx, ty), part, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(INK.r, INK.g, INK.b, a))
 		ty += lh
 
@@ -958,7 +980,7 @@ func _caption(ci, R, u):
 	var lines = _wrap(c["text"], bold, fs, maxw)
 	var lw = 0.0
 	for l in lines:
-		lw = max(lw, bold.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+		lw = max(lw, bold.get_string_size(Loc.t(l), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
 	var lh = fs * 1.25
 	var sz = Vector2(lw + 36.0 * u, lines.size() * lh + 24.0 * u)
 	var slide = (1.0 - c["a"]) * -26.0 * u
@@ -969,7 +991,7 @@ func _caption(ci, R, u):
 	ci.draw_rect(Rect2(rect.position + Vector2(6, 6) * u, rect.size), Color(INK.r, INK.g, INK.b, 0.85 * a))
 	ci.draw_rect(rect, Color(CAP_FILL.r, CAP_FILL.g, CAP_FILL.b, a))
 	ci.draw_rect(rect, Color(INK.r, INK.g, INK.b, a), false, 3.0 * u)
-	var left = c["shown"]
+	var left = c["shown"] if c["shown"] < c["text"].length() else 1 << 30
 	var ty = rect.position.y + 12.0 * u + fs * 0.92
 	for l in lines:
 		if left <= 0:
@@ -1030,19 +1052,19 @@ func _vn(ci, R, u):
 	# the name plate
 	var tx = prect.end.x + 26.0 * u
 	var nm = v["who"]
-	var nw = bold.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, int(21 * u)).x + 40.0 * u
+	var nw = bold.get_string_size(Loc.t(nm), HORIZONTAL_ALIGNMENT_LEFT, -1, int(21 * u)).x + 40.0 * u
 	var plate = Rect2(tx - 8.0 * u, by0 - 22.0 * u, nw, 36.0 * u)
 	ci.draw_rect(Rect2(plate.position + Vector2(4, 4) * u, plate.size), Color(0, 0, 0, 0.5 * a))
 	ci.draw_rect(plate, Color(tint.r, tint.g, tint.b, a))
 	ci.draw_rect(plate, ink, false, 3.0 * u)
-	ci.draw_string(bold, Vector2(plate.position.x + 20.0 * u, plate.position.y + 26.0 * u), nm, HORIZONTAL_ALIGNMENT_LEFT, -1, int(21 * u), ink)
+	ci.draw_string(bold, Vector2(plate.position.x + 20.0 * u, plate.position.y + 26.0 * u), Loc.t(nm), HORIZONTAL_ALIGNMENT_LEFT, -1, int(21 * u), ink)
 	if v["sub"] != "":
-		ci.draw_string(font, Vector2(plate.end.x + 12.0 * u, plate.position.y + 24.0 * u), v["sub"], HORIZONTAL_ALIGNMENT_LEFT, -1, int(13 * u), Color(1, 0.93, 0.75, 0.7 * a))
+		ci.draw_string(font, Vector2(plate.end.x + 12.0 * u, plate.position.y + 24.0 * u), Loc.t(v["sub"]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(13 * u), Color(1, 0.93, 0.75, 0.7 * a))
 	# the line
 	var fs = int(24.0 * u)
 	var maxw = box.end.x - 30.0 * u - tx
 	var lines = _wrap(v["text"], font, fs, maxw)
-	var left = v["shown"]
+	var left = v["shown"] if v["shown"] < v["text"].length() else 1 << 30
 	var ty = by0 + 52.0 * u
 	for l in lines:
 		if left <= 0:
@@ -1069,9 +1091,9 @@ func _film(ci, u):
 	if tag != null:
 		var age = (GS.msec() - tag["t0"]) / 1000.0
 		var ta = clamp(min(age / 0.5, (tag["life"] - age) / 0.5), 0.0, 1.0)
-		var txt = tag["text"]
+		var txt = Loc.t(tag["text"])
 		var ty = bh * 0.5 + 6.0 * u
-		var tw_ = bold.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x
+		var tw_ = bold.get_string_size(Loc.t(txt), HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u)).x
 		var tx = ci.size.x * 0.5 - (tw_ + (txt.length() - 1) * 4.0 * u) * 0.5
 		for ch in txt:
 			ci.draw_string(bold, Vector2(tx, ty), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(1.0, 0.86, 0.5, 0.85 * ta * e))
@@ -1083,13 +1105,13 @@ func _film(ci, u):
 		var lh = fs * 1.3
 		var total_h = lines.size() * lh
 		var y0 = ci.size.y - bh * 0.5 - total_h * 0.5 + fs * 0.85
-		var left = n["shown"]
+		var left = n["shown"] if n["shown"] < n["text"].length() else 1 << 30
 		var tint = n["tint"]
 		for l in lines:
 			if left <= 0:
 				break
 			var part = l.substr(0, left)
-			var w = font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			var w = font.get_string_size(Loc.t(l), HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 			var x = ci.size.x * 0.5 - w * 0.5
 			ci.draw_string(font, Vector2(x + 1.5, y0 + 1.5), part, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0, 0, 0, 0.6 * n["a"]))
 			ci.draw_string(font, Vector2(x, y0), part, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(tint.r, tint.g, tint.b, n["a"]))
@@ -1152,7 +1174,7 @@ func _cards(ci, R, u):
 			_mem_icon(ci, c["kind"], photo.get_center() + Vector2(0, 4.0 * u), photo.size.x * 0.3, a, c["extra"], age)
 		ci.draw_rect(photo, Color(0.1, 0.08, 0.14, 0.55 * a), false, 2.0 * u)
 		# the title, like a pencil line on the white strip
-		ci.draw_string(bold, Vector2(rect.position.x, rect.end.y - 26.0 * u), c["title"], HORIZONTAL_ALIGNMENT_CENTER, w, int(18 * u), Color(0.16, 0.13, 0.18, a))
+		ci.draw_string(bold, Vector2(rect.position.x, rect.end.y - 26.0 * u), Loc.t(c["title"]), HORIZONTAL_ALIGNMENT_CENTER, w, int(18 * u), Color(0.16, 0.13, 0.18, a))
 		# a little tape
 		ci.draw_rect(Rect2(-34.0 * u, rect.position.y - 8.0 * u, 68.0 * u, 20.0 * u), Color(1.0, 0.93, 0.6, 0.55 * a))
 		ci.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -1250,7 +1272,7 @@ func _mem_icon(ci, kind, c, s, a, extra, age):
 				for k in 3:
 					var off = s * 0.45 if r % 2 == 1 else 0.0
 					ci.draw_rect(Rect2(c + Vector2(-s * 0.9 + k * s * 0.62 - off, -s * 0.7 + r * s * 0.42), Vector2(s * 0.58, s * 0.38)), Color(0.78, 0.4, 0.3, a))
-			ci.draw_string(bold, c + Vector2(-s * 0.4, s * 1.0), "BONK", HORIZONTAL_ALIGNMENT_CENTER, s * 0.8, int(s * 0.34), ink)
+			ci.draw_string(bold, c + Vector2(-s * 0.4, s * 1.0), Loc.t("BONK"), HORIZONTAL_ALIGNMENT_CENTER, s * 0.8, int(s * 0.34), ink)
 		"armed":
 			ci.draw_rect(Rect2(c + Vector2(-s * 0.4, -s * 0.9), Vector2(s * 0.8, s * 1.1)), Color(0.16, 0.17, 0.21, a))
 			ci.draw_rect(Rect2(c + Vector2(-s * 0.85, s * 0.15), Vector2(s * 1.7, s * 0.18)), Color(0.16, 0.17, 0.21, a))
@@ -1390,8 +1412,8 @@ func draw_page(ci):
 		ci.draw_arc(base, cs * 0.82, -PI * 0.5, -PI * 0.5 + TAU * hold["p"], 40, GOLD, 4.0 * u, true)
 		ci.draw_arc(base, cs * 0.82, 0, TAU, 40, Color(1, 1, 1, 0.18), 2.0 * u, true)
 		var lab = "HOLD   " + hold["label"]
-		ci.draw_string_outline(bold, base + Vector2(-cs * 0.7 - 300.0 * u, 7.0 * u), lab, HORIZONTAL_ALIGNMENT_RIGHT, 300.0 * u, int(19 * u), 6, Color(0, 0, 0, 0.75))
-		ci.draw_string(bold, base + Vector2(-cs * 0.7 - 300.0 * u, 7.0 * u), lab, HORIZONTAL_ALIGNMENT_RIGHT, 300.0 * u, int(19 * u), Color(1, 0.97, 0.88, 0.95))
+		ci.draw_string_outline(bold, base + Vector2(-cs * 0.7 - 300.0 * u, 7.0 * u), Loc.t(lab), HORIZONTAL_ALIGNMENT_RIGHT, 300.0 * u, int(19 * u), 6, Color(0, 0, 0, 0.75))
+		ci.draw_string(bold, base + Vector2(-cs * 0.7 - 300.0 * u, 7.0 * u), Loc.t(lab), HORIZONTAL_ALIGNMENT_RIGHT, 300.0 * u, int(19 * u), Color(1, 0.97, 0.88, 0.95))
 	# shutter / black / flash
 	if shutter >= 0.0:
 		var sl = 180.0 * u

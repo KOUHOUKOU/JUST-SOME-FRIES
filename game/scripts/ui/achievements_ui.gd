@@ -79,6 +79,9 @@ class View extends Control:
 				ui.close()
 
 	func _wrap(font, text, width, fs):
+		text = Loc.t(text)
+		if Loc.cjk:
+			return Loc.wrap(text, font, fs, width)
 		var words = text.split(" ")
 		var lines = []
 		var cur = ""
@@ -106,13 +109,13 @@ class View extends Control:
 		var ids = _ids()
 		var got = GS.ach_count()
 		# title
-		var title = "ACHIEVEMENTS"
+		var title = Loc.t("ACHIEVEMENTS")
 		var x = 54.0 * u
 		for ch in title:
 			draw_string(bold, Vector2(x + 2, 74.0 * u + 2), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, int(42 * u), Color(0, 0, 0, 0.5))
 			draw_string(bold, Vector2(x, 74.0 * u), ch, HORIZONTAL_ALIGNMENT_LEFT, -1, int(42 * u), GOLD)
 			x += bold.get_string_size(ch, HORIZONTAL_ALIGNMENT_LEFT, -1, int(42 * u)).x + 4.0 * u
-		draw_string(font, Vector2(x + 24.0 * u, 74.0 * u), "%d / %d" % [got, ids.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, int(26 * u), Color(1, 0.96, 0.85, 0.85))
+		draw_string(font, Vector2(x + 24.0 * u, 74.0 * u), Loc.t("%d / %d" % [got, ids.size()]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(26 * u), Color(1, 0.96, 0.85, 0.85))
 		# the grid
 		cells.clear()
 		var cs = 106.0 * u
@@ -161,32 +164,32 @@ class View extends Control:
 		var ny = cr.position.y + 44.0 * u
 		var name_fs = int(25 * u)
 		for ln in _wrap(bold, d[0] if have2 else d[0], nw, name_fs):
-			draw_string(bold, Vector2(nx, ny), ln, HORIZONTAL_ALIGNMENT_LEFT, -1, name_fs, CREAM if have2 else Color(0.8, 0.82, 0.9))
+			draw_string(bold, Vector2(nx, ny), Loc.t(ln), HORIZONTAL_ALIGNMENT_LEFT, -1, name_fs, CREAM if have2 else Color(0.8, 0.82, 0.9))
 			ny += 29.0 * u
 		var status = ("OBTAINED   " + GS.ach_date(sid)) if have2 else "NOT YET"
-		draw_string(font, Vector2(nx, ny + 4.0 * u), status, HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(0.55, 0.95, 0.7) if have2 else Color(1, 1, 1, 0.45))
+		draw_string(font, Vector2(nx, ny + 4.0 * u), Loc.t(status), HORIZONTAL_ALIGNMENT_LEFT, -1, int(15 * u), Color(0.55, 0.95, 0.7) if have2 else Color(1, 1, 1, 0.45))
 		var dy = ir.end.y + 40.0 * u
-		draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), "WHAT TO DO", HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(GOLD.r, GOLD.g, GOLD.b, 0.85))
+		draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), Loc.t("WHAT TO DO"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(GOLD.r, GOLD.g, GOLD.b, 0.85))
 		dy += 24.0 * u
 		for ln in _wrap(font, d[1], cr.size.x - 44.0 * u, int(19 * u)):
-			draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), ln, HORIZONTAL_ALIGNMENT_LEFT, -1, int(19 * u), Color(1, 1, 1, 0.9))
+			draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), Loc.t(ln), HORIZONTAL_ALIGNMENT_LEFT, -1, int(19 * u), Color(1, 1, 1, 0.9))
 			dy += 25.0 * u
 		dy += 20.0 * u
-		draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), "THE GAME'S OPINION", HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(GOLD.r, GOLD.g, GOLD.b, 0.85))
+		draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), Loc.t("THE GAME'S OPINION"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(GOLD.r, GOLD.g, GOLD.b, 0.85))
 		dy += 24.0 * u
 		if have2:
 			for ln in _wrap(font, d[2], cr.size.x - 44.0 * u, int(19 * u)):
-				draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), ln, HORIZONTAL_ALIGNMENT_LEFT, -1, int(19 * u), Color(1.0, 0.93, 0.7, 0.95))
+				draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), Loc.t(ln), HORIZONTAL_ALIGNMENT_LEFT, -1, int(19 * u), Color(1.0, 0.93, 0.7, 0.95))
 				dy += 25.0 * u
 		else:
-			draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), "(it is not telling yet)", HORIZONTAL_ALIGNMENT_LEFT, -1, int(17 * u), Color(1, 1, 1, 0.35))
+			draw_string(font, Vector2(cr.position.x + 22.0 * u, dy), Loc.t("(it is not telling yet)"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(17 * u), Color(1, 1, 1, 0.35))
 		# the way back
 		back_rect = Rect2(Vector2(W - 190.0 * u, H - 78.0 * u), Vector2(140.0 * u, 44.0 * u))
 		var hov = back_rect.has_point(get_local_mouse_position())
 		draw_rect(back_rect, Color(0.08, 0.1, 0.16, 0.9))
 		draw_rect(back_rect, GOLD if hov else Color(1, 0.9, 0.6, 0.35), false, 2.0)
-		draw_string(bold, back_rect.position + Vector2(0, 30.0 * u), "BACK", HORIZONTAL_ALIGNMENT_CENTER, back_rect.size.x, int(22 * u), GOLD if hov else CREAM)
-		draw_string(font, Vector2(54.0 * u, H - 40.0 * u), "mouse or arrow keys  -  Esc to go back", HORIZONTAL_ALIGNMENT_LEFT, -1, int(13 * u), Color(1, 1, 1, 0.4))
+		draw_string(bold, back_rect.position + Vector2(0, 30.0 * u), Loc.t("BACK"), HORIZONTAL_ALIGNMENT_CENTER, back_rect.size.x, int(22 * u), GOLD if hov else CREAM)
+		draw_string(font, Vector2(54.0 * u, H - 40.0 * u), Loc.t("mouse or arrow keys  -  Esc to go back"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(13 * u), Color(1, 1, 1, 0.4))
 
 func _ready():
 	layer = 45

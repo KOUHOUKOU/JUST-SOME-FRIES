@@ -271,10 +271,23 @@ func _ready():
 		ev.physical_keycode = keys[a]
 		InputMap.action_add_event(a, ev)
 	reset_stats()
+	# round 17: the language. The player picks it on the card before the cover (ui/menus.gd); it is remembered in user://language.cfg.
+	# Dev / test runs stay in English unless they pass --lang=zh_CN / zh_TW / ja; --loc-log writes every shown line that has no translation.
+	var uargs = OS.get_cmdline_user_args()
+	var la = ""
+	for a in uargs:
+		if a.begins_with("--lang="):
+			la = a.substr(7)
+	if "--loc-log" in uargs:
+		Loc.record = true
+	if la == "":
+		la = "en" if uargs.size() > 0 else Loc.guess()
+	Loc.set_lang(la)
 	if web:
 		# the browser build restarts by reloading the page (main.gd `_reload`): the choice (straight into a new run, or the menu) comes through the tab's session storage
 		var v = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_skip_menu'); sessionStorage.removeItem('jsf_skip_menu'); return v; } catch (e) { return null; } })()")
 		skip_menu = str(v) == "1"
+		web_reloaded = v != null                  # a reload from inside the game (restart / back to the menu): the language card is not shown again
 		var vs = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_slot'); sessionStorage.removeItem('jsf_slot'); return v; } catch (e) { return null; } })()")
 		autoload_slot = int(str(vs)) if (vs != null and str(vs).is_valid_int()) else 0
 		# dev: `?lite=N` in the page address switches parts of the film moments off to find out what costs the most in the browser (1 = no close-ups, 2 = no blur, 4 = no letterbox bars + words)
@@ -284,6 +297,11 @@ func _ready():
 
 # The clock every timed thing in the game reads (rhythm rings, dialogue, cards). Normally the wall clock; under Movie Maker
 # (--write-movie, the walkthrough video) frames render slower than real time, so there it counts movie frames instead.
+var web_reloaded = false
+
+func _exit_tree():
+	if Loc.record:
+		Loc.dump_misses(ProjectSettings.globalize_path("res://").path_join("../shots/loc_miss_%d.txt" % Time.get_ticks_usec()))
 var movie_fps = 0.0
 
 func _init_clock():

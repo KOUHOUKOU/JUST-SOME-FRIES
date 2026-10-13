@@ -19,6 +19,8 @@
 
 A small 3D flight game made for **Tripothon**, theme *"A Gift for ____"*.
 
+🌐 **English · 简体中文 · 繁體中文 · 日本語** — the game asks for your language when it starts (press **L** on the title screen to change it).
+
 **A gift for: the part of you that only wanted some fries.**
 
 ## ▶ Watch · Play · Download
@@ -51,6 +53,15 @@ The trailer (about 1 minute 50) was recorded straight from the game with Godot's
 | C | Fry Codex (right-click a wearable to put it on or take it off) |
 | F | squawk |
 | Esc | pause |
+
+## Languages
+
+The whole game is translated: menus, HUD, Gull Sight, the codex and fish book, achievements, item cards, the comic opening and ending, the big brother, the people in town, signs and credits.
+Chinese and Japanese text wraps between characters and uses small subsets of **Noto Sans SC / JP** (SIL Open Font License) so it also works in the browser.
+How it works: [`game/scripts/systems/loc.gd`](game/scripts/systems/loc.gd), tables in [`tools/i18n/`](tools/i18n/), notes in [`design/47_ROUND17_LANGUAGES.md`](design/47_ROUND17_LANGUAGES.md).
+
+游戏支持简体中文、繁體中文和日本語：开始时会先选择语言，标题画面按 **L** 可以随时切换。
+ゲームは日本語にも対応しています。起動時に言語を選べます（タイトル画面で **L** を押すと切り替え）。
 
 ## The game
 

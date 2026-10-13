@@ -5,6 +5,7 @@
 Uses the GitHub token from the Git Credential Manager (`git credential fill`); the token is never printed.
 Assets: submission/JustSomeFries_Windows.zip, submission/JustSomeFries_walkthrough.mp4, film/art_remaster_preview.mp4 (uploaded as JustSomeFries_gameplay_preview.mp4).
 """
+import hashlib
 import json
 import subprocess
 import sys
@@ -24,11 +25,12 @@ FILES = [
 NOTES = (
     "**Recommended: download `JustSomeFries_Windows.zip` and play locally.** Unzip, double-click `JustSomeFries.exe` (keep the `.pck` next to it). "
     "The in-browser page is only a light trial and may not run stably; the local version has clearer graphics and runs much more smoothly.\n\n"
+    "Round 17: the game speaks English, Simplified Chinese, Traditional Chinese and Japanese (pick the language on the first card; L on the title changes it). "
     "Round 16: FISH TIME (surf the sea, launch with Space), the moon and sun as nine circles, F calls a flock, two save slots and KEEP PLAYING, an opening and ending drawn as a four-panel comic (a tribute to *What Fries Ahead*, False Knees #319, by Joshua Barkman), a fix for take-off from the water, and a new trailer. "
     "Round 15 (final content pass): a TAB lesson for Gull Sight, RAINBOW TIME first on the board, a SKY HIGH quest (cloud, star, moon, sun, rainbow, plus a rain cloud), "
     "new drink effects, a friendlier town (strangers leave you drinks, puppies run circles), a rewritten ending on the roof, 24 achievements with a gallery, "
     "redrawn comic panels, a balanced gull and tailored outfits. Round 14: art remaster to match the cover (some props adapted from Kenney's CC0 packs).\n\n"
-    "Windows 版推荐下载到本地游玩：网页版可能无法稳定运行，本地版画质更清晰、运行更流畅。"
+    "Windows 版推荐下载到本地游玩：网页版可能无法稳定运行，本地版画质更清晰、运行更流畅。游戏支持简体中文、繁體中文和日本語。"
 )
 
 
@@ -60,12 +62,20 @@ def main():
     rel = api("GET", "https://api.github.com/repos/%s/releases/tags/%s" % (REPO, TAG), tok)
     rid = rel["id"]
     print("release", rid, rel["name"])
-    names = {n for _, n, _ in FILES}
-    for a in rel.get("assets", []):
-        if a["name"] in names:
-            api("DELETE", "https://api.github.com/repos/%s/releases/assets/%d" % (REPO, a["id"]), tok)
-            print("deleted old asset", a["name"])
+    # an asset that is already there with the same bytes (GitHub reports its sha256) is kept, not uploaded again
+    have = {a["name"]: a for a in rel.get("assets", [])}
+    todo = []
     for f, name, ctype in FILES:
+        a = have.get(name)
+        digest = "sha256:" + hashlib.sha256(f.read_bytes()).hexdigest()
+        if a is not None and a.get("digest", "") == digest and a["size"] == f.stat().st_size:
+            print("unchanged, kept:", name)
+            continue
+        if a is not None:
+            api("DELETE", "https://api.github.com/repos/%s/releases/assets/%d" % (REPO, a["id"]), tok)
+            print("deleted old asset", name)
+        todo.append((f, name, ctype))
+    for f, name, ctype in todo:
         url = "https://uploads.github.com/repos/%s/releases/%d/assets?name=%s" % (REPO, rid, name)
         print("uploading", name, round(f.stat().st_size / 1e6, 1), "MB ...", flush=True)
         r = subprocess.run(["curl", "-sS", "--fail-with-body", "-X", "POST", "-H", "Authorization: Bearer " + tok,

@@ -269,7 +269,7 @@ class Pane extends Control:
 			var cx = x0 + 34.0 * u + i * 150.0 * u
 			var k = stats[i][0]
 			_stat_icon(k, Vector2(cx, 40.0 * u), 15.0 * u, GS.TYPE_COLORS[k])
-			draw_string(font, Vector2(cx + 28.0 * u, 48.0 * u), stats[i][1], HORIZONTAL_ALIGNMENT_LEFT, -1, int(24 * u), Color(1, 0.97, 0.88))
+			draw_string(font, Vector2(cx + 28.0 * u, 48.0 * u), Loc.t(stats[i][1]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(24 * u), Color(1, 0.97, 0.88))
 		# ---- the two tabs
 		tabs.clear()
 		for pg in 2:
@@ -279,7 +279,7 @@ class Pane extends Control:
 			draw_rect(tr, Color(1, 1, 1, 0.2 if on else 0.07))
 			if on:
 				draw_rect(Rect2(tr.position + Vector2(0, tr.size.y - 3.0), Vector2(tr.size.x, 3.0)), Color(1.0, 0.85, 0.35))
-			draw_string(font, tr.position + Vector2(0, 18.0 * u), ["FRIES", "FISH BOOK"][pg], HORIZONTAL_ALIGNMENT_CENTER, tr.size.x, int(13 * u), Color(1, 1, 1, 1.0 if on else 0.6))
+			draw_string(font, tr.position + Vector2(0, 18.0 * u), Loc.t(["FRIES", "FISH BOOK"][pg]), HORIZONTAL_ALIGNMENT_CENTER, tr.size.x, int(13 * u), Color(1, 1, 1, 1.0 if on else 0.6))
 		if ui.page == 1:
 			_fish_page(x0, font, u, t)
 		else:
@@ -303,7 +303,7 @@ class Pane extends Control:
 			if have:
 				_stat_icon(k2, Vector2(x0 + 128.0 * u, y + 28.0 * u), 17.0 * u, col.lightened(0.25))
 				var val = _value_text(k2, lv)
-				draw_string(font, Vector2(x0 + 162.0 * u, y + 38.0 * u), val, HORIZONTAL_ALIGNMENT_LEFT, -1, int(26 * u), Color(1, 0.97, 0.88))
+				draw_string(font, Vector2(x0 + 162.0 * u, y + 38.0 * u), Loc.t(val), HORIZONTAL_ALIGNMENT_LEFT, -1, int(26 * u), Color(1, 0.97, 0.88))
 			else:
 				_stat_icon(k2, Vector2(x0 + 128.0 * u, y + 28.0 * u), 17.0 * u, Color(1, 1, 1, 0.22))
 			# the three gems + the rainbow count
@@ -316,7 +316,7 @@ class Pane extends Control:
 			for q in 5:
 				var rc = Color.from_hsv(float(q) / 5.0, 0.55, 1.0, 1.0 if rb > 0 else 0.2)
 				draw_arc(Vector2(rx, y + 40.0 * u), (16.0 - q * 2.2) * u, PI, TAU, 14, rc, 2.5, true)
-			draw_string(font, Vector2(rx + 22.0 * u, y + 42.0 * u), "x%d" % rb, HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.8, 0.95, 1.0 if rb > 0 else 0.3))
+			draw_string(font, Vector2(rx + 22.0 * u, y + 42.0 * u), Loc.t("x%d" % rb), HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.8, 0.95, 1.0 if rb > 0 else 0.3))
 			y += rh
 		# ---- the menu: coffee, the cocktail and ice cream, with the number you have had
 		var my = y + 8.0 * u
@@ -345,19 +345,19 @@ class Pane extends Control:
 				draw_polyline(PackedVector2Array([Vector2(ax - 8, my + 50.0 * u), Vector2(ax, my + 46.0 * u), Vector2(ax + 8, my + 50.0 * u)]), ac, 2.5, true)
 			else:
 				_shield(Vector2(ax, my + 38.0 * u), 15.0 * u, ac)
-			draw_string(font, Vector2(cx2 + 62.0 * u, my + 42.0 * u), "x%d" % n, HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.97, 0.88, 1.0 if n > 0 else 0.35))
+			draw_string(font, Vector2(cx2 + 62.0 * u, my + 42.0 * u), Loc.t("x%d" % n), HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.97, 0.88, 1.0 if n > 0 else 0.35))
 
 	# ---- the fish book: nine kinds in three rarities; the longest and the heaviest of each that the gull ever caught
 	func _fish_page(x0, font, u, t):
 		var y = 90.0 * u
 		var caught = GS.fish_book.size()
-		draw_string(font, Vector2(x0, y + 12.0 * u), "THE FISH BOOK     %d / %d" % [caught, GS.FISH_ORDER.size()], HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.97, 0.88))
+		draw_string(font, Vector2(x0, y + 12.0 * u), Loc.t("THE FISH BOOK     %d / %d" % [caught, GS.FISH_ORDER.size()]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(20 * u), Color(1, 0.97, 0.88))
 		y += 26.0 * u
 		var cw = (size.x * 0.5 - 40.0 * u) / 3.0
 		for rar in 3:
 			var rc = GS.FISH_RARITY_COLORS[rar]
 			draw_rect(Rect2(Vector2(x0 - 8.0 * u, y), Vector2(size.x * 0.5 - 40.0 * u, 20.0 * u)), Color(rc.r, rc.g, rc.b, 0.22))
-			draw_string(font, Vector2(x0, y + 15.0 * u), "%s    %d BEATS TO CATCH    NEED %d" % [GS.FISH_RARITY_NAMES[rar], GS.FISH_JUDGE[rar], int(GS.FISH_NEED[rar])], HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(rc.r, rc.g, rc.b, 1.0))
+			draw_string(font, Vector2(x0, y + 15.0 * u), Loc.t("%s    %d BEATS TO CATCH    NEED %d" % [GS.FISH_RARITY_NAMES[rar], GS.FISH_JUDGE[rar], int(GS.FISH_NEED[rar])]), HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(rc.r, rc.g, rc.b, 1.0))
 			y += 24.0 * u
 			var col = 0
 			for sp in GS.FISH_ORDER:
@@ -370,15 +370,15 @@ class Pane extends Control:
 				draw_rect(Rect2(r.position, Vector2(r.size.x, 3.0 * u)), Color(rc.r, rc.g, rc.b, 0.9 if have else 0.25))
 				FishArt.draw(self, r.position + Vector2(r.size.x * 0.46, 40.0 * u), min(cw * 0.26, 44.0 * u), sp, 1.0, have)
 				if have:
-					draw_string(font, r.position + Vector2(0, 80.0 * u), GS.FISH_SPECIES[sp][0], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(13 * u), Color(1, 0.97, 0.88))
-					draw_string(font, r.position + Vector2(0, 98.0 * u), "%s    %s" % [GS.fish_cm_text(e["cm"]), GS.fish_kg_text(e["kg"])], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(13 * u), Color(1.0, 0.86, 0.5))
-					draw_string(font, r.position + Vector2(0, 113.0 * u), "BEST   -   CAUGHT x%d" % e["n"], HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(10 * u), Color(1, 1, 1, 0.55))
+					draw_string(font, r.position + Vector2(0, 80.0 * u), Loc.t(GS.FISH_SPECIES[sp][0]), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(13 * u), Color(1, 0.97, 0.88))
+					draw_string(font, r.position + Vector2(0, 98.0 * u), Loc.t("%s    %s" % [GS.fish_cm_text(e["cm"]), GS.fish_kg_text(e["kg"])]), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(13 * u), Color(1.0, 0.86, 0.5))
+					draw_string(font, r.position + Vector2(0, 113.0 * u), Loc.t("BEST   -   CAUGHT x%d" % e["n"]), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(10 * u), Color(1, 1, 1, 0.55))
 				else:
 					draw_string(font, r.position + Vector2(0, 85.0 * u), "?", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(26 * u), Color(1, 1, 1, 0.3))
-					draw_string(font, r.position + Vector2(0, 108.0 * u), "NOT CAUGHT YET", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(10 * u), Color(1, 1, 1, 0.35))
+					draw_string(font, r.position + Vector2(0, 108.0 * u), Loc.t("NOT CAUGHT YET"), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(10 * u), Color(1, 1, 1, 0.35))
 				col += 1
 			y += 124.0 * u
-		draw_string(font, Vector2(x0, size.y - 20.0 * u), "fish leap where the water bubbles.   Gull Sight shows where, 5 seconds ahead.", HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(1, 1, 1, 0.42))
+		draw_string(font, Vector2(x0, size.y - 20.0 * u), Loc.t("fish leap where the water bubbles.   Gull Sight shows where, 5 seconds ahead."), HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u), Color(1, 1, 1, 0.42))
 
 	func _left_side(x0, font, u, t):
 		# ---- the wardrobe (under the gull)
@@ -408,7 +408,7 @@ class Pane extends Control:
 				draw_string(font, r.position + Vector2(0, r.size.y * 0.72), "?", HORIZONTAL_ALIGNMENT_CENTER, r.size.x, int(18 * u), Color(1, 1, 1, 0.22))
 			var cnt = GS.mischief_counts.get(k3, 0)
 			if owned:
-				draw_string(font, r.position + Vector2(r.size.x - 30.0 * u, r.size.y - 5.0 * u), "x%d" % max(cnt, 1), HORIZONTAL_ALIGNMENT_RIGHT, 26.0 * u, int(12 * u), Color(1, 0.95, 0.8))
+				draw_string(font, r.position + Vector2(r.size.x - 30.0 * u, r.size.y - 5.0 * u), Loc.t("x%d" % max(cnt, 1)), HORIZONTAL_ALIGNMENT_RIGHT, 26.0 * u, int(12 * u), Color(1, 0.95, 0.8))
 				if not GS.menu_seen.has("w_" + k3):
 					draw_circle(r.position + Vector2(r.size.x - 8.0 * u, 9.0 * u), 5.0 * u, Color(1.0, 0.3, 0.3))
 		# the mouse hint: a little mouse with the right button lit
@@ -438,7 +438,7 @@ class Pane extends Control:
 			var n2 = Vector2(-d.y, d.x)
 			draw_colored_polygon(PackedVector2Array([pp + d * 7, pp - d * 4 + n2 * 4, pp - d * 4 - n2 * 4]), Color(1, 1, 1))
 		if GS.ordinary_eaten:
-			draw_string(font, Vector2(size.x * 0.5 + 24.0 * u, size.y - 20.0 * u), "FRY   -   no effect.   tastes good.", HORIZONTAL_ALIGNMENT_LEFT, -1, int(18 * u), Color(1, 0.95, 0.8, 0.8))
+			draw_string(font, Vector2(size.x * 0.5 + 24.0 * u, size.y - 20.0 * u), Loc.t("FRY   -   no effect.   tastes good."), HORIZONTAL_ALIGNMENT_LEFT, -1, int(18 * u), Color(1, 0.95, 0.8, 0.8))
 
 func _ready():
 	layer = 12

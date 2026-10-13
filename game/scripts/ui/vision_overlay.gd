@@ -66,18 +66,18 @@ func _draw():
 		title = "OUT OF BREATH"
 		sub = "REST  -  LAND SOMEWHERE"
 		col = Color(1.0, 0.6, 0.4, 0.95 * a)
-	draw_string(font, Vector2(0, 112 * u), title, HORIZONTAL_ALIGNMENT_CENTER, size.x, int(22 * u), col)
+	draw_string(font, Vector2(0, 112 * u), Loc.t(title), HORIZONTAL_ALIGNMENT_CENTER, size.x, int(22 * u), col)
 	var cost = GS.vision_cost()
 	var free = p.mode != 0 or cost <= 0.0
 	var cost_txt = "FREE" if free else "-%.1f STAMINA / SEC" % cost
-	draw_string(font, Vector2(0, 132 * u), sub + "    " + cost_txt, HORIZONTAL_ALIGNMENT_CENTER, size.x, int(13 * u), Color(1.0, 0.92, 0.7, 0.6 * a))
+	draw_string(font, Vector2(0, 132 * u), Loc.t(sub + "    " + cost_txt), HORIZONTAL_ALIGNMENT_CENTER, size.x, int(13 * u), Color(1.0, 0.92, 0.7, 0.6 * a))
 	# the legend of the light pillars: the colour of the beam is the rarity of the fry
 	var names = ["SILVER", "GOLD", "DIAMOND", "RAINBOW"]
 	var x = size.x * 0.5 - 205.0 * u
 	for k in 4:
 		var c = _beam_col(k + 1, k * 0.2)
 		draw_rect(Rect2(x, 150 * u, 6.0 * u, 16.0 * u), Color(c.r, c.g, c.b, 0.95 * a))
-		draw_string(font, Vector2(x + 12.0 * u, 163 * u), names[k], HORIZONTAL_ALIGNMENT_LEFT, 90, int(12 * u), Color(c.r, c.g, c.b, 0.9 * a))
+		draw_string(font, Vector2(x + 12.0 * u, 163 * u), Loc.t(names[k]), HORIZONTAL_ALIGNMENT_LEFT, 90, int(12 * u), Color(c.r, c.g, c.b, 0.9 * a))
 		x += 104.0 * u
 
 # everything inside the radius that the gull could snatch, nearest first (fries before props), at most ~16 labels
@@ -179,9 +179,9 @@ func draw_glows(ci):
 				_emblem(ci, sp, tier, col, core, r, u)
 				var lines = label.split("\n")
 				var tcol = Color(col.r, col.g, col.b, (0.95 if tier < 4 else 0.7) * a)
-				ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 16 * u), lines[0], HORIZONTAL_ALIGNMENT_CENTER, 160, int((12 if tier < 4 else 10) * u), tcol)
+				ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 16 * u), Loc.t(lines[0]), HORIZONTAL_ALIGNMENT_CENTER, 160, int((12 if tier < 4 else 10) * u), tcol)
 				if tier < 4:
-					ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 32 * u), lines[1], HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), lc)
+					ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 32 * u), Loc.t(lines[1]), HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), lc)
 				n_labels += 1
 			else:
 				var dir = sp - size * 0.5
@@ -200,8 +200,8 @@ func draw_glows(ci):
 				ci.draw_colored_polygon(PackedVector2Array([pos + dir * 17.0 * sc * u, pos - dir * 9.0 * u + nrm * 12.0 * u, pos - dir * 9.0 * u - nrm * 12.0 * u]), Color(col.r, col.g, col.b, 0.95 * a))
 				ci.draw_circle(pos - dir * 4.0, 4.0 * u, Color(core.r, core.g, core.b, 0.9 * a))
 				var lines2 = label.split("\n")
-				ci.draw_string(font, pos - dir * 34.0 * u + Vector2(-60, 0), lines2[0], HORIZONTAL_ALIGNMENT_CENTER, 120, int(12 * u), Color(1, 1, 1, 0.8 * a))
-				ci.draw_string(font, pos - dir * 34.0 * u + Vector2(-60, 14 * u), lines2[1], HORIZONTAL_ALIGNMENT_CENTER, 120, int(12 * u), lc)
+				ci.draw_string(font, pos - dir * 34.0 * u + Vector2(-60, 0), Loc.t(lines2[0]), HORIZONTAL_ALIGNMENT_CENTER, 120, int(12 * u), Color(1, 1, 1, 0.8 * a))
+				ci.draw_string(font, pos - dir * 34.0 * u + Vector2(-60, 14 * u), Loc.t(lines2[1]), HORIZONTAL_ALIGNMENT_CENTER, 120, int(12 * u), lc)
 				n_labels += 1
 		else:
 			# a thing (a drink, an ice cream, something to wear, a fish, a cloud...): a small picture of what it is, so the gull can decide whether it wants it
@@ -215,8 +215,8 @@ func draw_glows(ci):
 				ci.draw_circle(sp, s * 1.35, Color(0.02, 0.03, 0.07, 0.55 * a))
 				ci.draw_arc(sp, s * 1.35, 0, TAU, 24, Color(tint.r, tint.g, tint.b, 0.85 * a), 1.6, true)
 				_icon(ci, kind, sp, s, Color(tint.r, tint.g, tint.b, a))
-				ci.draw_string(font, sp + Vector2(-50, s * 1.35 + 13 * u), tag, HORIZONTAL_ALIGNMENT_CENTER, 100, int(11 * u), Color(1, 1, 1, 0.8 * a))
-				ci.draw_string(font, sp + Vector2(-50, s * 1.35 + 25 * u), "%d" % int(round(need)), HORIZONTAL_ALIGNMENT_CENTER, 100, int(10 * u), Color(1.0, 0.9, 0.6, 0.75 * a) if reachable else Color(1.0, 0.5, 0.45, 0.8 * a))
+				ci.draw_string(font, sp + Vector2(-50, s * 1.35 + 13 * u), Loc.t(tag), HORIZONTAL_ALIGNMENT_CENTER, 100, int(11 * u), Color(1, 1, 1, 0.8 * a))
+				ci.draw_string(font, sp + Vector2(-50, s * 1.35 + 25 * u), Loc.t("%d" % int(round(need))), HORIZONTAL_ALIGNMENT_CENTER, 100, int(10 * u), Color(1.0, 0.9, 0.6, 0.75 * a) if reachable else Color(1.0, 0.5, 0.45, 0.8 * a))
 				n_labels += 1
 	# when no fry is inside the circle of sight, the nearest fry in the whole town is still pointed out: there is always something to fly to
 	_draw_fish_forecast(ci, cam, font, u, rect, pl)
@@ -228,7 +228,7 @@ func draw_glows(ci):
 	if not have_fry and pl != null:
 		_nearest_pointer(ci, cam, font, u, rect, pl)
 	if items_.is_empty():
-		ci.draw_string(font, Vector2(0, size.y * 0.5 + 40 * u), "nothing in range - but there is one out there:", HORIZONTAL_ALIGNMENT_CENTER, size.x, int(14 * u), Color(1, 1, 1, 0.34 * a))
+		ci.draw_string(font, Vector2(0, size.y * 0.5 + 40 * u), Loc.t("nothing in range - but there is one out there:"), HORIZONTAL_ALIGNMENT_CENTER, size.x, int(14 * u), Color(1, 1, 1, 0.34 * a))
 	_unused(seen_labels, my_max)
 
 func _unused(_a, _b):
@@ -386,8 +386,8 @@ func _draw_meteor(ci, cam, font, u, rect, pl):
 			var an = t * 1.2 + k * PI * 0.5
 			ci.draw_line(hs + Vector2(cos(an), sin(an)) * r * 1.1, hs + Vector2(cos(an), sin(an)) * r * 1.9, Color(1, 1, 1, 0.9 * a), 1.8 * u, true)
 		ci.draw_circle(hs, r * 0.28, Color(1, 1, 1, 0.95 * a))
-		ci.draw_string(font, hs + Vector2(-90, r * 1.9 + 16 * u), title, HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(gold.r, gold.g, gold.b, 0.98 * a))
-		ci.draw_string(font, hs + Vector2(-90, r * 1.9 + 31 * u), sub, HORIZONTAL_ALIGNMENT_CENTER, 180, int(12 * u), lc)
+		ci.draw_string(font, hs + Vector2(-90, r * 1.9 + 16 * u), Loc.t(title), HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(gold.r, gold.g, gold.b, 0.98 * a))
+		ci.draw_string(font, hs + Vector2(-90, r * 1.9 + 31 * u), Loc.t(sub), HORIZONTAL_ALIGNMENT_CENTER, 180, int(12 * u), lc)
 	else:
 		var tgt = hs if not behind else first_on
 		var dv = tgt - size * 0.5
@@ -400,8 +400,8 @@ func _draw_meteor(ci, cam, font, u, rect, pl):
 		var pos = rect.position + half + dv * min(half.x / max(abs(dv.x), 0.001), half.y / max(abs(dv.y), 0.001))
 		var nrm = Vector2(-dv.y, dv.x)
 		ci.draw_polyline(PackedVector2Array([pos - dv * 6.0 * u + nrm * 11.0 * u, pos + dv * 12.0 * u, pos - dv * 6.0 * u - nrm * 11.0 * u]), Color(gold.r, gold.g, gold.b, 0.95 * a), 2.4 * u, true)
-		ci.draw_string(font, pos - dv * 34.0 * u + Vector2(-70, 0), title, HORIZONTAL_ALIGNMENT_CENTER, 140, int(12 * u), Color(gold.r, gold.g, gold.b, 0.95 * a))
-		ci.draw_string(font, pos - dv * 34.0 * u + Vector2(-70, 14 * u), sub, HORIZONTAL_ALIGNMENT_CENTER, 140, int(11 * u), lc)
+		ci.draw_string(font, pos - dv * 34.0 * u + Vector2(-70, 0), Loc.t(title), HORIZONTAL_ALIGNMENT_CENTER, 140, int(12 * u), Color(gold.r, gold.g, gold.b, 0.95 * a))
+		ci.draw_string(font, pos - dv * 34.0 * u + Vector2(-70, 14 * u), Loc.t(sub), HORIZONTAL_ALIGNMENT_CENTER, 140, int(11 * u), lc)
 
 
 # the fish that are about to jump: a ring on the water, the rarity of the fish, the seconds left (5 s ahead of the bubbles) and the speed it needs
@@ -431,8 +431,8 @@ func _draw_fish_forecast(ci, cam, font, u, rect, pl):
 			ci.draw_arc(scr, r * 1.35, t, t + TAU * 0.6, 28, Color(rc.r, rc.g, rc.b, 0.45 * a), 2.0, true)
 			ci.draw_circle(scr, r * 0.5, Color(rc.r, rc.g, rc.b, 0.18 * a))
 			_icon(ci, "fish", scr, r * 0.42, Color(rc.r, rc.g, rc.b, a))
-			ci.draw_string(font, scr + Vector2(-80, r + 20 * u), "%s FISH   %dm" % [GS.FISH_RARITY_NAMES[info["rarity"]], int(d)], HORIZONTAL_ALIGNMENT_CENTER, 160, int(13 * u), Color(rc.r, rc.g, rc.b, 0.95 * a))
-			ci.draw_string(font, scr + Vector2(-80, r + 36 * u), lbl + "    NEED %d" % need, HORIZONTAL_ALIGNMENT_CENTER, 160, int(13 * u), lc)
+			ci.draw_string(font, scr + Vector2(-80, r + 20 * u), Loc.t("%s FISH   %dm" % [GS.FISH_RARITY_NAMES[info["rarity"]], int(d)]), HORIZONTAL_ALIGNMENT_CENTER, 160, int(13 * u), Color(rc.r, rc.g, rc.b, 0.95 * a))
+			ci.draw_string(font, scr + Vector2(-80, r + 36 * u), Loc.t(lbl + "    NEED %d" % need), HORIZONTAL_ALIGNMENT_CENTER, 160, int(13 * u), lc)
 		else:
 			var dir = scr - size * 0.5
 			if behind:
@@ -445,14 +445,14 @@ func _draw_fish_forecast(ci, cam, font, u, rect, pl):
 			var nrm = Vector2(-dir.y, dir.x)
 			ci.draw_circle(pos, 20.0 * u, Color(rc.r, rc.g, rc.b, 0.2 * a))
 			ci.draw_colored_polygon(PackedVector2Array([pos + dir * 14.0 * u, pos - dir * 8.0 * u + nrm * 10.0 * u, pos - dir * 8.0 * u - nrm * 10.0 * u]), Color(rc.r, rc.g, rc.b, 0.95 * a))
-			ci.draw_string(font, pos - dir * 30.0 * u + Vector2(-60, 0), "FISH  %s" % lbl, HORIZONTAL_ALIGNMENT_CENTER, 120, int(11 * u), lc)
+			ci.draw_string(font, pos - dir * 30.0 * u + Vector2(-60, 0), Loc.t("FISH  %s" % lbl), HORIZONTAL_ALIGNMENT_CENTER, 120, int(11 * u), lc)
 
 # the nearest fry anywhere (not the plain one: it never glows), as an arrow on the edge of the view with its distance
 func _nearest_pointer(ci, cam, font, u, rect, pl):
 	# only a fry that the gull's top speed can lock: pointing at one that is out of reach would waste the player's time
 	var best = GS.nearest_fry(pl.global_position)
 	if best == null:
-		ci.draw_string(font, Vector2(0, size.y * 0.5 + 64 * u), "no fry you can reach yet - look for something that makes you faster", HORIZONTAL_ALIGNMENT_CENTER, size.x, int(14 * u), Color(1, 0.9, 0.7, 0.55 * a))
+		ci.draw_string(font, Vector2(0, size.y * 0.5 + 64 * u), Loc.t("no fry you can reach yet - look for something that makes you faster"), HORIZONTAL_ALIGNMENT_CENTER, size.x, int(14 * u), Color(1, 0.9, 0.7, 0.55 * a))
 		return
 	var bd = pl.global_position.distance_to(best.global_position)
 	var info = best.vision_info()
@@ -467,7 +467,7 @@ func _nearest_pointer(ci, cam, font, u, rect, pl):
 		var r = 30.0 * pulse * u
 		ci.draw_arc(sp, r, 0, TAU, 36, Color(col.r, col.g, col.b, 0.95 * a), 3.0, true)
 		ci.draw_circle(sp, r * 0.4, Color(info["core"].r, info["core"].g, info["core"].b, 0.85 * a))
-		ci.draw_string(font, sp + Vector2(-90, r + 18 * u), label, HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(1, 1, 1, 0.9 * a))
+		ci.draw_string(font, sp + Vector2(-90, r + 18 * u), Loc.t(label), HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(1, 1, 1, 0.9 * a))
 		return
 	var dir = sp - size * 0.5
 	if behind:
@@ -482,7 +482,7 @@ func _nearest_pointer(ci, cam, font, u, rect, pl):
 	var nrm = Vector2(-dir.y, dir.x)
 	ci.draw_circle(pos, 30.0 * pulse * u, Color(col.r, col.g, col.b, 0.22 * a))
 	ci.draw_colored_polygon(PackedVector2Array([pos + dir * 22.0 * pulse * u, pos - dir * 11.0 * u + nrm * 15.0 * u, pos - dir * 11.0 * u - nrm * 15.0 * u]), Color(col.r, col.g, col.b, 0.97 * a))
-	ci.draw_string(font, pos - dir * 40.0 * u + Vector2(-90, 0), label, HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(1, 1, 1, 0.92 * a))
+	ci.draw_string(font, pos - dir * 40.0 * u + Vector2(-90, 0), Loc.t(label), HORIZONTAL_ALIGNMENT_CENTER, 180, int(13 * u), Color(1, 1, 1, 0.92 * a))
 
 # ---------------------------------------------------------------- the pictures of the things
 const KIND_TAG = {"coffee": "COFFEE", "alcohol": "COCKTAIL", "icecream": "ICE CREAM", "hawaii": "SHIRT", "stripes": "SHIRT", "coat": "COAT", "socks": "SOCK", "hat": "HAT", "sailor": "HAT",

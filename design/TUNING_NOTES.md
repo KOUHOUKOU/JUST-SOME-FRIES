@@ -174,3 +174,11 @@
 
 ## Round 16 (2026-10-12)
 See `docs/46_ROUND16_CHANGES.md`. Build: `BUILD.bat`, `python tools/make_zip.py` (Windows zip), `godot --headless --path game --export-release "Web" ../web/index.html` then `python tools/web/patch_index.py web/index.html film/poster_new.jpg`. Art: `python tools/cut_r16.py [a b c d e g]`, `tools/cut_r16_icons.py`; music: `python tools/audio/music16.py` (then `godot --headless --path game --import`). Dev tests `--r16a .. --r16f`, `--r16s`.
+
+
+## Round 17 (2026-10-13): four languages
+See `docs/47_ROUND17_LANGUAGES.md`. English / 简体中文 / 繁體中文 / 日本語, a language card before the cover, "L" on the cover changes it.
+Text tables `tools/i18n/tr_*.py` -> `python tools/i18n/build.py` (JSON + Noto Sans SC/JP subsets, then `godot --headless --path game --import`).
+Dev: `--lang=zh_CN|zh_TW|ja` (tests stay English without it), `--loc-log` writes untranslated shown lines to `shots/loc_miss_*.txt`, `--r17` shoots the menus in all four languages.
+Rules: never build a shown line from pieces without a template in the tables; drawn text goes through `Loc.t()` (all `draw_string*` / `get_string_size` calls are wrapped);
+text typed letter by letter must be translated before typing. The JSON is exported through `include_filter` (both presets).

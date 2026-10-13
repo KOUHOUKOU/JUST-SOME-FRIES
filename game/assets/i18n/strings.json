@@ -1,0 +1,4622 @@
+{
+"%.1f kg": {
+"ja": "{0} kg",
+"zh_CN": "{0} 千克",
+"zh_TW": "{0} 公斤"
+},
+"%.2f m": {
+"ja": "{0} m",
+"zh_CN": "{0} 米",
+"zh_TW": "{0} 公尺"
+},
+"%d   >   %d": {
+"ja": "{0}   >   {1}",
+"zh_CN": "{0}   >   {1}",
+"zh_TW": "{0}   >   {1}"
+},
+"%d / %d": {
+"ja": "{0} / {1}",
+"zh_CN": "{0} / {1}",
+"zh_TW": "{0} / {1}"
+},
+"%d cm": {
+"ja": "{0} cm",
+"zh_CN": "{0} 厘米",
+"zh_TW": "{0} 公分"
+},
+"%d fries are still out there. I counted. I was bored.": {
+"ja": "まだ{0}本残ってる。数えた。ヒマだったんでな。",
+"zh_CN": "外面还有 {0} 根薯条。我数过。我闲得慌。",
+"zh_TW": "外面還有 {0} 根薯條。我數過。我閒得慌。"
+},
+"%d g": {
+"ja": "{0} g",
+"zh_CN": "{0} 克",
+"zh_TW": "{0} 克"
+},
+"%d kinds of fish so far. Nine exist.": {
+"ja": "いまのところ魚は{0}種類。全部で9種類だ。",
+"zh_CN": "目前 {0} 种鱼。一共有九种。",
+"zh_TW": "目前 {0} 種魚。一共有九種。"
+},
+"%d m": {
+"ja": "{0} m",
+"zh_CN": "{0} 米",
+"zh_TW": "{0} 公尺"
+},
+"%d m   NEED %d": {
+"ja": "{0} m   必要 {1}",
+"zh_CN": "{0} 米   需要 {1}",
+"zh_TW": "{0} 公尺   需要 {1}"
+},
+"%d of %d achievements.": {
+"ja": "実績 {0} / {1}。",
+"zh_CN": "成就 {0} / {1}。",
+"zh_TW": "成就 {0} / {1}。"
+},
+"%d s": {
+"ja": "{0} 秒",
+"zh_CN": "{0} 秒",
+"zh_TW": "{0} 秒"
+},
+"%dm": {
+"ja": "{0}m",
+"zh_CN": "{0} 米",
+"zh_TW": "{0} 公尺"
+},
+"%s     %s": {
+"ja": "{0}     {1}",
+"zh_CN": "{0}     {1}",
+"zh_TW": "{0}     {1}"
+},
+"%s    %d BEATS TO CATCH    NEED %d": {
+"ja": "{0}    {1}拍でキャッチ    必要速度 {2}",
+"zh_CN": "{0}    需要 {1} 拍    速度 {2}",
+"zh_TW": "{0}    需要 {1} 拍    速度 {2}"
+},
+"%s    %s": {
+"ja": "{0}    {1}",
+"zh_CN": "{0}    {1}",
+"zh_TW": "{0}    {1}"
+},
+"%s   %s": {
+"ja": "{0}   {1}",
+"zh_CN": "{0}   {1}",
+"zh_TW": "{0}   {1}"
+},
+"%s  %dm": {
+"ja": "{0}  {1}m",
+"zh_CN": "{0}  {1} 米",
+"zh_TW": "{0}  {1} 公尺"
+},
+"%s %s. %s, %s.": {
+"ja": "{1}。{2}、{3}。",
+"zh_CN": "一条{1}。{2}，{3}。",
+"zh_TW": "一條{1}。{2}，{3}。"
+},
+"%s %s. the wettest thing i had ever held.": {
+"ja": "{1}。今までくわえた中でいちばん濡れてた。",
+"zh_CN": "一条{1}。我叼过最湿的东西。",
+"zh_TW": "一條{1}。我叼過最濕的東西。"
+},
+"%s FISH": {
+"ja": "{0}の魚",
+"zh_CN": "{0}鱼",
+"zh_TW": "{0}魚"
+},
+"%s FISH   %dm": {
+"ja": "{0}の魚   {1}m",
+"zh_CN": "{0}鱼   {1} 米",
+"zh_TW": "{0}魚   {1} 公尺"
+},
+"%s FISH   %dm    NEED %d": {
+"ja": "{0}の魚   {1}m    必要 {2}",
+"zh_CN": "{0}鱼   {1} 米    需要 {2}",
+"zh_TW": "{0}魚   {1} 公尺    需要 {2}"
+},
+"%s FRY": {
+"ja": "{0}ポテト",
+"zh_CN": "{0}薯条",
+"zh_TW": "{0}薯條"
+},
+"%s complete. the next ones are rainbow.": {
+"ja": "{0}コンプリート。次はレインボーだ。",
+"zh_CN": "{0}集齐了。接下来的是彩虹的。",
+"zh_TW": "{0}集齊了。接下來的是彩虹的。"
+},
+"(he would probably have given you one anyway.)": {
+"ja": "（どうせあの人、一本くらいくれただろうけど。）",
+"zh_CN": "（反正他大概本来也会给你一根的。）",
+"zh_TW": "（反正他大概本來也會給你一根的。）"
+},
+"(it is not telling yet)": {
+"ja": "（まだ教えてくれない）",
+"zh_CN": "（它还不肯说）",
+"zh_TW": "（它還不肯說）"
+},
+"(thank you, Musopen. thank you, Wikimedia Commons.)": {
+"ja": "（ありがとう、Musopen。ありがとう、ウィキメディア・コモンズ。）",
+"zh_CN": "（谢谢你，Musopen。谢谢你，维基共享资源。）",
+"zh_TW": "（謝謝你，Musopen。謝謝你，維基共享資源。）"
+},
+"*puff*": {
+"ja": "*ぷかー*",
+"zh_CN": "*呼*",
+"zh_TW": "*呼*"
+},
+"*shimmer*": {
+"ja": "*キラキラ*",
+"zh_CN": "*闪闪*",
+"zh_TW": "*閃閃*"
+},
+"*shiver*": {
+"ja": "*ぶるぶる*",
+"zh_CN": "*哆嗦*",
+"zh_TW": "*哆嗦*"
+},
+"+0.9 TOP SPEED": {
+"ja": "+0.9 最高速度",
+"zh_CN": "+0.9 极速",
+"zh_TW": "+0.9 極速"
+},
+"+2 % BANDS": {
+"ja": "+2% 判定帯",
+"zh_CN": "+2% 判定带",
+"zh_TW": "+2% 判定帶"
+},
+"+3 % RESTING": {
+"ja": "+3% 休憩",
+"zh_CN": "+3% 休息",
+"zh_TW": "+3% 休息"
+},
+"+4 % ACCELERATION": {
+"ja": "+4% 加速",
+"zh_CN": "+4% 加速",
+"zh_TW": "+4% 加速"
+},
+"+4 STAMINA": {
+"ja": "+4 スタミナ",
+"zh_CN": "+4 体力",
+"zh_TW": "+4 體力"
+},
+"+4 m SIGHT": {
+"ja": "+4 m 視界",
+"zh_CN": "+4 米视野",
+"zh_TW": "+4 公尺視野"
+},
+"-  EMPTY  -": {
+"ja": "-  からっぽ  -",
+"zh_CN": "-  空  -",
+"zh_TW": "-  空  -"
+},
+"-%.1f STAMINA / SEC": {
+"ja": "-{0} スタミナ / 秒",
+"zh_CN": "-{0} 体力 / 秒",
+"zh_TW": "-{0} 體力 / 秒"
+},
+"-%d %%": {
+"ja": "-{0}%",
+"zh_CN": "-{0}%",
+"zh_TW": "-{0}%"
+},
+"-%d%%": {
+"ja": "-{0}%",
+"zh_CN": "-{0}%",
+"zh_TW": "-{0}%"
+},
+"-1 % DAMAGE": {
+"ja": "-1% ダメージ",
+"zh_CN": "-1% 伤害",
+"zh_TW": "-1% 傷害"
+},
+"...Hats are heavy. So is wanting things.": {
+"ja": "……帽子は重い。何かを欲しがるのもな。",
+"zh_CN": "……帽子很沉。想要东西也是。",
+"zh_TW": "……帽子很沉。想要東西也是。"
+},
+"...Nineteen, I suppose. That's not a direction. That's arithmetic.": {
+"ja": "……19本、だろうな。それは方角じゃない。算数だ。",
+"zh_CN": "……十九根吧，我猜。那不是方向，那是算术。",
+"zh_TW": "……十九根吧，我猜。那不是方向，那是算術。"
+},
+"...Right. Mine too. Something about fries, on a pier. Funny, that.": {
+"ja": "……だよな。おれのもだ。桟橋の、ポテトの話。おかしなもんだ。",
+"zh_CN": "……对。我的也是。跟码头上的薯条有关。挺好笑的。",
+"zh_TW": "……對。我的也是。跟碼頭上的薯條有關。挺好笑的。"
+},
+"...SAME.": {
+"ja": "……おれもだ。",
+"zh_CN": "……我也是。",
+"zh_TW": "……我也是。"
+},
+"...What does the stomach say?": {
+"ja": "……腹はなんて言ってる？",
+"zh_CN": "……肚子怎么说？",
+"zh_TW": "……肚子怎麼說？"
+},
+"...You brought it all the way up here.": {
+"ja": "……わざわざここまで持ってきたのか。",
+"zh_CN": "……你一路把它带上来了。",
+"zh_TW": "……你一路把它帶上來了。"
+},
+"...You're back. The fry is gone, and you're back.": {
+"ja": "……戻ってきたか。ポテトはなくなって、キミは戻ってきた。",
+"zh_CN": "……你回来了。薯条没了，你回来了。",
+"zh_TW": "……你回來了。薯條沒了，你回來了。"
+},
+"...and I'm still hungry.": {
+"ja": "……なのに、まだ腹がへってる。",
+"zh_CN": "……可我还是饿。",
+"zh_TW": "……可我還是餓。"
+},
+"...and you're the one who looks full.": {
+"ja": "……なのに、満ち足りた顔してるのはキミのほうだ。",
+"zh_CN": "……可看起来饱的是你。",
+"zh_TW": "……可看起來飽的是你。"
+},
+"...it would have been the fries again, wouldn't it.": {
+"ja": "……どうせまた、ポテトだったよね。",
+"zh_CN": "……许的肯定又是薯条，对吧。",
+"zh_TW": "……許的肯定又是薯條，對吧。"
+},
+"...it's just a fry.": {
+"ja": "……ただのポテトだよ。",
+"zh_CN": "……只是一根薯条啦。",
+"zh_TW": "……只是一根薯條啦。"
+},
+"...just some fries.": {
+"ja": "……ただの、ポテトさ。",
+"zh_CN": "……不过是些薯条。",
+"zh_TW": "……不過是些薯條。"
+},
+"...oh.": {
+"ja": "……あ。",
+"zh_CN": "……哦。",
+"zh_TW": "……喔。"
+},
+"...same.": {
+"ja": "……おれもだ。",
+"zh_CN": "……我也是。",
+"zh_TW": "……我也是。"
+},
+"...that seems about right.": {
+"ja": "……まあ、そんなもんか。",
+"zh_CN": "……好像也挺合理。",
+"zh_TW": "……好像也挺合理。"
+},
+"...warm.": {
+"ja": "……あったかい。",
+"zh_CN": "……暖的。",
+"zh_TW": "……暖的。"
+},
+"...what was it, again?": {
+"ja": "……なんだっけ？",
+"zh_CN": "……那是什么来着？",
+"zh_TW": "……那是什麼來著？"
+},
+"...why does it still rumble?": {
+"ja": "……どうして、まだ鳴るんだろう？",
+"zh_CN": "……为什么还在咕噜叫？",
+"zh_TW": "……為什麼還在咕嚕叫？"
+},
+"...yeah.": {
+"ja": "……うん。",
+"zh_CN": "……嗯。",
+"zh_TW": "……嗯。"
+},
+"...you too?": {
+"ja": "……キミもか？",
+"zh_CN": "……你也是？",
+"zh_TW": "……キミもか？"
+},
+"A BARBECUE": {
+"ja": "バーベキュー",
+"zh_CN": "一个烧烤架",
+"zh_TW": "一個烤肉架"
+},
+"A BARN ROOF": {
+"ja": "納屋の屋根",
+"zh_CN": "谷仓屋顶",
+"zh_TW": "穀倉屋頂"
+},
+"A CAFE TABLE": {
+"ja": "カフェのテーブル",
+"zh_CN": "一张咖啡馆的桌子",
+"zh_TW": "一張咖啡館的桌子"
+},
+"A CHILD. A WATER GUN. A TRAGEDY.": {
+"ja": "子ども。水鉄砲。悲劇。",
+"zh_CN": "一个小孩。一把水枪。一场悲剧。",
+"zh_TW": "一個小孩。一把水槍。一場悲劇。"
+},
+"A CLOUD": {
+"ja": "雲",
+"zh_CN": "一朵云",
+"zh_TW": "一朵雲"
+},
+"A COCKTAIL": {
+"ja": "カクテル",
+"zh_CN": "一杯鸡尾酒",
+"zh_TW": "一杯雞尾酒"
+},
+"A COFFEE": {
+"ja": "コーヒー",
+"zh_CN": "一杯咖啡",
+"zh_TW": "一杯咖啡"
+},
+"A CONTAINER STACK": {
+"ja": "コンテナの山",
+"zh_CN": "一堆集装箱",
+"zh_TW": "一堆貨櫃"
+},
+"A CRANE HOOK": {
+"ja": "クレーンのフック",
+"zh_CN": "一个起重机吊钩",
+"zh_TW": "一個起重機吊鉤"
+},
+"A DOG TRIED. THE ICE CREAM SAID NO.": {
+"ja": "犬がためした。アイスがことわった。",
+"zh_CN": "一条狗试了试。冰淇淋说不行。",
+"zh_TW": "一條狗試了試。冰淇淋說不行。"
+},
+"A DOG. OF COURSE.": {
+"ja": "犬。まあ、そうなる。",
+"zh_CN": "一条狗。当然了。",
+"zh_TW": "一條狗。當然了。"
+},
+"A FALLING STAR": {
+"ja": "流れ星",
+"zh_CN": "一颗流星",
+"zh_TW": "一顆流星"
+},
+"A FINE WARDROBE": {
+"ja": "すてきなワードローブ",
+"zh_CN": "满满的衣橱",
+"zh_TW": "滿滿的衣櫥"
+},
+"A FISH": {
+"ja": "魚",
+"zh_CN": "一条鱼",
+"zh_TW": "一條魚"
+},
+"A FISH. NOT A FRY. STILL FUNNY.": {
+"ja": "魚。ポテトじゃない。でもおもしろい。",
+"zh_CN": "一条鱼。不是薯条。还是挺好笑的。",
+"zh_TW": "一條魚。不是薯條。還是挺好笑的。"
+},
+"A FISHING BOAT": {
+"ja": "漁船",
+"zh_CN": "一艘渔船",
+"zh_TW": "一艘漁船"
+},
+"A FLOCK. BREATH BACK.": {
+"ja": "群れ。スタミナ回復。",
+"zh_CN": "一群伙伴。体力恢复。",
+"zh_TW": "一群夥伴。體力恢復。"
+},
+"A FRIEND": {
+"ja": "友だち",
+"zh_CN": "一个朋友",
+"zh_TW": "一個朋友"
+},
+"A FRIEND WHO SHARES": {
+"ja": "分けてくれる友だち",
+"zh_CN": "愿意分享的朋友",
+"zh_TW": "願意分享的朋友"
+},
+"A FRIEND. BREATH BACK.": {
+"ja": "友だち。スタミナ回復。",
+"zh_CN": "一个朋友。体力恢复。",
+"zh_TW": "一個朋友。體力恢復。"
+},
+"A FRIEND. HEARTS WERE EXCHANGED.": {
+"ja": "友だち。ハートを交わした。",
+"zh_CN": "一个朋友。互相交换了爱心。",
+"zh_TW": "一個朋友。互相交換了愛心。"
+},
+"A FRY ON THE FLOOR": {
+"ja": "床に落ちたポテト",
+"zh_CN": "掉在地上的薯条",
+"zh_TW": "掉在地上的薯條"
+},
+"A GENTLEBIRD": {
+"ja": "紳士なトリ",
+"zh_CN": "一位鸟绅士",
+"zh_TW": "一位鳥紳士"
+},
+"A GIFT": {
+"ja": "おくりもの",
+"zh_CN": "一份礼物",
+"zh_TW": "一份禮物"
+},
+"A GIFT FROM: THE OLD MAN": {
+"ja": "おじいさんからのおくりもの",
+"zh_CN": "来自老爷爷的礼物",
+"zh_TW": "來自老爺爺的禮物"
+},
+"A GULL BEAT YOU TO IT.": {
+"ja": "ほかのカモメに先をこされた。",
+"zh_CN": "被一只海鸥抢先了。",
+"zh_TW": "被一隻海鷗搶先了。"
+},
+"A GULL. THE AUDACITY.": {
+"ja": "カモメ。なんて図々しい。",
+"zh_CN": "一只海鸥。好大的胆子。",
+"zh_TW": "一隻海鷗。好大的膽子。"
+},
+"A HILLTOP CHIMNEY": {
+"ja": "丘の上の煙突",
+"zh_CN": "山顶的烟囱",
+"zh_TW": "山頂的煙囪"
+},
+"A KID SHOUTED BOO. YOU SHRUGGED.": {
+"ja": "子どもが「わっ！」と叫んだ。肩をすくめた。",
+"zh_CN": "一个小孩冲你喊“哇”。你耸了耸肩。",
+"zh_TW": "一個小孩衝你喊「哇」。你聳了聳肩。"
+},
+"A KID. A VERY LOUD KID.": {
+"ja": "子ども。とても声の大きい子ども。",
+"zh_CN": "一个小孩。一个嗓门超大的小孩。",
+"zh_TW": "一個小孩。一個嗓門超大的小孩。"
+},
+"A KIND CHILD": {
+"ja": "やさしい子ども",
+"zh_CN": "善良的孩子",
+"zh_TW": "善良的孩子"
+},
+"A KIND WORLD": {
+"ja": "やさしい世界",
+"zh_CN": "温柔的世界",
+"zh_TW": "溫柔的世界"
+},
+"A KITE (OF ALL THINGS)": {
+"ja": "凧（よりによって）",
+"zh_CN": "一只风筝（偏偏是风筝）",
+"zh_TW": "一隻風箏（偏偏是風箏）"
+},
+"A LAUNDRY ROOF": {
+"ja": "洗濯物の屋根",
+"zh_CN": "晾衣服的屋顶",
+"zh_TW": "晾衣服的屋頂"
+},
+"A LITTLE SUN": {
+"ja": "小さな太陽",
+"zh_CN": "一个小太阳",
+"zh_TW": "一個小太陽"
+},
+"A LONELY BUOY": {
+"ja": "ぽつんとしたブイ",
+"zh_CN": "一个孤零零的浮标",
+"zh_TW": "一個孤零零的浮標"
+},
+"A MARINA MAST": {
+"ja": "マリーナのマスト",
+"zh_CN": "游艇港的桅杆",
+"zh_TW": "遊艇港的桅杆"
+},
+"A PUPPY CIRCLED YOU. FOR NO REASON. HEARTS.": {
+"ja": "子犬がぐるぐる回った。理由はない。ハート。",
+"zh_CN": "一只小狗绕着你转圈。毫无理由。爱心。",
+"zh_TW": "一隻小狗繞著你轉圈。毫無理由。愛心。"
+},
+"A RAIN CLOUD": {
+"ja": "雨雲",
+"zh_CN": "一朵雨云",
+"zh_TW": "一朵雨雲"
+},
+"A RAIN CLOUD. IT DRIZZLES ON PURPOSE.": {
+"ja": "雨雲。わざと小雨を降らせてくる。",
+"zh_CN": "一朵雨云。它是故意下毛毛雨的。",
+"zh_TW": "一朵雨雲。它是故意下毛毛雨的。"
+},
+"A RAINBOW": {
+"ja": "虹",
+"zh_CN": "一道彩虹",
+"zh_TW": "一道彩虹"
+},
+"A RAINBOW FRY": {
+"ja": "レインボーポテト",
+"zh_CN": "一根彩虹薯条",
+"zh_TW": "一根彩虹薯條"
+},
+"A RAINBOW. ALL SEVEN FLAVOURS OF NOTHING.": {
+"ja": "虹。7つの味の、なにもなさ。",
+"zh_CN": "一道彩虹。七种口味的空气。",
+"zh_TW": "一道彩虹。七種口味的空氣。"
+},
+"A RIVAL GULL BOUNCED OFF.": {
+"ja": "ライバルのカモメがはねかえった。",
+"zh_CN": "一只对手海鸥被弹开了。",
+"zh_TW": "一隻對手海鷗被彈開了。"
+},
+"A SEAGULL IS HUNGRY.": {
+"ja": "一羽のカモメが、腹をすかせている。",
+"zh_CN": "一只海鸥饿了。",
+"zh_TW": "一隻海鷗餓了。"
+},
+"A SHOOTING STAR": {
+"ja": "流れ星",
+"zh_CN": "一颗流星",
+"zh_TW": "一顆流星"
+},
+"A SHOOTING STAR. THE WISH IS FRIES.": {
+"ja": "流れ星。願いはポテト。",
+"zh_CN": "一颗流星。愿望是薯条。",
+"zh_TW": "一顆流星。願望是薯條。"
+},
+"A SLOW MORNING AT THE CAFE.": {
+"ja": "カフェの、のんびりした朝。",
+"zh_CN": "咖啡馆里，一个慢悠悠的早晨。",
+"zh_TW": "咖啡館裡，一個慢悠悠的早晨。"
+},
+"A STRANGER LEFT A DRINK. HOW KIND.": {
+"ja": "知らない人がドリンクを置いていった。やさしい。",
+"zh_CN": "一个陌生人留下了一杯饮品。真贴心。",
+"zh_TW": "一個陌生人留下了一杯飲品。真貼心。"
+},
+"A STRANGER WAVED BACK. THE SQUAWK WORKS.": {
+"ja": "知らない人が手を振りかえした。鳴き声、効いてる。",
+"zh_CN": "一个陌生人朝你挥手了。嘎嘎叫有用。",
+"zh_TW": "一個陌生人朝你揮手了。嘎嘎叫有用。"
+},
+"A STRANGER'S HAND. HOW RUDE.": {
+"ja": "知らない人の手。失礼な。",
+"zh_CN": "陌生人的手。真没礼貌。",
+"zh_TW": "陌生人的手。真沒禮貌。"
+},
+"A SWAT. YOU FELT A BREEZE.": {
+"ja": "はたかれた。そよ風を感じた。",
+"zh_CN": "挨了一巴掌。你只感觉到一阵微风。",
+"zh_TW": "挨了一巴掌。你只感覺到一陣微風。"
+},
+"A SWIMMING POOL": {
+"ja": "プール",
+"zh_CN": "一个泳池",
+"zh_TW": "一個泳池"
+},
+"A TRIBUTE": {
+"ja": "トリビュート",
+"zh_CN": "致敬",
+"zh_TW": "致敬"
+},
+"A VERY FAST KID": {
+"ja": "すごく足の速い子",
+"zh_CN": "一个跑得超快的小孩",
+"zh_TW": "一個跑得超快的小孩"
+},
+"A WALL": {
+"ja": "壁",
+"zh_CN": "一堵墙",
+"zh_TW": "一堵牆"
+},
+"A WATER GUN. YOU'RE ALREADY COLD.": {
+"ja": "水鉄砲。もとから冷たい。",
+"zh_CN": "一把水枪。你本来就是冰的。",
+"zh_TW": "一把水槍。你本來就是冰的。"
+},
+"A WHOLE CLOUD": {
+"ja": "雲まるごと",
+"zh_CN": "一整朵云",
+"zh_TW": "一整朵雲"
+},
+"A WHOLE CLOUD. SOFTER THAN EXPECTED.": {
+"ja": "雲まるごと。思ったよりやわらかい。",
+"zh_CN": "一整朵云。比想象的软。",
+"zh_TW": "一整朵雲。比想像的軟。"
+},
+"A WHOLE MOON": {
+"ja": "月まるごと",
+"zh_CN": "一整个月亮",
+"zh_TW": "一整個月亮"
+},
+"A WHOLE RAINBOW": {
+"ja": "虹まるごと",
+"zh_CN": "一整道彩虹",
+"zh_TW": "一整道彩虹"
+},
+"A WIND TURBINE": {
+"ja": "風力発電機",
+"zh_CN": "一台风力发电机",
+"zh_TW": "一台風力發電機"
+},
+"A cloud with a beak.": {
+"ja": "くちばしのある雲。",
+"zh_CN": "一朵长了嘴的云。",
+"zh_TW": "一朵長了嘴的雲。"
+},
+"A complete set. The pier is nervous.": {
+"ja": "コンプリート。桟橋がざわついている。",
+"zh_CN": "全套集齐。码头开始紧张了。",
+"zh_TW": "全套集齊。碼頭開始緊張了。"
+},
+"A gull for every season. And every umbrella.": {
+"ja": "どの季節にもカモメを。どの傘にも。",
+"zh_CN": "四季皆宜的海鸥。雨伞也皆宜。",
+"zh_TW": "四季皆宜的海鷗。雨傘也皆宜。"
+},
+"A taste for the whole spectrum. Mostly salt, though.": {
+"ja": "スペクトル全色の味。ほぼ塩味だけど。",
+"zh_CN": "尝遍了整条光谱。不过主要是咸味。",
+"zh_TW": "嚐遍了整條光譜。不過主要是鹹味。"
+},
+"A very short game. A very full gull.": {
+"ja": "とても短いゲーム。とても満腹なカモメ。",
+"zh_CN": "一局很短的游戏，一只很饱的海鸥。",
+"zh_TW": "一局很短的遊戲，一隻很飽的海鷗。"
+},
+"ABILITY": {
+"ja": "能力",
+"zh_CN": "能力",
+"zh_TW": "能力"
+},
+"ACCELERATION": {
+"ja": "加速",
+"zh_CN": "加速",
+"zh_TW": "加速"
+},
+"ACHIEVEMENT UNLOCKED": {
+"ja": "実績解除",
+"zh_CN": "成就达成",
+"zh_TW": "成就達成"
+},
+"ACHIEVEMENTS": {
+"ja": "実績",
+"zh_CN": "成就",
+"zh_TW": "成就"
+},
+"ALERT": {
+"ja": "厳戒",
+"zh_CN": "戒备",
+"zh_TW": "戒備"
+},
+"ALL %d FRIES   %d / %d": {
+"ja": "ポテト{0}本ぜんぶ   {1} / {2}",
+"zh_CN": "全部 {0} 根薯条   {1} / {2}",
+"zh_TW": "全部 {0} 根薯條   {1} / {2}"
+},
+"ALL 24": {
+"ja": "24本ぜんぶ",
+"zh_CN": "全部24根",
+"zh_TW": "全部24根"
+},
+"ALL EYES": {
+"ja": "全員注目",
+"zh_CN": "全员盯着你",
+"zh_TW": "全員盯著你"
+},
+"ALL THREE AT ONCE": {
+"ja": "3つ同時",
+"zh_CN": "三杯齐上",
+"zh_TW": "三杯齊上"
+},
+"ALL-SEEING FRY": {
+"ja": "千里眼ポテト",
+"zh_CN": "全知之眼薯条",
+"zh_TW": "全知之眼薯條"
+},
+"ALT %d": {
+"ja": "高度 {0}",
+"zh_CN": "高度 {0}",
+"zh_TW": "高度 {0}"
+},
+"AN UMBRELLA. OF ALL THINGS.": {
+"ja": "傘。よりによって傘。",
+"zh_CN": "一把伞。偏偏是伞。",
+"zh_TW": "一把傘。偏偏是傘。"
+},
+"AND ON A PIER,": {
+"ja": "そして、ある桟橋で、",
+"zh_CN": "而在一个码头上，",
+"zh_TW": "而在一個碼頭上，"
+},
+"AND SOMEWHERE ON A PIER,": {
+"ja": "そして、とある桟橋で、",
+"zh_CN": "而在某个码头上，",
+"zh_TW": "而在某個碼頭上，"
+},
+"ANOTHER ONE. THE SEA KEEPS SENDING THEM.": {
+"ja": "もう1匹。海がどんどん送ってくる。",
+"zh_CN": "又一条。大海还在不停地送。",
+"zh_TW": "又一條。大海還在不停地送。"
+},
+"ANOTHER ONE. THE TIMER JUST GREW.": {
+"ja": "もう一杯。タイマーがのびた。",
+"zh_CN": "又一杯。计时又变长了。",
+"zh_TW": "又一杯。計時又變長了。"
+},
+"Alexander Borodin  -  In the Steppes of Central Asia": {
+"ja": "アレクサンドル・ボロディン  -  中央アジアの草原にて",
+"zh_CN": "亚历山大·鲍罗丁  -  《在中亚细亚草原上》",
+"zh_TW": "亞歷山大·鮑羅定  -  《中亞細亞草原》"
+},
+"All nine fish. The sea has stopped returning your calls.": {
+"ja": "9種類ぜんぶか。海はもう電話に出てくれないぞ。",
+"zh_CN": "九种鱼全齐了。大海已经不回你电话了。",
+"zh_TW": "九種魚全齊了。大海已經不回你電話了。"
+},
+"All twenty-four. Show-off.": {
+"ja": "24本ぜんぶか。見せびらかしやがって。",
+"zh_CN": "全部二十四根。显摆。",
+"zh_TW": "全部二十四根。愛現。"
+},
+"All twenty-four. The whole spectrum.": {
+"ja": "24本ぜんぶ。スペクトル全色だ。",
+"zh_CN": "全部二十四根。整条光谱。",
+"zh_TW": "全部二十四根。整條光譜。"
+},
+"And you came back to a roof. ...Interesting.": {
+"ja": "それで屋根に戻ってきた。……面白い。",
+"zh_CN": "然后你回到了一个屋顶上。……有意思。",
+"zh_TW": "然後你回到了一個屋頂上。……有意思。"
+},
+"Antonin Dvorak  -  Largo, from the New World Symphony": {
+"ja": "アントニン・ドヴォルザーク  -  交響曲「新世界より」ラルゴ",
+"zh_CN": "安东宁·德沃夏克  -  《自新大陆》交响曲 广板",
+"zh_TW": "安東寧·德弗札克  -  《新世界》交響曲 廣板"
+},
+"Apparently breathing is useful.": {
+"ja": "どうやら呼吸は大事らしい。",
+"zh_CN": "原来呼吸挺有用的。",
+"zh_TW": "原來呼吸挺有用的。"
+},
+"BACK": {
+"ja": "もどる",
+"zh_CN": "返回",
+"zh_TW": "返回"
+},
+"BALL": {
+"ja": "ボール",
+"zh_CN": "球",
+"zh_TW": "球"
+},
+"BALLOON": {
+"ja": "風船",
+"zh_CN": "气球",
+"zh_TW": "氣球"
+},
+"BANDS x%.2f": {
+"ja": "判定帯 x{0}",
+"zh_CN": "判定带 x{0}",
+"zh_TW": "判定帶 x{0}"
+},
+"BANDS x%.2f   -   RINGS %d %% SLOWER": {
+"ja": "判定帯 x{0}   -   リング {1}% ゆっくり",
+"zh_CN": "判定带 x{0}   -   圆环慢 {1}%",
+"zh_TW": "判定帶 x{0}   -   圓環慢 {1}%"
+},
+"BEACH BALL BANDIT": {
+"ja": "ビーチボール泥棒",
+"zh_CN": "沙滩球大盗",
+"zh_TW": "沙灘球大盜"
+},
+"BEAKED. BY A STRANGER.": {
+"ja": "つつかれた。知らない鳥に。",
+"zh_CN": "被啄了。是个陌生鸟。",
+"zh_TW": "被啄了。是個陌生鳥。"
+},
+"BEST   -   CAUGHT x%d": {
+"ja": "ベスト   -   キャッチ x{0}",
+"zh_CN": "最佳纪录   -   已抓 x{0}",
+"zh_TW": "最佳紀錄   -   已抓 x{0}"
+},
+"BIG BRO": {
+"ja": "アニキ",
+"zh_CN": "大哥",
+"zh_TW": "大哥"
+},
+"BIG FISH ENERGY": {
+"ja": "大物オーラ",
+"zh_CN": "大鱼气场",
+"zh_TW": "大魚氣場"
+},
+"BIG LUNGS FRY": {
+"ja": "でかい肺ポテト",
+"zh_CN": "大肺薯条",
+"zh_TW": "大肺薯條"
+},
+"BIRDS OF A FEATHER": {
+"ja": "類は友を呼ぶ",
+"zh_CN": "物以类聚",
+"zh_TW": "物以類聚"
+},
+"BLACK TIE (BLACK-BEAKED)": {
+"ja": "ブラックタイ（くちばしは黄色）",
+"zh_CN": "正装出席（黑嘴版）",
+"zh_TW": "正裝出席（黑嘴版）"
+},
+"BLING": {
+"ja": "ギラギラ",
+"zh_CN": "金光闪闪",
+"zh_TW": "金光閃閃"
+},
+"BONK": {
+"ja": "ゴン",
+"zh_CN": "咚",
+"zh_TW": "咚"
+},
+"BOO!": {
+"ja": "わっ！",
+"zh_CN": "哇！",
+"zh_TW": "哇！"
+},
+"BOO? YOU'RE MADE OF SPRINKLES.": {
+"ja": "わっ？ こっちはカラースプレーでできてるんだ。",
+"zh_CN": "哇？你可是彩糖做的。",
+"zh_TW": "哇？你可是彩糖做的。"
+},
+"BOP!": {
+"ja": "ポコッ！",
+"zh_CN": "咚！",
+"zh_TW": "咚！"
+},
+"BOTTOMLESS FRY": {
+"ja": "底なしポテト",
+"zh_CN": "无底洞薯条",
+"zh_TW": "無底洞薯條"
+},
+"BOW TIE": {
+"ja": "蝶ネクタイ",
+"zh_CN": "领结",
+"zh_TW": "領結"
+},
+"BREATH IS SOLD BY THE CARTON.": {
+"ja": "スタミナは紙パックで売られている。",
+"zh_CN": "力气论盒卖。",
+"zh_TW": "力氣論盒賣。"
+},
+"BREATH IS STILL SOLD BY THE CARTON.": {
+"ja": "スタミナはいまも紙パックで売られている。",
+"zh_CN": "力气依然论盒卖。",
+"zh_TW": "力氣依然論盒賣。"
+},
+"BRRR!": {
+"ja": "ブルルッ！",
+"zh_CN": "嘶——好冰！",
+"zh_TW": "嘶——好冰！"
+},
+"BY THE NUMBERS": {
+"ja": "数字で見ると",
+"zh_CN": "数据一览",
+"zh_TW": "數據一覽"
+},
+"BZZZT!": {
+"ja": "ビビビッ！",
+"zh_CN": "滋滋滋！",
+"zh_TW": "滋滋滋！"
+},
+"Be circled by a happy puppy.": {
+"ja": "ごきげんな子犬にぐるぐる回られる。",
+"zh_CN": "被一只开心的小狗绕着转圈。",
+"zh_TW": "被一隻開心的小狗繞著轉圈。"
+},
+"Be given a gift by a stranger or a child.": {
+"ja": "知らない人か子どもから、プレゼントをもらう。",
+"zh_CN": "从陌生人或小孩那里收到一份礼物。",
+"zh_TW": "從陌生人或小孩那裡收到一份禮物。"
+},
+"Bedrich Smetana  -  Vltava": {
+"ja": "ベドルジハ・スメタナ  -  モルダウ",
+"zh_CN": "贝德里赫·斯美塔那  -  《伏尔塔瓦河》",
+"zh_TW": "貝德里赫·史麥塔納  -  《莫爾道河》"
+},
+"Big picture: it has something to do with fries. I just can't prove it.": {
+"ja": "大局的に言えば、ポテトに関係がある。証明はできんがな。",
+"zh_CN": "往大了说：跟薯条有关。我只是证明不了。",
+"zh_TW": "往大了說：跟薯條有關。我只是證明不了。"
+},
+"C - CODEX          F - SQUAWK (TRY IT ON A ROOF)": {
+"ja": "C - 図鑑          F - 鳴く（屋根の上でどうぞ）",
+"zh_CN": "C - 图鉴          F - 嘎嘎叫（去屋顶上试试）",
+"zh_TW": "C - 圖鑑          F - 嘎嘎叫（去屋頂上試試）"
+},
+"C - Codex (fries, wardrobe, fish book; right-click a taken item to wear it)": {
+"ja": "C - 図鑑（ポテト・衣装・魚図鑑。手に入れたアイテムを右クリックで装備）",
+"zh_CN": "C - 图鉴（薯条、衣橱、鱼类图鉴；右键点击已获得的物品即可穿戴）",
+"zh_TW": "C - 圖鑑（薯條、衣櫥、魚類圖鑑；右鍵點擊已獲得的物品即可穿戴）"
+},
+"CALM": {
+"ja": "平穏",
+"zh_CN": "平静",
+"zh_TW": "平靜"
+},
+"CATCH A FISH": {
+"ja": "魚を1匹つかまえる",
+"zh_CN": "抓一条鱼",
+"zh_TW": "抓一條魚"
+},
+"CAUGHT A FISH": {
+"ja": "魚をつかまえた",
+"zh_CN": "抓到一条鱼",
+"zh_TW": "抓到一條魚"
+},
+"CAUGHT.": {
+"ja": "キャッチ。",
+"zh_CN": "抓到了。",
+"zh_TW": "抓到了。"
+},
+"CHAIN": {
+"ja": "チェーン",
+"zh_CN": "链子",
+"zh_TW": "鍊子"
+},
+"CHOMP!": {
+"ja": "パクッ！",
+"zh_CN": "嗷呜！",
+"zh_TW": "嗷嗚！"
+},
+"CLEAN GETAWAY": {
+"ja": "きれいに逃げきった",
+"zh_CN": "全身而退",
+"zh_TW": "全身而退"
+},
+"CLINK": {
+"ja": "チャリン",
+"zh_CN": "叮！",
+"zh_TW": "叮！"
+},
+"CLOUD": {
+"ja": "雲",
+"zh_CN": "云",
+"zh_TW": "雲"
+},
+"CLOUD!": {
+"ja": "雲！",
+"zh_CN": "云！",
+"zh_TW": "雲！"
+},
+"CLOUD: CAUGHT. DAMP: SLIGHTLY.": {
+"ja": "雲：捕獲。湿り気：ちょっと。",
+"zh_CN": "云：已抓获。潮湿：轻微。",
+"zh_TW": "雲：已抓獲。潮濕：輕微。"
+},
+"COAT": {
+"ja": "コート",
+"zh_CN": "大衣",
+"zh_TW": "大衣"
+},
+"COCKTAIL": {
+"ja": "カクテル",
+"zh_CN": "鸡尾酒",
+"zh_TW": "雞尾酒"
+},
+"COFFEE": {
+"ja": "コーヒー",
+"zh_CN": "咖啡",
+"zh_TW": "咖啡"
+},
+"COMMON": {
+"ja": "ふつう",
+"zh_CN": "普通",
+"zh_TW": "普通"
+},
+"COMMON FRY  -  FIRST": {
+"ja": "ふつうのポテト  -  1本目",
+"zh_CN": "普通薯条  -  第一根",
+"zh_TW": "普通薯條  -  第一根"
+},
+"COMMON FRY  -  SECOND": {
+"ja": "ふつうのポテト  -  2本目",
+"zh_CN": "普通薯条  -  第二根",
+"zh_TW": "普通薯條  -  第二根"
+},
+"COMMON FRY  -  THIRD": {
+"ja": "ふつうのポテト  -  3本目",
+"zh_CN": "普通薯条  -  第三根",
+"zh_TW": "普通薯條  -  第三根"
+},
+"CONTINUE": {
+"ja": "つづける",
+"zh_CN": "继续",
+"zh_TW": "繼續"
+},
+"CONTINUE  -  WHICH SLOT?": {
+"ja": "つづきから  -  どのスロット？",
+"zh_CN": "继续  -  选哪个存档？",
+"zh_TW": "繼續  -  選哪個存檔？"
+},
+"CONTROLS": {
+"ja": "操作方法",
+"zh_CN": "操作说明",
+"zh_TW": "操作說明"
+},
+"CORNER TABLE FRY": {
+"ja": "すみっこテーブルのポテト",
+"zh_CN": "角落餐桌薯条",
+"zh_TW": "角落餐桌薯條"
+},
+"COZY": {
+"ja": "ぬくぬく",
+"zh_CN": "暖和",
+"zh_TW": "暖和"
+},
+"CRASH!": {
+"ja": "ガシャーン！",
+"zh_CN": "哐当！",
+"zh_TW": "哐噹！"
+},
+"CRISP. SLIGHTLY ILLEGAL.": {
+"ja": "サクサク。ちょっと違法。",
+"zh_CN": "酥脆。略微违法。",
+"zh_TW": "酥脆。略微違法。"
+},
+"CROWD": {
+"ja": "まわりの目",
+"zh_CN": "人群",
+"zh_TW": "人群"
+},
+"CTRL - LAND AND REST": {
+"ja": "CTRL - 着地して休む",
+"zh_CN": "CTRL - 降落休息",
+"zh_TW": "CTRL - 降落休息"
+},
+"Call a flock of gulls to a rooftop with F.": {
+"ja": "屋根の上でFを押して、カモメの群れを呼ぶ。",
+"zh_CN": "在屋顶上按 F，召来一群海鸥。",
+"zh_TW": "在屋頂上按 F，召來一群海鷗。"
+},
+"Calm a crowd that was on full alert, until nobody is watching you.": {
+"ja": "厳戒態勢の人たちを、誰も見ていなくなるまで落ち着かせる。",
+"zh_CN": "让一群全面戒备的人平静下来，直到没人再盯着你。",
+"zh_TW": "讓一群全面戒備的人平靜下來，直到沒人再盯著你。"
+},
+"Careful. The old man's watching. Or sleeping. Hard to tell.": {
+"ja": "気をつけろ。じいさんが見てる。いや寝てるのか。わからん。",
+"zh_CN": "小心。老爷爷在看着。或者在睡觉。说不准。",
+"zh_TW": "小心。老爺爺在看著。或者在睡覺。說不準。"
+},
+"Catch a cloud, a star, the moon, the sun and a rainbow.": {
+"ja": "雲、星、月、太陽、虹をつかまえる。",
+"zh_CN": "抓住一朵云、一颗星星、月亮、太阳和一道彩虹。",
+"zh_TW": "抓住一朵雲、一顆星星、月亮、太陽和一道彩虹。"
+},
+"Catch a fish: FISH TIME. On the sea W surfs, Space launches you at the fish that keep jumping.": {
+"ja": "魚をつかまえるとフィッシュタイム。海の上でWでサーフィン、スペースで跳ねる魚に飛びかかる。",
+"zh_CN": "抓到一条鱼：捕鱼时间。在海上按 W 冲浪，按空格扑向不停跃出水面的鱼。",
+"zh_TW": "抓到一條魚：捕魚時間。在海上按 W 衝浪，按空白鍵撲向不停躍出水面的魚。"
+},
+"Catch a legendary fish.": {
+"ja": "伝説の魚をつかまえる。",
+"zh_CN": "抓到一条传说级的鱼。",
+"zh_TW": "抓到一條傳說級的魚。"
+},
+"Catch a shooting star.": {
+"ja": "流れ星をつかまえる。",
+"zh_CN": "抓住一颗流星。",
+"zh_TW": "抓住一顆流星。"
+},
+"Catch every kind of fish.": {
+"ja": "すべての種類の魚をつかまえる。",
+"zh_CN": "抓遍每一种鱼。",
+"zh_TW": "抓遍每一種魚。"
+},
+"Catch five fish in one FISH TIME.": {
+"ja": "1回のフィッシュタイムで魚を5匹つかまえる。",
+"zh_CN": "在一次捕鱼时间里抓到五条鱼。",
+"zh_TW": "在一次捕魚時間裡抓到五條魚。"
+},
+"Catch one and the sea wakes up. Then you can ride it. Space on the water, kid.": {
+"ja": "1匹つかまえれば海が目をさます。そしたら乗れる。水の上でスペースだ。",
+"zh_CN": "抓一条，大海就醒了。然后你就能乘着它。在水上按空格，小家伙。",
+"zh_TW": "抓一條，大海就醒了。然後你就能乘著它。在水上按空白鍵，小傢伙。"
+},
+"Catch the moon.": {
+"ja": "月をつかまえる。",
+"zh_CN": "抓住月亮。",
+"zh_TW": "抓住月亮。"
+},
+"Catch the sun.": {
+"ja": "太陽をつかまえる。",
+"zh_CN": "抓住太阳。",
+"zh_TW": "抓住太陽。"
+},
+"Catch the white cloud and the rain cloud.": {
+"ja": "白い雲と雨雲をつかまえる。",
+"zh_CN": "抓住白云和雨云。",
+"zh_TW": "抓住白雲和雨雲。"
+},
+"Cheese was never confirmed.": {
+"ja": "チーズ説は、いまだ未確認。",
+"zh_CN": "奶酪一说，至今无法证实。",
+"zh_TW": "起司一說，至今無法證實。"
+},
+"Chin up, kid. The wind's free.": {
+"ja": "顔を上げろ、おチビ。風はタダだ。",
+"zh_CN": "抬起头，小家伙。风是免费的。",
+"zh_TW": "抬起頭，小傢伙。風是免費的。"
+},
+"Chinese and Japanese letters: Noto Sans SC / JP (SIL Open Font License)": {
+"ja": "中国語・日本語フォント：Noto Sans SC / JP（SIL Open Font License）",
+"zh_CN": "中文与日文字体：Noto Sans SC / JP（SIL 开放字体许可证）",
+"zh_TW": "中文與日文字體：Noto Sans SC / JP（SIL 開放字型授權）"
+},
+"Circles appear around it. Press E when a white wave shrinks onto the green ring; the gold ring inside it counts double.": {
+"ja": "まわりにリングが出る。白い波が緑のリングに重なったらE。内側の金のリングは2倍。",
+"zh_CN": "它周围会出现圆环。白色波纹缩到绿色圆环上时按 E；里面的金色圆环算双倍。",
+"zh_TW": "它周圍會出現圓環。白色波紋縮到綠色圓環上時按 E；裡面的金色圓環算雙倍。"
+},
+"Claude Debussy  -  Clair de lune": {
+"ja": "クロード・ドビュッシー  -  月の光",
+"zh_CN": "克劳德·德彪西  -  《月光》",
+"zh_TW": "克勞德·德布西  -  《月光》"
+},
+"Cloud, star, sun, rainbow. The lot.": {
+"ja": "雲、星、太陽、虹。ひととおりだな。",
+"zh_CN": "云、星星、太阳、彩虹。全套。",
+"zh_TW": "雲、星星、太陽、彩虹。全套。"
+},
+"Crisp, salty and slightly illegal.\nA strong start.": {
+"ja": "サクサク、しょっぱい、ちょっと違法。\n幸先のいいスタート。",
+"zh_CN": "酥脆、咸香，还有点违法。\n开局不错。",
+"zh_TW": "酥脆、鹹香，還有點違法。\n開局不錯。"
+},
+"DEEP": {
+"ja": "しんこきゅう",
+"zh_CN": "深呼吸",
+"zh_TW": "深呼吸"
+},
+"DEEP BREATH FRY": {
+"ja": "しんこきゅうポテト",
+"zh_CN": "深呼吸薯条",
+"zh_TW": "深呼吸薯條"
+},
+"DETECTIVE GULL": {
+"ja": "名探偵カモメ",
+"zh_CN": "侦探海鸥",
+"zh_TW": "偵探海鷗"
+},
+"DIAMOND": {
+"ja": "ダイヤ",
+"zh_CN": "钻石",
+"zh_TW": "鑽石"
+},
+"DODGE": {
+"ja": "回避",
+"zh_CN": "闪避",
+"zh_TW": "閃避"
+},
+"DRINKS HAD   %d   (SOME OF THEM WERE A MISTAKE)": {
+"ja": "飲んだドリンク   {0}   （いくつかは間違いだった）",
+"zh_CN": "喝过的饮品   {0}   （有几杯是个错误）",
+"zh_TW": "喝過的飲品   {0}   （有幾杯是個錯誤）"
+},
+"DRIP.": {
+"ja": "ポタッ。",
+"zh_CN": "滴答。",
+"zh_TW": "滴答。"
+},
+"E  -  TALK TO BIG BRO": {
+"ja": "E  -  アニキと話す",
+"zh_CN": "E  -  和大哥聊聊",
+"zh_TW": "E  -  和大哥聊聊"
+},
+"E - TALK": {
+"ja": "E - 話す",
+"zh_CN": "E - 聊天",
+"zh_TW": "E - 聊天"
+},
+"E - WHEN A WHITE RING HITS THE GREEN.  GOLD COUNTS DOUBLE.": {
+"ja": "E - 白いリングが緑に重なったら。金は2倍。",
+"zh_CN": "E - 白环碰到绿环时按下。金色算双倍。",
+"zh_TW": "E - 白環碰到綠環時按下。金色算雙倍。"
+},
+"E WHILE FLYING - POINTS TO THE NEAREST FRY YOU CAN CATCH": {
+"ja": "飛行中にE - 取れる一番近いポテトを指す",
+"zh_CN": "飞行时按 E - 指向最近的、你能抓到的薯条",
+"zh_TW": "飛行時按 E - 指向最近的、你能抓到的薯條"
+},
+"E while flying free - points out the nearest fry that you can really catch.": {
+"ja": "自由飛行中にE - 本当に取れる一番近いポテトを教えてくれる。",
+"zh_CN": "自由飞行时按 E - 指出离你最近、真正能抓到的薯条。",
+"zh_TW": "自由飛行時按 E - 指出離你最近、真正能抓到的薯條。"
+},
+"EAGLE-EYED FRY": {
+"ja": "タカの目ポテト",
+"zh_CN": "鹰眼薯条",
+"zh_TW": "鷹眼薯條"
+},
+"EARLY BIRD": {
+"ja": "早起きの鳥",
+"zh_CN": "早起的鸟儿",
+"zh_TW": "早起的鳥兒"
+},
+"EAT": {
+"ja": "食べる",
+"zh_CN": "吃",
+"zh_TW": "吃"
+},
+"EAT %d FRIES   %d / %d": {
+"ja": "ポテトを{0}本食べる   {1} / {2}",
+"zh_CN": "吃掉 {0} 根薯条   {1} / {2}",
+"zh_TW": "吃掉 {0} 根薯條   {1} / {2}"
+},
+"ENDLESS WIND FRY": {
+"ja": "いくらでも息ポテト",
+"zh_CN": "无尽之气薯条",
+"zh_TW": "無盡之氣薯條"
+},
+"ENOUGH": {
+"ja": "じゅうぶん",
+"zh_CN": "够了",
+"zh_TW": "夠了"
+},
+"ESPRESSO": {
+"ja": "エスプレッソ",
+"zh_CN": "浓缩咖啡",
+"zh_TW": "濃縮咖啡"
+},
+"EVERYTHING": {
+"ja": "すべて",
+"zh_CN": "一切",
+"zh_TW": "一切"
+},
+"EVERYTHING IS CRISP. SO IS YOUR BEAK.": {
+"ja": "なにもかもクッキリ。くちばしもね。",
+"zh_CN": "一切都清清楚楚。你的嘴也是。",
+"zh_TW": "一切都清清楚楚。你的嘴也是。"
+},
+"EVERYTHING THAT GLOWS IS A FRY TO STEAL": {
+"ja": "光るものはぜんぶ、盗めるポテト",
+"zh_CN": "所有发光的，都是可以偷的薯条",
+"zh_TW": "所有發光的，都是可以偷的薯條"
+},
+"Eat the plain fry at the very end.": {
+"ja": "いちばん最後に、ふつうのポテトを食べる。",
+"zh_CN": "在最后吃掉那根普通薯条。",
+"zh_TW": "在最後吃掉那根普通薯條。"
+},
+"Eat the plain fry before you take a single magic one.": {
+"ja": "魔法のポテトを1本も取らずに、ふつうのポテトを食べる。",
+"zh_CN": "一根魔法薯条都还没拿，就先吃掉那根普通薯条。",
+"zh_TW": "一根魔法薯條都還沒拿，就先吃掉那根普通薯條。"
+},
+"Edvard Grieg  -  Morning Mood": {
+"ja": "エドヴァルド・グリーグ  -  朝",
+"zh_CN": "爱德华·格里格  -  《晨景》",
+"zh_TW": "愛德華·葛利格  -  《晨歌》"
+},
+"Eighteen. Where do you think we're headed, kid?": {
+"ja": "18本。おれたち、どこに向かってると思う？",
+"zh_CN": "十八根。你觉得我们要往哪儿去，小家伙？",
+"zh_TW": "十八根。你覺得我們要往哪兒去，小傢伙？"
+},
+"English  ·  简体中文  ·  繁體中文  ·  日本語": {
+"ja": "English  ·  简体中文  ·  繁體中文  ·  日本語",
+"zh_CN": "English  ·  简体中文  ·  繁體中文  ·  日本語",
+"zh_TW": "English  ·  简体中文  ·  繁體中文  ·  日本語"
+},
+"Erik Satie  -  Gymnopedie No. 1": {
+"ja": "エリック・サティ  -  ジムノペディ第1番",
+"zh_CN": "埃里克·萨蒂  -  《裸体舞曲》第一号",
+"zh_TW": "艾瑞克·薩提  -  《吉諾佩第》第一號"
+},
+"Even less thinking.": {
+"ja": "さらに考えなくていい。",
+"zh_CN": "脑子用得更少了。",
+"zh_TW": "腦子用得更少了。"
+},
+"Every drink gives breath back and adds its time. All three drinks at once: RAINBOW TIME.": {
+"ja": "ドリンクはスタミナを回復し、効果時間をのばす。3つ同時でレインボータイム。",
+"zh_CN": "每种饮品都会恢复体力并延长时间。三种饮品同时生效：彩虹时间。",
+"zh_TW": "每種飲品都會恢復體力並延長時間。三種飲品同時生效：彩虹時間。"
+},
+"Everything far away glows.": {
+"ja": "遠くのものがぜんぶ光る。",
+"zh_CN": "远处的东西全在发光。",
+"zh_TW": "遠處的東西全在發光。"
+},
+"Everything you needed was on the table. It usually is.": {
+"ja": "必要なものは、ずっとテーブルの上にあった。たいていそうだ。",
+"zh_CN": "你需要的一切，一直都在桌上。通常都是这样。",
+"zh_TW": "你需要的一切，一直都在桌上。通常都是這樣。"
+},
+"Everything's shinier. Nothing's tastier.": {
+"ja": "なんでもピカピカになった。うまくはならない。",
+"zh_CN": "什么都更亮了，可没有更好吃的。",
+"zh_TW": "什麼都更亮了，可沒有更好吃的。"
+},
+"F - squawk: on a roof it calls the gulls, on the ground a calm crowd says hello and a wary one chases you off.": {
+"ja": "F - 鳴く：屋根の上ならカモメが集まる。地上だと、落ち着いた人はあいさつし、警戒した人は追い払う。",
+"zh_CN": "F - 嘎嘎叫：在屋顶上会召来海鸥；在地面上，平静的人群会跟你打招呼，警惕的人群会把你轰走。",
+"zh_TW": "F - 嘎嘎叫：在屋頂上會召來海鷗；在地面上，平靜的人群會跟你打招呼，警惕的人群會把你轟走。"
+},
+"FAIR WEATHER, FOUL WEATHER": {
+"ja": "晴れの日も、雨の日も",
+"zh_CN": "晴也好，雨也好",
+"zh_TW": "晴也好，雨也好"
+},
+"FARSIGHT": {
+"ja": "とおめがね",
+"zh_CN": "远见",
+"zh_TW": "遠見"
+},
+"FARSIGHT FRY": {
+"ja": "とおめがねポテト",
+"zh_CN": "远见薯条",
+"zh_TW": "遠見薯條"
+},
+"FASHION WEEK": {
+"ja": "ファッションウィーク",
+"zh_CN": "时装周",
+"zh_TW": "時裝週"
+},
+"FEATHERS FULL OF SUNSHINE.": {
+"ja": "羽根に日差しがいっぱい。",
+"zh_CN": "羽毛里装满了阳光。",
+"zh_TW": "羽毛裡裝滿了陽光。"
+},
+"FIND 3 VISION FRIES   %d / 3": {
+"ja": "ビジョンポテトを3本さがす   {0} / 3",
+"zh_CN": "找到 3 根视觉薯条   {0} / 3",
+"zh_TW": "找到 3 根視覺薯條   {0} / 3"
+},
+"FIRST BITE": {
+"ja": "はじめのひとくち",
+"zh_CN": "第一口",
+"zh_TW": "第一口"
+},
+"FISH": {
+"ja": "魚",
+"zh_CN": "鱼",
+"zh_TW": "魚"
+},
+"FISH  %s": {
+"ja": "魚  {0}",
+"zh_CN": "鱼  {0}",
+"zh_TW": "魚  {0}"
+},
+"FISH  x%d": {
+"ja": "魚  x{0}",
+"zh_CN": "鱼  x{0}",
+"zh_TW": "魚  x{0}"
+},
+"FISH BOOK": {
+"ja": "魚図鑑",
+"zh_CN": "鱼类图鉴",
+"zh_TW": "魚類圖鑑"
+},
+"FISH CAUGHT   %d   (NOT FRIES. SO NOT THE POINT.)": {
+"ja": "つかまえた魚   {0}   （ポテトじゃない。だから本題じゃない。）",
+"zh_CN": "抓到的鱼   {0}   （不是薯条。所以不算重点。）",
+"zh_TW": "抓到的魚   {0}   （不是薯條。所以不算重點。）"
+},
+"FISH IN %d s": {
+"ja": "魚まで {0} 秒",
+"zh_CN": "鱼 {0} 秒后",
+"zh_TW": "魚 {0} 秒後"
+},
+"FISH TIME": {
+"ja": "フィッシュタイム",
+"zh_CN": "捕鱼时间",
+"zh_TW": "捕魚時間"
+},
+"FISH TIME  x%d": {
+"ja": "フィッシュタイム  x{0}",
+"zh_CN": "捕鱼时间  x{0}",
+"zh_TW": "捕魚時間  x{0}"
+},
+"FISH TIME.   THE SEA IS YOURS. SPACE ON THE WATER = LAUNCH.": {
+"ja": "フィッシュタイム。   海はキミのもの。水の上でスペース＝飛びかかる。",
+"zh_CN": "捕鱼时间。   大海归你了。在水上按空格 = 扑出去。",
+"zh_TW": "捕魚時間。   大海歸你了。在水上按空白鍵 = 撲出去。"
+},
+"FISH TIME:  W - SURF    SPACE - LAUNCH AT THE FISH": {
+"ja": "フィッシュタイム：  W - サーフィン    スペース - 魚に飛びかかる",
+"zh_CN": "捕鱼时间：  W - 冲浪    空格 - 扑向鱼",
+"zh_TW": "捕魚時間：  W - 衝浪    空白鍵 - 撲向魚"
+},
+"FISH x%d. THE POND IS RUNNING OUT OF EXCUSES.": {
+"ja": "魚 x{0}。池の言い訳が尽きてきた。",
+"zh_CN": "鱼 x{0}。池塘快找不到借口了。",
+"zh_TW": "魚 x{0}。池塘快找不到藉口了。"
+},
+"FLOWER SHIRT": {
+"ja": "アロハシャツ",
+"zh_CN": "花衬衫",
+"zh_TW": "花襯衫"
+},
+"FLUFF": {
+"ja": "ふわふわ",
+"zh_CN": "蓬松",
+"zh_TW": "蓬鬆"
+},
+"FLUFF FRY": {
+"ja": "ふわふわポテト",
+"zh_CN": "蓬松薯条",
+"zh_TW": "蓬鬆薯條"
+},
+"FLUFF!": {
+"ja": "ふわっ！",
+"zh_CN": "噗噗！",
+"zh_TW": "噗噗！"
+},
+"FLUFFIER FRY": {
+"ja": "もっとふわふわポテト",
+"zh_CN": "更蓬松薯条",
+"zh_TW": "更蓬鬆薯條"
+},
+"FLY TO THE GLOWING FRY  -  AIM WITH THE MOUSE, HOLD  W": {
+"ja": "光るポテトへ飛べ  -  マウスで狙って  W 長押し",
+"zh_CN": "飞向发光的薯条  -  用鼠标瞄准，按住  W",
+"zh_TW": "飛向發光的薯條  -  用滑鼠瞄準，按住  W"
+},
+"FLYING FISH": {
+"ja": "トビウオ",
+"zh_CN": "飞鱼",
+"zh_TW": "飛魚"
+},
+"FREE": {
+"ja": "タダ",
+"zh_CN": "免费",
+"zh_TW": "免費"
+},
+"FRESH MART": {
+"ja": "フレッシュマート",
+"zh_CN": "鲜货超市",
+"zh_TW": "鮮貨超市"
+},
+"FRIES": {
+"ja": "ポテト",
+"zh_CN": "薯条",
+"zh_TW": "薯條"
+},
+"FRIES STOLEN   %d": {
+"ja": "盗んだポテト   {0}",
+"zh_CN": "偷到的薯条   {0}",
+"zh_TW": "偷到的薯條   {0}"
+},
+"FRIES THAT HIT THE FLOOR   %d": {
+"ja": "床に落ちたポテト   {0}",
+"zh_CN": "掉到地上的薯条   {0}",
+"zh_TW": "掉到地上的薯條   {0}"
+},
+"FRIES WITH SPECIAL POWERS   %d / 24": {
+"ja": "特殊能力つきのポテト   {0} / 24",
+"zh_CN": "带特殊能力的薯条   {0} / 24",
+"zh_TW": "帶特殊能力的薯條   {0} / 24"
+},
+"FRIES YOU ACTUALLY WANTED   1": {
+"ja": "本当にほしかったポテト   1",
+"zh_CN": "你真正想要的薯条   1",
+"zh_TW": "你真正想要的薯條   1"
+},
+"FRY": {
+"ja": "ポテト",
+"zh_CN": "薯条",
+"zh_TW": "薯條"
+},
+"FRY   -   no effect.   tastes good.": {
+"ja": "ポテト   -   効果なし。   おいしい。",
+"zh_CN": "薯条   -   没有效果。   很好吃。",
+"zh_TW": "薯條   -   沒有效果。   很好吃。"
+},
+"FULLY ARMED": {
+"ja": "フル装備",
+"zh_CN": "全副武装",
+"zh_TW": "全副武裝"
+},
+"FULLY ARMED. STILL HUNGRY.": {
+"ja": "フル装備。まだ腹ぺこ。",
+"zh_CN": "全副武装。还是饿。",
+"zh_TW": "全副武裝。還是餓。"
+},
+"FWOOM!": {
+"ja": "ボワッ！",
+"zh_CN": "轰！",
+"zh_TW": "轟！"
+},
+"Fast beats strong. Strong beats loud.": {
+"ja": "速さは力に勝つ。力は大声に勝つ。",
+"zh_CN": "快胜过壮，壮胜过吵。",
+"zh_TW": "快勝過壯，壯勝過吵。"
+},
+"Faster at the very top.\nCruising stays exactly the same.": {
+"ja": "最高速度だけ速くなる。\n巡航はそのまま。",
+"zh_CN": "极速更快。\n巡航速度一点没变。",
+"zh_TW": "極速更快。\n巡航速度一點沒變。"
+},
+"Felix Mendelssohn  -  Italian and Scottish Symphonies": {
+"ja": "フェリックス・メンデルスゾーン  -  交響曲「イタリア」「スコットランド」",
+"zh_CN": "费利克斯·门德尔松  -  《意大利》与《苏格兰》交响曲",
+"zh_TW": "費利克斯·孟德爾頌  -  《義大利》與《蘇格蘭》交響曲"
+},
+"Five in one FISH TIME? Go on. I'll pretend not to watch.": {
+"ja": "1回のフィッシュタイムで5匹？やってみな。見てないふりしとく。",
+"zh_CN": "一次捕鱼时间抓五条？去吧。我假装没在看。",
+"zh_TW": "一次捕魚時間抓五條？去吧。我假裝沒在看。"
+},
+"Fluffier. Harder to hurt.": {
+"ja": "もっとふわふわ。もっと打たれ強く。",
+"zh_CN": "更蓬松，更扛揍。",
+"zh_TW": "更蓬鬆，更耐揍。"
+},
+"Fly into a wall at full speed.": {
+"ja": "全速力で壁に突っこむ。",
+"zh_CN": "全速撞上一堵墙。",
+"zh_TW": "全速撞上一堵牆。"
+},
+"Fly like the sea owes you rent.": {
+"ja": "海に家賃を貸してるつもりで飛べ。",
+"zh_CN": "飞得像大海欠你房租一样。",
+"zh_TW": "飛得像大海欠你房租一樣。"
+},
+"Frederic Chopin  -  Nocturne in E-flat, Op. 9 No. 2": {
+"ja": "フレデリック・ショパン  -  夜想曲 変ホ長調 Op. 9-2",
+"zh_CN": "弗雷德里克·肖邦  -  降E大调夜曲 Op. 9 No. 2",
+"zh_TW": "弗雷德里克·蕭邦  -  降E大調夜曲 Op. 9 No. 2"
+},
+"Free altitude. Freer than free.": {
+"ja": "タダの高度。タダよりタダ。",
+"zh_CN": "免费的高度，比免费还免费。",
+"zh_TW": "免費的高度，比免費還免費。"
+},
+"Funny thing about having everything: it takes up room. In here.": {
+"ja": "ぜんぶ持ってるってのは妙なもんでな。場所をとるんだ。ここの中で。",
+"zh_CN": "什么都有这件事挺好笑的：它占地方。在这里面。",
+"zh_TW": "什麼都有這件事挺好笑的：它佔地方。在這裡面。"
+},
+"G U L L   T I M E": {
+"ja": "カ モ メ タ イ ム",
+"zh_CN": "海 鸥 时 间",
+"zh_TW": "海 鷗 時 間"
+},
+"GALE FRY": {
+"ja": "はやてポテト",
+"zh_CN": "疾风薯条",
+"zh_TW": "疾風薯條"
+},
+"GET A DRINK": {
+"ja": "ドリンクをゲット",
+"zh_CN": "弄到一杯饮品",
+"zh_TW": "弄到一杯飲品"
+},
+"GET A RAINBOW FRY": {
+"ja": "レインボーポテトをゲット",
+"zh_CN": "弄到一根彩虹薯条",
+"zh_TW": "弄到一根彩虹薯條"
+},
+"GET AN ACCESSORY": {
+"ja": "アクセサリーをゲット",
+"zh_CN": "弄到一件配饰",
+"zh_TW": "弄到一件配飾"
+},
+"GETTING DANGEROUSLY STYLISH.": {
+"ja": "危険なほどおしゃれになってきた。",
+"zh_CN": "时髦得有点危险了。",
+"zh_TW": "時髦得有點危險了。"
+},
+"GLASSES": {
+"ja": "メガネ",
+"zh_CN": "眼镜",
+"zh_TW": "眼鏡"
+},
+"GLUG~": {
+"ja": "ゴクゴク~",
+"zh_CN": "咕嘟~",
+"zh_TW": "咕嘟~"
+},
+"GO AWAY, BIRD!": {
+"ja": "あっち行け、鳥！",
+"zh_CN": "走开，鸟！",
+"zh_TW": "走開，鳥！"
+},
+"GOLD": {
+"ja": "ゴールド",
+"zh_CN": "金",
+"zh_TW": "金"
+},
+"GOLD CHAIN": {
+"ja": "金のチェーン",
+"zh_CN": "金链子",
+"zh_TW": "金鍊子"
+},
+"GOLDEN TUNA": {
+"ja": "黄金マグロ",
+"zh_CN": "黄金金枪鱼",
+"zh_TW": "黃金鮪魚"
+},
+"GONE FISHING": {
+"ja": "釣りに行ってます",
+"zh_CN": "钓鱼去了",
+"zh_TW": "釣魚去了"
+},
+"GOOD BOY": {
+"ja": "いい子だね",
+"zh_CN": "好狗狗",
+"zh_TW": "好狗狗"
+},
+"GOOD.  TAB IS YOURS.": {
+"ja": "よし。TABはキミのものだ。",
+"zh_CN": "很好。TAB 归你了。",
+"zh_TW": "很好。TAB 歸你了。"
+},
+"GOT IT": {
+"ja": "ゲット",
+"zh_CN": "到手",
+"zh_TW": "到手"
+},
+"GRAB": {
+"ja": "くわえる",
+"zh_CN": "叼",
+"zh_TW": "叼"
+},
+"GREEDY HERRING": {
+"ja": "くいしんぼニシン",
+"zh_CN": "贪吃鲱鱼",
+"zh_TW": "貪吃鯡魚"
+},
+"GULL SIGHT": {
+"ja": "カモメアイ",
+"zh_CN": "鸥之眼",
+"zh_TW": "鷗之眼"
+},
+"GULL SIGHT   -   HOLD TAB": {
+"ja": "カモメアイ   -   TAB長押し",
+"zh_CN": "鸥之眼   -   按住 TAB",
+"zh_TW": "鷗之眼   -   按住 TAB"
+},
+"GULL SIGHT   1 / 3": {
+"ja": "カモメアイ   1 / 3",
+"zh_CN": "鸥之眼   1 / 3",
+"zh_TW": "鷗之眼   1 / 3"
+},
+"GULL SIGHT   2 / 3": {
+"ja": "カモメアイ   2 / 3",
+"zh_CN": "鸥之眼   2 / 3",
+"zh_TW": "鷗之眼   2 / 3"
+},
+"GULL SIGHT UNLOCKED": {
+"ja": "カモメアイ解放",
+"zh_CN": "鸥之眼已解锁",
+"zh_TW": "鷗之眼已解鎖"
+},
+"GULL SIGHT: SEE EVERYTHING WORTH STEALING": {
+"ja": "カモメアイ：盗む価値のあるものがぜんぶ見える",
+"zh_CN": "鸥之眼：看清一切值得偷的东西",
+"zh_TW": "鷗之眼：看清一切值得偷的東西"
+},
+"GULL TIME AGAIN.   PRESS  E  WHEN A WHITE RING HITS THE GREEN   (GOLD COUNTS DOUBLE)": {
+"ja": "またカモメタイム。   白いリングが緑に重なったら  E   （金は2倍）",
+"zh_CN": "又是海鸥时间。   白环碰到绿环时按  E   （金色算双倍）",
+"zh_TW": "又是海鷗時間。   白環碰到綠環時按  E   （金色算雙倍）"
+},
+"GULP.": {
+"ja": "ゴクリ。",
+"zh_CN": "咕咚。",
+"zh_TW": "咕咚。"
+},
+"Get a fry of every colour.": {
+"ja": "すべての色のポテトを手に入れる。",
+"zh_CN": "每种颜色的薯条都弄到一根。",
+"zh_TW": "每種顏色的薯條都弄到一根。"
+},
+"Get your first rainbow fry.": {
+"ja": "初めてのレインボーポテトを手に入れる。",
+"zh_CN": "弄到你的第一根彩虹薯条。",
+"zh_TW": "弄到你的第一根彩虹薯條。"
+},
+"Go look at the table you started at. I never did.": {
+"ja": "キミが始まったテーブルを見てこい。おれは見に行かなかった。",
+"zh_CN": "去看看你出发的那张桌子吧。我从没去过。",
+"zh_TW": "去看看你出發的那張桌子吧。我從沒去過。"
+},
+"Go make the sky nervous. I'll be here. Looking expensive.": {
+"ja": "空をビビらせてこい。おれはここにいる。高そうな顔してな。",
+"zh_CN": "去让天空紧张紧张吧。我就在这儿，看起来很贵。",
+"zh_TW": "去讓天空緊張緊張吧。我就在這兒，看起來很貴。"
+},
+"Golds hide on roofs. Diamonds hide where you'd need a ladder, if you had one.": {
+"ja": "ゴールドは屋根の上。ダイヤははしごが要るところ。持ってればの話だが。",
+"zh_CN": "金的藏在屋顶上。钻石的藏在得用梯子的地方——如果你有梯子的话。",
+"zh_TW": "金的藏在屋頂上。鑽石的藏在得用梯子的地方——如果你有梯子的話。"
+},
+"Good. The sky did not get any smaller.": {
+"ja": "よし。空はちっとも狭くなってない。",
+"zh_CN": "很好。天空一点也没变小。",
+"zh_TW": "很好。天空一點也沒變小。"
+},
+"HAPPY HOUR": {
+"ja": "ハッピーアワー",
+"zh_CN": "欢乐时光",
+"zh_TW": "歡樂時光"
+},
+"HAT": {
+"ja": "帽子",
+"zh_CN": "帽子",
+"zh_TW": "帽子"
+},
+"HAT TRICK": {
+"ja": "ハットトリック",
+"zh_CN": "帽子戏法",
+"zh_TW": "帽子戲法"
+},
+"HEAD IN THE CLOUDS": {
+"ja": "頭は雲の上",
+"zh_CN": "脑袋在云里",
+"zh_TW": "腦袋在雲裡"
+},
+"HITS -%d %%": {
+"ja": "ダメージ -{0}%",
+"zh_CN": "受伤 -{0}%",
+"zh_TW": "受傷 -{0}%"
+},
+"HITS -%d %%   -   STUN -%d %%": {
+"ja": "ダメージ -{0}%   -   スタン -{1}%",
+"zh_CN": "受伤 -{0}%   -   眩晕 -{1}%",
+"zh_TW": "受傷 -{0}%   -   暈眩 -{1}%"
+},
+"HOLD   %s": {
+"ja": "長押し   {0}",
+"zh_CN": "长按   {0}",
+"zh_TW": "長按   {0}"
+},
+"HOLD  E  -  KEEP PLAYING          ESC  -  menu": {
+"ja": "E 長押し  -  遊びつづける          ESC  -  メニュー",
+"zh_CN": "长按  E  -  继续玩          ESC  -  菜单",
+"zh_TW": "長按  E  -  繼續玩          ESC  -  選單"
+},
+"HOLD  TAB": {
+"ja": "TAB 長押し",
+"zh_CN": "按住  TAB",
+"zh_TW": "按住  TAB"
+},
+"HOLD  W  OR  SHIFT  -  REACH THE GRAB LINE  (%d)": {
+"ja": "W か SHIFT 長押し  -  キャッチラインに届け  （{0}）",
+"zh_CN": "按住  W  或  SHIFT  -  达到抓取线  （{0}）",
+"zh_TW": "按住  W  或  SHIFT  -  達到抓取線  （{0}）"
+},
+"HOLD IT ANY TIME. IT IS FREE ON THE GROUND.": {
+"ja": "いつでも長押しできる。地上ならタダ。",
+"zh_CN": "随时都能按住。在地面上免费。",
+"zh_TW": "隨時都能按住。在地面上免費。"
+},
+"HOT HANDHELD FRY": {
+"ja": "ほかほか手持ちポテト",
+"zh_CN": "热乎手持薯条",
+"zh_TW": "熱呼手持薯條"
+},
+"HUGE. the whole pier saw that. definitely.": {
+"ja": "デカい。桟橋じゅうが見てた。たぶん。",
+"zh_CN": "超大。整个码头都看见了。肯定的。",
+"zh_TW": "超大。整個碼頭都看見了。肯定的。"
+},
+"HURRICANE FRY": {
+"ja": "ハリケーンポテト",
+"zh_CN": "飓风薯条",
+"zh_TW": "颶風薯條"
+},
+"HUSH.": {
+"ja": "しーっ。",
+"zh_CN": "嘘——",
+"zh_TW": "噓——"
+},
+"He is not guarding anything. He just likes you.": {
+"ja": "何も守ってない。ただキミが好きなだけ。",
+"zh_CN": "他什么也没在守，他只是喜欢你。",
+"zh_TW": "他什麼也沒在守，他只是喜歡你。"
+},
+"Hearts were exchanged. No fries were shared.": {
+"ja": "ハートは交わした。ポテトは分けなかった。",
+"zh_CN": "交换了爱心。没有分享薯条。",
+"zh_TW": "交換了愛心。沒有分享薯條。"
+},
+"Hold Tab - Gull Sight (free on the ground). Everything that glows is worth stealing; the number is the speed it needs.": {
+"ja": "Tab長押し - カモメアイ（地上ならタダ）。光っているものは盗む価値あり。数字は必要な速度。",
+"zh_CN": "按住 Tab - 鸥之眼（在地面上免费）。发光的东西都值得偷；数字是需要的速度。",
+"zh_TW": "按住 Tab - 鷗之眼（在地面上免費）。發光的東西都值得偷；數字是需要的速度。"
+},
+"Hungry suits you. Don't tell anyone I said so.": {
+"ja": "腹ぺこが似合ってるぞ。おれが言ったってのはナイショな。",
+"zh_CN": "饿着挺适合你的。别说是我说的。",
+"zh_TW": "餓著挺適合你的。別說是我說的。"
+},
+"I STILL FEEL LIKE IT HAS SOMETHING TO DO WITH THOSE FRIES ON THE PIER.": {
+"ja": "やっぱり、桟橋のポテトに関係ある気がする。",
+"zh_CN": "我还是觉得，这跟码头上那些薯条有关。",
+"zh_TW": "我還是覺得，這跟碼頭上那些薯條有關。"
+},
+"I WAS GOING TO GO GET SOME FRIES. DOWN AT THE PIER.": {
+"ja": "ポテトを取りに行こうと思ってた。桟橋のほうに。",
+"zh_CN": "我本来打算去弄点薯条。就在码头那边。",
+"zh_TW": "我本來打算去弄點薯條。就在碼頭那邊。"
+},
+"I got everything.": {
+"ja": "ぜんぶ手に入れた。",
+"zh_CN": "我什么都有了。",
+"zh_TW": "我什麼都有了。"
+},
+"I got the chain.": {
+"ja": "チェーンは手に入れた。",
+"zh_CN": "链子，我有了。",
+"zh_TW": "鍊子，我有了。"
+},
+"I spent years collecting hats.": {
+"ja": "何年も帽子を集めてきた。",
+"zh_CN": "我花了好些年收集帽子。",
+"zh_TW": "我花了好些年收集帽子。"
+},
+"I was fast like that once. Then I found accessories.": {
+"ja": "おれも昔はそれくらい速かった。そのあとアクセサリーに出会った。",
+"zh_CN": "我以前也那么快。后来我发现了配饰。",
+"zh_TW": "我以前也那麼快。後來我發現了配飾。"
+},
+"I'd say don't copy me. But look at that hat.": {
+"ja": "おれのマネはするなと言いたい。だがその帽子はいいな。",
+"zh_CN": "我本想说别学我。可看看那顶帽子。",
+"zh_TW": "我本想說別學我。可看看那頂帽子。"
+},
+"ICE CREAM": {
+"ja": "アイス",
+"zh_CN": "冰淇淋",
+"zh_TW": "冰淇淋"
+},
+"INDOOR VOICE": {
+"ja": "おしずかに",
+"zh_CN": "请小声点",
+"zh_TW": "請小聲點"
+},
+"INNOCENT AS A SEAGULL": {
+"ja": "カモメのように無実",
+"zh_CN": "海鸥般无辜",
+"zh_TW": "海鷗般無辜"
+},
+"INVERT MOUSE Y": {
+"ja": "マウスY軸を反転",
+"zh_CN": "反转鼠标 Y 轴",
+"zh_TW": "反轉滑鼠 Y 軸"
+},
+"IT DID. IT HAD SOMETHING TO DO WITH THE FRIES.": {
+"ja": "あった。ポテトに関係あった。",
+"zh_CN": "确实。真的跟薯条有关。",
+"zh_TW": "確實。真的跟薯條有關。"
+},
+"IT WAS ENOUGH.": {
+"ja": "それで、じゅうぶんだった。",
+"zh_CN": "这就够了。",
+"zh_TW": "這就夠了。"
+},
+"It is, regrettably, not fruit flavoured.": {
+"ja": "残念ながら、フルーツ味ではない。",
+"zh_CN": "很遗憾，不是水果味的。",
+"zh_TW": "很遺憾，不是水果味的。"
+},
+"It was warm, it was salty, and it was somebody else's.": {
+"ja": "あったかくて、しょっぱくて、他人のものだった。",
+"zh_CN": "热乎乎的，咸滋滋的，而且是别人的。",
+"zh_TW": "熱呼呼的，鹹滋滋的，而且是別人的。"
+},
+"JET FRY": {
+"ja": "ジェットポテト",
+"zh_CN": "喷气薯条",
+"zh_TW": "噴射薯條"
+},
+"JUST": {
+"ja": "ただ……",
+"zh_CN": "只是……",
+"zh_TW": "只是……"
+},
+"JUST SOME FRIES": {
+"ja": "ただのポテト",
+"zh_CN": "不过是些薯条",
+"zh_TW": "不過是些薯條"
+},
+"JUST WANT FRIES.": {
+"ja": "ただ、ポテトが食べたい。",
+"zh_CN": "只是想要薯条。",
+"zh_TW": "只是想要薯條。"
+},
+"Johannes Brahms  -  Symphony No. 3": {
+"ja": "ヨハネス・ブラームス  -  交響曲第3番",
+"zh_CN": "约翰内斯·勃拉姆斯  -  第三交响曲",
+"zh_TW": "約翰尼斯·布拉姆斯  -  第三號交響曲"
+},
+"Just a fry.\nWarm and salty.": {
+"ja": "ただのポテト。\nあったかくて、しょっぱい。",
+"zh_CN": "只是一根薯条。\n温热，咸咸的。",
+"zh_TW": "只是一根薯條。\n溫熱，鹹鹹的。"
+},
+"KEEP AIMING AT THE FRY": {
+"ja": "ポテトを狙いつづけて",
+"zh_CN": "继续瞄准薯条",
+"zh_TW": "繼續瞄準薯條"
+},
+"KEEP HOLDING...": {
+"ja": "そのまま押して……",
+"zh_CN": "继续按住……",
+"zh_TW": "繼續按住……"
+},
+"KIDS THAT SHOUTED BOO   %d": {
+"ja": "「わっ！」って言ってきた子   {0}",
+"zh_CN": "冲你喊“哇”的小孩   {0}",
+"zh_TW": "衝你喊「哇」的小孩   {0}"
+},
+"KIND CHILDREN   %d     NEW FRIENDS   %d": {
+"ja": "やさしい子ども   {0}     あたらしい友だち   {1}",
+"zh_CN": "善良的孩子   {0}     新朋友   {1}",
+"zh_TW": "善良的孩子   {0}     新朋友   {1}"
+},
+"Keep playing after the end.": {
+"ja": "エンディングのあとも遊びつづける。",
+"zh_CN": "通关后继续玩。",
+"zh_TW": "通關後繼續玩。"
+},
+"LANGUAGES": {
+"ja": "言語",
+"zh_CN": "语言",
+"zh_TW": "語言"
+},
+"LAST ORDERS": {
+"ja": "ラストオーダー",
+"zh_CN": "最后一轮",
+"zh_TW": "最後一輪"
+},
+"LEGENDARY": {
+"ja": "伝説",
+"zh_CN": "传说",
+"zh_TW": "傳說"
+},
+"LONG COAT": {
+"ja": "ロングコート",
+"zh_CN": "长大衣",
+"zh_TW": "長大衣"
+},
+"LOOK UP": {
+"ja": "見上げて",
+"zh_CN": "抬头看",
+"zh_TW": "抬頭看"
+},
+"Land anywhere to rest - higher is faster. Trees and roofs count.": {
+"ja": "どこにでも降りて休める。高いところほど早く回復。木や屋根もOK。",
+"zh_CN": "随便找个地方落脚休息——越高恢复越快。树和屋顶都算。",
+"zh_TW": "隨便找個地方落腳休息——越高恢復越快。樹和屋頂都算。"
+},
+"Less runway. More gull.": {
+"ja": "助走は短く、カモメは多めに。",
+"zh_CN": "助跑更短，海鸥更多。",
+"zh_TW": "助跑更短，海鷗更多。"
+},
+"Let another gull sit down next to you.": {
+"ja": "ほかのカモメを隣に座らせる。",
+"zh_CN": "让另一只海鸥坐到你身边。",
+"zh_TW": "讓另一隻海鷗坐到你身邊。"
+},
+"Look all you like. It costs nothing.": {
+"ja": "見放題。タダです。",
+"zh_CN": "随便看，一分钱不花。",
+"zh_TW": "隨便看，一毛錢不花。"
+},
+"Lungs the size of a pier.": {
+"ja": "桟橋サイズの肺。",
+"zh_CN": "肺有码头那么大。",
+"zh_TW": "肺有碼頭那麼大。"
+},
+"MARINE LIFE": {
+"ja": "マリンライフ",
+"zh_CN": "海洋生活",
+"zh_TW": "海洋生活"
+},
+"MAXIMUM FLUFF FRY": {
+"ja": "究極ふわふわポテト",
+"zh_CN": "极限蓬松薯条",
+"zh_TW": "極限蓬鬆薯條"
+},
+"METEOR": {
+"ja": "流星",
+"zh_CN": "流星",
+"zh_TW": "流星"
+},
+"MINE NOW.": {
+"ja": "いまからぼくの。",
+"zh_CN": "现在是我的了。",
+"zh_TW": "現在是我的了。"
+},
+"MINE! (NOT YOURS)": {
+"ja": "ぼくの！（キミのじゃない）",
+"zh_CN": "我的！（不是你的）",
+"zh_TW": "我的！（不是你的）"
+},
+"MISCHIEF": {
+"ja": "いたずら",
+"zh_CN": "恶作剧",
+"zh_TW": "惡作劇"
+},
+"MISSED": {
+"ja": "ミス",
+"zh_CN": "落空",
+"zh_TW": "落空"
+},
+"MMMMF.": {
+"ja": "んむむ。",
+"zh_CN": "嗯——",
+"zh_TW": "嗯——"
+},
+"MOON!": {
+"ja": "月！",
+"zh_CN": "月亮！",
+"zh_TW": "月亮！"
+},
+"MOONFISH": {
+"ja": "マンボウ",
+"zh_CN": "月亮鱼",
+"zh_TW": "月亮魚"
+},
+"MORE OF THE SAME. NO COMPLAINTS.": {
+"ja": "おかわり。文句なし。",
+"zh_CN": "再来一份一样的。没意见。",
+"zh_TW": "再來一份一樣的。沒意見。"
+},
+"MOUSE SENSITIVITY": {
+"ja": "マウス感度",
+"zh_CN": "鼠标灵敏度",
+"zh_TW": "滑鼠靈敏度"
+},
+"MUSIC": {
+"ja": "音楽",
+"zh_CN": "音乐",
+"zh_TW": "音樂"
+},
+"More hats than a gull has heads. Mathematically concerning.": {
+"ja": "頭の数より帽子が多い。数学的に心配。",
+"zh_CN": "帽子比海鸥的脑袋还多。从数学上讲很令人担忧。",
+"zh_TW": "帽子比海鷗的腦袋還多。從數學上講很令人擔憂。"
+},
+"More sky before you need a rest.": {
+"ja": "休むまでに、もっと空を飛べる。",
+"zh_CN": "歇脚之前，能多飞一片天。",
+"zh_TW": "歇腳之前，能多飛一片天。"
+},
+"Mouse - steer          W - throttle          S - brake": {
+"ja": "マウス - 方向          W - 加速          S - ブレーキ",
+"zh_CN": "鼠标 - 转向          W - 加速          S - 减速",
+"zh_TW": "滑鼠 - 轉向          W - 加速          S - 減速"
+},
+"NEAREST FRY": {
+"ja": "一番近いポテト",
+"zh_CN": "最近的薯条",
+"zh_TW": "最近的薯條"
+},
+"NEAREST FRY YOU CAN REACH   %d m": {
+"ja": "届く一番近いポテト   {0} m",
+"zh_CN": "能追上的最近薯条   {0} 米",
+"zh_TW": "能追上的最近薯條   {0} 公尺"
+},
+"NEED  %d": {
+"ja": "必要  {0}",
+"zh_CN": "需要  {0}",
+"zh_TW": "需要  {0}"
+},
+"NEED %d": {
+"ja": "必要 {0}",
+"zh_CN": "需要 {0}",
+"zh_TW": "需要 {0}"
+},
+"NEW FRIEND": {
+"ja": "あたらしい友だち",
+"zh_CN": "新朋友",
+"zh_TW": "新朋友"
+},
+"NEW IN THE FISH BOOK": {
+"ja": "図鑑に新登録",
+"zh_CN": "图鉴新收录",
+"zh_TW": "圖鑑新收錄"
+},
+"NEW RECORD   HEAVIEST": {
+"ja": "新記録   最重",
+"zh_CN": "新纪录   最重",
+"zh_TW": "新紀錄   最重"
+},
+"NEW RECORD   LONGEST": {
+"ja": "新記録   最長",
+"zh_CN": "新纪录   最长",
+"zh_TW": "新紀錄   最長"
+},
+"NEW RECORD   LONGEST AND HEAVIEST": {
+"ja": "新記録   最長かつ最重",
+"zh_CN": "新纪录   最长也最重",
+"zh_TW": "新紀錄   最長也最重"
+},
+"NEW RUN  -  WHICH SLOT?": {
+"ja": "はじめから  -  どのスロット？",
+"zh_CN": "新游戏  -  选哪个存档？",
+"zh_TW": "新遊戲  -  選哪個存檔？"
+},
+"NEW!": {
+"ja": "NEW!",
+"zh_CN": "新！",
+"zh_TW": "新！"
+},
+"NO BRAKES. NO BREATH NEEDED.": {
+"ja": "ブレーキなし。息つぎ不要。",
+"zh_CN": "不用刹车。不用喘气。",
+"zh_TW": "不用煞車。不用喘氣。"
+},
+"NO DAMAGE. JUST VIBES.": {
+"ja": "ノーダメージ。ノリだけ。",
+"zh_CN": "零伤害。只有氛围。",
+"zh_TW": "零傷害。只有氛圍。"
+},
+"NO FRIES WERE HARMED IN THE MAKING OF THIS GAME.": {
+"ja": "このゲームの制作において、ポテトは一本も傷つけられていません。",
+"zh_CN": "本游戏制作过程中，没有薯条受到伤害。",
+"zh_TW": "本遊戲製作過程中，沒有薯條受到傷害。"
+},
+"NO LONGER HUNGRY   0 / 1": {
+"ja": "もう腹ぺこじゃない   0 / 1",
+"zh_CN": "不再饿了   0 / 1",
+"zh_TW": "不再餓了   0 / 1"
+},
+"NO REGRETS. SOME KETCHUP.": {
+"ja": "後悔なし。ケチャップ少々。",
+"zh_CN": "不后悔。有点番茄酱。",
+"zh_TW": "不後悔。有點番茄醬。"
+},
+"NO. BIG PICTURE. I'VE GOT THE CHAIN, THE HAT, THE COAT. I'VE GOT EVERYTHING. SO WHERE DOES IT END?": {
+"ja": "ちがう。大局的にだ。チェーンも帽子もコートもある。ぜんぶある。で、行きつく先は？",
+"zh_CN": "不是。往大了说。我有链子、帽子、大衣。我什么都有了。那终点在哪儿？",
+"zh_TW": "不是。往大了說。我有鍊子、帽子、大衣。我什麼都有了。那終點在哪兒？"
+},
+"NOBODY IS WATCHING. SUSPICIOUSLY PERFECT.": {
+"ja": "だれも見ていない。あやしいほど完璧。",
+"zh_CN": "没人在看。完美得可疑。",
+"zh_TW": "沒人在看。完美得可疑。"
+},
+"NOBODY SAW A THING.": {
+"ja": "だれも見ていない。",
+"zh_CN": "谁也没看见。",
+"zh_TW": "誰也沒看見。"
+},
+"NOM NOM!": {
+"ja": "もぐもぐ！",
+"zh_CN": "吧唧吧唧！",
+"zh_TW": "吧唧吧唧！"
+},
+"NONE.   IT'S JUST A FRY.": {
+"ja": "なし。   ただのポテトだ。",
+"zh_CN": "无。   它只是一根薯条。",
+"zh_TW": "無。   它只是一根薯條。"
+},
+"NOT AGAIN!": {
+"ja": "またか！",
+"zh_CN": "又来！",
+"zh_TW": "又來！"
+},
+"NOT CAUGHT YET": {
+"ja": "まだつかまえていない",
+"zh_CN": "还没抓到",
+"zh_TW": "還沒抓到"
+},
+"NOT YET": {
+"ja": "まだ",
+"zh_CN": "尚未达成",
+"zh_TW": "尚未達成"
+},
+"NOTHING CAN HURT YOU. PROBABLY.": {
+"ja": "なにもキミを傷つけられない。たぶん。",
+"zh_CN": "什么都伤不了你。大概。",
+"zh_TW": "什麼都傷不了你。大概。"
+},
+"NOTHING IN REACH YET": {
+"ja": "まだ届くものがない",
+"zh_CN": "还没有够得着的",
+"zh_TW": "還沒有夠得著的"
+},
+"NOW LET GO.": {
+"ja": "はい、離して。",
+"zh_CN": "现在松开。",
+"zh_TW": "現在放開。"
+},
+"NOW!": {
+"ja": "いま！",
+"zh_CN": "就是现在！",
+"zh_TW": "就是現在！"
+},
+"Naps are optional. Recovery is not.": {
+"ja": "昼寝は任意。回復は必須。",
+"zh_CN": "午觉可以不睡，回血不能不回。",
+"zh_TW": "午覺可以不睡，回血不能不回。"
+},
+"Nice landing. I'd give it a 7. I'm a tough crowd.": {
+"ja": "いい着地だ。7点。おれは辛口でな。",
+"zh_CN": "落地漂亮。给你 7 分。我打分很严的。",
+"zh_TW": "落地漂亮。給你 7 分。我打分很嚴的。"
+},
+"Nine rings per sun. Nine per moon. The sky is a strict teacher.": {
+"ja": "太陽にリング9つ。月にも9つ。空はきびしい先生だ。",
+"zh_CN": "太阳九个环，月亮九个环。天空是个严格的老师。",
+"zh_TW": "太陽九個環，月亮九個環。天空是個嚴格的老師。"
+},
+"Nine species. One extremely smug gull.": {
+"ja": "9種類の魚。1羽のドヤ顔カモメ。",
+"zh_CN": "九种鱼，一只极其得意的海鸥。",
+"zh_TW": "九種魚，一隻極其得意的海鷗。"
+},
+"Nine suns, they say. One of them is real.": {
+"ja": "太陽は9つあるらしい。本物はひとつだ。",
+"zh_CN": "听说有九个太阳。其中一个是真的。",
+"zh_TW": "聽說有九個太陽。其中一個是真的。"
+},
+"Now I mostly collect the view.": {
+"ja": "いまはだいたい、景色を集めてる。",
+"zh_CN": "现在我主要收集风景。",
+"zh_TW": "現在我主要收集風景。"
+},
+"OBTAINED   %s": {
+"ja": "達成   {0}",
+"zh_CN": "已达成   {0}",
+"zh_TW": "已達成   {0}"
+},
+"ON THE WATER:  YOUR BREATH COMES BACK.   SPACE - TAKE OFF": {
+"ja": "水の上：  スタミナが回復する。   スペース - 飛び立つ",
+"zh_CN": "在水上：  体力会恢复。   空格 - 起飞",
+"zh_TW": "在水上：  體力會恢復。   空白鍵 - 起飛"
+},
+"ONE MORE LAP": {
+"ja": "もう一周",
+"zh_CN": "再飞一圈",
+"zh_TW": "再飛一圈"
+},
+"OOH!": {
+"ja": "おおっ！",
+"zh_CN": "噢！",
+"zh_TW": "噢！"
+},
+"ORDINARY": {
+"ja": "ふつう",
+"zh_CN": "普通",
+"zh_TW": "普通"
+},
+"ORDINARY FRY": {
+"ja": "ふつうのポテト",
+"zh_CN": "普通的薯条",
+"zh_TW": "普通的薯條"
+},
+"OUCH.": {
+"ja": "いてっ。",
+"zh_CN": "哎哟。",
+"zh_TW": "哎喲。"
+},
+"OUT OF BREATH": {
+"ja": "息切れ",
+"zh_CN": "没力气了",
+"zh_TW": "沒力氣了"
+},
+"OUT! OUT!": {
+"ja": "あっち行け！",
+"zh_CN": "出去！出去！",
+"zh_TW": "出去！出去！"
+},
+"OVER THE MOON": {
+"ja": "月までのぼる心地",
+"zh_CN": "欣喜若月",
+"zh_TW": "欣喜若月"
+},
+"OVER THE MOON. LITERALLY.": {
+"ja": "月までのぼった。文字どおり。",
+"zh_CN": "欣喜若月。字面意思。",
+"zh_TW": "欣喜若月。字面意思。"
+},
+"OVER THE RAINBOW": {
+"ja": "虹の彼方に",
+"zh_CN": "彩虹之上",
+"zh_TW": "彩虹之上"
+},
+"Own every fry: silver, gold and diamond of all seven colours.": {
+"ja": "7色すべてのシルバー・ゴールド・ダイヤのポテトを手に入れる。",
+"zh_CN": "集齐所有薯条：七种颜色的银、金、钻石。",
+"zh_TW": "集齊所有薯條：七種顏色的銀、金、鑽石。"
+},
+"PAUSED": {
+"ja": "一時停止",
+"zh_CN": "暂停",
+"zh_TW": "暫停"
+},
+"PERFECT": {
+"ja": "パーフェクト",
+"zh_CN": "完美",
+"zh_TW": "完美"
+},
+"PERFECT CATCH!": {
+"ja": "パーフェクトキャッチ！",
+"zh_CN": "完美捕获！",
+"zh_TW": "完美捕獲！"
+},
+"PERFECT GRABS   %d": {
+"ja": "パーフェクトキャッチ   {0}",
+"zh_CN": "完美叼取   {0}",
+"zh_TW": "完美叼取   {0}"
+},
+"PERFECT!": {
+"ja": "パーフェクト！",
+"zh_CN": "完美！",
+"zh_TW": "完美！"
+},
+"PERFECT. EVEN THE FRY IS IMPRESSED.": {
+"ja": "パーフェクト。ポテトも感心してる。",
+"zh_CN": "完美。连薯条都服了。",
+"zh_TW": "完美。連薯條都服了。"
+},
+"PIPE": {
+"ja": "パイプ",
+"zh_CN": "烟斗",
+"zh_TW": "菸斗"
+},
+"PIPE DREAMS": {
+"ja": "パイプの夢",
+"zh_CN": "烟斗梦",
+"zh_TW": "菸斗夢"
+},
+"POKE!": {
+"ja": "ツンッ！",
+"zh_CN": "戳！",
+"zh_TW": "戳！"
+},
+"POKED. WITH AN UMBRELLA.": {
+"ja": "つつかれた。傘で。",
+"zh_CN": "被戳了。用的是伞。",
+"zh_TW": "被戳了。用的是傘。"
+},
+"POW!": {
+"ja": "ドカッ！",
+"zh_CN": "砰！",
+"zh_TW": "砰！"
+},
+"POW. A PUNCH. FROM A GRANDPARENT.": {
+"ja": "ドカッ。パンチ。おじいちゃんから。",
+"zh_CN": "砰。一拳。来自一位老人家。",
+"zh_TW": "砰。一拳。來自一位老人家。"
+},
+"PRESS  E  TO CONTINUE": {
+"ja": "E で つづける",
+"zh_CN": "按  E  继续",
+"zh_TW": "按  E  繼續"
+},
+"PRESS  E  WHEN A WHITE RING HITS THE GREEN   (GOLD COUNTS DOUBLE)": {
+"ja": "白いリングが緑に重なったら  E   （金は2倍）",
+"zh_CN": "白环碰到绿环时按  E   （金色算双倍）",
+"zh_TW": "白環碰到綠環時按  E   （金色算雙倍）"
+},
+"Press E when you want company. I'll be here. Looking expensive.": {
+"ja": "話し相手がほしけりゃEを押せ。おれはここにいる。高そうな顔してな。",
+"zh_CN": "想找个伴就按 E。我就在这儿，看起来很贵。",
+"zh_TW": "想找個伴就按 E。我就在這兒，看起來很貴。"
+},
+"QUIET, YOU!": {
+"ja": "静かにしろ！",
+"zh_CN": "安静点，你！",
+"zh_TW": "安靜點，你！"
+},
+"QUIT": {
+"ja": "やめる",
+"zh_CN": "退出",
+"zh_TW": "離開"
+},
+"RAIN CLOUD": {
+"ja": "雨雲",
+"zh_CN": "雨云",
+"zh_TW": "雨雲"
+},
+"RAIN CLOUD!": {
+"ja": "雨雲！",
+"zh_CN": "雨云！",
+"zh_TW": "雨雲！"
+},
+"RAIN ON MY PARADE": {
+"ja": "パレードに雨",
+"zh_CN": "雨淋游行",
+"zh_TW": "雨淋遊行"
+},
+"RAIN, BUT PORTABLE.": {
+"ja": "雨、ただし持ち運び可。",
+"zh_CN": "雨，但是便携。",
+"zh_TW": "雨，但是隨身攜帶。"
+},
+"RAINBOW": {
+"ja": "レインボー",
+"zh_CN": "彩虹",
+"zh_TW": "彩虹"
+},
+"RAINBOW %s FRY": {
+"ja": "レインボー{0}ポテト",
+"zh_CN": "彩虹{0}薯条",
+"zh_TW": "彩虹{0}薯條"
+},
+"RAINBOW FRIES   %d": {
+"ja": "レインボーポテト   {0}",
+"zh_CN": "彩虹薯条   {0}",
+"zh_TW": "彩虹薯條   {0}"
+},
+"RAINBOW MARLIN": {
+"ja": "虹色カジキ",
+"zh_CN": "彩虹旗鱼",
+"zh_TW": "彩虹旗魚"
+},
+"RAINBOW TIME": {
+"ja": "レインボータイム",
+"zh_CN": "彩虹时间",
+"zh_TW": "彩虹時間"
+},
+"RAINBOW TIME.   NOTHING COSTS ANYTHING. NOTHING CAN HURT YOU.": {
+"ja": "レインボータイム。   なにもかもタダ。なにもキミを傷つけられない。",
+"zh_CN": "彩虹时间。   什么都不耗体力。什么都伤不了你。",
+"zh_TW": "彩虹時間。   什麼都不耗體力。什麼都傷不了你。"
+},
+"RAINBOW TIME: ALL THREE DRINKS AT ONCE": {
+"ja": "レインボータイム：3つのドリンクを同時に",
+"zh_CN": "彩虹时间：三种饮品同时生效",
+"zh_TW": "彩虹時間：三種飲品同時生效"
+},
+"RAINBOW!": {
+"ja": "虹！",
+"zh_CN": "彩虹！",
+"zh_TW": "彩虹！"
+},
+"RANGE %d m": {
+"ja": "範囲 {0} m",
+"zh_CN": "范围 {0} 米",
+"zh_TW": "範圍 {0} 公尺"
+},
+"RANGE %d m   -   %s IN THE AIR": {
+"ja": "範囲 {0} m   -   空中コスト：{1}",
+"zh_CN": "范围 {0} 米   -   空中消耗：{1}",
+"zh_TW": "範圍 {0} 公尺   -   空中消耗：{1}"
+},
+"RARE": {
+"ja": "レア",
+"zh_CN": "稀有",
+"zh_TW": "稀有"
+},
+"READING GLASSES": {
+"ja": "老眼鏡",
+"zh_CN": "老花镜",
+"zh_TW": "老花眼鏡"
+},
+"RECOVERY": {
+"ja": "回復",
+"zh_CN": "恢复",
+"zh_TW": "恢復"
+},
+"RED BERET": {
+"ja": "赤いベレー帽",
+"zh_CN": "红色贝雷帽",
+"zh_TW": "紅色貝雷帽"
+},
+"RED MULLET": {
+"ja": "ヒメジ",
+"zh_CN": "红鲻鱼",
+"zh_TW": "紅鯔魚"
+},
+"RED SCARF": {
+"ja": "赤いマフラー",
+"zh_CN": "红围巾",
+"zh_TW": "紅圍巾"
+},
+"REST  -  LAND SOMEWHERE": {
+"ja": "休もう  -  どこかに降りて",
+"zh_CN": "休息  -  找个地方落脚",
+"zh_TW": "休息  -  找個地方落腳"
+},
+"RESTART RUN": {
+"ja": "最初からやりなおす",
+"zh_CN": "重新开始",
+"zh_TW": "重新開始"
+},
+"RESTING x%.1f": {
+"ja": "休憩 x{0}",
+"zh_CN": "休息 x{0}",
+"zh_TW": "休息 x{0}"
+},
+"RESTING x%.1f   -   ROLL %.2f s": {
+"ja": "休憩 x{0}   -   ロール {1} 秒",
+"zh_CN": "休息 x{0}   -   翻滚冷却 {1} 秒",
+"zh_TW": "休息 x{0}   -   翻滾冷卻 {1} 秒"
+},
+"RESUME": {
+"ja": "再開",
+"zh_CN": "继续游戏",
+"zh_TW": "繼續遊戲"
+},
+"RIVAL GULLS HATE THIS TRICK.": {
+"ja": "ライバルカモメが嫌うワザ。",
+"zh_CN": "对手海鸥最恨这一招。",
+"zh_TW": "對手海鷗最恨這一招。"
+},
+"RIVAL SCARED OFF": {
+"ja": "ライバル撃退",
+"zh_CN": "吓跑了对手",
+"zh_TW": "嚇跑了對手"
+},
+"ROCKET": {
+"ja": "ロケット",
+"zh_CN": "火箭",
+"zh_TW": "火箭"
+},
+"ROCKET FRY": {
+"ja": "ロケットポテト",
+"zh_CN": "火箭薯条",
+"zh_TW": "火箭薯條"
+},
+"Reach the speed a fry needs (the number on the speed meter) and fly straight at it.": {
+"ja": "ポテトに必要な速度（スピードメーターの数字）に達したら、まっすぐ飛びこもう。",
+"zh_CN": "达到薯条需要的速度（速度表上的数字），然后径直朝它飞过去。",
+"zh_TW": "達到薯條需要的速度（速度表上的數字），然後徑直朝它飛過去。"
+},
+"Resting is now a competitive sport.": {
+"ja": "休憩はいまや競技スポーツ。",
+"zh_CN": "休息现在是竞技项目了。",
+"zh_TW": "休息現在是競技項目了。"
+},
+"Run coffee, cocktail and ice cream at the same time.": {
+"ja": "コーヒー・カクテル・アイスを同時に効かせる。",
+"zh_CN": "让咖啡、鸡尾酒和冰淇淋同时生效。",
+"zh_TW": "讓咖啡、雞尾酒和冰淇淋同時生效。"
+},
+"SAILOR CAP": {
+"ja": "セーラー帽",
+"zh_CN": "水手帽",
+"zh_TW": "水手帽"
+},
+"SAME BIG BRO ENERGY": {
+"ja": "アニキと同じオーラ",
+"zh_CN": "大哥同款气场",
+"zh_TW": "大哥同款氣場"
+},
+"SAVE": {
+"ja": "セーブ",
+"zh_CN": "存档",
+"zh_TW": "存檔"
+},
+"SAVE & QUIT TO MENU": {
+"ja": "セーブしてメニューへ",
+"zh_CN": "存档并返回菜单",
+"zh_TW": "存檔並返回選單"
+},
+"SCARF": {
+"ja": "マフラー",
+"zh_CN": "围巾",
+"zh_TW": "圍巾"
+},
+"SCHOOL'S IN": {
+"ja": "魚の学校",
+"zh_CN": "鱼群开课",
+"zh_TW": "魚群開課"
+},
+"SEA BASS": {
+"ja": "スズキ",
+"zh_CN": "鲈鱼",
+"zh_TW": "鱸魚"
+},
+"SEA DOG": {
+"ja": "海の男",
+"zh_CN": "老水手",
+"zh_TW": "老水手"
+},
+"SEA LEGS": {
+"ja": "海の男",
+"zh_CN": "海上老手",
+"zh_TW": "海上老手"
+},
+"SEASIDE PLATE FRY": {
+"ja": "海辺のお皿のポテト",
+"zh_CN": "海边餐盘薯条",
+"zh_TW": "海邊餐盤薯條"
+},
+"SECOND": {
+"ja": "ひと息",
+"zh_CN": "回气",
+"zh_TW": "回氣"
+},
+"SECOND WIND FRY": {
+"ja": "ひと息ポテト",
+"zh_CN": "回气薯条",
+"zh_TW": "回氣薯條"
+},
+"SECONDS SPENT SQUINTING   %d": {
+"ja": "目を細めていた秒数   {0}",
+"zh_CN": "眯眼的秒数   {0}",
+"zh_TW": "瞇眼的秒數   {0}"
+},
+"SENSES SHARPENED. THE WORLD SLOWS DOWN.": {
+"ja": "感覚が研ぎ澄まされた。世界がゆっくりになる。",
+"zh_CN": "感官变敏锐了。世界慢了下来。",
+"zh_TW": "感官變敏銳了。世界慢了下來。"
+},
+"SEVEN COLOURS": {
+"ja": "七色",
+"zh_CN": "七种颜色",
+"zh_TW": "七種顏色"
+},
+"SEVERAL WERE EATEN.": {
+"ja": "何本かは食べられました。",
+"zh_CN": "但有好几根被吃掉了。",
+"zh_TW": "但有好幾根被吃掉了。"
+},
+"SHADES": {
+"ja": "サングラス",
+"zh_CN": "墨镜",
+"zh_TW": "墨鏡"
+},
+"SHIFT - BOOST          CTRL - LAND": {
+"ja": "SHIFT - ブースト          CTRL - 着地",
+"zh_CN": "SHIFT - 冲刺          CTRL - 降落",
+"zh_TW": "SHIFT - 衝刺          CTRL - 降落"
+},
+"SHIRT": {
+"ja": "シャツ",
+"zh_CN": "衬衫",
+"zh_TW": "襯衫"
+},
+"SHOO!": {
+"ja": "シッシッ！",
+"zh_CN": "嘘！走开！",
+"zh_TW": "噓！走開！"
+},
+"SHOO'D. WITH A NEWSPAPER.": {
+"ja": "追い払われた。新聞で。",
+"zh_CN": "被轰走了。用报纸。",
+"zh_TW": "被轟走了。用報紙。"
+},
+"SHOOTING STAR": {
+"ja": "流れ星",
+"zh_CN": "流星",
+"zh_TW": "流星"
+},
+"SHOWCASE": {
+"ja": "おひろめ",
+"zh_CN": "展示",
+"zh_TW": "展示"
+},
+"SILVER": {
+"ja": "シルバー",
+"zh_CN": "银",
+"zh_TW": "銀"
+},
+"SILVER SARDINE": {
+"ja": "ギンイワシ",
+"zh_CN": "银沙丁鱼",
+"zh_TW": "銀沙丁魚"
+},
+"SKIMMER": {
+"ja": "水面すれすれ",
+"zh_CN": "掠海者",
+"zh_TW": "掠海者"
+},
+"SKIMMING": {
+"ja": "海面すれすれ",
+"zh_CN": "掠海",
+"zh_TW": "掠海"
+},
+"SKY HIGH!": {
+"ja": "空高く！",
+"zh_CN": "冲上云霄！",
+"zh_TW": "衝上雲霄！"
+},
+"SKY HIGH! CLOUD, STAR, MOON, SUN, RAINBOW": {
+"ja": "空高く！ 雲・星・月・太陽・虹",
+"zh_CN": "冲上云霄！云、星星、月亮、太阳、彩虹",
+"zh_TW": "衝上雲霄！雲、星星、月亮、太陽、彩虹"
+},
+"SKYLINE": {
+"ja": "スカイライン",
+"zh_CN": "天际线",
+"zh_TW": "天際線"
+},
+"SLIPPED OUT FROM UNDER THE ROOF": {
+"ja": "屋根の下からすりぬけた",
+"zh_CN": "从屋檐下溜出来了",
+"zh_TW": "從屋簷下溜出來了"
+},
+"SLOT %d": {
+"ja": "スロット {0}",
+"zh_CN": "存档 {0}",
+"zh_TW": "存檔 {0}"
+},
+"SLOT %d\n%d / 24 FRIES    %s    %d FISH KINDS": {
+"ja": "スロット {0}\nポテト {1} / 24    {2}    魚 {3} 種類",
+"zh_CN": "存档 {0}\n薯条 {1} / 24    {2}    鱼 {3} 种",
+"zh_TW": "存檔 {0}\n薯條 {1} / 24    {2}    魚 {3} 種"
+},
+"SLOT %d\n%d / 24 FRIES    %s    %d FISH KINDS\nTHE END, AND KEEP PLAYING": {
+"ja": "スロット {0}\nポテト {1} / 24    {2}    魚 {3} 種類\nクリア後も遊びつづけ中",
+"zh_CN": "存档 {0}\n薯条 {1} / 24    {2}    鱼 {3} 种\n已通关，继续游玩中",
+"zh_TW": "存檔 {0}\n薯條 {1} / 24    {2}    魚 {3} 種\n已通關，繼續遊玩中"
+},
+"SLOT %d\n-  EMPTY  -": {
+"ja": "スロット {0}\n-  からっぽ  -",
+"zh_CN": "存档 {0}\n-  空  -",
+"zh_TW": "存檔 {0}\n-  空  -"
+},
+"SLOT %d\nTHIS ERASES THE OLD RUN.   PRESS AGAIN TO START": {
+"ja": "スロット {0}\n前のデータは消えます。   もう一度押すとスタート",
+"zh_CN": "存档 {0}\n这会覆盖旧的进度。   再按一次开始",
+"zh_TW": "存檔 {0}\n這會覆蓋舊的進度。   再按一次開始"
+},
+"SMACKED. BY AN ELDERLY HAND.": {
+"ja": "ペシッ。年季の入った手で。",
+"zh_CN": "啪。被一只苍老的手。",
+"zh_TW": "啪。被一隻蒼老的手。"
+},
+"SMOOTH. SALTY. SMOOTH.": {
+"ja": "なめらか。しょっぱい。なめらか。",
+"zh_CN": "丝滑。咸香。丝滑。",
+"zh_TW": "絲滑。鹹香。絲滑。"
+},
+"SMUG, AND SALTY.": {
+"ja": "ドヤ顔、しかもしょっぱい。",
+"zh_CN": "得意，而且咸。",
+"zh_TW": "得意，而且鹹。"
+},
+"SOAKED": {
+"ja": "ずぶぬれ",
+"zh_CN": "湿透了",
+"zh_TW": "濕透了"
+},
+"SOCK": {
+"ja": "靴下",
+"zh_CN": "袜子",
+"zh_TW": "襪子"
+},
+"SOCKED AWAY": {
+"ja": "靴下しまいこみ",
+"zh_CN": "袜子藏起来了",
+"zh_TW": "襪子藏起來了"
+},
+"SOMETHING BELOW SMELLS WARM.": {
+"ja": "下のほうから、あったかい匂いがする。",
+"zh_CN": "下面有股暖暖的香味。",
+"zh_TW": "下面有股暖暖的香味。"
+},
+"SOMEWHERE ELSE": {
+"ja": "どこかよそ",
+"zh_CN": "别的地方",
+"zh_TW": "別的地方"
+},
+"SONIC FRY": {
+"ja": "ソニックポテト",
+"zh_CN": "音速薯条",
+"zh_TW": "音速薯條"
+},
+"SPACE  -  TAKE OFF": {
+"ja": "スペース  -  飛び立つ",
+"zh_CN": "空格  -  起飞",
+"zh_TW": "空白鍵  -  起飛"
+},
+"SPEED": {
+"ja": "速度",
+"zh_CN": "速度",
+"zh_TW": "速度"
+},
+"SPIKED. NOBODY SAID SORRY.": {
+"ja": "スパイクされた。だれも謝らなかった。",
+"zh_CN": "被扣杀了。没人道歉。",
+"zh_TW": "被扣殺了。沒人道歉。"
+},
+"SPIKED. NOTHING HAPPENED.": {
+"ja": "スパイクされた。なにも起きなかった。",
+"zh_CN": "被扣杀了。啥事没有。",
+"zh_TW": "被扣殺了。啥事沒有。"
+},
+"SPLASH!": {
+"ja": "バシャッ！",
+"zh_CN": "哗啦！",
+"zh_TW": "嘩啦！"
+},
+"SPLASH. MOSTLY DELICIOUS.": {
+"ja": "バシャッ。だいたいおいしい。",
+"zh_CN": "哗啦。主要是好吃。",
+"zh_TW": "嘩啦。主要是好吃。"
+},
+"SQUAWK!": {
+"ja": "ギャーッ！",
+"zh_CN": "嘎——！",
+"zh_TW": "嘎——！"
+},
+"SQUAWKING AT A SUSPICIOUS CROWD: RUDE.": {
+"ja": "疑ってる人たちに鳴く：失礼。",
+"zh_CN": "对着起疑的人群嘎嘎叫：没礼貌。",
+"zh_TW": "對著起疑的人群嘎嘎叫：沒禮貌。"
+},
+"SQUINT HARDER. SEE EVERYTHING.": {
+"ja": "もっと目を細めて。ぜんぶ見える。",
+"zh_CN": "眯得再用力点。看清一切。",
+"zh_TW": "瞇得再用力點。看清一切。"
+},
+"SQUIRT!": {
+"ja": "ピュッ！",
+"zh_CN": "滋——！",
+"zh_TW": "滋——！"
+},
+"SQUIRTED. BY A CHILD.": {
+"ja": "水をかけられた。子どもに。",
+"zh_CN": "被滋了。是个小孩。",
+"zh_TW": "被滋了。是個小孩。"
+},
+"STAMINA": {
+"ja": "スタミナ",
+"zh_CN": "体力",
+"zh_TW": "體力"
+},
+"STAR": {
+"ja": "星",
+"zh_CN": "星星",
+"zh_TW": "星星"
+},
+"STAR IN %d s": {
+"ja": "星まで {0} 秒",
+"zh_CN": "星星 {0} 秒后",
+"zh_TW": "星星 {0} 秒後"
+},
+"STAR!": {
+"ja": "星！",
+"zh_CN": "星星！",
+"zh_TW": "星星！"
+},
+"STARRING": {
+"ja": "出演",
+"zh_CN": "主演",
+"zh_TW": "主演"
+},
+"START": {
+"ja": "はじめる",
+"zh_CN": "开始",
+"zh_TW": "開始"
+},
+"STEADIER BEAK FRY": {
+"ja": "もっとブレないポテト",
+"zh_CN": "更稳嘴薯条",
+"zh_TW": "更穩嘴薯條"
+},
+"STEADY": {
+"ja": "ブレない",
+"zh_CN": "稳嘴",
+"zh_TW": "穩嘴"
+},
+"STEADY BEAK": {
+"ja": "ブレないくちばし",
+"zh_CN": "稳嘴",
+"zh_TW": "穩嘴"
+},
+"STEADY BEAK FRY": {
+"ja": "ブレないくちばしポテト",
+"zh_CN": "稳嘴薯条",
+"zh_TW": "穩嘴薯條"
+},
+"STEADY TIMING": {
+"ja": "タイミング安定",
+"zh_CN": "稳定节奏",
+"zh_TW": "穩定節奏"
+},
+"STILL HUNGRY.": {
+"ja": "まだ腹ぺこ。",
+"zh_CN": "还是饿。",
+"zh_TW": "還是餓。"
+},
+"STOLEN FROM: A BAKER": {
+"ja": "盗んだ相手：パン屋さん",
+"zh_CN": "偷自：面包师",
+"zh_TW": "偷自：麵包師"
+},
+"STOLEN FROM: A BIRDWATCHER": {
+"ja": "盗んだ相手：バードウォッチャー",
+"zh_CN": "偷自：观鸟爱好者",
+"zh_TW": "偷自：賞鳥愛好者"
+},
+"STOLEN FROM: A BOARDWALK VENDOR": {
+"ja": "盗んだ相手：遊歩道の売り子",
+"zh_CN": "偷自：海滨步道的小贩",
+"zh_TW": "偷自：海濱步道的小販"
+},
+"STOLEN FROM: A LIGHTHOUSE KEEPER": {
+"ja": "盗んだ相手：灯台守",
+"zh_CN": "偷自：灯塔看守",
+"zh_TW": "偷自：燈塔看守"
+},
+"STOLEN FROM: A MAN WITH A CARTON": {
+"ja": "盗んだ相手：紙パックを持った男",
+"zh_CN": "偷自：拿着纸盒的男人",
+"zh_TW": "偷自：拿著紙盒的男人"
+},
+"STOLEN FROM: A PICNIC PARENT": {
+"ja": "盗んだ相手：ピクニック中の親",
+"zh_CN": "偷自：野餐的家长",
+"zh_TW": "偷自：野餐的家長"
+},
+"STOLEN FROM: A PIER WANDERER": {
+"ja": "盗んだ相手：桟橋をぶらつく人",
+"zh_CN": "偷自：码头上闲逛的人",
+"zh_TW": "偷自：碼頭上閒逛的人"
+},
+"STOLEN FROM: A VERY FAST KID": {
+"ja": "盗んだ相手：すごく足の速い子",
+"zh_CN": "偷自：一个跑得超快的小孩",
+"zh_TW": "偷自：一個跑得超快的小孩"
+},
+"STOLEN FROM: THE OLD MAN": {
+"ja": "盗んだ相手：おじいさん",
+"zh_CN": "偷自：老爷爷",
+"zh_TW": "偷自：老爺爺"
+},
+"STOLEN FROM: THE UMBRELLA LADY": {
+"ja": "盗んだ相手：傘のご婦人",
+"zh_CN": "偷自：撑伞的女士",
+"zh_TW": "偷自：撐傘的女士"
+},
+"STRAW HAT": {
+"ja": "麦わら帽子",
+"zh_CN": "草帽",
+"zh_TW": "草帽"
+},
+"STREAK x%d. THE FISH ARE ORGANISING.": {
+"ja": "連続 x{0}。魚たちが団結しはじめた。",
+"zh_CN": "连击 x{0}。鱼儿们开始组织起来了。",
+"zh_TW": "連擊 x{0}。魚兒們開始組織起來了。"
+},
+"STRIPED SHIRT": {
+"ja": "ボーダーシャツ",
+"zh_CN": "条纹衫",
+"zh_TW": "條紋衫"
+},
+"STRIPED SOCK": {
+"ja": "しましま靴下",
+"zh_CN": "条纹袜",
+"zh_TW": "條紋襪"
+},
+"STRIPY MACKEREL": {
+"ja": "しましまサバ",
+"zh_CN": "条纹鲭鱼",
+"zh_TW": "條紋鯖魚"
+},
+"SUN!": {
+"ja": "太陽！",
+"zh_CN": "太阳！",
+"zh_TW": "太陽！"
+},
+"SUNGLASSES": {
+"ja": "サングラス",
+"zh_CN": "墨镜",
+"zh_TW": "墨鏡"
+},
+"SUNSET TIKI": {
+"ja": "サンセット・ティキ",
+"zh_CN": "日落提基酒吧",
+"zh_TW": "日落提基酒吧"
+},
+"SWAT DAMAGE": {
+"ja": "被ダメージ",
+"zh_CN": "挨打伤害",
+"zh_TW": "挨打傷害"
+},
+"SWEET TOOTH": {
+"ja": "甘党",
+"zh_CN": "甜食控",
+"zh_TW": "甜食控"
+},
+"SWEET, COLD AND INVINCIBLE.": {
+"ja": "甘くて、冷たくて、無敵。",
+"zh_CN": "甜甜的，冰冰的，无敌。",
+"zh_TW": "甜甜的，冰冰的，無敵。"
+},
+"SWEPT UP WITH THE CRUMBS.": {
+"ja": "パンくずといっしょに掃かれた。",
+"zh_CN": "跟面包屑一起被扫走了。",
+"zh_TW": "跟麵包屑一起被掃走了。"
+},
+"SWINGS SLIPPED   %d": {
+"ja": "かわした平手   {0}",
+"zh_CN": "躲过的巴掌   {0}",
+"zh_TW": "躲過的巴掌   {0}"
+},
+"SWOOSH!": {
+"ja": "シュバッ！",
+"zh_CN": "唰！",
+"zh_TW": "唰！"
+},
+"Saw you land. Clean. Not bad, kid.": {
+"ja": "着地、見てたぞ。きれいだ。悪くないな、おチビ。",
+"zh_CN": "看见你落地了。干净利落。不赖嘛，小家伙。",
+"zh_TW": "看見你落地了。乾淨俐落。不賴嘛，小傢伙。"
+},
+"She only looks up when you think she won't.\nNoted.": {
+"ja": "見ないだろうと思ったときに限って、彼女は顔を上げる。\nメモしておこう。",
+"zh_CN": "你以为她不会抬头的时候，她偏偏抬头。\n记下了。",
+"zh_TW": "你以為她不會抬頭的時候，她偏偏抬頭。\n記下了。"
+},
+"Shift - boost          Ctrl - land now          Space - flap          A / D - bank (double-tap: roll)": {
+"ja": "Shift - ブースト          Ctrl - すぐ着地          スペース - 羽ばたき          A / D - 傾き（2回押し：ロール）",
+"zh_CN": "Shift - 冲刺          Ctrl - 立刻降落          空格 - 扑翅          A / D - 侧倾（双击：翻滚）",
+"zh_TW": "Shift - 衝刺          Ctrl - 立刻降落          空白鍵 - 拍翅          A / D - 側傾（連按兩下：翻滾）"
+},
+"Skim the sea at speed.": {
+"ja": "高速で海面すれすれを飛ぶ。",
+"zh_CN": "高速贴着海面飞。",
+"zh_TW": "高速貼著海面飛。"
+},
+"So.  What do YOU want?": {
+"ja": "で。キミは何がほしい？",
+"zh_CN": "所以。你想要什么？",
+"zh_TW": "所以。你想要什麼？"
+},
+"So. Big picture. Where does this path end?": {
+"ja": "で、大局的に見て。この道はどこで終わる？",
+"zh_CN": "所以，往大了说。这条路的尽头在哪儿？",
+"zh_TW": "所以，往大了說。這條路的盡頭在哪兒？"
+},
+"So. What do YOU want?": {
+"ja": "で。キミは何がほしい？",
+"zh_CN": "所以。你想要什么？",
+"zh_TW": "所以。你想要什麼？"
+},
+"Soar up on a column of warm air.": {
+"ja": "あたたかい上昇気流に乗って舞い上がる。",
+"zh_CN": "乘着一股上升的暖气流飞上去。",
+"zh_TW": "乘著一股上升的暖氣流飛上去。"
+},
+"Softer landings.\nSwats hurt less.": {
+"ja": "着地がやわらかく。\nはたかれても痛くない。",
+"zh_CN": "落地更软。\n挨打没那么疼。",
+"zh_TW": "落地更軟。\n挨打沒那麼疼。"
+},
+"Speeds up sooner.\nThe top speed is still yours alone.": {
+"ja": "加速が早くなる。\n最高速度はキミの実力のまま。",
+"zh_CN": "提速更快。\n极速还是你自己的本事。",
+"zh_TW": "提速更快。\n極速還是你自己的本事。"
+},
+"Spot the difference. Hint: it is the squint.": {
+"ja": "まちがい探し。ヒント：目つき。",
+"zh_CN": "找不同。提示：眯眼的那个。",
+"zh_TW": "找不同。提示：瞇眼的那個。"
+},
+"Squawk at a calm crowd and be waved at.": {
+"ja": "落ち着いた人たちに鳴いて、手を振ってもらう。",
+"zh_CN": "对平静的人群叫一声，然后被挥手回应。",
+"zh_TW": "對平靜的人群叫一聲，然後被揮手回應。"
+},
+"Squawk at a crowd that doesn't like you. ...Don't.": {
+"ja": "キミを嫌ってる人たちに鳴く。……やめとけ。",
+"zh_CN": "对着不喜欢你的人群叫一声。……别。",
+"zh_TW": "對著不喜歡你的人群叫一聲。……別。"
+},
+"Squawk at a wary crowd and be chased off.": {
+"ja": "警戒している人たちに鳴いて、追い払われる。",
+"zh_CN": "对警惕的人群叫一声，然后被轰走。",
+"zh_TW": "對警惕的人群叫一聲，然後被轟走。"
+},
+"Squawk on a roof. F. They come. Don't ask me why.": {
+"ja": "屋根の上で鳴け。Fだ。みんな来る。理由は聞くな。",
+"zh_CN": "在屋顶上叫一声。按 F。它们就来了。别问我为什么。",
+"zh_TW": "在屋頂上叫一聲。按 F。牠們就來了。別問我為什麼。"
+},
+"Squinting, but with magic.\nGull Sight reaches twice as far.": {
+"ja": "目を細める、ただし魔法つき。\nカモメアイの範囲が2倍に。",
+"zh_CN": "眯眼，但是带魔法。\n鸥之眼能看两倍远。",
+"zh_TW": "瞇眼，但是帶魔法。\n鷗之眼能看兩倍遠。"
+},
+"Steal your very first fry.": {
+"ja": "最初のポテトを盗む。",
+"zh_CN": "偷到你的第一根薯条。",
+"zh_TW": "偷到你的第一根薯條。"
+},
+"Still hungry. Still fabulous.": {
+"ja": "まだ腹ぺこ。まだイケてる。",
+"zh_CN": "还是饿。还是很帅。",
+"zh_TW": "還是餓。還是很帥。"
+},
+"Still hungry? ...Yeah. Me too.": {
+"ja": "まだ腹へってるか？……ああ。おれもだ。",
+"zh_CN": "还饿吗？……嗯，我也是。",
+"zh_TW": "還餓嗎？……嗯，我也是。"
+},
+"Still moving, still warm.\nSo are you.": {
+"ja": "まだ動いてて、まだあったかい。\nキミもね。",
+"zh_CN": "还在动，还是热的。\n你也一样。",
+"zh_TW": "還在動，還是熱的。\n你也一樣。"
+},
+"TA-DAA!": {
+"ja": "ジャジャーン！",
+"zh_CN": "当当！",
+"zh_TW": "噹噹！"
+},
+"TAILWIND": {
+"ja": "おいかぜ",
+"zh_CN": "顺风",
+"zh_TW": "順風"
+},
+"TAILWIND FRY": {
+"ja": "おいかぜポテト",
+"zh_CN": "顺风薯条",
+"zh_TW": "順風薯條"
+},
+"TAKEN FROM: %s": {
+"ja": "いただき先：{0}",
+"zh_CN": "得手自：{0}",
+"zh_TW": "得手自：{0}"
+},
+"TASK DONE   -   %s": {
+"ja": "タスク完了   -   {0}",
+"zh_CN": "任务完成   -   {0}",
+"zh_TW": "任務完成   -   {0}"
+},
+"TASTE THE RAINBOW": {
+"ja": "虹をあじわえ",
+"zh_CN": "尝尝彩虹",
+"zh_TW": "嚐嚐彩虹"
+},
+"TERRITORIAL": {
+"ja": "なわばり",
+"zh_CN": "地盘意识",
+"zh_TW": "地盤意識"
+},
+"THANK YOU FOR PLAYING.": {
+"ja": "遊んでくれて、ありがとう。",
+"zh_CN": "感谢游玩。",
+"zh_TW": "感謝遊玩。"
+},
+"THE BALL BOUNCED OFF YOU.": {
+"ja": "ボールがはねかえった。",
+"zh_CN": "球从你身上弹开了。",
+"zh_TW": "球從你身上彈開了。"
+},
+"THE BAR SHELF": {
+"ja": "バーの棚",
+"zh_CN": "酒吧的架子",
+"zh_TW": "酒吧的架子"
+},
+"THE BIG BROTHER": {
+"ja": "アニキ",
+"zh_CN": "大哥",
+"zh_TW": "大哥"
+},
+"THE BIG ONE": {
+"ja": "大物",
+"zh_CN": "大家伙",
+"zh_TW": "大傢伙"
+},
+"THE BROOM HAS OPINIONS.": {
+"ja": "ほうきにも言い分がある。",
+"zh_CN": "扫帚有它自己的看法。",
+"zh_TW": "掃帚有它自己的看法。"
+},
+"THE CHURCH SPIRE": {
+"ja": "教会の尖塔",
+"zh_CN": "教堂尖顶",
+"zh_TW": "教堂尖頂"
+},
+"THE CLOCK TOWER": {
+"ja": "時計塔",
+"zh_CN": "钟楼",
+"zh_TW": "鐘樓"
+},
+"THE COCKTAIL WORE OFF.": {
+"ja": "カクテルが切れた。",
+"zh_CN": "鸡尾酒劲儿过了。",
+"zh_TW": "雞尾酒勁兒過了。"
+},
+"THE COFFEE WORE OFF.": {
+"ja": "コーヒーが切れた。",
+"zh_CN": "咖啡劲儿过了。",
+"zh_TW": "咖啡勁兒過了。"
+},
+"THE DOG BOUNCES OFF. YOU'RE FINE.": {
+"ja": "犬がはねかえった。キミは平気。",
+"zh_CN": "狗被弹开了。你没事。",
+"zh_TW": "狗被彈開了。你沒事。"
+},
+"THE DOGS": {
+"ja": "犬たち",
+"zh_CN": "狗狗们",
+"zh_TW": "狗狗們"
+},
+"THE END, AND KEEP PLAYING": {
+"ja": "クリア後も遊びつづけ中",
+"zh_CN": "已通关，继续游玩中",
+"zh_TW": "已通關，繼續遊玩中"
+},
+"THE FERRIS WHEEL": {
+"ja": "観覧車",
+"zh_CN": "摩天轮",
+"zh_TW": "摩天輪"
+},
+"THE FIRST FRY": {
+"ja": "最初のポテト",
+"zh_CN": "第一根薯条",
+"zh_TW": "第一根薯條"
+},
+"THE FIRST ONE IS THE LAST ONE": {
+"ja": "最初の一本が最後の一本",
+"zh_CN": "第一根就是最后一根",
+"zh_TW": "第一根就是最後一根"
+},
+"THE FISH BOOK     %d / %d": {
+"ja": "魚図鑑     {0} / {1}",
+"zh_CN": "鱼类图鉴     {0} / {1}",
+"zh_TW": "魚類圖鑑     {0} / {1}"
+},
+"THE FRY IS GONE. THE SKY IS NOT.": {
+"ja": "ポテトはなくなった。空はまだある。",
+"zh_CN": "薯条没了。天空还在。",
+"zh_TW": "薯條沒了。天空還在。"
+},
+"THE FRY SHACK": {
+"ja": "ポテト小屋",
+"zh_CN": "薯条小屋",
+"zh_TW": "薯條小屋"
+},
+"THE FRY SHACK SIGN": {
+"ja": "ポテト小屋の看板",
+"zh_CN": "薯条小屋的招牌",
+"zh_TW": "薯條小屋的招牌"
+},
+"THE GAME'S OPINION": {
+"ja": "ゲームのひとこと",
+"zh_CN": "游戏的看法",
+"zh_TW": "遊戲的看法"
+},
+"THE GULL": {
+"ja": "カモメ",
+"zh_CN": "海鸥",
+"zh_TW": "海鷗"
+},
+"THE ICE CREAM MELTED.": {
+"ja": "アイスがとけた。",
+"zh_CN": "冰淇淋化了。",
+"zh_TW": "冰淇淋化了。"
+},
+"THE ISLET": {
+"ja": "小島",
+"zh_CN": "小岛",
+"zh_TW": "小島"
+},
+"THE LIFEGUARD TOWER": {
+"ja": "監視塔",
+"zh_CN": "救生员瞭望台",
+"zh_TW": "救生員瞭望台"
+},
+"THE LIGHTHOUSE LAMP": {
+"ja": "灯台のランプ",
+"zh_CN": "灯塔的灯",
+"zh_TW": "燈塔的燈"
+},
+"THE MOON": {
+"ja": "月",
+"zh_CN": "月亮",
+"zh_TW": "月亮"
+},
+"THE MOON. NO CHEESE FOUND.": {
+"ja": "月。チーズは見つからず。",
+"zh_CN": "月亮。未发现奶酪。",
+"zh_TW": "月亮。未發現起司。"
+},
+"THE NUMBER = THE SPEED YOU NEED": {
+"ja": "数字＝必要な速度",
+"zh_CN": "数字 = 你需要的速度",
+"zh_TW": "數字 = 你需要的速度"
+},
+"THE OLD MAN": {
+"ja": "おじいさん",
+"zh_CN": "老爷爷",
+"zh_TW": "老爺爺"
+},
+"THE OLD MAN IS ORDERING A NEW ONE...": {
+"ja": "おじいさんが新しいのを注文している……",
+"zh_CN": "老爷爷正在点一份新的……",
+"zh_TW": "老爺爺正在點一份新的……"
+},
+"THE OTHER CRANE": {
+"ja": "もう一台のクレーン",
+"zh_CN": "另一台起重机",
+"zh_TW": "另一台起重機"
+},
+"THE PLAYGROUND SLIDE": {
+"ja": "公園のすべり台",
+"zh_CN": "游乐场的滑梯",
+"zh_TW": "遊樂場的溜滑梯"
+},
+"THE SEA GAVE YOU A RIDE. SPACE ON THE WATER = LAUNCH.": {
+"ja": "海が乗せてくれた。水の上でスペース＝飛びかかる。",
+"zh_CN": "大海载了你一程。在水上按空格 = 扑出去。",
+"zh_TW": "大海載了你一程。在水上按空白鍵 = 撲出去。"
+},
+"THE SEA PAYS WELL.": {
+"ja": "海は払いがいい。",
+"zh_CN": "大海出手很大方。",
+"zh_TW": "大海出手很大方。"
+},
+"THE SEA WANTS ITS FISH BACK. (IT CAN WAIT.)": {
+"ja": "海が魚を返せと言っている。（待たせとけ。）",
+"zh_CN": "大海想要回它的鱼。（让它等着吧。）",
+"zh_TW": "大海想要回牠的魚。（讓它等著吧。）"
+},
+"THE STAR WAS FAST. YOU WERE FASTER.": {
+"ja": "星は速かった。キミはもっと速かった。",
+"zh_CN": "星星很快。你更快。",
+"zh_TW": "星星很快。你更快。"
+},
+"THE STARS WENT BACK TO THE SKY. YOU KEPT THE VIEW.": {
+"ja": "星は空に帰った。景色はキミのもの。",
+"zh_CN": "星星回到了天上。风景你留下了。",
+"zh_TW": "星星回到了天上。風景你留下了。"
+},
+"THE SUN": {
+"ja": "太陽",
+"zh_CN": "太阳",
+"zh_TW": "太陽"
+},
+"THE SUN. WARM. SLIGHTLY STUBBORN.": {
+"ja": "太陽。あったかい。ちょっと頑固。",
+"zh_CN": "太阳。暖暖的。有点倔。",
+"zh_TW": "太陽。暖暖的。有點倔。"
+},
+"THE SUPERMARKET STALL": {
+"ja": "スーパーの売り場",
+"zh_CN": "超市的摊位",
+"zh_TW": "超市的攤位"
+},
+"THE UMBRELLA LADY": {
+"ja": "傘のご婦人",
+"zh_CN": "撑伞的女士",
+"zh_TW": "撐傘的女士"
+},
+"THE WALL": {
+"ja": "壁",
+"zh_CN": "那堵墙",
+"zh_TW": "那堵牆"
+},
+"THE WALL BOUNCED OFF YOU.": {
+"ja": "壁のほうがはねかえった。",
+"zh_CN": "墙被你弹开了。",
+"zh_TW": "牆被你彈開了。"
+},
+"THE WALL WAS REAL.": {
+"ja": "壁は本物だった。",
+"zh_CN": "墙是真的。",
+"zh_TW": "牆是真的。"
+},
+"THE WALL WON.": {
+"ja": "壁の勝ち。",
+"zh_CN": "墙赢了。",
+"zh_TW": "牆贏了。"
+},
+"THE WHOLE SEA": {
+"ja": "海のすべて",
+"zh_CN": "整片大海",
+"zh_TW": "整片大海"
+},
+"THE WIND LISTENS TO CERTAIN FRIES.": {
+"ja": "風は、ある種のポテトの言うことを聞く。",
+"zh_CN": "风会听某些薯条的话。",
+"zh_TW": "風會聽某些薯條的話。"
+},
+"THE WIND STILL LISTENS TO CERTAIN FRIES.": {
+"ja": "風はいまも、ある種のポテトの言うことを聞く。",
+"zh_CN": "风依然会听某些薯条的话。",
+"zh_TW": "風依然會聽某些薯條的話。"
+},
+"THE WINDMILL": {
+"ja": "風車",
+"zh_CN": "风车",
+"zh_TW": "風車"
+},
+"THE WORLD SLOWS DOWN": {
+"ja": "世界がゆっくりになる",
+"zh_CN": "世界慢了下来",
+"zh_TW": "世界慢了下來"
+},
+"THE WORLD SLOWS DOWN: THIS IS GULL TIME.   PRESS  E  WHEN A WHITE RING HITS THE GREEN": {
+"ja": "世界がゆっくりになる：これがカモメタイム。   白いリングが緑に重なったら  E",
+"zh_CN": "世界慢了下来：这就是海鸥时间。   白环碰到绿环时按  E",
+"zh_TW": "世界慢了下來：這就是海鷗時間。   白環碰到綠環時按  E"
+},
+"THERMAL RIDER": {
+"ja": "上昇気流ライダー",
+"zh_CN": "热气流骑士",
+"zh_TW": "熱氣流騎士"
+},
+"THEY HIT YOU. IT TICKLED.": {
+"ja": "なぐられた。くすぐったかった。",
+"zh_CN": "他们打你了。痒痒的。",
+"zh_TW": "他們打你了。癢癢的。"
+},
+"THING": {
+"ja": "もの",
+"zh_CN": "东西",
+"zh_TW": "東西"
+},
+"THINGS BORROWED FROM STRANGERS   %d": {
+"ja": "知らない人から「借りた」もの   {0}",
+"zh_CN": "向陌生人“借”的东西   {0}",
+"zh_TW": "向陌生人「借」的東西   {0}"
+},
+"THIRD WIND FRY": {
+"ja": "ふた息ポテト",
+"zh_CN": "再回气薯条",
+"zh_TW": "再回氣薯條"
+},
+"THIS IS AN AGE OF MAGIC.": {
+"ja": "いまは、魔法の時代。",
+"zh_CN": "这是一个魔法的时代。",
+"zh_TW": "這是一個魔法的時代。"
+},
+"THIS WAS AN AGE OF MAGIC.": {
+"ja": "あれは、魔法の時代だった。",
+"zh_CN": "那是一个魔法的时代。",
+"zh_TW": "那是一個魔法的時代。"
+},
+"THREE IN A ROW. THE FISH ARE ORGANISING.": {
+"ja": "3連続。魚たちが団結しはじめた。",
+"zh_CN": "连抓三条。鱼儿们开始组织起来了。",
+"zh_TW": "連抓三條。魚兒們開始組織起來了。"
+},
+"THROUGH THE RAINBOW AND OUT THE OTHER COLOUR.": {
+"ja": "虹に入って、ちがう色から出てきた。",
+"zh_CN": "从彩虹这头进去，从另一种颜色出来。",
+"zh_TW": "從彩虹這頭進去，從另一種顏色出來。"
+},
+"TIME ON THE PIER   %02d:%02d": {
+"ja": "桟橋にいた時間   {0}:{1}",
+"zh_CN": "码头时光   {0}:{1}",
+"zh_TW": "碼頭時光   {0}:{1}"
+},
+"TIMES YOU WERE SWATTED   %d": {
+"ja": "はたかれた回数   {0}",
+"zh_CN": "被拍中的次数   {0}",
+"zh_TW": "被拍中的次數   {0}"
+},
+"TO FLY": {
+"ja": "飛び立つ",
+"zh_CN": "起飞",
+"zh_TW": "起飛"
+},
+"TOO COOL": {
+"ja": "クールすぎ",
+"zh_CN": "酷毙了",
+"zh_TW": "酷斃了"
+},
+"TOO EARLY": {
+"ja": "早い",
+"zh_CN": "太早了",
+"zh_TW": "太早了"
+},
+"TOO HOT TO HANDLE": {
+"ja": "アツすぎ注意",
+"zh_CN": "烫嘴",
+"zh_TW": "燙嘴"
+},
+"TOO LATE": {
+"ja": "遅い",
+"zh_CN": "太晚了",
+"zh_TW": "太晚了"
+},
+"TOO SLOW": {
+"ja": "遅すぎ",
+"zh_CN": "太慢了",
+"zh_TW": "太慢了"
+},
+"TOP %d   >   %d": {
+"ja": "最高 {0}   >   {1}",
+"zh_CN": "极速 {0}   >   {1}",
+"zh_TW": "極速 {0}   >   {1}"
+},
+"TOP HAT": {
+"ja": "シルクハット",
+"zh_CN": "高礼帽",
+"zh_TW": "高禮帽"
+},
+"TOP SPEED": {
+"ja": "最高速度",
+"zh_CN": "极速",
+"zh_TW": "極速"
+},
+"TOPPED UP.": {
+"ja": "満タン。",
+"zh_CN": "续满了。",
+"zh_TW": "續滿了。"
+},
+"TROUBLEMAKER": {
+"ja": "トラブルメーカー",
+"zh_CN": "捣蛋鬼",
+"zh_TW": "搗蛋鬼"
+},
+"TUTORIAL": {
+"ja": "チュートリアル",
+"zh_CN": "教学",
+"zh_TW": "教學"
+},
+"TWENTY-FOUR": {
+"ja": "24",
+"zh_CN": "二十四",
+"zh_TW": "二十四"
+},
+"TWO SEAGULLS SHARED ONE PLAIN FRY.": {
+"ja": "二羽のカモメが、ふつうのポテトを一本わけあった。",
+"zh_CN": "两只海鸥分吃了一根普通的薯条。",
+"zh_TW": "兩隻海鷗分吃了一根普通的薯條。"
+},
+"Taste coffee, a cocktail and ice cream.": {
+"ja": "コーヒー、カクテル、アイスを味わう。",
+"zh_CN": "尝过咖啡、鸡尾酒和冰淇淋。",
+"zh_TW": "嚐過咖啡、雞尾酒和冰淇淋。"
+},
+"Tastes good.": {
+"ja": "おいしい。",
+"zh_CN": "很好吃。",
+"zh_TW": "很好吃。"
+},
+"Ten fries. You fly like you're late for something.": {
+"ja": "10本か。何かに遅刻しそうな飛び方だな。",
+"zh_CN": "十根了。你飞得像赶着去干什么似的。",
+"zh_TW": "十根了。你飛得像趕著去幹什麼似的。"
+},
+"The coat. The hat. The chain. I got everything.": {
+"ja": "コート。帽子。チェーン。ぜんぶ持ってる。",
+"zh_CN": "大衣。帽子。链子。我什么都有了。",
+"zh_TW": "大衣。帽子。鍊子。我什麼都有了。"
+},
+"The dial runs out of numbers.": {
+"ja": "メーターの数字が足りなくなった。",
+"zh_CN": "仪表上的数字不够用了。",
+"zh_TW": "儀表上的數字不夠用了。"
+},
+"The fry is eaten. The sky is not.": {
+"ja": "ポテトは食べた。空はまだある。",
+"zh_CN": "薯条吃完了，天空还没有。",
+"zh_TW": "薯條吃完了，天空還沒有。"
+},
+"The pier saw it. The pier will exaggerate.": {
+"ja": "桟橋は見ていた。そして話を盛るだろう。",
+"zh_CN": "码头看见了。码头会添油加醋的。",
+"zh_TW": "碼頭看見了。碼頭會加油添醋的。"
+},
+"The rest are mostly things you do by accident. Or on purpose, if you're me.": {
+"ja": "残りはだいたい、うっかりやるやつだ。おれならわざとやるがな。",
+"zh_CN": "剩下的大多是不小心做到的。要是我的话，就是故意的。",
+"zh_TW": "剩下的大多是不小心做到的。要是我的話，就是故意的。"
+},
+"The runway is now a rumour.": {
+"ja": "助走なんて、もはや都市伝説。",
+"zh_CN": "助跑？只是个传说。",
+"zh_TW": "助跑？只是個傳說。"
+},
+"The sea ran out of excuses before you ran out of beak.": {
+"ja": "くちばしより先に、海の言い訳が尽きた。",
+"zh_CN": "你的嘴还没累，大海先没借口了。",
+"zh_TW": "你的嘴還沒累，大海先沒藉口了。"
+},
+"The shades. The hat. The coat.": {
+"ja": "サングラス。帽子。コート。",
+"zh_CN": "墨镜。帽子。大衣。",
+"zh_TW": "墨鏡。帽子。大衣。"
+},
+"The sky made room. So did the laws of physics.": {
+"ja": "空が道をあけた。物理法則も。",
+"zh_CN": "天空让了路，物理定律也让了。",
+"zh_TW": "天空讓了路，物理定律也讓了。"
+},
+"The sky's full of things. Nothing's quite it.": {
+"ja": "空はモノであふれてる。どれもしっくりこない。",
+"zh_CN": "天上满是东西，可没有一样是对的。",
+"zh_TW": "天上滿是東西，可沒有一樣是對的。"
+},
+"The top of the dial moves up again.": {
+"ja": "メーターの上限がまた上がった。",
+"zh_CN": "仪表的顶格又往上挪了。",
+"zh_TW": "儀表的頂格又往上挪了。"
+},
+"The view's great up here. The menu isn't.": {
+"ja": "ここからの眺めは最高だ。メニューは最低だが。",
+"zh_CN": "这上面风景很好。菜单不行。",
+"zh_TW": "這上面風景很好。菜單不行。"
+},
+"The wall is fine. The wall is always fine.": {
+"ja": "壁は無事。壁はいつだって無事。",
+"zh_CN": "墙没事。墙永远没事。",
+"zh_TW": "牆沒事。牆永遠沒事。"
+},
+"They did not want your hello. They wanted a quiet pier.": {
+"ja": "「こんにちは」はいらない。静かな桟橋がほしかった。",
+"zh_CN": "他们不想要你的你好，他们想要一个安静的码头。",
+"zh_TW": "他們不想要你的你好，他們想要一個安靜的碼頭。"
+},
+"Three drinks, zero regrets, one very busy beak.": {
+"ja": "ドリンク3杯、後悔ゼロ、くちばしは大忙し。",
+"zh_CN": "三杯饮品，零个后悔，一张很忙的嘴。",
+"zh_TW": "三杯飲品，零個後悔，一張很忙的嘴。"
+},
+"Try the rainbow ones. They keep coming. Like regrets.": {
+"ja": "レインボーのを狙え。次々来るぞ。後悔みたいにな。",
+"zh_CN": "试试彩虹的。它们会一直来，跟后悔一样。",
+"zh_TW": "試試彩虹的。它們會一直來，跟後悔一樣。"
+},
+"Turns out a good squawk is just a loud hello.": {
+"ja": "いい鳴き声は、大きな「こんにちは」だった。",
+"zh_CN": "原来一声好嘎叫，就是一句大声的你好。",
+"zh_TW": "原來一聲好嘎叫，就是一句大聲的你好。"
+},
+"Turns out the town was never against you. Just busy.": {
+"ja": "町は敵じゃなかった。ただ忙しかっただけ。",
+"zh_CN": "原来小镇从来没跟你作对，只是太忙了。",
+"zh_TW": "原來小鎮從來沒跟你作對，只是太忙了。"
+},
+"UNLOCKED": {
+"ja": "解放",
+"zh_CN": "已解锁",
+"zh_TW": "已解鎖"
+},
+"UNLOCKING": {
+"ja": "解放中",
+"zh_CN": "解锁中",
+"zh_TW": "解鎖中"
+},
+"UNSHAKEABLE BEAK FRY": {
+"ja": "微動だにしないポテト",
+"zh_CN": "纹丝不动薯条",
+"zh_TW": "紋絲不動薯條"
+},
+"UP": {
+"ja": "上へ",
+"zh_CN": "向上",
+"zh_TW": "向上"
+},
+"UP, UP AND AWAY": {
+"ja": "ふわふわ、どこまでも",
+"zh_CN": "飞呀飞，飞走了",
+"zh_TW": "飛呀飛，飛走了"
+},
+"VERY ARTISTIC": {
+"ja": "とても芸術的",
+"zh_CN": "非常艺术",
+"zh_TW": "非常藝術"
+},
+"VISION FRY   %d / 3": {
+"ja": "ビジョンポテト   {0} / 3",
+"zh_CN": "视觉薯条   {0} / 3",
+"zh_TW": "視覺薯條   {0} / 3"
+},
+"VOLLEYBALL. THE NET WAS RIGHT THERE.": {
+"ja": "バレーボール。ネットはすぐそこだった。",
+"zh_CN": "排球。网明明就在那儿。",
+"zh_TW": "排球。網明明就在那兒。"
+},
+"VOLLEYBALLS TO THE FACE   %d": {
+"ja": "顔面バレーボール   {0}",
+"zh_CN": "被排球砸脸   {0}",
+"zh_TW": "被排球砸臉   {0}"
+},
+"W / S or mouse  -  E / click": {
+"ja": "W / S かマウス  -  E / クリック",
+"zh_CN": "W / S 或鼠标  -  E / 点击",
+"zh_TW": "W / S 或滑鼠  -  E / 點擊"
+},
+"WALL KISS": {
+"ja": "壁とキス",
+"zh_CN": "亲吻墙壁",
+"zh_TW": "親吻牆壁"
+},
+"WALLS MET   %d": {
+"ja": "出会った壁   {0}",
+"zh_CN": "邂逅的墙   {0}",
+"zh_TW": "邂逅的牆   {0}"
+},
+"WARY": {
+"ja": "警戒",
+"zh_CN": "警惕",
+"zh_TW": "警惕"
+},
+"WEEKEND MODE": {
+"ja": "週末モード",
+"zh_CN": "周末模式",
+"zh_TW": "週末模式"
+},
+"WELL READ": {
+"ja": "博識",
+"zh_CN": "饱读诗书",
+"zh_TW": "飽讀詩書"
+},
+"WELL, HELLO": {
+"ja": "やあ、こんにちは",
+"zh_CN": "哟，你好",
+"zh_TW": "喲，你好"
+},
+"WET, SHINY AND NOT WHAT I WANTED.": {
+"ja": "ぬれてて、ピカピカで、ほしかったものじゃない。",
+"zh_CN": "湿的，亮的，不是我想要的。",
+"zh_TW": "濕的，亮的，不是我想要的。"
+},
+"WET. DEEPLY DISGRUNTLED.": {
+"ja": "ぬれた。とても不機嫌。",
+"zh_CN": "湿了。非常不爽。",
+"zh_TW": "濕了。非常不爽。"
+},
+"WHAT FRIES AHEAD  -  False Knees, by Joshua Barkman  (2018)": {
+"ja": "WHAT FRIES AHEAD  -  『False Knees』Joshua Barkman 作（2018）",
+"zh_CN": "WHAT FRIES AHEAD  -  《False Knees》，Joshua Barkman 作（2018）",
+"zh_TW": "WHAT FRIES AHEAD  -  《False Knees》，Joshua Barkman 作（2018）"
+},
+"WHAT TO DO": {
+"ja": "条件",
+"zh_CN": "达成条件",
+"zh_TW": "達成條件"
+},
+"WHEEEEEE!": {
+"ja": "ひゃっほーー！",
+"zh_CN": "呜呼——！",
+"zh_TW": "嗚呼——！"
+},
+"WHERE DO YOU THINK WE'RE HEADED?": {
+"ja": "おれたち、どこに向かってると思う？",
+"zh_CN": "你觉得我们要往哪儿去？",
+"zh_TW": "你覺得我們要往哪兒去？"
+},
+"WHOA!!": {
+"ja": "うおっ！！",
+"zh_CN": "哇哦！！",
+"zh_TW": "哇喔！！"
+},
+"WHOOOOSH": {
+"ja": "ビュオオオ",
+"zh_CN": "呼——",
+"zh_TW": "呼——"
+},
+"WHOOSH!": {
+"ja": "ビュン！",
+"zh_CN": "嗖！",
+"zh_TW": "咻！"
+},
+"WISHFUL THINKING": {
+"ja": "願いごと",
+"zh_CN": "许个愿吧",
+"zh_TW": "許個願吧"
+},
+"WOOF!": {
+"ja": "ワンッ！",
+"zh_CN": "汪！",
+"zh_TW": "汪！"
+},
+"WOOF. (THAT MEANS 'MINE')": {
+"ja": "ワン。（「ぼくの」という意味）",
+"zh_CN": "汪。（意思是“我的”）",
+"zh_TW": "汪。（意思是「我的」）"
+},
+"WRIGGLED FREE": {
+"ja": "すりぬけた",
+"zh_CN": "挣脱了",
+"zh_TW": "掙脫了"
+},
+"Warm, brilliant, and a little hard on the beak.": {
+"ja": "あたたかくて、まぶしくて、くちばしにちょっとキツい。",
+"zh_CN": "温暖、耀眼，还有点烫嘴。",
+"zh_TW": "溫暖、耀眼，還有點燙嘴。"
+},
+"Wear a top hat, shades, a chain, a pipe and a long coat at once.": {
+"ja": "シルクハット、サングラス、チェーン、パイプ、ロングコートを同時に身につける。",
+"zh_CN": "同时戴上高礼帽、墨镜、金链子、烟斗，穿上长大衣。",
+"zh_TW": "同時戴上高禮帽、墨鏡、金鍊子、菸斗，穿上長大衣。"
+},
+"Wear every kind of clothing on the island.": {
+"ja": "島じゅうの服をぜんぶ身につける。",
+"zh_CN": "把岛上每一种衣物都穿一遍。",
+"zh_TW": "把島上每一種衣物都穿一遍。"
+},
+"Wet feet, dry wit.": {
+"ja": "足はびしょびしょ、ユーモアはカラッと。",
+"zh_CN": "脚是湿的，幽默是干的。",
+"zh_TW": "腳是濕的，幽默是乾的。"
+},
+"What do you want?": {
+"ja": "何がほしい？",
+"zh_CN": "你想要什么？",
+"zh_TW": "你想要什麼？"
+},
+"Where do you think we're headed, kid? ...No. Don't answer.": {
+"ja": "おれたち、どこに向かってると思う？……いや、答えなくていい。",
+"zh_CN": "你觉得我们要往哪儿去，小家伙？……不，别回答。",
+"zh_TW": "你覺得我們要往哪兒去，小傢伙？……不，別回答。"
+},
+"Whistle. Look at the clouds. Works every time.": {
+"ja": "口笛を吹いて、雲を見る。毎回効く。",
+"zh_CN": "吹口哨，看看云。百试百灵。",
+"zh_TW": "吹口哨，看看雲。百試百靈。"
+},
+"Wider bands, slower rings.\nLess thinking, better grabbing.": {
+"ja": "判定の帯が広く、リングがゆっくりに。\n考えるより、くわえろ。",
+"zh_CN": "判定带更宽，圆环更慢。\n少动脑，多下嘴。",
+"zh_TW": "判定帶更寬，圓環更慢。\n少動腦，多下嘴。"
+},
+"Wish granted: more speed. Wish pending: more fries.": {
+"ja": "かなった願い：もっと速く。保留中の願い：もっとポテトを。",
+"zh_CN": "已实现的愿望：更快。待实现的愿望：更多薯条。",
+"zh_TW": "已實現的願望：更快。待實現的願望：更多薯條。"
+},
+"YOU": {
+"ja": "キミ",
+"zh_CN": "你",
+"zh_TW": "你"
+},
+"YOU CALLED. A FLOCK CAME. NOBODY ASKED WHY.": {
+"ja": "呼んだら、群れが来た。だれも理由を聞かなかった。",
+"zh_CN": "你一叫，来了一群。谁也没问为什么。",
+"zh_TW": "你一叫，來了一群。誰也沒問為什麼。"
+},
+"YOU CAN HEAR THE FRIES SIZZLE.": {
+"ja": "ポテトのジュワッて音が聞こえる。",
+"zh_CN": "你能听见薯条滋滋响。",
+"zh_TW": "你能聽見薯條滋滋響。"
+},
+"YOU DID NOT FEEL THAT.": {
+"ja": "なにも感じなかった。",
+"zh_CN": "你一点也没感觉到。",
+"zh_TW": "你一點也沒感覺到。"
+},
+"YOU FEEL LIKE A GUST OF WIND.": {
+"ja": "一陣の風になった気分。",
+"zh_CN": "你感觉自己像一阵风。",
+"zh_TW": "你感覺自己像一陣風。"
+},
+"YOU FEEL UNBREAKABLE. AND STICKY.": {
+"ja": "無敵の気分。あとベタベタ。",
+"zh_CN": "你感觉刀枪不入。还黏糊糊的。",
+"zh_TW": "你感覺刀槍不入。還黏呼呼的。"
+},
+"YOU HELD THE SUN. YOUR BEAK IS FINE.": {
+"ja": "太陽を抱いた。くちばしは無事。",
+"zh_CN": "你抱住了太阳。你的嘴没事。",
+"zh_TW": "你抱住了太陽。你的嘴沒事。"
+},
+"YOU HIT A WALL. THE WALL FEELS WORSE.": {
+"ja": "壁にぶつかった。壁のほうがつらそう。",
+"zh_CN": "你撞墙了。墙感觉更糟。",
+"zh_TW": "你撞牆了。牆感覺更糟。"
+},
+"You are mostly lungs now.": {
+"ja": "キミはもはや、ほぼ肺。",
+"zh_CN": "你现在基本就是一个肺。",
+"zh_TW": "你現在基本就是一個肺。"
+},
+"You caught the moon. I tried once. It laughed.": {
+"ja": "月をつかまえたのか。おれも一度やった。笑われたよ。",
+"zh_CN": "你抓住了月亮。我试过一次，它笑了。",
+"zh_TW": "你抓住了月亮。我試過一次，它笑了。"
+},
+"You did not ask them to come. They came anyway. Hearts.": {
+"ja": "呼んでないのに、来てくれた。ハート。",
+"zh_CN": "你没请它们来，它们还是来了。爱心。",
+"zh_TW": "你沒請牠們來，牠們還是來了。愛心。"
+},
+"You own the sky now. Please do not tell the airlines.": {
+"ja": "空はキミのものだ。航空会社にはナイショで。",
+"zh_CN": "天空现在归你了。请别告诉航空公司。",
+"zh_TW": "天空現在歸你了。請別告訴航空公司。"
+},
+"You've got the squint now. Welcome.": {
+"ja": "キミもその目つきになったか。ようこそ。",
+"zh_CN": "你也学会眯眼了。欢迎。",
+"zh_TW": "你也學會瞇眼了。歡迎。"
+},
+"Your beak no longer shakes. Neither does the fry.": {
+"ja": "くちばしはもう震えない。ポテトもね。",
+"zh_CN": "你的嘴不抖了，薯条也不抖了。",
+"zh_TW": "你的嘴不抖了，薯條也不抖了。"
+},
+"ZING!": {
+"ja": "キラーン！",
+"zh_CN": "叮——！",
+"zh_TW": "叮——！"
+},
+"a child with a heart over its head fed me.": {
+"ja": "頭の上にハートを出した子が、ごはんをくれた。",
+"zh_CN": "一个头顶冒着爱心的孩子喂了我。",
+"zh_TW": "一個頭頂冒著愛心的孩子餵了我。"
+},
+"a cloud, a star, the moon, the sun, a rainbow: you need RAINBOW TIME": {
+"ja": "雲・星・月・太陽・虹：レインボータイムが必要",
+"zh_CN": "云、星星、月亮、太阳、彩虹：你需要彩虹时间",
+"zh_TW": "雲、星星、月亮、太陽、彩虹：你需要彩虹時間"
+},
+"a cocktail. the clouds are giggling.": {
+"ja": "カクテル。雲がクスクス笑ってる。",
+"zh_CN": "鸡尾酒。云朵在咯咯笑。",
+"zh_TW": "雞尾酒。雲朵在咯咯笑。"
+},
+"a cocktail. the clouds were giggling at me.": {
+"ja": "カクテル。雲がぼくを見てクスクス笑ってた。",
+"zh_CN": "鸡尾酒。云朵都在冲我咯咯笑。",
+"zh_TW": "雞尾酒。雲朵都在衝我咯咯笑。"
+},
+"a cup or a cone in somebody's hand: take it": {
+"ja": "だれかが持ってるカップやコーン：いただこう",
+"zh_CN": "别人手里的杯子或甜筒：抢过来",
+"zh_TW": "別人手裡的杯子或甜筒：搶過來"
+},
+"a fry the colour of everything.": {
+"ja": "ぜんぶの色をしたポテト。",
+"zh_CN": "一根拥有所有颜色的薯条。",
+"zh_TW": "一根擁有所有顏色的薯條。"
+},
+"a game about one gull, one pier and one fry": {
+"ja": "一羽のカモメと、ひとつの桟橋と、一本のポテトのゲーム",
+"zh_CN": "一只海鸥、一座码头和一根薯条的游戏",
+"zh_TW": "一隻海鷗、一座碼頭和一根薯條的遊戲"
+},
+"a good one. the sea does not hand those out.": {
+"ja": "いいやつだ。海はそうそうくれない。",
+"zh_CN": "好货。大海可不随便给这个。",
+"zh_TW": "好貨。大海可不隨便給這個。"
+},
+"a passer-by far from town holds one": {
+"ja": "町から離れた通行人が持っている",
+"zh_CN": "远离小镇的路人手里有一根",
+"zh_TW": "遠離小鎮的路人手裡有一根"
+},
+"a seagull. hungry.": {
+"ja": "カモメ。腹ぺこ。",
+"zh_CN": "一只海鸥。饿着。",
+"zh_TW": "一隻海鷗。餓著。"
+},
+"a star fell. my beak was full, so i couldn't wish.": {
+"ja": "星が落ちた。くちばしがいっぱいで、願えなかった。",
+"zh_CN": "一颗星星掉下来了。我嘴里塞满了，没法许愿。",
+"zh_TW": "一顆星星掉下來了。我嘴裡塞滿了，沒法許願。"
+},
+"a stranger gave me a fry for no reason at all.": {
+"ja": "知らない人が、なんの理由もなくポテトをくれた。",
+"zh_CN": "一个陌生人无缘无故给了我一根薯条。",
+"zh_TW": "一個陌生人無緣無故給了我一根薯條。"
+},
+"a warm wind carried me all the way up, for free.": {
+"ja": "あたたかい風が、タダで上まで運んでくれた。",
+"zh_CN": "一阵暖风把我一路托上去，免费的。",
+"zh_TW": "一陣暖風把我一路托上去，免費的。"
+},
+"and a nursery round, Row, Row, Row Your Boat, for the sea": {
+"ja": "そして海のための輪唱、「こげこげボート」",
+"zh_CN": "还有一首献给大海的童谣轮唱：《划船歌》",
+"zh_TW": "還有一首獻給大海的童謠輪唱：《划船歌》"
+},
+"and somehow... i'm still hungry.": {
+"ja": "なのに……まだおなかがすいてる。",
+"zh_CN": "可不知怎么的……我还是饿。",
+"zh_TW": "可不知怎麼的……我還是餓。"
+},
+"as A Very Fast Kid": {
+"ja": "すごく足の速い子 役",
+"zh_CN": "饰 一个跑得超快的小孩",
+"zh_TW": "飾 一個跑得超快的小孩"
+},
+"as A Witness, With An Umbrella": {
+"ja": "目撃者（傘つき）役",
+"zh_CN": "饰 一位目击者（带着伞）",
+"zh_TW": "飾 一位目擊者（帶著傘）"
+},
+"as Concerned Authorities": {
+"ja": "心配する当局 役",
+"zh_CN": "饰 忧心忡忡的执法者",
+"zh_TW": "飾 憂心忡忡的執法者"
+},
+"as Itself": {
+"ja": "本人役",
+"zh_CN": "饰 它自己",
+"zh_TW": "飾 牠自己"
+},
+"as Itself (you have met)": {
+"ja": "本人役（会ったよね）",
+"zh_CN": "饰 它自己（你们见过）",
+"zh_TW": "飾 它自己（你們見過）"
+},
+"as Someone Who Had Everything": {
+"ja": "すべてを持っていた者 役",
+"zh_CN": "饰 什么都有的家伙",
+"zh_TW": "飾 什麼都有的傢伙"
+},
+"as The Man Who Gave A Fry": {
+"ja": "ポテトをくれた人 役",
+"zh_CN": "饰 给了一根薯条的人",
+"zh_TW": "飾 給了一根薯條的人"
+},
+"catch the sun": {
+"ja": "太陽をつかまえろ",
+"zh_CN": "抓住太阳",
+"zh_TW": "抓住太陽"
+},
+"clink": {
+"ja": "カチン",
+"zh_CN": "叮",
+"zh_TW": "叮"
+},
+"coffee + cocktail + ice cream running together: the best flying there is": {
+"ja": "コーヒー＋カクテル＋アイスを同時に：最高の飛び心地",
+"zh_CN": "咖啡 + 鸡尾酒 + 冰淇淋同时生效：世上最爽的飞行",
+"zh_TW": "咖啡 + 雞尾酒 + 冰淇淋同時生效：世上最爽的飛行"
+},
+"coffee. cocktail. ice cream. all at once.": {
+"ja": "コーヒー。カクテル。アイス。ぜんぶ同時に。",
+"zh_CN": "咖啡。鸡尾酒。冰淇淋。一起上。",
+"zh_TW": "咖啡。雞尾酒。冰淇淋。一起上。"
+},
+"coffee. my heart did a little drum solo.": {
+"ja": "コーヒー。心臓がドラムソロをかました。",
+"zh_CN": "咖啡。我的心脏来了段架子鼓独奏。",
+"zh_TW": "咖啡。我的心臟來了段爵士鼓獨奏。"
+},
+"coffee. my heart just learned drums.": {
+"ja": "コーヒー。心臓がドラムを覚えた。",
+"zh_CN": "咖啡。我的心脏刚学会打鼓。",
+"zh_TW": "咖啡。我的心臟剛學會打鼓。"
+},
+"could not save.": {
+"ja": "セーブできませんでした。",
+"zh_CN": "存档失败。",
+"zh_TW": "存檔失敗。"
+},
+"enter: skip": {
+"ja": "Enter：スキップ",
+"zh_CN": "回车：跳过",
+"zh_TW": "Enter：跳過"
+},
+"even the rings look slower. i look... less slow.": {
+"ja": "リングまでゆっくりに見える。ぼくは……あんまりゆっくりじゃない。",
+"zh_CN": "连圆环都看起来变慢了。我看起来……没那么慢了。",
+"zh_TW": "連圓環都看起來變慢了。我看起來……沒那麼慢了。"
+},
+"every kind of magic there was. i had it.": {
+"ja": "あらゆる魔法を、ぼくは手にした。",
+"zh_CN": "世上每一种魔法，我都有过。",
+"zh_TW": "世上每一種魔法，我都有過。"
+},
+"every one of them wetter than i expected.": {
+"ja": "どれも思ってたより濡れてた。",
+"zh_CN": "每一条都比我想的更湿。",
+"zh_TW": "每一條都比我想的更濕。"
+},
+"everybody says: make a wish.": {
+"ja": "みんな言う。願いごとをしなよって。",
+"zh_CN": "大家都说：许个愿吧。",
+"zh_TW": "大家都說：許個願吧。"
+},
+"everything is full. except you.": {
+"ja": "なにもかも満ちている。キミ以外は。",
+"zh_CN": "什么都满了。除了你。",
+"zh_TW": "什麼都滿了。除了你。"
+},
+"everything this island had to give, i have.": {
+"ja": "この島がくれるものは、ぜんぶ手に入れた。",
+"zh_CN": "这座岛能给的一切，我都有了。",
+"zh_TW": "這座島能給的一切，我都有了。"
+},
+"everything went gold for a moment.": {
+"ja": "一瞬、ぜんぶが金色になった。",
+"zh_CN": "那一刻，一切都变成了金色。",
+"zh_TW": "那一刻，一切都變成了金色。"
+},
+"faster than the wind. stronger than the tide.": {
+"ja": "風より速く。潮より強く。",
+"zh_CN": "比风更快，比潮更强。",
+"zh_TW": "比風更快，比潮更強。"
+},
+"fish leap where the water bubbles": {
+"ja": "魚は泡の立つところで跳ねる",
+"zh_CN": "鱼会在冒泡的水面跃出",
+"zh_TW": "魚會在冒泡的水面躍出"
+},
+"fish leap where the water bubbles.   Gull Sight shows where, 5 seconds ahead.": {
+"ja": "魚は泡の立つところで跳ねる。   カモメアイなら5秒前に場所がわかる。",
+"zh_CN": "鱼会在冒泡的水面跃出。   鸥之眼能提前 5 秒看到位置。",
+"zh_TW": "魚會在冒泡的水面躍出。   鷗之眼能提前 5 秒看到位置。"
+},
+"flick": {
+"ja": "シュッ",
+"zh_CN": "唰",
+"zh_TW": "唰"
+},
+"fries glow in colours. the colours mean things.": {
+"ja": "ポテトはいろんな色に光る。色には意味がある。",
+"zh_CN": "薯条会发出不同颜色的光。颜色是有含义的。",
+"zh_TW": "薯條會發出不同顏色的光。顏色是有含義的。"
+},
+"from the inside it has more colours than i thought.": {
+"ja": "内側から見ると、思ってたより色が多い。",
+"zh_CN": "从里面看，它的颜色比我想的还多。",
+"zh_TW": "從裡面看，它的顏色比我想的還多。"
+},
+"good morning, bird.": {
+"ja": "おはよう、鳥さん。",
+"zh_CN": "早上好，小鸟。",
+"zh_TW": "早安，小鳥。"
+},
+"got it": {
+"ja": "ゲット",
+"zh_CN": "到手",
+"zh_TW": "到手"
+},
+"grrrmmbl...": {
+"ja": "ぐうぅ……",
+"zh_CN": "咕噜噜……",
+"zh_TW": "咕嚕嚕……"
+},
+"gull of many accessories": {
+"ja": "アクセサリーだらけのカモメ",
+"zh_CN": "配饰多多的海鸥",
+"zh_TW": "配飾多多的海鷗"
+},
+"gull sight is not open yet. three fries first.": {
+"ja": "カモメアイはまだ使えない。まずはポテト3本。",
+"zh_CN": "鸥之眼还没开启。先弄到三根薯条。",
+"zh_TW": "鷗之眼還沒開啟。先弄到三根薯條。"
+},
+"gull! gull! gull!": {
+"ja": "カモメ！カモメ！カモメ！",
+"zh_CN": "海鸥！海鸥！海鸥！",
+"zh_TW": "海鷗！海鷗！海鷗！"
+},
+"hats, scarves, balloons: things strangers carry": {
+"ja": "帽子、マフラー、風船：知らない人が持っているもの",
+"zh_CN": "帽子、围巾、气球：陌生人身上的东西",
+"zh_TW": "帽子、圍巾、氣球：陌生人身上的東西"
+},
+"he dropped another one.": {
+"ja": "あの人、もう一本落とした。",
+"zh_CN": "他又掉了一根。",
+"zh_TW": "他又掉了一根。"
+},
+"hello, you.": {
+"ja": "こんにちは。",
+"zh_CN": "你好呀。",
+"zh_TW": "你好呀。"
+},
+"hi, seagull!": {
+"ja": "やあ、カモメ！",
+"zh_CN": "嗨，海鸥！",
+"zh_TW": "嗨，海鷗！"
+},
+"hic!": {
+"ja": "ヒック！",
+"zh_CN": "嗝！",
+"zh_TW": "嗝！"
+},
+"hold TAB. see what glows.": {
+"ja": "TABを長押し。光るものを見よう。",
+"zh_CN": "按住 TAB。看看什么在发光。",
+"zh_TW": "按住 TAB。看看什麼在發光。"
+},
+"i carried my own weather. it only rained on me.": {
+"ja": "自分専用の天気を連れ歩いた。雨はぼくにだけ降った。",
+"zh_CN": "我随身带着自己的天气。雨只下在我身上。",
+"zh_TW": "我隨身帶著自己的天氣。雨只下在我身上。"
+},
+"i caught a cloud.": {
+"ja": "雲をつかまえた。",
+"zh_CN": "我抓住了一朵云。",
+"zh_TW": "我抓住了一朵雲。"
+},
+"i caught a rain cloud.": {
+"ja": "雨雲をつかまえた。",
+"zh_CN": "我抓住了一朵雨云。",
+"zh_TW": "我抓住了一朵雨雲。"
+},
+"i caught a rainbow.": {
+"ja": "虹をつかまえた。",
+"zh_CN": "我抓住了一道彩虹。",
+"zh_TW": "我抓住了一道彩虹。"
+},
+"i caught the moon.": {
+"ja": "月をつかまえた。",
+"zh_CN": "我抓住了月亮。",
+"zh_TW": "我抓住了月亮。"
+},
+"i caught the sun.": {
+"ja": "太陽をつかまえた。",
+"zh_CN": "我抓住了太阳。",
+"zh_TW": "我抓住了太陽。"
+},
+"i flew right through a rainbow. it tasted of every colour.": {
+"ja": "虹のどまんなかを飛び抜けた。ぜんぶの色の味がした。",
+"zh_CN": "我径直穿过一道彩虹。尝起来是每一种颜色。",
+"zh_TW": "我徑直穿過一道彩虹。嚐起來是每一種顏色。"
+},
+"i flew so low the sea tickled my feet.": {
+"ja": "低く飛びすぎて、海が足をくすぐった。",
+"zh_CN": "我飞得好低，大海挠着我的脚丫。",
+"zh_TW": "我飛得好低，大海搔著我的腳丫。"
+},
+"i held the moon. no cheese. a surprising amount of mouse.": {
+"ja": "月を抱いた。チーズはなかった。ネズミは意外と多かった。",
+"zh_CN": "我抱住了月亮。没有奶酪。老鼠倒是多得出奇。",
+"zh_TW": "我抱住了月亮。沒有起司。老鼠倒是多得出奇。"
+},
+"i held the sun. it was so warm.": {
+"ja": "太陽を抱いた。すごくあったかかった。",
+"zh_CN": "我抱住了太阳。好暖啊。",
+"zh_TW": "我抱住了太陽。好暖啊。"
+},
+"i know who is still hungry.": {
+"ja": "まだ腹ぺこなのが誰か、知ってる。",
+"zh_CN": "我知道谁还饿着。",
+"zh_TW": "我知道誰還餓著。"
+},
+"i met a wall. we agreed not to talk about it.": {
+"ja": "壁に出会った。その話はしないことにした。",
+"zh_CN": "我遇见了一堵墙。我们说好不提这事。",
+"zh_TW": "我遇見了一堵牆。我們說好不提這事。"
+},
+"i owned more hats than a gull should.": {
+"ja": "カモメにしては、帽子を持ちすぎた。",
+"zh_CN": "我的帽子多得不像一只海鸥该有的。",
+"zh_TW": "我的帽子多得不像一隻海鷗該有的。"
+},
+"i think it has something to do with the fries.": {
+"ja": "たぶん、ポテトに関係がある。",
+"zh_CN": "我觉得，这跟薯条有关。",
+"zh_TW": "我覺得，這跟薯條有關。"
+},
+"i think it's a little shy.": {
+"ja": "ちょっと恥ずかしがりみたい。",
+"zh_CN": "我觉得它有点害羞。",
+"zh_TW": "我覺得它有點害羞。"
+},
+"i wanted to tell someone. everybody was asleep.": {
+"ja": "だれかに話したかった。みんな寝てた。",
+"zh_CN": "我想告诉谁。大家都睡着了。",
+"zh_TW": "我想告訴誰。大家都睡著了。"
+},
+"i was going to get some fries. wasn't i.": {
+"ja": "ポテトを取りに行くはずだった。よね。",
+"zh_CN": "我本来是要去弄点薯条的。对吧。",
+"zh_TW": "我本來是要去弄點薯條的。對吧。"
+},
+"i wore a whole cloud. it was softer than i expected.": {
+"ja": "雲をまるごと着た。思ってたよりやわらかかった。",
+"zh_CN": "我穿上了一整朵云。比我想的还软。",
+"zh_TW": "我穿上了一整朵雲。比我想的還軟。"
+},
+"ice cream. cold, sweet, extremely questionable.": {
+"ja": "アイス。冷たくて、甘くて、とても怪しい。",
+"zh_CN": "冰淇淋。冰的，甜的，非常可疑。",
+"zh_TW": "冰淇淋。冰的，甜的，非常可疑。"
+},
+"ice cream. so cold it hurts. so sweet i don't care.": {
+"ja": "アイス。冷たくて痛い。甘いから気にしない。",
+"zh_CN": "冰淇淋。冰得发疼，甜得不在乎。",
+"zh_TW": "冰淇淋。冰得發疼，甜得不在乎。"
+},
+"it doesn't taste of anything. it tastes of going.": {
+"ja": "なんの味もしない。旅立ちの味がする。",
+"zh_CN": "它什么味道都没有。它是出发的味道。",
+"zh_TW": "它什麼味道都沒有。它是出發的味道。"
+},
+"it fell right at my feet.": {
+"ja": "ちょうど足もとに落ちてきた。",
+"zh_CN": "它正好掉在我脚边。",
+"zh_TW": "它正好掉在我腳邊。"
+},
+"it only rains on me.": {
+"ja": "雨はぼくにだけ降る。",
+"zh_CN": "雨只下在我身上。",
+"zh_TW": "雨只下在我身上。"
+},
+"it was falling. so i caught it.": {
+"ja": "落ちてきた。だから受けとめた。",
+"zh_CN": "它在往下掉。所以我接住了。",
+"zh_TW": "它在往下掉。所以我接住了。"
+},
+"it was softer than i expected.": {
+"ja": "思ってたよりやわらかかった。",
+"zh_CN": "比我想的还软。",
+"zh_TW": "比我想的還軟。"
+},
+"it was softer, warmer and louder than i expected.": {
+"ja": "思ってたより、やわらかくて、あったかくて、うるさかった。",
+"zh_CN": "比我想的更软、更暖，也更吵。",
+"zh_TW": "比我想的更軟、更暖，也更吵。"
+},
+"it was warm. something in me changed.": {
+"ja": "あったかかった。ぼくの中で何かが変わった。",
+"zh_CN": "它很暖。我心里有什么变了。",
+"zh_TW": "它很暖。我心裡有什麼變了。"
+},
+"just a fry, and somebody to eat it with.": {
+"ja": "ただのポテトと、いっしょに食べる誰か。",
+"zh_CN": "只是一根薯条，和一个一起吃的伙伴。",
+"zh_TW": "只是一根薯條，和一個一起吃的夥伴。"
+},
+"lap... lap...": {
+"ja": "ちゃぷ……ちゃぷ……",
+"zh_CN": "哗……哗……",
+"zh_TW": "嘩……嘩……"
+},
+"later. it will keep.": {
+"ja": "あとで。逃げやしない。",
+"zh_CN": "待会儿吧。它跑不了。",
+"zh_TW": "待會兒吧。它跑不了。"
+},
+"mouse or arrow keys  -  Esc to go back": {
+"ja": "マウスか矢印キー  -  Escでもどる",
+"zh_CN": "鼠标或方向键  -  Esc 返回",
+"zh_TW": "滑鼠或方向鍵  -  Esc 返回"
+},
+"my beak is full.": {
+"ja": "くちばしがいっぱいだ。",
+"zh_CN": "我嘴里塞满了。",
+"zh_TW": "我嘴裡塞滿了。"
+},
+"new on the board: %s.": {
+"ja": "掲示板に追加：{0}。",
+"zh_CN": "任务板新增：{0}。",
+"zh_TW": "任務板新增：{0}。"
+},
+"new tasks on the board. the gull is never idle.": {
+"ja": "掲示板に新しいタスク。カモメに休みなし。",
+"zh_CN": "任务板上有新任务了。海鸥从不闲着。",
+"zh_TW": "任務板上有新任務了。海鷗從不閒著。"
+},
+"nice wings!": {
+"ja": "いい翼だね！",
+"zh_CN": "翅膀真好看！",
+"zh_TW": "翅膀真好看！"
+},
+"nine kinds of fish, three sizes of luck": {
+"ja": "9種類の魚、3段階の運",
+"zh_CN": "九种鱼，三种运气",
+"zh_TW": "九種魚，三種運氣"
+},
+"no cheese. just a very large, very quiet thing.": {
+"ja": "チーズはなかった。ただ、とても大きくて、とても静かなもの。",
+"zh_CN": "没有奶酪。只是一个很大、很安静的东西。",
+"zh_TW": "沒有起司。只是一個很大、很安靜的東西。"
+},
+"no fry you can reach yet - look for something that makes you faster": {
+"ja": "まだ届くポテトがない - 速くなれるものを探そう",
+"zh_CN": "还没有你能追上的薯条——去找点让你变快的东西吧",
+"zh_TW": "還沒有你能追上的薯條——去找點讓你變快的東西吧"
+},
+"no more tired wings. my aim is... artistic.": {
+"ja": "翼はもう疲れない。狙いは……芸術的。",
+"zh_CN": "翅膀不累了。我的准头……很有艺术感。",
+"zh_TW": "翅膀不累了。我的準頭……很有藝術感。"
+},
+"not a fry. but it wriggled with real conviction.": {
+"ja": "ポテトじゃない。でも、本気でくねくねしてた。",
+"zh_CN": "不是薯条。但它扭得很有信念感。",
+"zh_TW": "不是薯條。但牠扭得很有信念感。"
+},
+"nothing can hurt me. brain freeze is just speed.": {
+"ja": "なにもぼくを傷つけられない。キーンとするのはスピードのせい。",
+"zh_CN": "什么都伤不了我。脑冻只是速度。",
+"zh_TW": "什麼都傷不了我。腦凍只是速度。"
+},
+"nothing in range - but there is one out there:": {
+"ja": "範囲内にはない - でも、あっちにひとつ：",
+"zh_CN": "范围内没有——不过远处有一根：",
+"zh_TW": "範圍內沒有——不過遠處有一根："
+},
+"nothing shiny. nothing fast.": {
+"ja": "光ってもいない。速くもない。",
+"zh_CN": "不闪亮，也不快。",
+"zh_TW": "不閃亮，也不快。"
+},
+"okay. going very fast now.": {
+"ja": "よし。いま、すごく速い。",
+"zh_CN": "好吧。现在飞得超快了。",
+"zh_TW": "好吧。現在飛得超快了。"
+},
+"our page is drawn again, with our own gulls, in love and thanks.": {
+"ja": "ぼくらのカモメで、そのページを描きなおしました。愛と感謝をこめて。",
+"zh_CN": "我们用自己的海鸥重画了这一页，满怀爱意与感谢。",
+"zh_TW": "我們用自己的海鷗重畫了這一頁，滿懷愛意與感謝。"
+},
+"out of breath. land somewhere and rest.": {
+"ja": "息切れ。どこかに降りて休もう。",
+"zh_CN": "没力气了。找个地方落脚休息吧。",
+"zh_TW": "沒力氣了。找個地方落腳休息吧。"
+},
+"played by the Musopen Symphony and other musicians who gave their recordings to everyone": {
+"ja": "演奏：Musopen交響楽団と、録音をみんなに贈ってくれた音楽家たち",
+"zh_CN": "演奏：Musopen 交响乐团，以及其他把录音无偿分享给所有人的音乐家",
+"zh_TW": "演奏：Musopen 交響樂團，以及其他把錄音無償分享給所有人的音樂家"
+},
+"press any key to skip": {
+"ja": "なにかキーを押してスキップ",
+"zh_CN": "按任意键跳过",
+"zh_TW": "按任意鍵跳過"
+},
+"pssshhh!": {
+"ja": "プシュー！",
+"zh_CN": "呲——！",
+"zh_TW": "呲——！"
+},
+"salt.": {
+"ja": "しお。",
+"zh_CN": "咸的。",
+"zh_TW": "鹹的。"
+},
+"saved.": {
+"ja": "セーブしました。",
+"zh_CN": "已存档。",
+"zh_TW": "已存檔。"
+},
+"senses sharpened...": {
+"ja": "感覚が研ぎ澄まされた……",
+"zh_CN": "感官变敏锐了……",
+"zh_TW": "感官變敏銳了……"
+},
+"sniff sniff": {
+"ja": "くんくん",
+"zh_CN": "嗅嗅",
+"zh_TW": "嗅嗅"
+},
+"so many fries. still hungry.": {
+"ja": "こんなにポテトがあるのに。まだ腹ぺこ。",
+"zh_CN": "这么多薯条。还是饿。",
+"zh_TW": "這麼多薯條。還是餓。"
+},
+"so where does the path end?": {
+"ja": "じゃあ、この道はどこで終わるの？",
+"zh_CN": "那么，这条路的尽头在哪儿？",
+"zh_TW": "那麼，這條路的盡頭在哪兒？"
+},
+"somebody landed next to me, just to say hello.": {
+"ja": "だれかが隣に降りてきた。あいさつするためだけに。",
+"zh_CN": "有谁落在我旁边，只为了打个招呼。",
+"zh_TW": "有誰落在我旁邊，只為了打個招呼。"
+},
+"something is falling, somewhere up there.": {
+"ja": "なにかが落ちてくる。どこか上のほうで。",
+"zh_CN": "有什么东西正在往下掉，就在上面某处。",
+"zh_TW": "有什麼東西正在往下掉，就在上面某處。"
+},
+"something is still missing.": {
+"ja": "まだ、なにかが足りない。",
+"zh_CN": "好像还少了点什么。",
+"zh_TW": "好像還少了點什麼。"
+},
+"stronger. faster. still hungry.": {
+"ja": "強く。速く。まだ腹ぺこ。",
+"zh_CN": "更强。更快。还是饿。",
+"zh_TW": "更強。更快。還是餓。"
+},
+"that slow moment... that's a gull's whole trick.": {
+"ja": "あのスローな瞬間……それがカモメの奥義。",
+"zh_CN": "那个慢下来的瞬间……就是海鸥的全部绝活。",
+"zh_TW": "那個慢下來的瞬間……就是海鷗的全部絕活。"
+},
+"the %s. %s. nobody on the pier believed me.": {
+"ja": "あの{0}。{1}。桟橋のだれも信じてくれなかった。",
+"zh_CN": "那条{0}。{1}。码头上没人信我。",
+"zh_TW": "那條{0}。{1}。碼頭上沒人信我。"
+},
+"the afternoon i could see the wind.": {
+"ja": "風が見えた、あの午後。",
+"zh_CN": "那个我能看见风的下午。",
+"zh_TW": "那個我能看見風的下午。"
+},
+"the closer the fry, the slower the world. it's called gull time.": {
+"ja": "ポテトが近いほど、世界はゆっくりになる。カモメタイムっていうんだ。",
+"zh_CN": "薯条越近，世界越慢。这叫海鸥时间。",
+"zh_TW": "薯條越近，世界越慢。這叫海鷗時間。"
+},
+"the crowd was on high alert": {
+"ja": "まわりは厳戒態勢だった",
+"zh_CN": "人群高度戒备中",
+"zh_TW": "人群高度戒備中"
+},
+"the crowd was on high alert, so the bands were thin": {
+"ja": "まわりが厳戒態勢だったので、判定の帯が細かった",
+"zh_CN": "人群高度戒备，所以判定带很窄",
+"zh_TW": "人群高度戒備，所以判定帶很窄"
+},
+"the first fry. i shook so much i nearly dropped it.": {
+"ja": "最初のポテト。震えすぎて落としそうになった。",
+"zh_CN": "第一根薯条。我抖得差点没叼住。",
+"zh_TW": "第一根薯條。我抖得差點沒叼住。"
+},
+"the fry hit the floor. it's gone.": {
+"ja": "ポテトが床に落ちた。もうだめだ。",
+"zh_CN": "薯条掉地上了。没了。",
+"zh_TW": "薯條掉地上了。沒了。"
+},
+"the old man's table is a good start.": {
+"ja": "おじいさんのテーブルから始めるといい。",
+"zh_CN": "老爷爷那张桌子是个好起点。",
+"zh_TW": "老爺爺那張桌子是個好起點。"
+},
+"the sea gave me a ride. i gave it a fish.": {
+"ja": "海が乗せてくれた。お礼に魚をもらった。",
+"zh_CN": "大海载了我一程，我还了它一条鱼。",
+"zh_TW": "大海載了我一程，我還了它一條魚。"
+},
+"the whole sea, written down.": {
+"ja": "海のぜんぶを、書きとめた。",
+"zh_CN": "整片大海，都记下来了。",
+"zh_TW": "整片大海，都記下來了。"
+},
+"the whole sky, in my beak.": {
+"ja": "空ぜんぶが、ぼくのくちばしの中。",
+"zh_CN": "整片天空，都在我嘴里。",
+"zh_TW": "整片天空，都在我嘴裡。"
+},
+"this might suit a gull.": {
+"ja": "これ、カモメに似合うかも。",
+"zh_CN": "这个可能挺适合海鸥的。",
+"zh_TW": "這個可能挺適合海鷗的。"
+},
+"tk.": {
+"ja": "コト。",
+"zh_CN": "嗒。",
+"zh_TW": "嗒。"
+},
+"too tired to squint. land and rest first.": {
+"ja": "疲れて目を細められない。まず降りて休もう。",
+"zh_CN": "累得眯不动眼了。先落地休息吧。",
+"zh_TW": "累得瞇不動眼了。先落地休息吧。"
+},
+"two gulls, one big question, and some fries on the pier.": {
+"ja": "二羽のカモメと、ひとつの大きな問いと、桟橋のポテト。",
+"zh_CN": "两只海鸥，一个大问题，还有码头上的一些薯条。",
+"zh_TW": "兩隻海鷗，一個大問題，還有碼頭上的一些薯條。"
+},
+"wait. hold on. i can SEE the wind.": {
+"ja": "まって。ちょっと。風が見える。",
+"zh_CN": "等等。慢着。我能看见风了。",
+"zh_TW": "等等。慢著。我能看見風了。"
+},
+"warm.": {
+"ja": "あったかい。",
+"zh_CN": "暖的。",
+"zh_TW": "暖的。"
+},
+"where does this path end?": {
+"ja": "この道はどこで終わるの？",
+"zh_CN": "这条路的尽头在哪儿？",
+"zh_TW": "這條路的盡頭在哪兒？"
+},
+"where is it?": {
+"ja": "どこだろう？",
+"zh_CN": "在哪儿呢？",
+"zh_TW": "在哪兒呢？"
+},
+"x%.1f": {
+"ja": "x{0}",
+"zh_CN": "x{0}",
+"zh_TW": "x{0}"
+},
+"x%.1f   >   x%.1f   -   TOP SPEED UNCHANGED": {
+"ja": "x{0}   >   x{1}   -   最高速度は変わらない",
+"zh_CN": "x{0}   >   x{1}   -   极速不变",
+"zh_TW": "x{0}   >   x{1}   -   極速不變"
+},
+"x%.2f": {
+"ja": "x{0}",
+"zh_CN": "x{0}",
+"zh_TW": "x{0}"
+},
+"x%d": {
+"ja": "x{0}",
+"zh_CN": "x{0}",
+"zh_TW": "x{0}"
+},
+"you are strong now. where do you think you are headed?": {
+"ja": "もう強くなった。どこに向かってると思う？",
+"zh_CN": "你现在很强了。你觉得你要往哪儿去？",
+"zh_TW": "你現在很強了。你覺得你要往哪兒去？"
+},
+"you caught a fish": {
+"ja": "魚をつかまえた",
+"zh_CN": "你抓到了一条鱼",
+"zh_TW": "你抓到了一條魚"
+},
+"you got a fry": {
+"ja": "ポテトをゲット",
+"zh_CN": "你弄到了一根薯条",
+"zh_TW": "你弄到了一根薯條"
+},
+"you were going to get some fries. on the pier.": {
+"ja": "ポテトを取りに行くはずだった。桟橋で。",
+"zh_CN": "你本来是要去弄点薯条的。在码头上。",
+"zh_TW": "你本來是要去弄點薯條的。在碼頭上。"
+},
+"you're so fluffy.": {
+"ja": "ふわふわだね。",
+"zh_CN": "你好蓬松啊。",
+"zh_TW": "你好蓬鬆啊。"
+},
+"~ blub ~": {
+"ja": "~ ぶくぶく ~",
+"zh_CN": "~ 咕嘟 ~",
+"zh_TW": "~ 咕嘟 ~"
+}
+}

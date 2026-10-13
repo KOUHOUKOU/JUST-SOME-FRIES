@@ -1,4 +1,4 @@
-"""Round 16: the Windows submission zip (build/JustSomeFries.exe + .pck + HOW_TO_PLAY.txt).   python tools/make_zip.py"""
+"""Round 16/17: the Windows submission zip (build/JustSomeFries.exe + .pck + HOW_TO_PLAY.txt).   python tools/make_zip.py"""
 import os, zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,6 +17,8 @@ F = squawk: on a roof it calls the gulls; on the ground a calm crowd says hello,
 Catch a fish and FISH TIME begins: on the sea W surfs, Space launches you at the fish that keep jumping.
 Two save slots. After the end, HOLD E at the credits to keep playing (the big brother has things to say).
 
+Languages: English, 简体中文, 繁體中文, 日本語. The game asks when it starts; on the title screen press L to change it.
+
 Walkthrough video: https://kouhoukou.github.io/JUST-SOME-FRIES/walkthrough.html
 Source: https://github.com/KOUHOUKOU/JUST-SOME-FRIES
 
@@ -24,7 +26,7 @@ Third-party art: some props (boats, barrels, crates, palms, rocks, tables, chair
 """
 out = os.path.join(ROOT, "submission", "JustSomeFries_Windows.zip")
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
-    z.writestr("JustSomeFries/HOW_TO_PLAY.txt", HOW)
+    z.writestr("JustSomeFries/HOW_TO_PLAY.txt", HOW.encode("utf-8-sig"))
     z.write(os.path.join(ROOT, "build", "JustSomeFries.exe"), "JustSomeFries/JustSomeFries.exe")
     z.write(os.path.join(ROOT, "build", "JustSomeFries.pck"), "JustSomeFries/JustSomeFries.pck")
 print(out, os.path.getsize(out) // 1048576, "MB")
