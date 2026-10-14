@@ -1311,7 +1311,7 @@ func _drink_swap(st, pos):
 		return
 	var roll = fmod(abs(pos.x * 12.9898 + pos.z * 78.233), 1.0)       # a deterministic coin (the world builder's own random numbers must not shift)
 	var chance = 1.0 if pos.z < -22.0 else 0.45
-	if roll <= chance:
+	if roll <= chance and MISCHIEF.station_free(DRINK_OF[ir], pos):      # round 18: a real drink only where a drink station is (see mischief.gd)
 		st["mischief"] = DRINK_OF[ir]
 		st.erase("item_r")
 

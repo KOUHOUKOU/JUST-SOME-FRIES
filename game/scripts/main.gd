@@ -258,7 +258,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u", "--r16s", "--r16a", "--r16b", "--r16c", "--r16d", "--r16e", "--r16f", "--r16g", "--r16h"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u", "--r16s", "--r16a", "--r16b", "--r16c", "--r16d", "--r16e", "--r16f", "--r16g", "--r16h", "--r18a", "--r18b", "--r18v", "--r18m", "--r18n", "--r18h", "--r18f", "--r18w"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -373,7 +373,7 @@ func _reload(skip, slot = 0):
 	# the browser build: a second island built on top of the first one fragments the wasm heap (which only ever grows): the classic way a long session ends in
 	# a crash. A page reload gives a clean heap; the 0.8 s lets a save that was just written reach the browser's storage first.
 	if GS.web and not autotest:
-		var ok = JavaScriptBridge.eval("(function(){ try { sessionStorage.setItem('jsf_skip_menu', '%s'); sessionStorage.setItem('jsf_slot', '%d'); setTimeout(function(){ location.reload(); }, 800); return 1; } catch (e) { return 0; } })()" % [("1" if skip else "0"), slot])
+		var ok = JavaScriptBridge.eval("(function(){ try { sessionStorage.setItem('jsf_skip_menu', '%s'); sessionStorage.setItem('jsf_slot', '%d'); sessionStorage.setItem('jsf_diff', '%s'); setTimeout(function(){ location.reload(); }, 800); return 1; } catch (e) { return 0; } })()" % [("1" if skip else "0"), slot, GS.diff])
 		if ok != null and float(ok) > 0.5:
 			return
 	get_tree().reload_current_scene()
@@ -743,8 +743,8 @@ func _process(delta):
 	if GS.sense_active:
 		# Gull Sight lasts exactly as long as TAB is held (and the gull has the breath for it)
 		var s = player.snatch
-		if not Input.is_action_pressed("gull_sense") or GS.vision_tired or player.mode == 2 or s.state != "idle" or s.lock_fry != null:
-			if GS.vision_tired and Input.is_action_pressed("gull_sense"):
+		if (not Input.is_action_pressed("gull_sense") and not GS.tab_toggle) or GS.vision_tired or player.mode == 2 or s.state != "idle" or s.lock_fry != null:
+			if GS.vision_tired and (Input.is_action_pressed("gull_sense") or GS.tab_toggle):
 				hud.whisper("out of breath. land somewhere and rest.", 3.0)
 			_close_sense()
 	elif GS.vision_tired and not Input.is_action_pressed("gull_sense"):
@@ -760,6 +760,8 @@ func _process(delta):
 		_autosave_tick(rdt)
 		_quest_tick(rdt)
 		_tab_lesson_tick(rdt)
+		_coach_tick(rdt)
+		_clock_tick(rdt)
 		_ach_tick(rdt)
 		_bow_tick()
 		_cine_tick(rdt)
@@ -788,7 +790,7 @@ func _zone_tick(rdt):
 	if zone_check > 0.0:
 		return
 	zone_check = 0.4
-	Sfx.set_fish(GS.fish_mode())          # round 16: the sea has its own music while FISH TIME runs
+	Sfx.set_fish(GS.fish_mode())          # round 16: the sea has its own music while OCEAN TIME runs
 	var z = _zone_of(player.global_position)
 	if z == Sfx.world_zone:
 		zone_cand = ""
@@ -808,8 +810,11 @@ func _hints():
 	var post = GS.gull_sense_count >= 3
 	if post and play_t > 25.0 and GS.fry_total() < 8 and player.mode == 0 and not hud.hint_shown.has("shift"):
 		hud.hint("shift", "SHIFT - BOOST          CTRL - LAND", 4.0)
+
+	if GS.diff != "classic" and play_t > 25.0 and GS.fry_total() < 3 and player.mode == 0 and not hud.hint_shown.has("turn"):
+		hud.hint("turn", "R - TURN RIGHT ROUND", 4.0)
 	if post and player.snatch.hud_state == "locked":
-		hud.hint("e", "E - WHEN A WHITE RING HITS THE GREEN.  GOLD COUNTS DOUBLE.", 3.5)
+		hud.hint("e", "E - ON THE BEAT: WHEN A WHITE RING IS IN THE GOLD BAND." if GS.is_hard() else "E - WHEN A WHITE RING HITS THE GREEN.  GOLD COUNTS DOUBLE.", 3.5)
 	if player.low_stamina and player.mode == 0:
 		hud.hint("rest", "CTRL - LAND AND REST", 3.0)
 	# round 15: the TAB lesson (see _tab_lesson_tick) replaces the old one-line hint; after it, the codex is mentioned once
@@ -843,7 +848,10 @@ func _tutorial_director():
 				prompt = ""
 			elif best.vanished:
 				prompt = "THE OLD MAN IS ORDERING A NEW ONE..."
+			elif GS.diff != "classic":
+				prompt = ""           # round 18: the coach card (hud.gd Coach) tells the steps, one line at a time
 			elif sn.lock_fry != null:
+
 				# round 10: the slow time is the most important skill of the game; the first fries name it, quietly
 				if n == 0:
 					prompt = "THE WORLD SLOWS DOWN: THIS IS GULL TIME.   PRESS  E  WHEN A WHITE RING HITS THE GREEN"
@@ -939,13 +947,21 @@ func _unhandled_input(event):
 	if player == null or not player.active or get_tree().paused or intro_active:
 		return
 	if event.is_action_pressed("gull_sense"):
-		_try_open_vision()
-	elif event.is_action_released("gull_sense"):
+		if GS.tab_toggle and GS.sense_active:
+			GS.vision_tired = false
+			_close_sense()
+		else:
+			_try_open_vision()
+	elif event.is_action_released("gull_sense") and not GS.tab_toggle:
 		GS.vision_tired = false
 		_close_sense()
 	if codex_open and event is InputEventKey and event.pressed and not event.echo and event.keycode in [KEY_LEFT, KEY_RIGHT]:
 		sense.page = 1 - sense.page
 		Sfx.play("equip", -12.0, 1.3)
+	if event.is_action_pressed("board_toggle") and not event.is_echo() and not codex_open and not hud.film_clean:
+		GS.board_open = not GS.board_open       # round 18b: Q folds the goals board away and brings it back
+		GS.save_settings()
+		Sfx.play("tick_ui", -8.0, 1.0 if GS.board_open else 0.8)
 	if event.is_action_pressed("codex"):
 		if codex_open:
 			_close_codex()
@@ -1007,7 +1023,7 @@ func _try_open_vision():
 	var s = player.snatch
 	if player.mode == 2 or s.state != "idle" or s.lock_fry != null:
 		return
-	if player.mode == 0 and player.stamina < 8.0 and GS.vision_cost() > 0.0:
+	if player.mode == 0 and player.stamina < 8.0 * GS.drain_mult() and GS.vision_cost() > 0.0:
 		hud.whisper("too tired to squint. land and rest first.", 3.0)
 		return
 	_open_sense()
@@ -1093,6 +1109,100 @@ func _quest_tick(rdt):
 	if day != null:
 		day.sun_caught = GS.sky_got.has("sun")
 		day.moon_caught = GS.sky_got.has("moon")
+
+# ---- round 18: THE COACH. Nobody knew how to get a fry: that you climb first, put the fry in the middle of the screen, then dive at it with Shift, then press E on the green.
+# So the first fries come with a card of those four steps (hud.gd Coach); the step that is lit follows what the gull is really doing, one line says what to do now. After the
+# three starter fries it only comes back when a player has gone a long time without a fry, and then a pointer shows the nearest fry that can be caught.
+var coach_idle = 0.0
+var coach_total = -1
+var coach_tgt = null
+
+func _coach_target():
+	if GS.gull_sense_count < 3:
+		for id in ["TUTORIAL_01", "TUTORIAL_02", "TUTORIAL_03"]:
+			var f = world["fries"][id]
+			if not GS.tutorial_done.has(id) and is_instance_valid(f) and not f.consumed and not f.vanished:
+				return f
+		return null
+	return GS.nearest_fry(player.global_position)
+
+func _coach_tick(rdt):
+	var tot = GS.fry_total()
+	var sn = player.snatch
+	if tot != coach_total:
+		coach_total = tot
+		coach_idle = 0.0
+	if sn.state == "idle" and sn.lock_fry == null and player.mode != 2:
+		coach_idle += rdt
+	var busy = GS.ordinary_eaten or intro_active or ending_started or GS.free_play or codex_open or showcase.active or scenes.cine_busy or GS.film_flow or story.active
+	var want = false
+	if GS.diff != "classic" and not busy:
+		if tot < 3:
+			want = GS.is_easy() or tot == 0
+		elif tot < 10:
+			want = coach_idle > (45.0 if GS.is_easy() else 100.0)
+	# a pointer to the nearest catchable fry for anybody who has been looking for one for a long time
+	if GS.diff != "classic" and not busy and tot >= 3 and tot < GS.FRY_CAP and coach_idle > (80.0 if GS.is_easy() else 170.0) and player.mode == 0:
+		var nf = GS.nearest_fry(player.global_position)
+		if nf != null:
+			GS.sniff_node = nf
+			GS.sniff_until = GS.msec() / 1000.0 + 7.0
+			hud.whisper("lost? the arrow points at the nearest fry you can catch.", 4.5)
+			Sfx.play("chime", -14.0, 1.5)
+			coach_idle = coach_idle - 45.0
+	if not want:
+		hud.coach = null
+		return
+	var tgt = _coach_target()
+	if tgt == null:
+		hud.coach = null
+		return
+	var p = player
+	var tab = GS.vision_unlocked()
+	var need = GS.need_speed(tgt)
+	var to = tgt.global_position - p.global_position
+	var step = 0
+	var line = "CLIMB ABOVE THE FRY:  W AND LOOK UP,  OR TAP SPACE"
+	if p.mode != 0:
+		line = "PRESS SPACE TO TAKE OFF"
+	elif sn.state == "carry" or sn.state == "cine":
+		step = 4
+		line = "GOT IT!"
+	elif sn.lock_fry != null:
+		step = 3
+		line = "PRESS  E  ON THE BEAT:  WHEN A WHITE RING IS IN THE GOLD BAND" if GS.is_hard() else "PRESS  E  WHEN A WHITE RING HITS THE GREEN BAND  (GOLD COUNTS DOUBLE)"
+	elif sn.near_target == tgt:
+		step = 2
+		line = "NOW DIVE:  HOLD SHIFT AND FLY STRAIGHT AT IT   (SPEED %d)" % int(round(need * GS.SPEED_UNIT))
+	elif p.global_position.y >= tgt.global_position.y + 4.0 or to.length() < 10.0:
+		step = 1
+		line = ("HOLD TAB:  THE WORLD SLOWS DOWN.  PUT THE FRY IN THE MIDDLE OF THE SCREEN" if tab else "TURN SO THAT THE FRY IS IN THE MIDDLE OF THE SCREEN   (R - TURN AROUND)")
+	hud.coach = {"show": true, "step": step, "line": line, "steps": [
+		{"key": "SPACE", "label": "CLIMB"},
+		{"key": "TAB" if tab else "MOUSE", "label": "SLOW + AIM" if tab else "AIM AT IT"},
+		{"key": "SHIFT", "label": "DIVE"},
+		{"key": "E", "label": "ON THE GOLD" if GS.is_hard() else "ON THE GREEN"}]}
+
+# ---- round 18: the race clock of HARD (the fastest time to the 24 fries is kept)
+func _clock_tick(rdt):
+	if not GS.is_hard() or GS.ordinary_eaten or intro_active or GS.cutscene or showcase.active or codex_open or GS.hard_last > 0.0:
+		return
+	GS.hard_clock += rdt
+
+func _hard_finish():
+	if not GS.is_hard() or GS.hard_last > 0.0:
+		return
+	GS.hard_last = GS.hard_clock
+	if GS.diff_changed:
+		hud.whisper("24 fries in %s.  (a run that began easy is not a record.)" % GS.time_text(GS.hard_last), 6.0)
+		return
+	if GS.hard_best <= 0.0 or GS.hard_last < GS.hard_best:
+		GS.hard_best = GS.hard_last
+		GS.save_records()
+		hud.whisper("24 fries in %s.  A NEW BEST TIME." % GS.time_text(GS.hard_last), 7.0)
+		GS.comic.emit("record", "THE FASTEST GULL ON THE PIER. FOR NOW.", {"tier": 3, "col": GS.RARITY_COLORS[2]})
+	else:
+		hud.whisper("24 fries in %s.  (your best: %s)" % [GS.time_text(GS.hard_last), GS.time_text(GS.hard_best)], 6.0)
 
 # ---- the TAB lesson (round 15). The most important key of the game gets a lesson of its own, by doing: a big keycap presses itself at the bottom of the screen
 # ("HOLD TAB") from the moment the third fry has opened Gull Sight; once the player holds it, the lines change with the seconds of holding (what glows, what the number
@@ -1605,6 +1715,7 @@ func _star_collected(f):
 	if GS.fry_total() >= GS.FRY_CAP:
 		GS.award("ALL 24")
 		queue_cine("all24")
+		_hard_finish()
 	star_timer = 3.0
 
 # RAINBOW FRIES (round 7). Once a colour is complete, a passer-by somewhere out at the edges of the map is holding a rainbow fry of that colour in one

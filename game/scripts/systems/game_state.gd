@@ -34,12 +34,122 @@ signal fish_caught(info)              # {"sp": id, "len": cm, "kg": x, "new": bo
 signal meteor_caught                  # a shooting star was caught (round 8)
 signal sky_caught(kind, count)        # round 15: cloud | raincloud | star | moon | sun | rainbow; count = how many of the five are in
 signal achievement_unlocked(id)       # round 15: a gallery achievement (icon, name, date)
-signal fish_started                   # round 16: the first fish of a streak: FISH TIME begins
+signal fish_started                   # round 16: the first fish of a streak: OCEAN TIME begins
 signal fish_added(streak, rarity)     # ...and every fish after it (the streak climbs, the time grows)
 signal fish_ended
 signal memory_added(id)               # round 16: a first-time moment worth a little film (main.gd records a few frames of it)
 
 enum Phase { TUTORIAL, SPECIAL_HUNT, STILL_HUNGRY, ENDED }
+
+# ---- ROUND 18: DIFFICULTY ---------------------------------------------------------------------------------------------------------------------------------------------
+# The first outside players found the game hard to enter: nobody knew how to get a fry, the breath ran out, TAB cost breath, the rings arrived before anyone saw them and the
+# town hit back for nothing. So there are two ways to play:
+#   EASY  = the way in. Lots of breath that comes back quickly, TAB is nearly free, the rings are clear (round 18b: smaller again) and the waves go at the normal speed from the very first one (a count-in of soft ticks), every
+#           ordinary fry (the 24) asks for ONE judgement per circle with fat bands; the waves of the families speed up (`ladder`: starter 1.0 .. diamond 0.76 of the time) and the fat bands
+#           get thinner (`band_lad`), so the music of a diamond fry is quicker than the music of a plain one, the town is friendly unless the crowd is on FULL alert, a wall is a bump.
+#           Its challenge lives elsewhere: the rainbow fries, the fish and the things of the sky (clouds, the moon, the sun, a rainbow, a star).
+#   HARD  = the race, and a real rhythm game (round 18b, `single`): ONE band only (gold, as wide as the old green one), THREE waves per circle, the tune plays by itself on the
+#           beats and an E counts only when the white wave is in the gold band (a hit = 1 point, a quarter of the waves may be missed). Higher speeds, breath that runs out,
+#           a TAB that costs, a town that is wary and a clock (the fastest time to the 24 fries is kept).
+#   classic = the numbers of round 17 (dev / test runs only: the bots were written for them).
+# `GS.dp(key)` reads the table for the current difficulty. Waves per circle: 0 = keep the number of the tier table.
+const DP = {
+	"easy": {"stam": 1.7, "drain": 0.5, "regen_air": 2.4, "regen_perch": 2.4, "free_early": true, "sight": 0.25, "sight_game": true, "need": 0.88, "band": 1.5, "band_x": 1.0,
+		"ring": 0.68, "first_slow": 1.0, "first_lead": 0.3, "ticks": 2, "gap": 1.0, "sky_slow": 1.5, "single": false, "ladder": [1.0, 0.92, 0.84, 0.76], "band_lad": [1.0, 0.9, 0.8, 0.72], "w_fry": 1, "w_rb": 2, "w_fish": 2, "w_sky": 2, "sky_need": 0.6,
+		"hostile": 3.0, "friend": 1.4, "hits": false, "star_sec": 45.0, "label": "EASY"},
+	"hard": {"stam": 1.0, "drain": 1.0, "regen_air": 1.0, "regen_perch": 1.0, "free_early": false, "sight": 1.0, "sight_game": false, "need": 1.1, "band": 0.85, "band_x": 0.8,
+		"ring": 0.62, "first_slow": 1.0, "first_lead": 0.1, "ticks": 1, "gap": 0.88, "sky_slow": 1.0, "single": true, "ladder": [1.0, 0.94, 0.88, 0.82], "band_lad": [1.0, 1.0, 1.0, 1.0], "w_fry": 3, "w_rb": 3, "w_fish": 3, "w_sky": 2, "sky_need": 1.0,
+		"hostile": 1.6, "friend": 0.5, "hits": true, "star_sec": 30.0, "label": "HARD"},
+	"classic": {"stam": 1.0, "drain": 1.0, "regen_air": 1.0, "regen_perch": 1.0, "free_early": false, "sight": 1.0, "sight_game": false, "need": 1.0, "band": 1.0, "band_x": 1.0,
+		"ring": 1.0, "first_slow": 1.0, "first_lead": 0.0, "ticks": 0, "gap": 1.0, "sky_slow": 1.0, "single": false, "ladder": [1.0, 1.0, 1.0, 1.0], "band_lad": [1.0, 1.0, 1.0, 1.0], "w_fry": 0, "w_rb": 0, "w_fish": 0, "w_sky": 0, "sky_need": 1.0,
+		"hostile": 1.6, "friend": 1.0, "hits": true, "star_sec": 30.0, "label": "CLASSIC"},
+}
+var diff = "easy"                    # "easy" | "hard" | "classic"
+var diff_changed = false              # the player switched difficulty in the middle of this run (a hard record needs a run that was hard from the start)
+var hard_clock = 0.0                  # seconds of play (cut scenes, cards and the codex do not count) for the HARD race
+var hard_best = -1.0                  # the fastest time to the 24 fries in HARD (kept in user://records.json)
+var hard_last = -1.0                  # the time of this run's 24th fry (-1 until then)
+const RECORDS_PATH = "user://records.json"
+const SETTINGS_PATH = "user://settings.cfg"
+var input_offset_ms = 0.0             # round 18: rhythm timing offset (+ = a press counts as earlier: for a laggy screen or speakers; the browser build starts with a little)
+var tab_toggle = false                # round 18: TAB toggles Gull Sight instead of being held (for hands that tire)
+var board_open = true                 # round 18b: the goals board (top left); Q folds it away and brings it back
+
+func load_settings():
+	var c = ConfigFile.new()
+	if c.load(SETTINGS_PATH) == OK:
+		input_offset_ms = float(c.get_value("play", "offset_ms", 0.0))
+		tab_toggle = bool(c.get_value("play", "tab_toggle", false))
+		board_open = bool(c.get_value("play", "board_open", true))
+	elif OS.has_feature("web"):
+		input_offset_ms = 40.0
+
+func save_settings():
+	if OS.get_cmdline_user_args().size() > 0:
+		return
+	var c = ConfigFile.new()
+	c.set_value("play", "offset_ms", input_offset_ms)
+	c.set_value("play", "tab_toggle", tab_toggle)
+	c.set_value("play", "board_open", board_open)
+	c.save(SETTINGS_PATH)
+
+func dp(k):
+	return DP[diff][k]
+
+func is_easy():
+	return diff == "easy"
+
+func is_hard():
+	return diff == "hard"
+
+func diff_label():
+	return DP[diff]["label"]
+
+func set_diff(d, mid_run = false):
+	if not DP.has(d):
+		return
+	if mid_run and d != diff:
+		diff_changed = true
+	diff = d
+
+# the town only turns on the gull when the crowd's attention is on its highest (EASY: "ALL EYES"); every pink CHARM fry raises the line a little (HARD)
+func hostile_line():
+	return dp("hostile") + (0.35 * charm() if diff == "hard" else 0.0)
+
+func hostile():
+	return watch >= hostile_line()
+
+# kindness of the town: how often a friend turns up (CHARM fries add to it)
+func friend_mult():
+	return dp("friend") * (1.0 + 0.3 * charm())
+
+# the pink fry is a CHARM fry since round 18: 0..3 (+ a little for every rainbow one)
+func charm():
+	return float(lv["pink"]) + 0.05 * rainbow["pink"]
+
+func star_sec():
+	return dp("star_sec")
+
+func load_records():
+	var f = FileAccess.open(RECORDS_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var d = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(d) == TYPE_DICTIONARY:
+		hard_best = float(d.get("hard_best", -1.0))
+
+func save_records():
+	if OS.get_cmdline_user_args().size() > 0:
+		return                       # the dev / test runs never touch a player's records
+	var f = FileAccess.open(RECORDS_PATH, FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify({"hard_best": hard_best}))
+		f.close()
+
+func time_text(secs):
+	var s = int(max(secs, 0.0))
+	return "%d:%02d" % [s / 60, s % 60]
 
 const FRY_TYPES = ["red", "orange", "green", "cyan", "blue", "purple", "pink"]
 const TOTAL_BASE = 10                 # 3 tutorial fries + 7 silver fries = the end of the first part
@@ -81,24 +191,25 @@ const BOOST_TAB = [15.0, 20.0, 25.0, 28.5]   # gauge 90 -> 120 -> 150 -> 171
 const ACCEL_TAB = [1.0, 1.5, 2.2, 3.2]
 const STAM_TAB = [60.0, 90.0, 130.0, 190.0]
 # the three time buffs (20 s each). They burn on the stamina bar and fade quickly once the gull lands or is hit.
-const BUFF_SEC = 20.0
+const BUFF_SEC = 30.0                 # round 18: every cup lasts 30 s (it used to be 20: the players felt the drinks ended before they could use them)
 const BUFF_CAP = 300.0                # drinks stack their time (and their states): a gull can keep the party going for as long as it keeps finding cups
 const BUFF_TOP = {"coffee": 4.2, "alcohol": 5.0, "ice": 3.0}      # m/s of extra top speed (x6 for the gauge)
 const STAR_SEC = 30.0
 const STAR_TOP = 9.0                  # STARLIGHT: top speed on top of everything else
 const BUFF_COL = {"coffee": Color("B9783C"), "alcohol": Color("FFD23A"), "ice": Color("8FE3F2")}
 const BUFF_NAME = {"coffee": "COFFEE", "alcohol": "COCKTAIL", "ice": "ICE CREAM"}
-# the side quests on the mission board: id -> [fries needed before it shows up, text on the board, "still hungry" line shown afterwards (big quests only)]
+# the side quests on the mission board: id -> [fries needed before it shows up, text on the board, "still hungry" line shown afterwards (big quests only), name of the REWARD (round 18), what it does]
 # BIG quests (fish book, cloud, sun) end with the quiet moment; the small ones just tick off with a chime.
 const QUESTS = {
-	"star": [3, "RAINBOW TIME: ALL THREE DRINKS AT ONCE", ""],
-	"drink": [3, "GET A DRINK", ""],
-	"wear": [3, "GET AN ACCESSORY", ""],
-	"fish": [3, "CATCH A FISH", ""],
-	"rainbow": [6, "GET A RAINBOW FRY", ""],
-	"sky": [10, "SKY HIGH! CLOUD, STAR, MOON, SUN, RAINBOW", "the whole sky, in my beak.|it was softer, warmer and louder than i expected.|and somehow... i'm still hungry."],
+	"star": [3, "RAINBOW TIME: ALL THREE DRINKS AT ONCE", "", "RAINBOW TIME", "FLY FREE, NOTHING CAN HURT YOU, SPEED SOARS"],
+	"fish": [3, "CATCH A FISH", "", "OCEAN TIME", "THE SEA IS YOURS: SURF IT, LAUNCH AT THE FISH"],
+	"drink": [3, "GET A DRINK", "", "A BOOST", "ALL YOUR BREATH BACK AND MORE SPEED"],
+	"wear": [3, "GET AN ACCESSORY", "", "A NEW LOOK", "WEAR IT FROM THE CODEX (C)"],
+	"rainbow": [6, "GET A RAINBOW FRY", "", "A BETTER GULL", "IT ADDS A LITTLE TO ITS COLOUR FOR EVER"],
+	"sky": [10, "SKY HIGH! CLOUD, STAR, MOON, SUN, RAINBOW", "the whole sky, in my beak.|it was softer, warmer and louder than i expected.|and somehow... i'm still hungry.", "WEAR THE SKY", "WHAT YOU CATCH UP THERE STAYS WITH YOU"],
 }
 const BIG_QUESTS = ["sky"]
+const SKY_THINGS = ["cloud", "raincloud", "moon", "sun", "skybow", "meteor"]      # the things of the sky keep their speeds in every difficulty (their challenge is the challenge of EASY)
 const SKY_KINDS = ["cloud", "star", "moon", "sun", "rainbow"]      # the five things of the sky quest (a rain cloud counts as the cloud; catching both is an achievement of its own)
 const QUEST_SHOWN = 5                 # lines on the board at once
 
@@ -138,9 +249,10 @@ const NAMES = {
 	"cyan": ["FARSIGHT FRY", "EAGLE-EYED FRY", "ALL-SEEING FRY"],
 	"blue": ["DEEP BREATH FRY", "BIG LUNGS FRY", "BOTTOMLESS FRY"],
 	"purple": ["SECOND WIND FRY", "THIRD WIND FRY", "ENDLESS WIND FRY"],
-	"pink": ["FLUFF FRY", "FLUFFIER FRY", "MAXIMUM FLUFF FRY"],
+	"pink": ["CHARM FRY", "CHARMING FRY", "IRRESISTIBLE FRY"],        # round 18: the pink fry is the CHARM fry (it was the FLUFF fry: nobody hits a gull any more unless the crowd is on full alert)
 }
-const STAT_NAMES = {"red": "TOP SPEED", "orange": "ACCELERATION", "green": "STEADY TIMING", "cyan": "GULL SIGHT", "blue": "STAMINA", "purple": "RECOVERY", "pink": "SWAT DAMAGE"}
+const STAT_NAMES = {"red": "TOP SPEED", "orange": "ACCELERATION", "green": "STEADY TIMING", "cyan": "GULL SIGHT", "blue": "STAMINA", "purple": "RECOVERY", "pink": "CHARM"}
+const CHARM_LINES = ["", "STRANGERS SMILE FIRST", "GULLS COME TO SAY HELLO", "EVEN THE DOGS ARE FRIENDS"]
 const DESCS = {
 	"red": ["Faster at the very top.\nCruising stays exactly the same.", "The top of the dial moves up again.", "The dial runs out of numbers."],
 	"orange": ["Speeds up sooner.\nThe top speed is still yours alone.", "Less runway. More gull.", "The runway is now a rumour."],
@@ -148,7 +260,7 @@ const DESCS = {
 	"cyan": ["Squinting, but with magic.\nGull Sight reaches twice as far.", "Everything far away glows.", "Look all you like. It costs nothing."],
 	"blue": ["More sky before you need a rest.", "Lungs the size of a pier.", "You are mostly lungs now."],
 	"purple": ["Apparently breathing is useful.", "Resting is now a competitive sport.", "Naps are optional. Recovery is not."],
-	"pink": ["Softer landings.\nSwats hurt less.", "Fluffier. Harder to hurt.", "A cloud with a beak."],
+	"pink": ["People smile at you first.\nHits hurt a little less, too.", "Kids and other gulls come to say hello.\nFluffier. Harder to hurt.", "Even the dogs want to be friends.\nA cloud with a beak."],
 }
 
 var phase = Phase.TUTORIAL
@@ -206,22 +318,23 @@ var clouds_got = {}                   # ...which clouds: cloud | raincloud
 var sight_time = 0.0                  # seconds Gull Sight has been held in total (the TAB lesson ends after a few)
 var tab_lesson = 0                    # 0 = not shown yet, 1 = prompt on screen, 2 = done
 var cine_seen = {}                    # the cinematic moments that have been shown already (each plays once per run): drinks3, fish, meteor, all24
+var coach_done = {}                   # round 18: the steps of the first-fry coach the player has already done (climb / tab / dive / press), see main._coach_tick
 
-# ---- ROUND 16: FISH TIME. A fish gives the breath back and starts (or tops up) a state of the sea: on the water the gull surfs at no cost, Space on the water is a
+# ---- ROUND 16: OCEAN TIME. A fish gives the breath back and starts (or tops up) a state of the sea: on the water the gull surfs at no cost, Space on the water is a
 # LAUNCH (a big, short burst of acceleration to catch the fish that jump), and every other fish starts leaping so that a streak is easy to keep going.
-# When RAINBOW TIME and FISH TIME run together, the SEA (the water and the air just above it) belongs to FISH TIME and the air to RAINBOW TIME (see `fish_mode`).
+# When RAINBOW TIME and OCEAN TIME run together, the SEA (the water and the air just above it) belongs to OCEAN TIME and the air to RAINBOW TIME (see `fish_mode`).
 const FISH_FIRST_SEC = 22.0
 const FISH_ADD = [10.0, 15.0, 24.0]    # seconds per fish: common, rare, legendary
 const FISH_CAP = 90.0
-const FISH_TOP = 3.0                   # m/s of extra top speed in the sea while FISH TIME runs (the fish ask for a lot)
+const FISH_TOP = 3.0                   # m/s of extra top speed in the sea while OCEAN TIME runs (the fish ask for a lot)
 const FISH_STREAK_SEC = 14.0           # a fish within this many seconds of the last one keeps the streak going
 const SEA_ZONE_H = 9.0                 # the "sea" reaches this high above the water (a leaping fish tops out at ~4.4 m)
-var fish_t = 0.0                       # seconds of FISH TIME left
+var fish_t = 0.0                       # seconds of OCEAN TIME left
 var fish_streak = 0
 var fish_streak_t = 0.0
 var fish_best_streak = 0
 var sea_zone = false                   # the gull is over the sea and low: the player script sets this every frame
-var cutscene = false                   # a film moment / the story is on screen: the drinks and FISH TIME wait (main / story_scenes set it)
+var cutscene = false                   # a film moment / the story is on screen: the drinks and OCEAN TIME wait (main / story_scenes set it)
 var free_play = false                  # round 16: the ending is over and the player kept playing (every colour, every fish, every achievement still to get)
 var slot = 1                           # which of the save slots this run lives in
 var autoload_slot = 0                  # a reload that must continue a slot at once (KEEP PLAYING after the credits)
@@ -229,7 +342,7 @@ var autoload_slot = 0                  # a reload that must continue a slot at o
 func fish_active():
 	return fish_t > 0.0
 
-# the sea belongs to FISH TIME while it runs; everywhere else RAINBOW TIME (if it runs) is in charge
+# the sea belongs to OCEAN TIME while it runs; everywhere else RAINBOW TIME (if it runs) is in charge
 func fish_mode():
 	return fish_t > 0.0 and sea_zone
 
@@ -261,9 +374,19 @@ func _ready():
 	Engine.max_fps = 60
 	_init_clock()
 	ach_load()
+	load_records()
+	load_settings()
+	# round 18: the dev / test runs keep the numbers of round 17 ("classic") unless they ask for --easy / --hard; a player's run starts EASY (the menu asks, the save remembers)
+	var ua = OS.get_cmdline_user_args()
+	if ua.size() > 0:
+		diff = "classic"
+		if "--easy" in ua:
+			diff = "easy"
+		elif "--hard" in ua:
+			diff = "hard"
 	var keys = {"move_forward": KEY_W, "move_back": KEY_S, "bank_left": KEY_A, "bank_right": KEY_D,
 		"flap": KEY_SPACE, "dash": KEY_SHIFT, "land": KEY_CTRL, "interact": KEY_E, "squawk": KEY_F,
-		"gull_sense": KEY_TAB, "codex": KEY_C, "pause_game": KEY_ESCAPE}
+		"gull_sense": KEY_TAB, "codex": KEY_C, "pause_game": KEY_ESCAPE, "turn_back": KEY_R, "board_toggle": KEY_Q}
 	for a in keys:
 		if not InputMap.has_action(a):
 			InputMap.add_action(a)
@@ -288,6 +411,9 @@ func _ready():
 		var v = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_skip_menu'); sessionStorage.removeItem('jsf_skip_menu'); return v; } catch (e) { return null; } })()")
 		skip_menu = str(v) == "1"
 		web_reloaded = v != null                  # a reload from inside the game (restart / back to the menu): the language card is not shown again
+		var vd = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_diff'); sessionStorage.removeItem('jsf_diff'); return v; } catch (e) { return null; } })()")
+		if vd != null and DP.has(str(vd)):
+			diff = str(vd)                      # round 18: a restart keeps the difficulty of the run
 		var vs = JavaScriptBridge.eval("(function(){ try { var v = sessionStorage.getItem('jsf_slot'); sessionStorage.removeItem('jsf_slot'); return v; } catch (e) { return null; } })()")
 		autoload_slot = int(str(vs)) if (vs != null and str(vs).is_valid_int()) else 0
 		# dev: `?lite=N` in the page address switches parts of the film moments off to find out what costs the most in the browser (1 = no close-ups, 2 = no blur, 4 = no letterbox bars + words)
@@ -339,7 +465,7 @@ func cull_tree(root, end_m, no_shadow = false):
 func _process(delta):
 	if heat > 0.0:
 		heat = max(heat - delta / 30.0 * heat_decay_mult, 0.0)
-	# round 16: the drinks and FISH TIME run on GAME time (Gull Sight and the grab slow-motion slow them too, so a player who taps TAB keeps them longer) and wait
+	# round 16: the drinks and OCEAN TIME run on GAME time (Gull Sight and the grab slow-motion slow them too, so a player who taps TAB keeps them longer) and wait
 	# while a film moment, the story or the credits are on screen
 	if not get_tree().paused and not codex_open and not showcase_active and not cutscene and not film_flow:
 		_buff_tick(delta)
@@ -401,6 +527,10 @@ func reset():
 	sea_zone = false
 	cutscene = false
 	free_play = false
+	hard_clock = 0.0
+	hard_last = -1.0
+	diff_changed = false
+	coach_done = {}
 	reset_stats()
 
 func set_level(type, level):
@@ -473,7 +603,7 @@ const ACH = {
 	"thermal": ["THERMAL RIDER", "Soar up on a column of warm air.", "Free altitude. Freer than free."],
 	"skim": ["SKIMMER", "Skim the sea at speed.", "Wet feet, dry wit."],
 	"wall": ["WALL KISS", "Fly into a wall at full speed.", "The wall is fine. The wall is always fine."],
-	"fishstreak": ["SCHOOL'S IN", "Catch five fish in one FISH TIME.", "The sea ran out of excuses before you ran out of beak."],
+	"fishstreak": ["SCHOOL'S IN", "Catch five fish in one OCEAN TIME.", "The sea ran out of excuses before you ran out of beak."],
 	"callgulls": ["BIRDS OF A FEATHER", "Call a flock of gulls to a rooftop with F.", "You did not ask them to come. They came anyway. Hearts."],
 	"callkind": ["WELL, HELLO", "Squawk at a calm crowd and be waved at.", "Turns out a good squawk is just a loud hello."],
 	"callshoo": ["INDOOR VOICE", "Squawk at a wary crowd and be chased off.", "They did not want your hello. They wanted a quiet pier."],
@@ -647,12 +777,12 @@ func buffs_die(_include_ice = true):
 func start_star():
 	remember("starlight")
 	ach_unlock("rainbowtime")
-	star_t = STAR_SEC
+	star_t = star_sec()
 	star_total += 1
 	stats["star"] = stats.get("star", 0) + 1
 	star_started.emit()
 
-# RAINBOW TIME as the gull feels it right now: in the sea FISH TIME is in charge, so the rainbow stays quiet there
+# RAINBOW TIME as the gull feels it right now: in the sea OCEAN TIME is in charge, so the rainbow stays quiet there
 func star_active():
 	return star_t > 0.0 and not fish_mode()
 
@@ -734,7 +864,7 @@ func buff_window_mult():
 
 # nothing costs stamina: the cocktail and STARLIGHT
 func free_flight():
-	return buff["alcohol"] > 0.0 or star_active() or fish_mode()
+	return buff["alcohol"] > 0.0 or star_active() or fish_mode() or (dp("free_early") and gull_sense_count < 3)      # round 18: EASY never runs out of breath while learning
 
 # ---- "where to fly next": the nearest fry that the gull's top speed can really lock (E in free flight, and the arrow of Gull Sight) ----
 var sniff_node = null
@@ -782,14 +912,18 @@ func accel_mult():
 	return (ACCEL_TAB[lv["orange"]] + 0.04 * rainbow["orange"]) * drink_accel_mult()
 
 func stamina_max():
-	return STAM_TAB[lv["blue"]] + 4.0 * rainbow["blue"]
+	return (STAM_TAB[lv["blue"]] + 4.0 * rainbow["blue"]) * dp("stam")
 
 func regen_glide():
-	return REGEN_GLIDE_TAB[lv["purple"]] * (1.0 + 0.03 * rainbow["purple"])
+	return REGEN_GLIDE_TAB[lv["purple"]] * (1.0 + 0.03 * rainbow["purple"]) * dp("regen_air")
 
 func regen_perch(high):
 	var base = 14.0 if high else 9.0
-	return base * (REGEN_PERCH_TAB[lv["purple"]] + 0.04 * rainbow["purple"])
+	return base * (REGEN_PERCH_TAB[lv["purple"]] + 0.04 * rainbow["purple"]) * dp("regen_perch")
+
+# round 18: how much a point of flight costs (EASY: half)
+func drain_mult():
+	return dp("drain")
 
 func roll_cooldown():
 	return ROLL_CD_TAB[lv["purple"]]
@@ -811,7 +945,7 @@ func sight_radius():
 func vision_cost():
 	if tab_lesson < 2:
 		return 0.0                # round 16: the first look through Gull Sight is free: the lesson must never fail on an empty bar
-	return VISION_BASE_COST * VISION_TAB[lv["cyan"]]
+	return VISION_BASE_COST * VISION_TAB[lv["cyan"]] * dp("sight")      # round 18: EASY a quarter of it AND per second of game time (the slow world makes it a trickle)
 
 func hurt_mult():
 	return max(HURT_TAB[lv["pink"]] - 0.01 * rainbow["pink"], 0.08)
@@ -826,20 +960,21 @@ func notice_mult():
 func need_speed(f):
 	if f == null or not is_instance_valid(f):
 		return 11.0
+	var k = dp("need")
 	match f.ftype:
 		"tutorial":
-			return TUT_NEED.get(f.id, 10.0)
+			return TUT_NEED.get(f.id, 10.0) * k
 		"fish":
 			return f.min_speed
 		"mischief":
-			return f.min_speed
+			return f.min_speed * (1.0 if f.kind in SKY_THINGS else k)
 		"ordinary":
 			return 0.0
 	if f.tier >= 4:
 		return RAINBOW_NEED / SPEED_UNIT
 	if f.utype != "" and NEED_GAUGE.has(f.utype):
-		return NEED_GAUGE[f.utype][clamp(f.tier, 1, 3) - 1] / SPEED_UNIT
-	return 11.0
+		return NEED_GAUGE[f.utype][clamp(f.tier, 1, 3) - 1] / SPEED_UNIT * k
+	return 11.0 * k
 
 # ---- the side quests on the mission board (fish / cloud / sun): they appear after enough fries, finishing one is a quiet moment ----
 func quest_state(id):
@@ -1012,7 +1147,7 @@ func ability_text(type, level):
 		"purple":
 			return "RESTING x%.1f   -   ROLL %.2f s" % [REGEN_PERCH_TAB[level], ROLL_CD_TAB[level]]
 		"pink":
-			return "HITS -%d %%   -   STUN -%d %%" % [int(round((1.0 - HURT_TAB[level]) * 100.0)), int(round((1.0 - STUN_TAB[level]) * 100.0))]
+			return "%s   -   HITS -%d %%" % [CHARM_LINES[clamp(level, 0, 3)], int(round((1.0 - HURT_TAB[level]) * 100.0))]
 	return ""
 
 # one short line for the tiny rainbow bonus
@@ -1031,7 +1166,7 @@ func rainbow_text(type):
 		"purple":
 			return "+3 % RESTING"
 		"pink":
-			return "-1 % DAMAGE"
+			return "+1 % CHARM"
 	return ""
 
 # ---- save game (a plain JSON file in the user folder): the run so far, the gull's stuff and where it was ----
@@ -1066,7 +1201,7 @@ func slot_info(sl):
 	for k in l:
 		n += int(l[k])
 	var secs = int(float(d.get("run", 0.0)))
-	return {"fries": n, "time": "%02d:%02d" % [secs / 60, secs % 60], "free": bool(d.get("free", false)), "fish": d.get("fish", {}).size()}
+	return {"fries": n, "time": "%02d:%02d" % [secs / 60, secs % 60], "free": bool(d.get("free", false)), "fish": d.get("fish", {}).size(), "diff": str(d.get("diff", "easy"))}
 
 # the end of a run: the gull is on the roof next to its big brother and may keep playing from there (the save is marked "free")
 func write_end_save(pos, yaw):
@@ -1079,7 +1214,7 @@ func write_save(pos, yaw, ended = false):
 		"worn": worn.keys(), "eq": equipped.keys(), "mis": mischief_counts.duplicate(), "ach": achievements_done.keys(), "eaten": fries_eaten,
 		"hunger": hunger_t, "run": run_time, "stats": stats.duplicate(), "phase": int(phase), "pos": [pos.x, pos.y, pos.z], "yaw": yaw,
 		"seen": menu_seen.keys(), "quests": quests.duplicate(), "fish": fish_book.duplicate(true), "starn": star_total, "cine": cine_seen.keys(), "mem": memories.duplicate(true), "sky": sky_got.keys(), "clouds": clouds_got.keys(), "sight": sight_time, "tabl": tab_lesson,
-		"free": free_play or ended}
+		"free": free_play or ended, "diff": diff, "dchg": diff_changed, "hclock": hard_clock, "hlast": hard_last, "coach": coach_done.keys()}
 	if ended:
 		d["phase"] = int(Phase.STILL_HUNGRY) if special_count() >= FRY_TYPES.size() else (int(Phase.SPECIAL_HUNT) if gull_sense_count >= 3 else int(Phase.TUTORIAL))
 	var f = FileAccess.open(save_path(), FileAccess.WRITE)
@@ -1106,6 +1241,15 @@ func read_save(sl = 0):
 func apply_save(d):
 	reset()
 	free_play = bool(d.get("free", false))
+	if d.has("diff") and DP.has(str(d["diff"])):
+		diff = str(d["diff"])
+	elif OS.get_cmdline_user_args().size() == 0:
+		diff = "easy"                    # a save from before the difficulties
+	diff_changed = bool(d.get("dchg", false))
+	hard_clock = float(d.get("hclock", 0.0))
+	hard_last = float(d.get("hlast", -1.0))
+	for k in d.get("coach", []):
+		coach_done[k] = true
 	gull_sense_count = int(d.get("sense", 0))
 	for id in d.get("tut", []):
 		tutorial_done[id] = true

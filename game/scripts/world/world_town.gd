@@ -237,6 +237,7 @@ func _beach_clothes():
 	var cz = 31.0
 	var cy = w.gh(cx, cz)
 	B.cyl(Vector3(cx, cy + 0.3, cz), 0.35, 0.6, WOOD, true)
+	_mis("icecream", Vector3(cx, cy + 0.62, cz))      # round 18: the beach has its ice cream too
 
 func _laundry_roofs():
 	var used = []

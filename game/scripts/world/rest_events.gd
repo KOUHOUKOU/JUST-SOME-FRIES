@@ -11,6 +11,7 @@ const DOG = preload("res://scripts/npc/dog.gd")
 const FRY = preload("res://scripts/fries/fry.gd")
 const Warn = preload("res://scripts/world/warn.gd")
 const Terrain = preload("res://scripts/world/terrain.gd")
+const Tunes = preload("res://scripts/systems/tunes.gd")
 
 var player = null
 var rest_t = 0.0
@@ -84,9 +85,17 @@ func _start():
 			kinds.append("kid")
 		if GS.watch < 1.0:
 			kinds.append_array(["stranger", "puppy", "kid"])
-	if GS.watch >= 1.6:
+	# round 18: charm. Every pink fry makes the town warmer: strangers smile first (1), more gulls come (2), the dogs come too (3)
+	var ch = GS.charm()
+	if ch >= 1.0:
+		kinds.append_array(["stranger", "stranger"])
+	if ch >= 2.0:
+		kinds.append_array(["buddy", "buddy", "kid"])
+	if ch >= 3.0:
+		kinds.append_array(["puppy", "puppy", "puppy"])
+	if GS.hostile():
 		kinds = ["buddy", "dog", "dog"]
-	elif GS.watch >= 1.0:
+	elif GS.watch >= 1.0 and GS.dp("hostile") < 2.0:
 		kinds = ["buddy", "puppy", "kid"]
 	if stranger_cd > 0.0:
 		kinds = kinds.filter(func(k): return k != "stranger")
@@ -113,7 +122,7 @@ var stranger_cd = 25.0
 
 func _end(cool):
 	ev = null
-	cd = cool
+	cd = cool / max(GS.friend_mult(), 0.3)      # round 18: the kinder the town, the sooner the next friend turns up
 	rest_t = 0.0
 
 # ------------------------------------------------------------------ round 16: the squawk on a roof (F) calls a flock of gulls: they come from every side, land (or hover) round the
@@ -121,6 +130,7 @@ func _end(cool):
 var flock = []
 var flock_t = 0.0
 var flock_done = false
+var flock_cue = false          # round 18b: the welcome song has been played for this flock
 
 func call_flock():
 	if not flock.is_empty():
@@ -129,6 +139,7 @@ func call_flock():
 	var n = 4 + randi() % 2
 	flock_t = 0.0
 	flock_done = false
+	flock_cue = false
 	var right = Vector3(cos(player.yaw), 0, -sin(player.yaw))
 	var fwd = Vector3(-sin(player.yaw), 0, -cos(player.yaw))
 	for i in n:
@@ -190,6 +201,12 @@ func _step_flock(dt):
 					e["phase"] = "sit"
 					e["t"] = 0.0
 					Sfx.play("land", -16.0, randf_range(1.2, 1.6))
+					# the welcome: the first gull to land brings the whole little song, each of the others a bell of its own
+					if not flock_cue:
+						flock_cue = true
+						Sfx.play("friend_welcome", -8.0)
+					else:
+						Sfx.play_note("tinkle", Tunes.up_pent(79, 2 + randi() % 4), -11.0)
 			"sit":
 				seated += 1
 				if e["hover"]:
@@ -202,7 +219,7 @@ func _step_flock(dt):
 				g.head.rotation.x = sin(e["t"] * 5.0 + e["delay"] * 7.0) * 0.25
 				if e["hearts"] < 3 and e["t"] > 0.5 + e["hearts"] * 0.7:
 					e["hearts"] += 1
-					_heart(g.global_position + Vector3(0, 0.9, 0))
+					_heart(g.global_position + Vector3(0, 0.9, 0), e["hearts"] + 1 + int(e["delay"] * 4.0))
 				if player.mode != 1 or flock_t > 9.5:
 					e["phase"] = "leave"
 					e["t"] = 0.0
@@ -278,6 +295,7 @@ func _start_buddy():
 			f.rim.visible = false
 		ev["gift"] = f
 	Sfx.play("gull_far", -10.0, 1.2)
+	Sfx.play("hello", -13.0)
 
 var gift_cd = 20.0
 
@@ -290,10 +308,11 @@ func _free_air(p):
 	q.collision_mask = 1
 	return player.get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
 
-func _heart(pos):
-	heart_fx(get_tree().current_scene, pos)
+func _heart(pos, k = -1):
+	heart_fx(get_tree().current_scene, pos, k)
 
-static func heart_fx(root, pos):
+# round 18b: a heart of a welcome (k >= 0) rings a little bell up the pentatonic scale (the hearts climb); any other heart keeps its soft pop
+static func heart_fx(root, pos, k = -1):
 	var s = Sprite3D.new()
 	s.texture = heart_tex()
 	s.pixel_size = 0.012
@@ -309,7 +328,11 @@ static func heart_fx(root, pos):
 	tw.tween_property(s, "global_position", pos + Vector3(randf_range(-0.3, 0.3), 1.6, randf_range(-0.3, 0.3)), 1.4)
 	tw.tween_property(s, "modulate:a", 0.0, 1.4).set_delay(0.5)
 	tw.chain().tween_callback(s.queue_free)
-	Sfx.play("heart", -10.0, randf_range(0.95, 1.15))
+	if k >= 0:
+		Sfx.play_note("tinkle", Tunes.up_pent(81, k + 1), -13.0)
+		Sfx.play("heart", -17.0, randf_range(1.2, 1.35))
+	else:
+		Sfx.play("heart", -10.0, randf_range(0.95, 1.15))
 
 # a few words over somebody's head (fades by itself)
 static func say(root, who, text, sec = 3.0, height = 2.2):
@@ -355,6 +378,7 @@ func _step_buddy(dt):
 				ev["t"] = 0.0
 				g.look_at(Vector3(pp.x, g.global_position.y, pp.z) + Vector3.ZERO, Vector3.UP)
 				Sfx.play("land", -14.0, 1.4)
+				Sfx.play("friend_welcome", -7.0)         # round 18b: the welcome song of a friend who lands next to you
 			if player.mode != 1:
 				ev["phase"] = "leave"
 				ev["t"] = 0.0
@@ -401,7 +425,7 @@ func _step_buddy(dt):
 			g.head.rotation.x = sin(ev["t"] * 5.0) * 0.25
 			if ev["hearts"] < 6 and ev["t"] > 0.5 + ev["hearts"] * 0.5:
 				ev["hearts"] += 1
-				_heart((pp + g.global_position) * 0.5 + Vector3(0, 0.7, 0))
+				_heart((pp + g.global_position) * 0.5 + Vector3(0, 0.7, 0), ev["hearts"] - 1)
 			if player.mode != 1 or ev["t"] > (4.4 if ev["gift"] == null else 5.4):
 				ev["phase"] = "leave"
 				ev["t"] = 0.0

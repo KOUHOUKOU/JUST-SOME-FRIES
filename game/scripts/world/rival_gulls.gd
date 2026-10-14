@@ -120,11 +120,16 @@ class Rival extends Node3D:
 		if player.shield_hit("rival", global_position):
 			Sfx.play("rival_call", -8.0, 0.7)
 			return
+		if not GS.dp("hits"):
+			# round 18, EASY: a rival gull only flaps past and takes the fry it wanted (no hit, no breath lost)
+			player.soft_bump(player.global_position - global_position, 0.5)
+			Sfx.play("rival_call", -12.0, 0.8)
+			return
 		GS.player_hurt.emit("swat_rival", false)
 		player.spend(4.0)
 		player.shake = max(player.shake, 0.3)
-		Sfx.play("thud", -10.0, 1.4)
-		Sfx.play("rival_call", -8.0, 0.7)
+		Sfx.play("thud", -14.0, 1.4)
+		Sfx.play("rival_call", -12.0, 0.8)
 	func _bump(delta):
 		position += away * 9.0 * delta
 		gull.rotation.z += 12.0 * delta

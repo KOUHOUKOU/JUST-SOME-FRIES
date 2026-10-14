@@ -69,7 +69,8 @@ func _draw():
 	draw_string(font, Vector2(0, 112 * u), Loc.t(title), HORIZONTAL_ALIGNMENT_CENTER, size.x, int(22 * u), col)
 	var cost = GS.vision_cost()
 	var free = p.mode != 0 or cost <= 0.0
-	var cost_txt = "FREE" if free else "-%.1f STAMINA / SEC" % cost
+	var shown_cost = cost * (0.3 if GS.dp("sight_game") else 1.0)      # (EASY pays per second of the slowed game clock)
+	var cost_txt = "FREE" if free else "-%.1f STAMINA / SEC" % shown_cost
 	draw_string(font, Vector2(0, 132 * u), Loc.t(sub + "    " + cost_txt), HORIZONTAL_ALIGNMENT_CENTER, size.x, int(13 * u), Color(1.0, 0.92, 0.7, 0.6 * a))
 	# the legend of the light pillars: the colour of the beam is the rarity of the fry
 	var names = ["SILVER", "GOLD", "DIAMOND", "RAINBOW"]
@@ -165,11 +166,12 @@ func draw_glows(ci):
 			var col = info["col"]
 			var core = info["core"]
 			var tier = info["tier"]
+			if tier == 0:
+				core = Color("E8453A")          # the starter fries come in a red carton
 			var label = "%s  %dm" % [GS.RARITY_NAMES[clamp(tier, 0, 4)], int(d)] if tier >= 1 else "%dm" % int(d)
 			label += "\nNEED %d" % int(round(need))
 			var lc = Color(1, 1, 1, 0.9 * a) if reachable else Color(1.0, 0.55, 0.45, 0.8 * a)
-			if tier >= 1:
-				_beam(ci, cam, f.global_position + Vector3(0, 0.3, 0), tier, d, u, ph)
+			_beam(ci, cam, f.global_position + Vector3(0, 0.3, 0), tier, d, u, ph)
 			if onscreen:
 				# round 8: a slim, crisp emblem per rarity instead of a big soft glow (silver: ring + hexagon, gold: ring + four-point star,
 				# diamond: a cut gem, rainbow: a ring of colours). The colour of the little core says which stat the fry gives.
@@ -181,7 +183,9 @@ func draw_glows(ci):
 				var tcol = Color(col.r, col.g, col.b, (0.95 if tier < 4 else 0.7) * a)
 				ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 16 * u), Loc.t(lines[0]), HORIZONTAL_ALIGNMENT_CENTER, 160, int((12 if tier < 4 else 10) * u), tcol)
 				if tier < 4:
-					ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 32 * u), Loc.t(lines[1]), HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), lc)
+					var gives = "VISION FRY" if f.ftype == "tutorial" else GS.STAT_NAMES.get(f.utype, "")
+					ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 31 * u), Loc.t(gives), HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), Color(core.r, core.g, core.b, 0.95 * a).lightened(0.3))
+					ci.draw_string(font, sp + Vector2(-80, r * 1.55 + 46 * u), Loc.t(lines[1]), HORIZONTAL_ALIGNMENT_CENTER, 160, int(12 * u), lc)
 				n_labels += 1
 			else:
 				var dir = sp - size * 0.5
@@ -237,6 +241,8 @@ func _unused(_a, _b):
 # ---- the light pillars (round 9): every silver / gold / diamond / rainbow fry in sight sends a column of light to the sky. Its colour and height are its rarity.
 const BEAM_H = [0.0, 70.0, 130.0, 220.0, 350.0]
 func _beam_col(tier, ph, k = 0.0):
+	if tier == 0:
+		return Color("FFE9A8")
 	match clamp(tier, 1, 4):
 		1:
 			return Color("DCE6F4")
@@ -247,7 +253,7 @@ func _beam_col(tier, ph, k = 0.0):
 	return Color.from_hsv(fmod(t * 0.35 + ph * 0.07 + k * 0.1, 1.0), 0.6, 1.0)
 
 func _beam(ci, cam, base, tier, d, u, ph):
-	var H = BEAM_H[clamp(tier, 1, 4)]
+	var H = BEAM_H[clamp(tier, 1, 4)] * (0.6 if tier == 0 else 1.0)
 	var wb = clamp(2300.0 * u / (d + 50.0), 8.0 * u, 32.0 * u) * (1.0 + 0.25 * (clamp(tier, 1, 4) - 1))
 	var n = 10
 	var prev = Vector2.ZERO
@@ -282,6 +288,20 @@ func _beam(ci, cam, base, tier, d, u, ph):
 				var rr = 7.0 * u * sin(q * PI)
 				ci.draw_line(sp2 - Vector2(rr, 0), sp2 + Vector2(rr, 0), Color(1, 1, 1, 0.9 * a), max(1.5 * u, 1.2))
 				ci.draw_line(sp2 - Vector2(0, rr), sp2 + Vector2(0, rr), Color(1, 1, 1, 0.9 * a), max(1.5 * u, 1.2))
+
+# a carton of fries (round 18): the picture that says "fry"
+func _carton(ci, c, w, col, a2, u):
+	var top = c.y - w * 0.1
+	var bot = c.y + w * 0.55
+	for k in 5:
+		var sx = c.x - w * 0.32 + k * w * 0.16
+		var sh = w * (0.4 + 0.1 * float((k * 5) % 3))
+		ci.draw_rect(Rect2(Vector2(sx, top - sh), Vector2(w * 0.13, sh + 2.0)), Color(0.98, 0.8, 0.33, 0.95 * a2))
+		ci.draw_rect(Rect2(Vector2(sx, top - sh), Vector2(w * 0.13, w * 0.07)), Color(1.0, 0.95, 0.72, 0.95 * a2))
+	var pts = PackedVector2Array([Vector2(c.x - w * 0.5, top), Vector2(c.x + w * 0.5, top), Vector2(c.x + w * 0.38, bot), Vector2(c.x - w * 0.38, bot)])
+	ci.draw_colored_polygon(pts, Color(col.r, col.g, col.b, 0.96 * a2))
+	ci.draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[3], pts[0]]), Color(1, 1, 1, 0.9 * a2), max(1.6 * u, 1.3), true)
+	ci.draw_rect(Rect2(Vector2(c.x - w * 0.22, top + w * 0.16), Vector2(w * 0.44, w * 0.2)), Color(1, 0.96, 0.84, 0.92 * a2))
 
 # one slim emblem. r = radius in pixels. Nothing here is filled thickly: it has to stay readable over a dark, busy picture.
 func _emblem(ci, c, tier, col, core, r, u):
@@ -332,9 +352,8 @@ func _emblem(ci, c, tier, col, core, r, u):
 				var a0 = t * 0.9 + TAU * k / 12.0
 				ci.draw_arc(c, r, a0, a0 + TAU / 12.0 * 0.82, 6, Color.from_hsv(float(k) / 12.0, 0.55, 1.0, 0.95 * a2), lw * 1.5, true)
 			ci.draw_arc(c, r * 0.58, -t * 1.2, -t * 1.2 + TAU * 0.7, 20, Color(1, 1, 1, 0.6 * a2), lw, true)
-	# the core: the colour of the stat this fry feeds
-	ci.draw_circle(c, max(r * 0.2, 2.5 * u), Color(core.r, core.g, core.b, 0.95 * a2))
-	ci.draw_circle(c, max(r * 0.08, 1.2 * u), Color(1, 1, 1, 0.95 * a2))
+	# round 18: the core is a carton of fries in the colour of the stat this fry feeds (the players could not tell a fry from a ring)
+	_carton(ci, c + Vector2(0, r * 0.12), r * 0.92, core, a2, u)
 
 # a shooting star (round 8): its whole orbit as a dotted line, so that it can be intercepted or chased. Needs a view from high up (the sky) or a star that is close.
 func _draw_meteor(ci, cam, font, u, rect, pl):

@@ -7,6 +7,8 @@ extends Node
 #          STARLIGHT has its own piece; the title and the ending have theirs.
 
 const Names = preload("res://scripts/systems/audio_names.gd")
+const NoteNames = preload("res://scripts/systems/note_names.gd")
+var note_streams = {}              # round 18: instrument -> {midi: stream}
 const RATE = 22050
 const MRATE = 11025
 # the pitch ladder of a streak of good presses (a major pentatonic climb)
@@ -44,7 +46,7 @@ var themes = {}
 var zone = ""                  # the piece that is playing in the world right now
 var world_zone = "boardwalk"
 var star_on = false
-var fish_on = false             # round 16: FISH TIME in the sea has its own piece (an arrangement of a sailors' hornpipe)
+var fish_on = false             # round 16: OCEAN TIME in the sea has its own piece (an arrangement of a sailors' hornpipe)
 var cur = 0
 var zone_tw = []
 var hush = false
@@ -52,7 +54,7 @@ var hush_db = 0.0
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	for i in 18:
+	for i in 30:
 		var p = AudioStreamPlayer.new()
 		add_child(p)
 		pool.append(p)
@@ -107,7 +109,38 @@ func _load_assets():
 			sounds[n].loop_end = int(round(sounds[n].get_length() * sounds[n].mix_rate))
 	return ok and sounds.has("wind") and music_streams.has("title")
 
+# round 18: the bank of single notes of the judgement tunes (tools/audio/r18_audio.py). A tune plays the nearest sample, shifted by two semitones at most.
+func _load_notes():
+	for inst in NoteNames.INSTS:
+		var d = {}
+		for m in NoteNames.MIDIS:
+			var path = "res://assets/audio/notes/%s_%d.ogg" % [inst, m]
+			if ResourceLoader.exists(path):
+				d[m] = load(path)
+		if not d.is_empty():
+			note_streams[inst] = d
+
+func play_note(inst, midi, vol_db = -6.0):
+	var bank = note_streams.get(inst, null)
+	if bank == null:
+		play("ring_ok", vol_db, pow(2.0, float(midi - 72) / 12.0))           # (no sample bank: the old single bell, pitched)
+		return
+	var best = -1
+	var bd = 99
+	for m in bank:
+		var d = abs(m - midi)
+		if d < bd:
+			bd = d
+			best = m
+	var p = pool[pool_i]
+	pool_i = (pool_i + 1) % pool.size()
+	p.stream = bank[best]
+	p.volume_db = vol_db
+	p.pitch_scale = pow(2.0, float(midi - best) / 12.0)
+	p.play()
+
 func _finish_loading():
+	_load_notes()
 	wind.stream = sounds.get("wind")
 	waves.stream = sounds.get("waves")
 	murmur.stream = sounds.get("murmur")

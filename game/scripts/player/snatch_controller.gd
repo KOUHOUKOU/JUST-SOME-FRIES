@@ -10,29 +10,15 @@ extends Node
 #   things (hats, drinks, ice cream, fish...)  1 circle, 1 wave.
 # Every E press judges the OLDEST wave that has not been judged yet. A press too early (before the green) or a wave that slips past is a miss.
 # Enough points = the fry is yours (the rhythm ends at once). The waves run in REAL time (the world only slows down for atmosphere); presses are time-stamped.
+# ROUND 18b: in HARD (`GS.dp("single")`) there is ONE band, the gold one, as wide as the old green band: the tune plays by itself, every wave is a beat of it and an E counts only
+# when the white wave is in the band (a hit = 1 point, a quarter of the waves may be missed); a hit adds a bright note on top of the beat. EASY keeps the two bands, and the
+# waves of the silver / gold / diamond fries run faster and faster (`ladder`), with thinner bands (`band_lad`).
 # STEADY BEAK (green) fries widen the bands and slow the waves. The crowd's attention thins the bands. Coffee: wider bands and a deeper slow-motion.
+const Tunes = preload("res://scripts/systems/tunes.gd")
 const LOCK_GRACE = 0.14         # presses in the first moments of a rhythm are ignored (that E was meant for something else)
-# ROUND 16: every good press plays the next note of a TUNE. The sequence of one catch is a little song, as long as the catch has judgements (every point is a note): a green
-# press plays one note, a gold press (worth two points) plays two (the second a breath later), so a perfect run still sings the whole tune. A miss is a hole in the song:
-# the tune waits for the next good press. Semitones above C (the pitch of the sample): 2 = sol-do, 4 = an arpeggio, 6 = a pentatonic climb, 10 = the first ten notes of
-# the Ode to Joy (the 5 circles), 14 = the Twinkle tune (the rainbow's 7 circles = 14 notes), 18 = the Ode's second phrase and a fanfare (the nine suns / the moon).
-const TUNES = {
-	2: [7, 12],
-	4: [0, 4, 7, 12],
-	6: [0, 2, 4, 7, 9, 12],
-	8: [0, 4, 7, 4, 9, 7, 12, 12],
-	10: [4, 4, 5, 7, 7, 5, 4, 2, 0, 0],
-	12: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 2, 0],
-	14: [0, 0, 7, 7, 9, 9, 7, 5, 5, 4, 4, 2, 2, 0],
-	18: [4, 4, 5, 7, 7, 5, 4, 2, 0, 0, 2, 4, 2, 0, 0, 4, 7, 12],
-}
-
-func _tune_pitch(n, i):
-	var t = TUNES.get(n, null)
-	if t == null:
-		t = TUNES[10] if n > 8 else TUNES[6]
-	var semi = t[clamp(i, 0, t.size() - 1)] if i < t.size() else t[t.size() - 1] + 12
-	return pow(2.0, float(semi) / 12.0)
+# ROUND 16 / 18: every good press plays the next note of a TUNE (systems/tunes.gd). The sequence of one catch is a little song as long as the catch has judgements (every point is a
+# note): a green press plays one note, a gold press (worth two points) plays two (the second a breath later), so a perfect run still sings the whole tune. A miss is a hole in the
+# song: the tune waits for the next good press. Round 18: the song is picked at random from a library of gentle public-domain melodies, one family per kind of catch.
 
 const MISS_GRACE = 0.03         # a wave that has passed its gold by this much is a miss
 const GOLD_GRACE = 0.02         # ...and a gold press may be this late
@@ -51,7 +37,7 @@ const SEQ_TIER = {
 	6: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.03, "gg": 0.06},     # cloud / sun: five circles x 2 like a diamond fry (STARLIGHT is always on, x1.5 bands)
 	7: {"c": 3, "w": 2, "lead": 0.85, "gap": 0.36, "gw": 0.045, "gg": 0.09},    # fish, rare: 3 x 2
 	8: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.30, "gw": 0.04, "gg": 0.08},     # fish, legendary: 5 x 2
-	9: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.30, "gw": 0.04, "gg": 0.075},    # RAINBOW fry: five circles x 2
+	9: {"c": 7, "w": 2, "lead": 0.85, "gap": 0.30, "gw": 0.04, "gg": 0.075},    # RAINBOW fry: round 18: SEVEN circles (the seven colours, laid out as an arch) x 2
 	10: {"c": 5, "w": 2, "lead": 0.85, "gap": 0.29, "gw": 0.03, "gg": 0.06},    # a shooting star: five circles x 2
 	11: {"c": 7, "w": 2, "lead": 0.85, "gap": 0.28, "gw": 0.03, "gg": 0.06},    # the rainbow in the sky: seven circles x 2 = 14 judgements
 	12: {"c": 9, "w": 2, "lead": 0.85, "gap": 0.26, "gw": 0.03, "gg": 0.06},    # round 16: the SUN: nine suns, nine circles x 2 = 18 judgements (orange + gold)
@@ -103,13 +89,16 @@ var seq_from = Vector3.ZERO
 var seq_to = Vector3.ZERO
 var last_step_usec = 0
 var tut_assist = false     # kept for the tutorial director in main.gd
+var slow_t = 0.0           # round 18: cool-down of the "TOO SLOW" line in Gull Sight
+var fish_lock = null       # round 18b: the fish that TAB has locked while OCEAN TIME runs and the gull sits on the water (SPACE then launches straight at it)
+var fish_pick_t = 0.0
 
 func _ready():
 	pass
 
 func _input(event):
 	if event.is_action_pressed("interact") and not event.is_echo():
-		presses.append(GS.usec())
+		presses.append(GS.usec() - int(GS.input_offset_ms * 1000.0))        # round 18: the player's timing offset (pause menu)
 		if presses.size() > 8:
 			presses.pop_front()
 
@@ -154,6 +143,7 @@ func step(delta):
 		seq["t0"] += now - last_step_usec     # the game was paused: the rhythm waits too
 	last_step_usec = now
 	_focus_time(delta)
+	_fish_lock_tick(delta)
 	match state:
 		"cine":
 			_update_cine(delta / max(Engine.time_scale, 0.02))
@@ -163,6 +153,84 @@ func step(delta):
 			return
 	_scan(delta)
 	_sniff()
+
+# ------------------------------------------------------------------ OCEAN TIME: TAB locks a fish, SPACE launches at it
+# Sitting on the water while OCEAN TIME runs, TAB (Gull Sight) picks the fish that is nearest to the middle of the view, rings it and keeps it (the lock stays when TAB is let go
+# until the fish is gone). SPACE then launches straight at the place where that fish WILL be (the launch is aimed, see `fish_aim_point`), and for the first moments of the climb
+# the beak is drawn towards it. A fish caught in the air (a dive, a flat flight) is judged as ever.
+func _fish_lock_tick(delta):
+	var p = player
+	var sitting = GS.fish_active() and p.on_water and p.mode == 1
+	var launching = GS.fish_active() and p.mode == 0 and p.launch_t > 0.0
+	if fish_lock != null:
+		var f0 = fish_lock
+		if not is_instance_valid(f0) or f0.taken or not f0.available or not (sitting or launching):
+			_clear_fish_lock()
+	if launching:
+		if fish_lock != null and p.launch_t > 0.9:
+			var tp = fish_aim_point(p.global_position, max(p.launch_speed, 20.0))
+			if tp != null:
+				var dn = (tp - p.global_position).normalized()
+				var k = 1.0 - exp(-5.0 * delta / max(Engine.time_scale, 0.1))
+				p.aim_yaw = lerp_angle(p.aim_yaw, atan2(-dn.x, -dn.z), k)
+				p.aim_pitch = lerp(p.aim_pitch, clamp(asin(clamp(dn.y, -1.0, 1.0)), -0.2, 1.0), k)
+		return
+	if not sitting or p.input_locked or not GS.sense_active:
+		return
+	var cam = get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var fwd = -cam.global_transform.basis.z
+	var origin = cam.global_position
+	var best = null
+	var best_s = -9.0
+	var cur_s = -9.0
+	for f in get_tree().get_nodes_in_group("fish_live"):
+		if not is_instance_valid(f) or f.taken or not f.available or not f.visible:
+			continue
+		var to = f.global_position - origin
+		var d = to.length()
+		if d > 95.0 or d < 1.0:
+			continue
+		var dot = fwd.dot(to / d)
+		if dot < 0.5:
+			continue
+		var sc = dot - d / 260.0           # the middle of the view first, the nearer one breaks a tie
+		if f == fish_lock:
+			cur_s = sc
+		if sc > best_s:
+			best_s = sc
+			best = f
+	if best == null or best == fish_lock:
+		return
+	if fish_lock != null and best_s < cur_s + 0.06:
+		return                             # no jumping about between two fish
+	if fish_lock != null and is_instance_valid(fish_lock):
+		fish_lock.set_marked(false)
+	fish_lock = best
+	fish_lock.set_marked(true)
+	Sfx.play("alert", -13.0, 1.7)
+	Sfx.play_note("tinkle", 91, -10.0)
+
+func _clear_fish_lock():
+	if fish_lock != null and is_instance_valid(fish_lock):
+		fish_lock.set_marked(false)
+	fish_lock = null
+
+# where the locked fish will be when a gull that launches NOW (at `v` m/s) gets to it; null when nothing is locked
+func fish_aim_point(from, v):
+	var f = fish_lock
+	if f == null or not is_instance_valid(f) or f.spot == null:
+		return null
+	var tp = f.global_position
+	var t = 0.0
+	for i in 4:
+		var q = f.spot.predict(t)
+		if q == null:
+			return f.global_position
+		tp = q
+		t = from.distance_to(tp) / max(v * 0.9, 8.0)
+	return tp
 
 # E with nothing to aim at: the gull sniffs out the nearest fry that its top speed can actually lock, and points at it for a few seconds
 func _sniff():
@@ -251,22 +319,39 @@ func _scan(delta):
 	if best == null:
 		return
 	near_target = best
-	var can = p.mode == 0 and not GS.sense_active and not p.input_locked and not GS.film_flow
+	# round 18: Gull Sight (TAB) no longer keeps the circles away: flying at a fry with TAB held starts the judgement just the same (and ends the sight: main.gd closes it
+	# the moment a fry is locked). Players with a slow hand fly at the fry in slow motion and nothing is skipped.
+	var can = p.mode == 0 and not p.input_locked and not GS.film_flow
 	var need = GS.need_speed(best)
 	need_speed = need
 	need_tier = _tier_of(best)
+	slow_t = max(slow_t - get_physics_process_delta_time(), 0.0)
 	if p.speed >= need - 0.04 and can:
 		hud_state = "ok"
 		var dir = (best.aim_point() - origin) / best_d
 		var closing = p.velocity.dot(dir)
 		# the rhythm starts within ~1 s of the fry at the current speed (a dive from far away is what makes it possible)
-		if snatch_cd <= 0.0 and closing >= max(7.0, need - 3.0) and best_d <= min(closing * 1.05, 26.0) and best_d >= 3.5:
+		var reach_d = min(closing * (1.4 if GS.sense_active else 1.05), 26.0)       # (in the slow world of TAB the circle opens a little earlier: nothing can be flown through)
+		if snatch_cd <= 0.0 and closing >= max(7.0, need - 3.0) and best_d <= reach_d and best_d >= 3.5:
 			_lock_on(best)
 	elif can or p.mode == 1:
 		hud_state = "slow"
 		if Input.is_action_just_pressed("interact") and best_d < 8.0:
 			p.show_toast("NEED %d" % int(round(need * GS.SPEED_UNIT)) if need > 12.0 else "TOO SLOW")
 			Sfx.play("tooslow", -10.0)
+		elif GS.sense_active and best_d < 9.0 and slow_t <= 0.0 and p.mode == 0:
+			# nobody has to guess why the circle did not open
+			slow_t = 2.6
+			p.show_toast("TOO SLOW:  NEED %d  -  HOLD SHIFT" % int(round(need * GS.SPEED_UNIT)), 1.6)
+			Sfx.play("tooslow", -14.0)
+	# EASY: while Gull Sight is held the beak is drawn gently towards the fry in the middle of the view (the slow world is for aiming, not for wrestling the mouse)
+	if GS.sense_active and GS.is_easy() and p.mode == 0 and not p.input_locked:
+		var dn = (best.aim_point() - origin).normalized()
+		var ty = atan2(-dn.x, -dn.z)
+		var tp = asin(clamp(dn.y, -1.0, 1.0))
+		var k = 1.0 - exp(-2.2 * get_physics_process_delta_time() / max(Engine.time_scale, 0.1))
+		p.aim_yaw = lerp_angle(p.aim_yaw, ty, k)
+		p.aim_pitch = lerp(p.aim_pitch, tp, k)
 
 func _is_tut(f):
 	return f != null and f.id.begins_with("TUTORIAL")
@@ -292,27 +377,74 @@ func _tier_of(f):
 		return 9
 	return clamp(f.tier, 0, 3)
 
+# round 18: the four families of judgement (the difficulty table speaks of them): ordinary fries and things, rainbow fries, fish, the things of the sky
+func _class_of(tier):
+	if tier == 4 or tier == 9:
+		return "rb"
+	if tier == 5 or tier == 7 or tier == 8:
+		return "fish"
+	if tier == 6 or tier >= 10:
+		return "sky"
+	return "fry"
+
 # the numbers of one rhythm (real seconds): circles, waves, lead, gap, gold width, green width
+# round 18: the FIRST wave of every rhythm is slow (`slow0` x longer to arrive, the bands grow with it so that what you see is what is judged) and is announced by a count-in of
+# soft ticks at the beat of the waves that follow; the difficulty sets the number of waves per circle, the width of the bands, the speed of the later waves
 func _seq_params(f):
 	var tier = _tier_of(f)
+	var cls = _class_of(tier)
 	var base = SEQ_TIER[tier].duplicate()
 	if f.ftype == "tutorial" and TUT_SEQ.has(f.id) and not GS.tutorial_done.has(f.id):
 		base.merge(TUT_SEQ[f.id], true)
+		if GS.is_easy() and f.id == "TUTORIAL_01":
+			base["w"] = 1       # the very first fry: one judgement, a huge band
+	else:
+		var wv = GS.dp("w_" + cls)
+		if wv > 0:
+			base["w"] = wv
 	var mult = GS.timing_mult() * GS.buff_window_mult()
 	var hw = GS.heat_window_mult()
 	if _is_tut(f):
 		hw = max(hw, 0.9)       # the crowd cannot thin the first lessons
 	if f.npc != null:
 		mult *= ARCH_MULT.get(f.npc.arch, 0.94)
-	var m = mult * hw
+	var bl = 1.0
+	var lad = 1.0
+	if cls == "fry" and tier <= 3:
+		bl = GS.dp("band_lad")[tier]
+		lad = GS.dp("ladder")[tier]
+	var m = mult * hw * (GS.dp("band") * bl if cls == "fry" else GS.dp("band_x"))
 	var rs = GS.ring_speed_mult()
+	var gm = GS.dp("gap") * lad
+	var sk = GS.dp("sky_slow") if cls == "sky" else 1.0
 	base["gw"] = max(base["gw"] * m, 0.026)
 	base["gg"] = max(base["gg"] * m, 0.05)
-	base["appr"] = APPR * rs
-	base["lead"] = max(base["lead"] * rs, base["appr"] + 0.14)
-	base["gap"] = base["gap"] * rs
+	base["single"] = GS.dp("single")
+	if base["single"]:
+		base["gw"] = base["gg"]          # one band, the gold one, as wide as the green one used to be
+		base["gg"] = 0.0
+	base["appr"] = APPR * rs * gm * sk
+	base["gap"] = base["gap"] * rs * gm * sk
+	var s0 = GS.dp("first_slow")
+	base["slow0"] = s0
+	base["appr0"] = base["appr"] * s0
+	var ticks = int(GS.dp("ticks"))
+	var lead = base["lead"] * rs + GS.dp("first_lead")
+	lead = max(lead, base["appr0"] + 0.14)
+	if ticks > 0:
+		lead = max(lead, ticks * max(base["gap"], 0.26) + 0.45)
+	base["lead"] = lead
+	base["ticks"] = ticks
 	base["n"] = base["c"] * base["w"]
+	base["need"] = base["n"]
+	if base["single"]:
+		base["need"] = base["n"] - int(base["n"] / 4)       # a quarter of the beats may be missed
+		if _is_tut(f):
+			base["need"] = max(base["n"] - 1, 1)            # the lessons forgive one beat
+	if cls == "sky":
+		base["need"] = max(int(ceil(base["need"] * GS.dp("sky_need"))), 1)       # EASY: the sky never sends the gull away empty-handed
 	base["tier"] = tier
+	base["cls"] = cls
 	return base
 
 # start a rhythm: world = where the circles are drawn (the fry)
@@ -321,11 +453,18 @@ func _seq_begin(kind, f, world):
 	var layout = LAYOUTS[prm["c"]]
 	var notes = []
 	for i in prm["n"]:
-		notes.append({"t": prm["lead"] + i * prm["gap"], "circle": i / prm["w"], "wave": i % prm["w"], "res": "", "res_t": 0.0})
+		var sl = prm["slow0"] if i == 0 else 1.0
+		notes.append({"t": prm["lead"] + i * prm["gap"], "circle": i / prm["w"], "wave": i % prm["w"], "res": "", "res_t": 0.0,
+			"appr": prm["appr0"] if i == 0 else prm["appr"], "gw": prm["gw"] * sl, "gg": prm["gg"] * sl})
 	var last_t = notes[notes.size() - 1]["t"]
-	seq = {"kind": kind, "t0": GS.usec(), "notes": notes, "appr": prm["appr"], "gw": prm["gw"], "gg": prm["gg"], "need": prm["n"], "points": 0,
+	var ticks = []
+	var gt = max(prm["gap"], 0.26)
+	for k in prm["ticks"]:
+		ticks.append({"t": prm["lead"] - (prm["ticks"] - k) * gt, "done": false})
+	seq = {"kind": kind, "t0": GS.usec(), "notes": notes, "appr": prm["appr"], "gw": prm["gw"], "gg": prm["gg"], "need": prm["need"], "points": 0,
 		"n": prm["n"], "circles": prm["c"], "waves": prm["w"], "layout": layout, "tier": prm["tier"], "dur": last_t + 0.2, "misses": 0, "golds": 0, "greens": 0,
-		"reason": "", "done": false, "ok": false, "perfect": false, "world": world, "combo": 0}
+		"reason": "", "done": false, "ok": false, "perfect": false, "world": world, "combo": 0, "ticks": ticks, "lead": prm["lead"], "cls": prm["cls"], "single": prm["single"]}
+	seq["tune"] = Tunes.pick(prm["tier"], prm["n"], prm["cls"], f.kind if f.ftype == "mischief" else "")
 	presses.clear()
 	last_step_usec = GS.usec()
 
@@ -361,9 +500,9 @@ func _seq_judge():
 			continue
 		var res = "miss"
 		var reason = "late" if dt > 0.0 else "early"
-		if dt >= -s["gw"] and dt <= GOLD_GRACE:
+		if dt >= -nt["gw"] and dt <= GOLD_GRACE:
 			res = "gold"
-		elif dt >= -(s["gw"] + s["gg"]) and dt < -s["gw"]:
+		elif dt >= -(nt["gw"] + nt["gg"]) and dt < -nt["gw"]:
 			res = "green"
 		_note_result(s, idx, res, reason, tp)
 		if s["done"]:
@@ -394,25 +533,27 @@ func _note_result(s, idx, res, reason, tp):
 	match res:
 		"gold":
 			s["golds"] += 1
-			var i0 = s["points"]
-			s["points"] += 2
 			s["combo"] += 1
-			Sfx.play("ring_gold", -9.0, _tune_pitch(s["n"], i0) * 0.7937)          # (that sample sits on E, the others on C)
-			Sfx.play("ring_ok", -6.0, _tune_pitch(s["n"], i0))
-			var p2 = _tune_pitch(s["n"], i0 + 1)
-			get_tree().create_timer(0.085, true, false, true).timeout.connect(func(): Sfx.play("ring_ok", -10.0, p2))
+			if s["single"]:
+				# HARD: one point per beat; the tune is already playing by itself, a hit adds a bright voice on top of this beat
+				s["points"] += 1
+				Tunes.hit(s["tune"], idx, s["combo"])
+			else:
+				var i0 = s["points"]
+				s["points"] += 2
+				Tunes.gold(s["tune"], i0)
 		"green":
 			s["greens"] += 1
 			var i1 = s["points"]
 			s["points"] += 1
 			s["combo"] += 1
-			Sfx.play("ring_ok", -8.0, _tune_pitch(s["n"], i1))
+			Tunes.play(s["tune"], i1, false)
 		_:
 			s["misses"] += 1
 			s["combo"] = 0
 			if s["reason"] == "":
 				s["reason"] = reason
-			Sfx.play("ring_miss", -9.0)
+			Sfx.play("ring_miss", -19.0 if s["single"] else -13.0)
 	var remaining = 0
 	for q in s["notes"]:
 		if q["res"] == "":
@@ -422,14 +563,14 @@ func _note_result(s, idx, res, reason, tp):
 	if s["points"] >= s["need"]:
 		s["done"] = true
 		s["ok"] = true
-	elif s["points"] + 2 * remaining < s["need"]:
+	elif s["points"] + (1 if s["single"] else 2) * remaining < s["need"]:
 		s["done"] = true          # even all golds could not save it any more
 		s["ok"] = false
 	elif remaining == 0:
 		s["done"] = true
 		s["ok"] = false
 	if s["done"]:
-		s["perfect"] = s["ok"] and s["misses"] == 0 and s["golds"] >= int(ceil(judged * 0.7))
+		s["perfect"] = s["ok"] and s["misses"] == 0 and (s["single"] or s["golds"] >= int(ceil(judged * 0.7)))
 
 # ------------------------------------------------------------------ lock: the guided last metres + the grab rhythm
 func _lock_on(f):
@@ -478,9 +619,28 @@ func _update_lock(delta, fwd, origin):
 		var dn = d2.normalized()
 		p.aim_yaw = atan2(-dn.x, -dn.z)
 		p.aim_pitch = asin(clamp(dn.y, -1.0, 1.0))
+	_seq_ticks()
 	if _seq_judge():
 		var sq = seq
 		_commit(f, sq["ok"], sq["perfect"], sq["reason"] if sq["reason"] != "" else "press")
+
+# the count-in: soft ticks at the beat of the waves, so that the slow first wave arrives on a beat the player has already heard (EASY two ticks, HARD one)
+func _seq_ticks():
+	var s = seq
+	if s == null or not s.has("ticks"):
+		return
+	var now = seq_now()
+	if s["single"]:
+		# HARD: the music plays by itself, a beat for every wave, in the middle of its band (what you press is what you hear)
+		for i in s["notes"].size():
+			var nb = s["notes"][i]
+			if not nb.get("bk", false) and now >= nb["t"] - nb["gw"] * 0.5:
+				nb["bk"] = true
+				Tunes.beat(s["tune"], i)
+	for tk in s["ticks"]:
+		if not tk["done"] and now >= tk["t"]:
+			tk["done"] = true
+			Sfx.play("count_tick", -9.0, 1.0 + 0.12 * s["ticks"].find(tk))
 
 func _unlock():
 	var had = lock_fry != null or seq != null

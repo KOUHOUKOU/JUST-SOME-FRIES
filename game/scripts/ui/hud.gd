@@ -97,6 +97,9 @@ var quiet_lines = []
 var starfx
 var fishcard
 var lesson_ui
+var coach_ui
+var clock_ui
+var coach = null                  # round 18: the first-fry coach (main.gd `_coach_tick` fills it in): {show, step, steps, line}
 var skypop
 var achui
 var lesson_line = ""            # what the TAB lesson says while Gull Sight is held (main.gd fills it in)
@@ -140,6 +143,8 @@ class Reticle extends HC:
 				shadow(font, c + Vector2(-20, 46 * u), "EAT", int(18 * u), Color(1, 0.9, 0.6, 0.95), HORIZONTAL_ALIGNMENT_CENTER, 40)
 			"locked":
 				_rhythm(s)
+		if s.fish_lock != null and is_instance_valid(s.fish_lock):
+			_fish_lock_draw(s, s.fish_lock, u, font)
 		if s.flash != 0 and s.hud_state != "locked":
 			var fc = Color(0.5, 1.0, 0.5, 0.9) if s.flash > 0 else Color(1.0, 0.35, 0.3, 0.9)
 			draw_arc(c, 32.0 * u, 0, TAU, 40, fc, 3.0, true)
@@ -152,6 +157,37 @@ class Reticle extends HC:
 		if pulse_t > 0.0:
 			var k = 1.0 - pulse_t / 0.7
 			draw_arc(c, 20.0 + 80.0 * k, 0, TAU, 48, Color(pulse_col.r, pulse_col.g, pulse_col.b, 1.0 - k), 4.0, true)
+	# round 18b, OCEAN TIME: the fish that TAB has locked: a ring that turns, four marks, its name and the speed it needs, and what SPACE does now
+	func _fish_lock_draw(s, f, u, font):
+		var cam = get_viewport().get_camera_3d()
+		if cam == null:
+			return
+		var wp = f.global_position
+		var rc = GS.FISH_RARITY_COLORS[clamp(f.rarity, 0, 2)]
+		var nm = GS.FISH_SPECIES[f.species][0]
+		var need = int(round(GS.need_speed(f) * GS.SPEED_UNIT))
+		var t = GS.msec() * 0.001
+		if cam.is_position_behind(wp):
+			shadow(font, Vector2(size.x * 0.5 - 150.0 * u, size.y - 150.0 * u), "FISH LOCKED:  TURN ROUND TO SEE IT", int(16 * u), Color(rc.r, rc.g, rc.b, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 300.0 * u)
+			return
+		var sp = cam.unproject_position(wp)
+		var d = cam.global_position.distance_to(wp)
+		var r = clamp(620.0 / max(d, 1.0), 26.0, 60.0) * u
+		var a0 = t * 2.4
+		for k in 4:
+			var an = a0 + k * TAU / 4.0
+			draw_arc(sp, r, an, an + 0.9, 12, Color(0, 0, 0, 0.5), 6.0 * u, true)
+			draw_arc(sp, r, an, an + 0.9, 12, Color(rc.r, rc.g, rc.b, 0.95), 3.5 * u, true)
+		draw_arc(sp, r * 0.62, 0, TAU, 28, Color(1, 1, 1, 0.45 + 0.3 * sin(t * 9.0)), 2.0 * u, true)
+		sp.x = clamp(sp.x, 150.0 * u, size.x - 150.0 * u)
+		sp.y = clamp(sp.y, 60.0 * u, size.y - 120.0 * u)
+		shadow(font, sp + Vector2(-150.0 * u, -r - 26.0 * u), "LOCKED:  %s" % nm, int(18 * u), Color(rc.r, rc.g, rc.b, 1.0), HORIZONTAL_ALIGNMENT_CENTER, 300.0 * u)
+		shadow(font, sp + Vector2(-150.0 * u, r + 22.0 * u), "NEED  %d" % need, int(15 * u), Color(1, 1, 1, 0.85), HORIZONTAL_ALIGNMENT_CENTER, 300.0 * u)
+		if p_sitting():
+			shadow(font, sp + Vector2(-150.0 * u, r + 44.0 * u), "SPACE  -  LAUNCH AT IT", int(16 * u), Color(1.0, 0.95, 0.6, 0.75 + 0.25 * sin(t * 8.0)), HORIZONTAL_ALIGNMENT_CENTER, 300.0 * u)
+	func p_sitting():
+		var p = hud.player
+		return p != null and p.on_water and p.mode == 1
 	# the one fry the game is looking at: brackets sit ON it, so you can see which one will be judged
 	func _brackets(s, col, label):
 		var tgt = s.near_target
@@ -198,9 +234,17 @@ class Reticle extends HC:
 		var multi = layout.size() > 1
 		# round 7: big, easy-to-read circles. Radius where the wave starts / where the gold band ends / spacing of the circles, per number of circles
 		var geo = {1: [172.0, 52.0, 0.0], 2: [120.0, 40.0, 262.0], 3: [100.0, 35.0, 208.0], 5: [106.0, 37.0, 228.0], 7: [76.0, 28.0, 148.0], 9: [56.0, 21.0, 132.0]}[layout.size()]
-		var r_start = geo[0] * u
-		var r_ge = geo[1] * u                                 # the radius where the gold band ends
-		var sep = geo[2] * u
+		# round 18: bigger circles (EASY x1.35, HARD x1.1), shrunk back only as far as the whole picture needs to stay on the screen
+		var ks = GS.dp("ring")
+		var ew1 = geo[0] + 24.0
+		var eh1 = geo[0] + 24.0
+		for lay1 in layout:
+			ew1 = max(ew1, abs(lay1[0]) * geo[2] + geo[0] + 24.0)
+			eh1 = max(eh1, abs(lay1[1]) * geo[2] + geo[0] + 24.0)
+		ks = max(min(ks, (size.x * 0.5 - 8.0) / (ew1 * u), (size.y * 0.5 - 60.0 * u) / (eh1 * u)), 0.6)
+		var r_start = geo[0] * u * ks
+		var r_ge = geo[1] * u * ks                            # the radius where the gold band ends
+		var sep = geo[2] * u * ks
 		var vpx = (r_start - r_ge) / max(sq["appr"], 0.2)    # pixels per second a wave shrinks
 		var ext_w = r_start + 24.0 * u
 		var ext_h = r_start + 24.0 * u
@@ -209,7 +253,8 @@ class Reticle extends HC:
 			ext_h = max(ext_h, abs(lay0[1]) * sep + r_start + 24.0 * u)
 		fc = Vector2(clamp(fc.x, ext_w, max(size.x - ext_w, ext_w)), clamp(fc.y, ext_h + 40.0 * u, max(size.y - ext_h - 70.0 * u, ext_h + 40.0 * u)))
 		var gold_px = max(sq["gw"] * vpx, 5.0 * u)
-		var green_px = max(sq["gg"] * vpx, 8.0 * u)
+		var single = sq.get("single", false)       # round 18b (HARD): one band only, the gold one
+		var green_px = 0.0 if single else max(sq["gg"] * vpx, 8.0 * u)
 		var r_gold_out = r_ge + gold_px
 		var r_green_out = r_gold_out + green_px
 		var g_mid = (r_gold_out + r_green_out) * 0.5
@@ -231,22 +276,41 @@ class Reticle extends HC:
 					pending = true
 					if now >= nt0["t"] - sq["appr"] - 0.05:
 						live = true
-			var base_a = 1.0 if live else (0.45 if pending else 0.22)
+			var base_a = 1.0 if live else (0.5 if pending else 0.22)
+			# round 18: a dark, soft scrim under the whole target: the white waves have to stand out on a bright sky and on the sand, whatever is behind
+			if pending:
+				draw_circle(c, r_start * 0.97, Color(0.02, 0.04, 0.09, 0.16 * base_a))
 			# a soft disc inside the target so that it reads at a glance, and a bright centre point
-			draw_circle(c, r_ge, Color(1, 1, 1, 0.05 * base_a))
+			draw_circle(c, r_ge, Color(1, 1, 1, 0.07 * base_a))
 			draw_circle(c, 4.0 * u, Color(1, 1, 1, 0.55 * base_a))
 			draw_arc(c, r_ge * 0.5, 0, TAU, 24, Color(1, 1, 1, 0.3 * base_a), 2.0, true)
 			var gcol = band
 			if sq["tier"] == 11:      # the rainbow in the sky: seven colours, each circle with its golden ring
 				gcol = RAINBOW_COLS[ci % RAINBOW_COLS.size()]
-			draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.14 * base_a), green_px + 12.0, true)
-			draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.85 * base_a), green_px, true)
-			draw_arc(c, o_mid, 0, TAU, 96, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, 0.28 * base_a), gold_px + 8.0, true)
-			draw_arc(c, o_mid, 0, TAU, 96, Color(RING_GOLD.r, RING_GOLD.g, RING_GOLD.b, base_a), gold_px, true)
+			if not single:
+				draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.14 * base_a), green_px + 12.0, true)
+				draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.85 * base_a), green_px, true)
+			var bandc = gcol if (single and sq["tier"] == 11) else RING_GOLD
+			draw_arc(c, o_mid, 0, TAU, 96, Color(bandc.r, bandc.g, bandc.b, 0.28 * base_a), gold_px + 8.0, true)
+			draw_arc(c, o_mid, 0, TAU, 96, Color(bandc.r, bandc.g, bandc.b, base_a), gold_px, true)
+		# round 18: the count-in. At every tick a ring pulses out of the first circle; and a "READY" waits above it until the slow first wave is close
+		var ct = sq.get("ticks", [])
+		if not ct.is_empty():
+			var c0 = fc + Vector2(layout[0][0], layout[0][1]) * sep
+			for tk in ct:
+				var ta = now - tk["t"]
+				if ta >= 0.0 and ta < 0.42:
+					var kk = ta / 0.42
+					draw_arc(c0, r_ge * (0.6 + 1.5 * kk), 0, TAU, 48, Color(1.0, 0.92, 0.55, (1.0 - kk) * 0.9), 5.0 * u, true)
+		if next_i == 0 and now < sq["notes"][0]["t"] - 0.12:
+			var rdy_a = clamp((now - 0.05) / 0.25, 0.0, 1.0) * (0.75 + 0.25 * sin(t * 9.0))
+			shadow(font, Vector2(fc.x - 110.0 * u, fc.y - r_start - 4.0 * u - 54.0 * u), "READY...", int(24 * u), Color(1.0, 0.95, 0.7, rdy_a), HORIZONTAL_ALIGNMENT_CENTER, 220.0 * u)
 		# the waves
 		for i in sq["notes"].size():
 			var nt = sq["notes"][i]
-			var spawn = nt["t"] - sq["appr"]
+			var napp = nt["appr"]
+			var vpx_n = (r_start - r_ge) / max(napp, 0.2)         # the first wave is slower: every wave has its own speed
+			var spawn = nt["t"] - napp
 			if now < spawn - 0.01:
 				continue
 			var done = nt["res"] != ""
@@ -259,30 +323,33 @@ class Reticle extends HC:
 			if done:
 				fade *= clamp(1.0 - age / 0.5, 0.0, 1.0)
 			var tt = nt["res_t"] if done else now
-			var r = r_ge + (nt["t"] - tt) * vpx
+			var r = r_ge + (nt["t"] - tt) * vpx_n
 			if done:
 				var rc2 = {"gold": RING_GOLD, "green": band, "miss": Color(1.0, 0.35, 0.3)}[nt["res"]]
-				draw_arc(c2, max(r, 4.0) + age * 60.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, fade), 4.0, true)
+				draw_arc(c2, max(r, 4.0) + age * 60.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, fade), 6.0 * u, true)
 				if nt["res"] != "miss":
-					draw_arc(c2, r_green_out + age * 110.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, 0.6 * fade), 3.0, true)
+					draw_arc(c2, r_green_out + age * 110.0 * u, 0, TAU, 56, Color(rc2.r, rc2.g, rc2.b, 0.6 * fade), 4.0 * u, true)
 				continue
 			var dt = now - nt["t"]
 			var zone = "none"
-			if dt >= -sq["gw"] and dt <= 0.02:
+			if dt >= -nt["gw"] and dt <= 0.02:
 				zone = "gold"
-			elif dt >= -(sq["gw"] + sq["gg"]) and dt < -sq["gw"]:
+			elif dt >= -(nt["gw"] + nt["gg"]) and dt < -nt["gw"]:
 				zone = "green"
 			var is_next = i == next_i
-			var rc = Color(1, 1, 1, (0.95 if is_next else 0.6) * fade)
-			var rw = (5.5 if is_next else 3.6) * u
+			var rc = Color(1, 1, 1, (1.0 if is_next else 0.7) * fade)
+			var rw = (8.0 if is_next else 5.5) * u
 			if zone == "gold":
 				rc = Color(1, 1, 1, 1.0).lerp(RING_GOLD, 0.5 + 0.5 * sin(t * 26.0))
-				rw = 7.5 * u
+				rw = 10.0 * u
 			elif zone == "green":
-				rw = 6.5 * u
-				draw_arc(c2, max(r, 4.0), 0, TAU, 60, Color(band.r, band.g, band.b, 0.3 * fade), 16.0 * u, true)
+				rw = 9.0 * u
+				draw_arc(c2, max(r, 4.0), 0, TAU, 60, Color(band.r, band.g, band.b, 0.34 * fade), 20.0 * u, true)
 			elif dt > 0.02:
 				rc = Color(1.0, 0.45, 0.4, 0.8 * fade)
+			# a dark rim under the white ring and a wide soft glow over it: bright and thick, readable on every background
+			draw_arc(c2, max(r, 4.0), 0, TAU, 72, Color(0.0, 0.02, 0.06, 0.55 * fade), rw + 6.0 * u, true)
+			draw_arc(c2, max(r, 4.0), 0, TAU, 72, Color(rc.r, rc.g, rc.b, 0.22 * fade), rw + 16.0 * u, true)
 			draw_arc(c2, max(r, 4.0), 0, TAU, 72, rc, rw, true)
 		# the little scoreboard: one pip per wave (green / gold / red) and the points you still need
 		var n = sq["n"]
@@ -344,7 +411,7 @@ class Tach extends HC:
 		var total_w = N * (seg_w + gap) - gap
 		var x1 = size.x - 26.0 * u
 		var x0 = x1 - total_w
-		var yb = 134.0 * u
+		var yb = 168.0 * u
 		var t = GS.msec() * 0.001
 		var maxv = GS.boost_speed() * GS.SPEED_UNIT
 		var need_hi = 0.0
@@ -505,19 +572,22 @@ class Status extends HC:
 		var font = ThemeDB.fallback_font
 		var w = size.x
 		var t = GS.msec() * 0.001
-		var ic = Vector2(w - 28, 28)
-		draw_circle(ic, 11, Color(0.95, 0.95, 0.92, 0.95))
+		# round 18: the whole corner scales with the picture (it used to be a fixed number of pixels: tiny on a big screen), pinned to the top-right corner
+		var u0 = get_viewport_rect().size.y / 720.0
+		draw_set_transform(Vector2(size.x * (1.0 - u0), 0.0), 0.0, Vector2(u0, u0))
+		var ic = Vector2(w - 40, 31)
+		draw_circle(ic, 14, Color(0.95, 0.95, 0.92, 0.95))
 		draw_colored_polygon(PackedVector2Array([ic + Vector2(-10, 1), ic + Vector2(-20, 4), ic + Vector2(-10, 6)]), Color("F2A22E"))
 		draw_circle(ic + Vector2(-4, -3), 1.8, Color(0.1, 0.1, 0.12))
 		var ratio = clamp(1.0 - p.roll_cd / max(GS.roll_cooldown(), 0.1), 0.0, 1.0)
-		draw_arc(ic, 20, -PI / 2, -PI / 2 + TAU, 40, Color(0, 0, 0, 0.35), 3.0, true)
-		draw_arc(ic, 20, -PI / 2, -PI / 2 + TAU * ratio, 40, GOLD if ratio >= 1.0 else Color(0.7, 0.7, 0.7, 0.8), 3.0, true)
+		draw_arc(ic, 24, -PI / 2, -PI / 2 + TAU, 40, Color(0, 0, 0, 0.35), 3.0, true)
+		draw_arc(ic, 24, -PI / 2, -PI / 2 + TAU * ratio, 40, GOLD if ratio >= 1.0 else Color(0.7, 0.7, 0.7, 0.8), 3.0, true)
 		if p.soaked_t > 0.0:
 			draw_circle(ic + Vector2(14, 14), 4.0, Color(0.4, 0.7, 1.0, 0.9))
 		var smax = GS.stamina_max()
-		var bar_w = 110.0 + smax * 0.9
-		var bx = w - 62 - bar_w
-		draw_rect(Rect2(bx, 20, bar_w, 12), Color(0, 0, 0, 0.4))
+		var bar_w = min(210.0 + smax * 0.8, 420.0)      # round 18: a big, framed breath bar (the players did not see the old thin one)
+		var bx = w - 74 - bar_w
+		draw_rect(Rect2(bx, 18, bar_w, 26), Color(0.02, 0.03, 0.06, 0.62))
 		var col = Color(0.98, 0.93, 0.78, 0.95)
 		if p.boosting:
 			col = Color(1.0, 0.82, 0.35, 1.0)
@@ -534,7 +604,7 @@ class Status extends HC:
 			if GS.buff[k] > 0.0:
 				act.append(k)
 		var filled_w = bar_w * p.stamina / smax
-		# round 16: FISH TIME turns the bar into deep ocean blue (in the air RAINBOW TIME, when it runs, wins)
+		# round 16: OCEAN TIME turns the bar into deep ocean blue (in the air RAINBOW TIME, when it runs, wins)
 		var fishy = GS.fish_mode() or (GS.fish_active() and GS.star_t <= 0.0)
 		if act.is_empty() and fishy:
 			var segs2 = max(int(filled_w / 4.0), 1)
@@ -542,10 +612,10 @@ class Status extends HC:
 				var sx2 = bx + i * 4.0
 				var cw3 = min(4.0, filled_w - i * 4.0)
 				var wv2 = 0.5 + 0.5 * sin(t * 3.2 - float(i) * 0.45)
-				draw_rect(Rect2(sx2, 20, cw3, 12), Color(0.03, 0.2, 0.52).lerp(Color(0.16, 0.56, 0.96), wv2))
-			draw_rect(Rect2(bx, 20, filled_w, 3), Color(0.7, 0.92, 1.0, 0.35))
+				draw_rect(Rect2(sx2, 18, cw3, 26), Color(0.03, 0.2, 0.52).lerp(Color(0.16, 0.56, 0.96), wv2))
+			draw_rect(Rect2(bx, 18, filled_w, 6), Color(0.7, 0.92, 1.0, 0.35))
 		elif act.is_empty():
-			draw_rect(Rect2(bx, 20, filled_w, 12), col)
+			draw_rect(Rect2(bx, 18, filled_w, 26), col)
 		else:
 			var kind = act[int(t * 1.3) % act.size()]
 			var fc2 = {"coffee": Color(1.0, 0.2, 0.1), "alcohol": Color(1.0, 0.8, 0.12), "ice": Color(0.45, 0.88, 1.0)}[kind]
@@ -554,14 +624,30 @@ class Status extends HC:
 				for i in segs:
 					var sx = bx + i * 5.0
 					var cw2 = min(5.0, filled_w - i * 5.0)
-					draw_rect(Rect2(sx, 20, cw2, 12), Color(0.45, 0.85, 1.0).lerp(Color(0.92, 1.0, 1.0), 0.5 + 0.5 * sin(t * 3.0 - float(i) * 0.5)))
+					draw_rect(Rect2(sx, 18, cw2, 26), Color(0.45, 0.85, 1.0).lerp(Color(0.92, 1.0, 1.0), 0.5 + 0.5 * sin(t * 3.0 - float(i) * 0.5)))
 				fc2 = Color(0.55, 0.9, 1.0)
 			else:
-				draw_rect(Rect2(bx, 20, filled_w, 12), fc2.lerp(Color(1, 0.55, 0.2) if kind == "coffee" else Color(1, 0.95, 0.5), 0.35 + 0.25 * sin(t * 12.0)))
-			_flames(bx, 20.0, filled_w, fc2, 1.0, t, 1.0)
-			draw_rect(Rect2(bx, 20, filled_w, 12), Color(1, 1, 1, 0.08 + 0.06 * sin(t * 20.0)))
+				draw_rect(Rect2(bx, 18, filled_w, 26), fc2.lerp(Color(1, 0.55, 0.2) if kind == "coffee" else Color(1, 0.95, 0.5), 0.35 + 0.25 * sin(t * 12.0)))
+			_flames(bx, 18.0, filled_w, fc2, 1.0, t, 1.0)
+			draw_rect(Rect2(bx, 18, filled_w, 26), Color(1, 1, 1, 0.08 + 0.06 * sin(t * 20.0)))
 		if p.boost_locked:
-			draw_rect(Rect2(bx, 20, bar_w * 15.0 / smax, 12), Color(1, 0.3, 0.2, 0.25))
+			draw_rect(Rect2(bx, 18, bar_w * 15.0 / smax, 26), Color(1, 0.3, 0.2, 0.25))
+		# round 18: the breath bar is a framed, readable thing: a gold frame (red and pulsing when the breath is low), quarter marks, the number, a name, and a call to rest
+		var low = p.low_stamina
+		var plow = 0.5 + 0.5 * sin(GS.msec() * 0.008)
+		var fcol = Color(1.0, 0.84, 0.4, 0.95)
+		if low:
+			fcol = Color(1.0, 0.4 + 0.25 * plow, 0.28, 1.0)
+		draw_rect(Rect2(bx - 3, 15, bar_w + 6, 32), fcol, false, 3.0)
+		draw_rect(Rect2(bx - 6, 12, bar_w + 12, 38), Color(0, 0, 0, 0.3), false, 2.0)
+		for q in range(1, 4):
+			var qx = bx + bar_w * q / 4.0
+			draw_line(Vector2(qx, 18), Vector2(qx, 44), Color(0, 0, 0, 0.32), 2.0)
+		shadow(font, Vector2(bx, 63), "BREATH", 13, Color(1, 0.95, 0.8, 0.85))
+		shadow(font, Vector2(bx, 37), "%d" % int(ceil(p.stamina)), 17, Color(1, 1, 1, 0.97), HORIZONTAL_ALIGNMENT_CENTER, bar_w)
+		if low and p.mode == 0:
+			shadow(font, Vector2(bx + 70, 63), "LOW BREATH:  CTRL - LAND AND REST", 13, Color(1.0, 0.62 + 0.2 * plow, 0.4, 0.8 + 0.2 * plow))
+
 		# CROWD WATCH: how closely the people around you are looking. More eyes = thinner timing bands.
 		var wv = GS.watch
 		var wc = Color(0.55, 0.92, 0.55)
@@ -571,17 +657,17 @@ class Status extends HC:
 			wc = Color(1.0, 0.6, 0.3)
 		elif wv >= 1.0:
 			wc = Color(0.98, 0.88, 0.4)
-		shadow(font, Vector2(bx, 50), "CROWD", 12, Color(1, 1, 1, 0.7))
+		shadow(font, Vector2(bx, 86), "CROWD", 12, Color(1, 1, 1, 0.7))
 		var filled = clamp(wv / 4.0, 0.0, 1.0) * 8.0
 		for i in 8:
 			var pa = clamp(filled - i, 0.0, 1.0)
-			var pr = Rect2(bx + 50 + i * 13, 41, 10, 10)
+			var pr = Rect2(bx + 50 + i * 13, 77, 10, 10)
 			draw_rect(pr, Color(1, 1, 1, 0.15))
 			if pa > 0.0:
 				draw_rect(Rect2(pr.position, Vector2(10 * pa, 10)), wc)
-		shadow(font, Vector2(bx + 158, 50), GS.watch_label(), 12, Color(wc.r, wc.g, wc.b, 0.95))
+		shadow(font, Vector2(bx + 158, 86), GS.watch_label(), 12, Color(wc.r, wc.g, wc.b, 0.95))
 		# the buff timers: a little bar that runs down (and rushes down once the gull has landed or been hit)
-		var ry = 192.0
+		var ry = 230.0
 		for k in act:
 			var dc = GS.BUFF_COL[k]
 			if k == "ice":
@@ -589,15 +675,15 @@ class Status extends HC:
 			var blink = 1.0 if GS.buff[k] > 3.5 else 0.55 + 0.45 * sin(t * 14.0)
 			shadow(font, Vector2(bx, ry + 9), GS.BUFF_NAME[k], 12, Color(dc.r, dc.g, dc.b, blink))
 			draw_rect(Rect2(bx + 92, ry, 110, 8), Color(0, 0, 0, 0.4))
-			draw_rect(Rect2(bx + 92, ry, 110.0 * clamp(GS.buff[k] / 60.0, 0.0, 1.0), 8), Color(dc.r, dc.g, dc.b, blink))
-			if GS.buff[k] > 60.0:
+			draw_rect(Rect2(bx + 92, ry, 110.0 * clamp(GS.buff[k] / GS.BUFF_SEC, 0.0, 1.0), 8), Color(dc.r, dc.g, dc.b, blink))
+			if GS.buff[k] > GS.BUFF_SEC:
 				draw_rect(Rect2(bx + 92 + 104.0, ry, 6, 8), Color(1, 1, 1, 0.9))
 			shadow(font, Vector2(bx + 208, ry + 9), "%d s" % int(ceil(GS.buff[k])), 11, Color(1, 1, 1, 0.7))
 			ry += 15.0
 		if GS.star_active():
 			for i in 22:
 				var fr = float(i) / 22.0
-				if fr > GS.star_t / GS.STAR_SEC:
+				if fr > GS.star_t / GS.star_sec():
 					break
 				draw_rect(Rect2(bx + 92 + i * 5.0, ry, 4.0, 8), Color.from_hsv(fmod(fr + t * 0.4, 1.0), 0.5, 1.0, 0.95))
 			shadow(font, Vector2(bx, ry + 9), "RAINBOW TIME", 12, Color.from_hsv(fmod(t * 0.5, 1.0), 0.35, 1.0, 1.0))
@@ -611,12 +697,12 @@ class Status extends HC:
 				if fr2 > GS.fish_t / 40.0:
 					break
 				draw_rect(Rect2(bx + 92 + i * 5.0, ry, 4.0, 8), Color(fc3.r, fc3.g, fc3.b, 0.95 if live_f else 0.45))
-			var fl = "FISH TIME" + ("  x%d" % GS.fish_streak if GS.fish_streak > 1 else "")
+			var fl = "OCEAN TIME" + ("  x%d" % GS.fish_streak if GS.fish_streak > 1 else "")
 			shadow(font, Vector2(bx, ry + 9), fl, 12, Color(fc3.r, fc3.g, fc3.b, 1.0 if live_f else 0.6))
 			shadow(font, Vector2(bx + 208, ry + 9), "%d s" % int(ceil(GS.fish_t)), 11, Color(1, 1, 1, 0.8))
 			ry += 15.0
 		if act.is_empty() and GS.has["blue"]:
-			shadow(font, Vector2(bx, 70), "ALT %d" % int(p.global_position.y), 13, Color(1, 1, 1, 0.75))
+			shadow(font, Vector2(bx + 250, 86), "ALT %d" % int(p.global_position.y), 13, Color(1, 1, 1, 0.75))
 		elif not act.is_empty():
 			shadow(font, Vector2(bx + 150, 50 + 0), "", 1, Color(1, 1, 1, 0))
 
@@ -666,6 +752,14 @@ class FryGrid extends HC:
 		vtex.fill_to = Vector2(1.08, 0.5)
 		vtex.width = 256
 		vtex.height = 256
+	# a small keycap (round 18b: the key of the board)
+	func _key_cap(c, txt, u):
+		var r = Rect2(c - Vector2(11.0, 11.0) * u, Vector2(22.0, 22.0) * u)
+		draw_rect(Rect2(r.position + Vector2(0, 2.5 * u), r.size), Color(0, 0, 0, 0.45))
+		draw_rect(r, Color(0.96, 0.94, 0.86, 0.95))
+		draw_rect(r, Color(0.1, 0.1, 0.16, 0.95), false, 1.5)
+		var f = ThemeDB.fallback_font
+		draw_string(f, Vector2(c.x - 11.0 * u, c.y + 5.5 * u), txt, HORIZONTAL_ALIGNMENT_CENTER, 22.0 * u, int(14 * u), Color(0.12, 0.13, 0.2))
 	func cell_size(u):
 		return Vector2(72.0 * u, 76.0 * u)
 	func cell_pos(i, u):
@@ -840,19 +934,20 @@ class FryGrid extends HC:
 				i2 += 1
 		if hud.film_clean:
 			return
-		# ---- the mission board (round 10): a readable panel. The first open task is the one to do now: bigger, pulsing, with a line that says where or how.
-		var my = 12.0 * u + 2.0 * 76.0 * u + 30.0 * u if unlocked else 12.0 * u + 76.0 * u + 30.0 * u
-		var mx = 24.0 * u
+		# ---- the mission board (round 18): ONE goal on top (stop being hungry), the step on the way to it (fries), and the BONUS GOALS, each with the REWARD it gives
+		var mx = 26.0 * u
+		var my = (12.0 + (2.0 * 76.0 if unlocked else 76.0) + 20.0) * u
+		if not GS.board_open:
+			# round 18b: the board is folded away: a small tab remembers that it is there (and which key brings it back)
+			var tb = Rect2(Vector2(mx - 14.0 * u, my - 12.0 * u), Vector2(158.0 * u, 34.0 * u))
+			draw_rect(tb, Color(0.03, 0.05, 0.1, 0.55))
+			draw_rect(tb, Color(1.0, 0.84, 0.4, 0.45), false, 1.5)
+			draw_rect(Rect2(tb.position, Vector2(4.0 * u, tb.size.y)), Color(1.0, 0.84, 0.4, 0.8))
+			_key_cap(Vector2(tb.position.x + 24.0 * u, tb.position.y + tb.size.y * 0.5), "Q", u)
+			shadow(font, Vector2(tb.position.x + 44.0 * u, tb.position.y + tb.size.y * 0.5 + 6.0 * u), "GOALS", int(15 * u), Color(1.0, 0.94, 0.75, 0.9))
+			return
 		var tgt = GS.mission_target()
 		var tot = GS.fry_total()
-		var line1 = ""
-		if tgt < 0:
-			line1 = "ALL %d FRIES   %d / %d" % [GS.FRY_CAP, GS.FRY_CAP, GS.FRY_CAP]
-		elif tgt == 3:
-			line1 = "FIND 3 VISION FRIES   %d / 3" % tot
-		else:
-			line1 = "EAT %d FRIES   %d / %d" % [tgt, tot, tgt]
-		var c1 = Color(0.75, 1.0, 0.75, 0.95) if tgt < 0 else Color(1, 0.96, 0.82, 0.97)
 		var shown_q = GS.quests_shown()
 		var qn = shown_q.size()
 		var focus_id = ""
@@ -860,45 +955,100 @@ class FryGrid extends HC:
 			if GS.quest_state(id0) != "done":
 				focus_id = id0
 				break
-		var panel_h = (30.0 + 21.0 * qn + (22.0 if focus_id != "" else 0.0) + 40.0) * u
-		var panel = Rect2(Vector2(mx - 12.0 * u, my - 24.0 * u), Vector2(392.0 * u, panel_h))
-		draw_rect(panel, Color(0.03, 0.05, 0.1, 0.42))
-		draw_rect(Rect2(panel.position, Vector2(4.0 * u, panel.size.y)), Color(1.0, 0.84, 0.4, 0.8 + 0.15 * sin(t * 2.4)))
-		shadow(font, Vector2(mx, my), line1, int(16 * u), c1)
-		# a small progress bar for the fry goal
+		var pw = 400.0 * u
+		var ph = (112.0 + 30.0 + (34.0 + 24.0 * qn + (34.0 if focus_id != "" else 0.0) + 16.0 if qn > 0 else 0.0) + 14.0) * u
+		var panel = Rect2(Vector2(mx - 14.0 * u, my - 12.0 * u), Vector2(pw, ph))
+		draw_rect(Rect2(panel.position + Vector2(4, 5), panel.size), Color(0, 0, 0, 0.28))
+		draw_rect(panel, Color(0.03, 0.05, 0.1, 0.7))
+		draw_rect(panel, Color(1.0, 0.84, 0.4, 0.55), false, 2.0)
+		draw_rect(Rect2(panel.position, Vector2(5.0 * u, panel.size.y)), Color(1.0, 0.84, 0.4, 0.85 + 0.15 * sin(t * 2.4)))
+		_key_cap(Vector2(panel.end.x - 58.0 * u, panel.position.y + 17.0 * u), "Q", u)
+		shadow(font, Vector2(panel.end.x - 44.0 * u, panel.position.y + 23.0 * u), "HIDE", int(12 * u), Color(1, 1, 1, 0.65))
+		# the goal
+		var gy = my + 8.0 * u
+		shadow(font, Vector2(mx, gy), "THE GOAL", int(12 * u), Color(1.0, 0.84, 0.4, 0.8))
+		shadow(font, Vector2(mx, gy + 28.0 * u), "NO LONGER HUNGRY", int(26 * u), Color(1.0, 0.95, 0.78, 1.0))
+		shadow(font, Vector2(panel.end.x - 90.0 * u, gy + 28.0 * u), "0 / 1", int(18 * u), Color(1.0, 0.82, 0.7, 0.85), HORIZONTAL_ALIGNMENT_RIGHT, 70.0 * u)
+		# the belly: it fills with every fry, but not quite to the top. The last bite is not a magic one.
+		var bw = 316.0 * u
+		var bh = 12.0 * u
+		var bxx = mx
+		var byy = gy + 40.0 * u
+		draw_rect(Rect2(bxx, byy, bw, bh), Color(0, 0, 0, 0.5))
+		var full = 0.92 * clamp(float(tot) / float(GS.FRY_CAP), 0.0, 1.0)
+		draw_rect(Rect2(bxx, byy, bw * full, bh), Color(1.0, 0.78, 0.3, 0.95))
+		draw_rect(Rect2(bxx, byy, bw * full, bh * 0.4), Color(1.0, 0.95, 0.7, 0.45))
+		for m in GS.MISSIONS:
+			var mxp = bxx + bw * 0.92 * float(m) / float(GS.FRY_CAP)
+			draw_line(Vector2(mxp, byy - 2.0 * u), Vector2(mxp, byy + bh + 2.0 * u), Color(1, 1, 1, 0.5), 1.5)
+		draw_rect(Rect2(bxx, byy, bw, bh), Color(1, 1, 1, 0.55), false, 1.5)
+		var qx = bxx + bw + 14.0 * u
+		var qp = 0.6 + 0.4 * sin(t * 3.0)
+		draw_circle(Vector2(qx, byy + bh * 0.5), 11.0 * u, Color(0.1, 0.1, 0.16, 0.8))
+		draw_arc(Vector2(qx, byy + bh * 0.5), 11.0 * u, 0, TAU, 20, Color(1.0, 0.84, 0.4, qp), 2.0)
+		shadow(font, Vector2(qx - 10.0 * u, byy + bh * 0.5 + 6.0 * u), "?", int(16 * u), Color(1.0, 0.9, 0.6, qp), HORIZONTAL_ALIGNMENT_CENTER, 20.0 * u)
+		shadow(font, Vector2(mx, byy + bh + 18.0 * u), "%d / %d FRIES EATEN ON THE WAY" % [tot, GS.FRY_CAP], int(12 * u), Color(1, 1, 1, 0.6))
+		# the step on the way
+		var ny = byy + bh + 46.0 * u
+		var line1 = ""
+		if tgt < 0:
+			line1 = "ALL %d FRIES   %d / %d" % [GS.FRY_CAP, GS.FRY_CAP, GS.FRY_CAP]
+		elif tgt == 3:
+			line1 = "NEXT:  FIND 3 VISION FRIES   %d / 3" % tot
+		else:
+			line1 = "NEXT:  EAT %d FRIES   %d / %d" % [tgt, tot, tgt]
+		var c1 = Color(0.75, 1.0, 0.75, 0.95) if tgt < 0 else Color(1, 0.96, 0.82, 0.98)
+		shadow(font, Vector2(mx, ny), line1, int(18 * u), c1)
 		if tgt > 0:
 			var prev = 0
-			for m in GS.MISSIONS:
-				if m < tgt:
-					prev = m
+			for m2 in GS.MISSIONS:
+				if m2 < tgt:
+					prev = m2
 			var fr = clamp(float(tot - prev) / float(max(tgt - prev, 1)), 0.0, 1.0)
-			draw_rect(Rect2(Vector2(mx, my + 6.0 * u), Vector2(290.0 * u, 4.0 * u)), Color(1, 1, 1, 0.16))
-			draw_rect(Rect2(Vector2(mx, my + 6.0 * u), Vector2(350.0 * u * fr, 4.0 * u)), Color(1.0, 0.84, 0.4, 0.95))
-		var yy = my + 30.0 * u
-		for id in shown_q:
-			var st = GS.quest_state(id)
-			var done = st == "done"
-			var isf = id == focus_id
-			var qa = 0.7 if done else (0.95 if isf else 0.82)
-			var qc = Color(0.7, 1.0, 0.8, qa) if done else Color(1.0, 0.92, 0.6, qa)
-			var bs = 12.0 * u
-			var glow = 0.5 + 0.5 * sin(t * 3.2) if isf else 0.0
-			draw_rect(Rect2(mx, yy - 11.0 * u, bs, bs), Color(qc.r, qc.g, qc.b, (0.22 + 0.25 * glow) * qa), true)
-			draw_rect(Rect2(mx, yy - 11.0 * u, bs, bs), qc, false, 1.5)
-			if done:
-				draw_line(Vector2(mx + 2.0 * u, yy - 5.0 * u), Vector2(mx + 5.0 * u, yy - 2.0 * u), qc, 2.0)
-				draw_line(Vector2(mx + 5.0 * u, yy - 2.0 * u), Vector2(mx + 11.0 * u, yy - 10.0 * u), qc, 2.0)
-			shadow(font, Vector2(mx + 20.0 * u, yy), GS.quest_label(id), int((15 if isf else 14) * u), qc)
-			yy += 21.0 * u
-			if isf:
-				shadow(font, Vector2(mx + 20.0 * u, yy - 5.0 * u), hud.QUEST_HINTS.get(id, ""), int(12 * u), Color(1, 1, 1, 0.7))
-				yy += 18.0 * u
-		shadow(font, Vector2(mx, yy + 2.0 * u), "NO LONGER HUNGRY   0 / 1", int(13 * u), Color(1.0, 0.82, 0.7, 0.8))
+			draw_rect(Rect2(Vector2(mx, ny + 8.0 * u), Vector2(340.0 * u, 5.0 * u)), Color(1, 1, 1, 0.16))
+			draw_rect(Rect2(Vector2(mx, ny + 8.0 * u), Vector2(340.0 * u * fr, 5.0 * u)), Color(1.0, 0.84, 0.4, 0.95))
 		var hint = ""
 		for h in hud.MISSION_HINTS:
 			if tot >= h[0]:
 				hint = h[1]
-		shadow(font, Vector2(mx, yy + 20.0 * u), hint, int(12 * u), Color(1, 1, 1, 0.55))
+		shadow(font, Vector2(mx, ny + 30.0 * u), hint, int(12 * u), Color(1, 1, 1, 0.6))
+		# the bonus goals, each with its reward
+		var yy = ny + 56.0 * u
+		if qn > 0:
+			draw_line(Vector2(mx, yy - 18.0 * u), Vector2(panel.end.x - 24.0 * u, yy - 18.0 * u), Color(1, 1, 1, 0.18), 1.5)
+			shadow(font, Vector2(mx, yy), "BONUS GOALS  -  EACH ONE GIVES A REWARD", int(12 * u), Color(1.0, 0.84, 0.4, 0.8))
+			yy += 24.0 * u
+		for id in shown_q:
+			var st = GS.quest_state(id)
+			var done = st == "done"
+			var isf = id == focus_id
+			var qa = 0.7 if done else (1.0 if isf else 0.85)
+			var qc = Color(0.7, 1.0, 0.8, qa) if done else Color(1.0, 0.92, 0.6, qa)
+			var bs = 14.0 * u
+			var glow = 0.5 + 0.5 * sin(t * 3.2) if isf else 0.0
+			draw_rect(Rect2(mx, yy - 12.0 * u, bs, bs), Color(qc.r, qc.g, qc.b, (0.22 + 0.25 * glow) * qa), true)
+			draw_rect(Rect2(mx, yy - 12.0 * u, bs, bs), qc, false, 1.5)
+			if done:
+				draw_line(Vector2(mx + 2.0 * u, yy - 5.0 * u), Vector2(mx + 5.0 * u, yy - 2.0 * u), qc, 2.0)
+				draw_line(Vector2(mx + 5.0 * u, yy - 2.0 * u), Vector2(mx + 12.0 * u, yy - 11.0 * u), qc, 2.0)
+			var qfs = int((16 if isf else 14) * u)
+			var qlab = GS.quest_label(id)
+			shadow(font, Vector2(mx + 24.0 * u, yy), qlab, qfs, qc)
+			var rw = GS.QUESTS[id][3]
+			var rcol = Color.from_hsv(fmod(t * 0.3, 1.0), 0.4, 1.0, qa) if id == "star" else Color(1.0, 0.82, 0.35, qa)
+			var rtxt = "REWARD:  %s" % rw
+			var lw = font.get_string_size(Loc.t(qlab), HORIZONTAL_ALIGNMENT_LEFT, -1, qfs).x
+			var rwid = font.get_string_size(Loc.t(rtxt), HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u)).x
+			if not isf and 24.0 * u + lw + 12.0 * u + rwid < pw - 30.0 * u:
+				shadow(font, Vector2(panel.end.x - 16.0 * u - rwid, yy), rtxt, int(12 * u), rcol)
+				yy += 22.0 * u
+			else:
+				yy += 17.0 * u
+				shadow(font, Vector2(mx + 24.0 * u, yy), rtxt, int(12 * u), rcol)
+				if isf:
+					yy += 16.0 * u
+					shadow(font, Vector2(mx + 24.0 * u, yy), GS.QUESTS[id][4], int(11 * u), Color(1, 1, 1, 0.78))
+				yy += 21.0 * u
 
 # BOTTOM MIDDLE (round 15): THE LESSON OF THE MOST IMPORTANT KEY. A big TAB keycap that presses itself with a ring of "hold", the words HOLD TAB, and - once the player
 # does hold it - what to look at while the sight is open. It stays (smaller when ignored) until Gull Sight has been held for a few seconds, then thanks the player.
@@ -1097,7 +1247,7 @@ class StarCorner extends HC:
 				draw_polygon(PackedVector2Array([Vector2(x_out, y0), Vector2(x_in, y0), Vector2(x_in, y1), Vector2(x_out, y1)]),
 					PackedColorArray([c0, Color(c0.r, c0.g, c0.b, 0.0), Color(c1.r, c1.g, c1.b, 0.0), c1]))
 		# the time left: a rainbow thread along the top edge
-		var frac = clamp(GS.star_t / GS.STAR_SEC, 0.0, 1.0)
+		var frac = clamp(GS.star_t / GS.star_sec(), 0.0, 1.0)
 		var segs = 48
 		for i in segs:
 			var x0 = size.x * i / segs
@@ -1164,6 +1314,91 @@ class FishCard extends HC:
 				hud.fish_cards.remove_at(i)
 			else:
 				i += 1
+
+# TOP MIDDLE (round 18): the COACH. Four steps of getting a fry, with the key of each, the one you are on lit up, the ones you did ticked off, and one line of what to do right now.
+# main.gd `_coach_tick` decides the step from what the gull is really doing; the card is there for the first fries and comes back whenever a player has been stuck for a while.
+class Coach extends HC:
+	var hud
+	var a = 0.0
+	func _key(c, w, h, txt, col, a2, u):
+		var r = Rect2(c - Vector2(w, h) * 0.5, Vector2(w, h))
+		draw_rect(Rect2(r.position + Vector2(0, 4.0 * u), r.size), Color(0, 0, 0, 0.4 * a2))
+		draw_rect(r, Color(0.96, 0.94, 0.86, a2))
+		draw_rect(r, Color(0.1, 0.1, 0.16, a2), false, 2.0)
+		var f = ThemeDB.fallback_font
+		var sz = int(15 * u)
+		var tw = f.get_string_size(Loc.t(txt), HORIZONTAL_ALIGNMENT_LEFT, -1, sz).x
+		draw_string(f, Vector2(c.x - tw * 0.5, c.y + 5.5 * u), Loc.t(txt), HORIZONTAL_ALIGNMENT_LEFT, -1, sz, Color(0.12, 0.13, 0.2, a2))
+	func _draw():
+		var dt = get_process_delta_time() / max(Engine.time_scale, 0.05)
+		var cd = hud.coach
+		var show = cd != null and cd.get("show", false) and not hud.quiet_busy and hud.quiet_bar < 0.02 and not GS.codex_open
+		a = move_toward(a, 1.0 if show else 0.0, 3.5 * dt)
+		if a <= 0.01 or cd == null:
+			return
+		var u = size.y / 720.0
+		var t = GS.msec() * 0.001
+		var font = ThemeDB.fallback_font
+		var steps = cd["steps"]
+		var cur = int(cd["step"])
+		var n = steps.size()
+		var cw = 94.0 * u
+		var gap = 8.0 * u
+		var total = n * cw + (n - 1) * gap
+		var x0 = size.x * 0.33
+		var y0 = (14.0 + (46.0 if GS.is_hard() else 0.0)) * u
+		var ch = 58.0 * u
+		draw_rect(Rect2(Vector2(x0 - 12.0 * u, y0 - 8.0 * u), Vector2(total + 24.0 * u, ch + 86.0 * u)), Color(0.03, 0.05, 0.1, 0.62 * a))
+		draw_rect(Rect2(Vector2(x0 - 12.0 * u, y0 - 8.0 * u), Vector2(total + 24.0 * u, ch + 86.0 * u)), Color(1.0, 0.84, 0.4, 0.4 * a), false, 1.5)
+		for i in n:
+			var st = steps[i]
+			var px = x0 + i * (cw + gap)
+			var done = i < cur
+			var on = i == cur
+			var pul = 0.5 + 0.5 * sin(t * 6.0) if on else 0.0
+			var bc = Color(0.55, 0.9, 0.6, 0.9 * a) if done else (Color(1.0, 0.84 + 0.1 * pul, 0.35, (0.9 + 0.1 * pul) * a) if on else Color(1, 1, 1, 0.25 * a))
+			var fillc = Color(0.2, 0.3, 0.22, 0.7 * a) if done else (Color(0.3, 0.26, 0.1, 0.75 * a) if on else Color(0.08, 0.1, 0.16, 0.6 * a))
+			draw_rect(Rect2(Vector2(px, y0), Vector2(cw, ch)), fillc)
+			draw_rect(Rect2(Vector2(px, y0), Vector2(cw, ch)), bc, false, (3.5 if on else 2.0))
+			if on:
+				draw_rect(Rect2(Vector2(px - 4.0 * u, y0 - 4.0 * u), Vector2(cw + 8.0 * u, ch + 8.0 * u)), Color(1.0, 0.9, 0.5, 0.25 * pul * a), false, 2.0)
+			var kw = max(36.0 * u, 18.0 * u + 8.0 * u * str(st["key"]).length())
+			_key(Vector2(px + 10.0 * u + kw * 0.5, y0 + 22.0 * u), kw, 26.0 * u, st["key"], bc, a * (1.0 if (on or done) else 0.6), u)
+			var lbl = st["label"]
+			var lc = Color(1, 1, 1, (0.95 if on else 0.7) * a)
+			shadow(font, Vector2(px + 8.0 * u, y0 + 50.0 * u), lbl, int(12 * u), lc)
+			if done:
+				var ck = Vector2(px + cw - 16.0 * u, y0 + 20.0 * u)
+				draw_line(ck + Vector2(-8, 0) * u, ck + Vector2(-2, 7) * u, Color(0.6, 1.0, 0.7, a), 3.5)
+				draw_line(ck + Vector2(-2, 7) * u, ck + Vector2(9, -8) * u, Color(0.6, 1.0, 0.7, a), 3.5)
+			if i < n - 1:
+				var ax = px + cw + gap * 0.5
+				draw_colored_polygon(PackedVector2Array([Vector2(ax - 5.0 * u, y0 + ch * 0.5 - 7.0 * u), Vector2(ax + 6.0 * u, y0 + ch * 0.5), Vector2(ax - 5.0 * u, y0 + ch * 0.5 + 7.0 * u)]), Color(1, 1, 1, 0.45 * a))
+		var line = str(cd.get("line", ""))
+		if line != "":
+			var lt = Loc.t(line)
+			draw_multiline_string(font, Vector2(x0 - 5.0 * u, y0 + ch + 23.0 * u), lt, HORIZONTAL_ALIGNMENT_LEFT, total + 10.0 * u, int(14 * u), 2, Color(0, 0, 0, 0.7 * a))
+			draw_multiline_string(font, Vector2(x0 - 6.0 * u, y0 + ch + 22.0 * u), lt, HORIZONTAL_ALIGNMENT_LEFT, total + 10.0 * u, int(14 * u), 2, Color(1.0, 0.96, 0.8, a))
+
+# TOP MIDDLE (round 18, HARD): the race clock. The time of this run so far and the best time to the 24 fries.
+class RaceClock extends HC:
+	var hud
+	func _draw():
+		if not GS.is_hard() or hud.film_clean or GS.codex_open:
+			return
+		var u = size.y / 720.0
+		var font = ThemeDB.fallback_font
+		var tx = GS.time_text(GS.hard_clock)
+		var best = ("BEST  %s" % GS.time_text(GS.hard_best)) if GS.hard_best > 0.0 else "NO RECORD YET"
+		var run_done = GS.hard_last > 0.0
+		var col = Color(0.7, 1.0, 0.8, 0.95) if run_done else Color(1.0, 0.82, 0.55, 0.95)
+		var w = 300.0 * u
+		var r = Rect2(Vector2(size.x * 0.5 - w * 0.5, 8.0 * u), Vector2(w, 38.0 * u))
+		draw_rect(r, Color(0.03, 0.05, 0.1, 0.55))
+		draw_rect(r, Color(col.r, col.g, col.b, 0.5), false, 1.5)
+		shadow(font, r.position + Vector2(12.0 * u, 26.0 * u), "HARD", int(13 * u), Color(1.0, 0.55, 0.4, 0.95))
+		shadow(font, r.position + Vector2(60.0 * u, 27.0 * u), tx if not run_done else GS.time_text(GS.hard_last), int(22 * u), col)
+		shadow(font, r.position + Vector2(w - 12.0 * u - 150.0 * u, 25.0 * u), best, int(12 * u), Color(1, 1, 1, 0.65), HORIZONTAL_ALIGNMENT_RIGHT, 150.0 * u)
 
 class Streaks extends Control:
 	var hud
@@ -1288,6 +1523,14 @@ func _ready():
 	lesson_ui.hud = self
 	_full(lesson_ui)
 	ui_root.add_child(lesson_ui)
+	coach_ui = Coach.new()
+	coach_ui.hud = self
+	_full(coach_ui)
+	ui_root.add_child(coach_ui)
+	clock_ui = RaceClock.new()
+	clock_ui.hud = self
+	_full(clock_ui)
+	ui_root.add_child(clock_ui)
 	skypop = SkyPop.new()
 	skypop.hud = self
 	_full(skypop)
@@ -1322,15 +1565,15 @@ func _ready():
 	hint_label = _lbl("", 22, Color(1, 0.96, 0.85), 6)
 	hint_label.anchor_left = 0.0
 	hint_label.anchor_right = 1.0
-	hint_label.anchor_top = 0.86
-	hint_label.anchor_bottom = 0.86
+	hint_label.anchor_top = 0.875
+	hint_label.anchor_bottom = 0.875
 	hint_label.modulate.a = 0.0
 	ui_root.add_child(hint_label)
 	whisper_label = _lbl("", 17, Color(1, 0.96, 0.88), 4)
 	whisper_label.anchor_left = 0.0
 	whisper_label.anchor_right = 1.0
-	whisper_label.anchor_top = 0.895
-	whisper_label.anchor_bottom = 0.895
+	whisper_label.anchor_top = 0.94
+	whisper_label.anchor_bottom = 0.94
 	whisper_label.modulate.a = 0.0
 	ui_root.add_child(whisper_label)
 	prompt_label = _lbl("", 26, Color(1, 0.96, 0.8), 8)
@@ -1442,6 +1685,8 @@ func _process(delta):
 	starfx.queue_redraw()
 	fishcard.queue_redraw()
 	lesson_ui.queue_redraw()
+	coach_ui.queue_redraw()
+	clock_ui.queue_redraw()
 	skypop.queue_redraw()
 	achui.queue_redraw()
 	lesson_done_t = max(lesson_done_t - real_dt, 0.0)

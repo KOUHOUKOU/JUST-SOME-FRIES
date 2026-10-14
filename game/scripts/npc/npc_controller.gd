@@ -685,5 +685,5 @@ func _update_awareness(delta, _dist_p):
 		if prof["kind"] == "squirt":
 			if awareness >= ALERT and dist < 9.0 and (player.is_vulnerable() or dist < 6.0):
 				trigger_swat()
-		elif awareness >= ALERT and player.is_vulnerable() and dist < 6.0 and not swatted_this_carry and not prof.get("grace", false):
+		elif awareness >= ALERT and player.is_vulnerable() and dist < 6.0 and not swatted_this_carry and not prof.get("grace", false) and (GS.dp("hits") or GS.hostile()):
 			trigger_swat()

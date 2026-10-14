@@ -1,0 +1,22 @@
+# Translations: round 18b (R = turn round, Q = the goals board, HARD as a rhythm game, the OCEAN TIME lock). Later files win over earlier ones.
+T = [
+("R - TURN RIGHT ROUND", "R - 立刻掉头", "R - 立刻掉頭", "R - くるっと反転"),
+("Mouse - steer          W - throttle          S - brake          R - turn right round", "鼠标 - 转向          W - 加速          S - 减速          R - 立刻掉头", "滑鼠 - 轉向          W - 加速          S - 減速          R - 立刻掉頭", "マウス - 方向          W - 加速          S - ブレーキ          R - くるっと反転"),
+("TURN SO THAT THE FRY IS IN THE MIDDLE OF THE SCREEN   (R - TURN AROUND)", "转向，让薯条出现在屏幕正中   （R - 掉头）", "轉向，讓薯條出現在螢幕正中   （R - 掉頭）", "ポテトが画面の真ん中に来るよう向きを変えよう   （R - 反転）"),
+("Q - hide or show the goals board (top left).", "Q - 收起 / 展开左上角的目标栏。", "Q - 收起 / 展開左上角的目標欄。", "Q - 左上の目標ボードをしまう / 出す。"),
+("GOALS", "目标", "目標", "目標"),
+("HIDE", "收起", "收起", "しまう"),
+("E - ON THE BEAT: WHEN A WHITE RING IS IN THE GOLD BAND.", "E - 踩着节拍：白圈进入金色环带时按下。", "E - 踩著節拍：白圈進入金色環帶時按下。", "E - ビートに合わせて：白い輪が金の帯に入ったら。"),
+("PRESS  E  ON THE BEAT:  WHEN A WHITE RING IS IN THE GOLD BAND", "踩着节拍按  E：白圈进入金色环带的时候", "踩著節拍按  E：白圈進入金色環帶的時候", "ビートに合わせて  E：白い輪が金の帯に入ったとき"),
+("ON THE GOLD", "金环时按", "金環時按", "金で押す"),
+("HOW TO GET A FRY:  1  climb above it.   2  put it in the middle of the screen (hold TAB: the world slows down).   3  dive at it with Shift.   4  press E on the beat.", "怎么弄到一根薯条：  1  先飞到它上方。   2  让它出现在屏幕正中（按住 TAB：世界会慢下来）。   3  按住 Shift 朝它俯冲。   4  踩着节拍按 E。", "怎麼弄到一根薯條：  1  先飛到它上方。   2  讓它出現在螢幕正中（按住 TAB：世界會慢下來）。   3  按住 Shift 朝它俯衝。   4  踩著節拍按 E。", "ポテトの取り方：  1  上に飛ぶ。   2  画面の真ん中に入れる（TAB長押しで世界がゆっくりに）。   3  Shiftで急降下。   4  ビートに合わせて E。"),
+("Circles appear around it and the music plays by itself. Press E on the beat: when a white wave is in the gold ring.", "它周围会出现圆环，音乐会自己响起来。踩着节拍按 E：白色波纹进入金色圆环的时候。", "它周圍會出現圓環，音樂會自己響起來。踩著節拍按 E：白色波紋進入金色圓環的時候。", "まわりに輪が現れ、音楽がひとりでに流れる。ビートに合わせて E：白い波が金の輪に入ったとき。"),
+("Catch a fish: OCEAN TIME. On the sea W surfs; hold TAB to lock the fish in the middle of the view, Space launches you straight at it.", "抓到鱼：海洋时间。在海上 W 冲浪；按住 TAB 锁定视野正中的鱼，空格直接朝它发射。", "抓到魚：海洋時間。在海上 W 衝浪；按住 TAB 鎖定視野正中的魚，空白鍵直接朝牠發射。", "魚を捕まえる：オーシャンタイム。海ではWでサーフィン。TAB長押しで視界の真ん中の魚をロックし、スペースでまっすぐ飛び出す。"),
+("OCEAN TIME:  W - SURF    HOLD TAB - LOCK A FISH    SPACE - LAUNCH AT IT", "海洋时间：  W - 冲浪    按住 TAB - 锁定一条鱼    空格 - 朝它发射", "海洋時間：  W - 衝浪    按住 TAB - 鎖定一條魚    空白鍵 - 朝牠發射", "オーシャンタイム：  W - サーフ    TAB長押し - 魚をロック    スペース - 発射"),
+("LOCKED:  %s", "锁定：{0}", "鎖定：{0}", "ロック：{0}"),
+("SPACE  -  LAUNCH AT IT", "空格  -  朝它发射", "空白鍵  -  朝牠發射", "スペース  -  発射"),
+("FISH LOCKED:  TURN ROUND TO SEE IT", "已锁定一条鱼：转过身就能看到它", "已鎖定一條魚：轉過身就能看到牠", "魚をロック中：振り向くと見える"),
+("A gentle first flight: lots of breath, clear rings, a friendly town.", "温柔的初次飞行：体力充沛，圆圈清晰，小镇很友好。", "溫柔的初次飛行：體力充沛，圓圈清晰，小鎮很友好。", "やさしい初フライト：スタミナたっぷり、見やすい輪、やさしい町。"),
+("The race, and a real rhythm game: one gold band, three beats a circle, the music plays by itself, a wary town.", "竞速，也是真正的音游：只有一条金色环带，每圈三拍，音乐自己响，小镇满是戒备。", "競速，也是真正的音遊：只有一條金色環帶，每圈三拍，音樂自己響，小鎮滿是戒備。", "レースであり本物のリズムゲーム：金の帯は1本、1つの輪に3拍、音楽はひとりでに流れ、町は警戒している。"),
+("easy: breath, clear rings, a friendly town.", "简单：体力、清晰的圆圈、友好的小镇。", "簡單：體力、清晰的圓圈、友好的小鎮。", "かんたん：スタミナ、見やすい輪、やさしい町。"),
+]

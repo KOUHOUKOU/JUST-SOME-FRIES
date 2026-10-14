@@ -16,7 +16,7 @@ const VisualScript = preload("res://scripts/player/gull_visual.gd")
 const WATER_Y = -0.75
 const GROUND_SPEED = 2.2
 const WATER_SPEED = 3.4
-const SURF_SPEED = 15.0          # FISH TIME: W on the water
+const SURF_SPEED = 15.0          # OCEAN TIME: W on the water
 const SURF_FAST = 22.0           # ...and Shift
 const CAM_TABLE = [[2.5, 62.0, 3.6], [5.0, 66.0, 4.0], [11.0, 74.0, 5.2], [19.0, 92.0, 7.5], [25.0, 104.0, 9.4], [30.0, 112.0, 10.8], [38.0, 122.0, 12.5]]
 const TURN_TABLE = [[2.5, 8.0], [5.0, 7.0], [11.0, 4.5], [19.0, 2.0], [25.0, 1.7], [30.0, 1.5], [38.0, 1.4]]
@@ -56,6 +56,8 @@ var aura_fx
 var aura_t = 0.0
 var scripted_move = false      # an ending cutscene moves the gull: no flight code, no collisions
 var drunk_dir = 0.0
+var uturn_left = 0.0             # round 18: radians of the Q U-turn still to turn
+var uturn_dir = 1.0
 var throttling = false
 var braking = false
 var regen_active = false
@@ -85,8 +87,9 @@ var skim_t = 0.0
 var on_water = false             # round 12: sitting on the sea with the wings spread: no sinking, no crash, the breath comes back, and Space takes off again
 var ripple_t = 0.0
 var water_grace = 0.0            # round 16: after a take-off from the water a wall cannot make the gull tumble for a moment
-var launch_t = 0.0               # round 16: seconds of the FISH TIME launch burst left (a huge short acceleration out of the sea)
+var launch_t = 0.0               # round 16: seconds of the OCEAN TIME launch burst left (a huge short acceleration out of the sea)
 var launch_speed = 0.0
+var aim_pitch_launch = 0.4       # round 18b: the pitch of an aimed launch
 var surf_t = 0.0
 var wake_t = 0.0
 var rings = []                   # the pool of water ripples (see _ripple)
@@ -289,7 +292,7 @@ func _on_star_ended():
 	Sfx.play("star_off", -6.0)
 
 func _on_fish_started():
-	GS.say_buff("FISH TIME.   THE SEA IS YOURS. SPACE ON THE WATER = LAUNCH.")
+	GS.say_buff("OCEAN TIME.   THE SEA IS YOURS. SPACE ON THE WATER = LAUNCH.")
 	Sfx.play("star_on", -5.0, 1.25)
 	fov_kick = 8.0
 	shake = max(shake, 0.25)
@@ -351,7 +354,7 @@ func _make_buff_fx():
 		"coffee": {"col": Color(0.72, 0.45, 0.22, 0.8), "amount": 40, "life": 1.0, "size": 0.38, "vmin": 0.8, "vmax": 1.9, "grav": 1.6, "tan": 2.5, "rad": 0.5, "tex": "soft"},
 		"alcohol": {"col": Color(1.0, 0.85, 0.3, 0.9), "amount": 34, "life": 1.8, "size": 0.2, "vmin": 0.5, "vmax": 1.1, "grav": 0.7, "tan": 0.0, "rad": 0.55, "tex": "bubble"},
 		"ice": {"col": Color(0.6, 0.92, 1.0, 0.95), "amount": 36, "life": 2.0, "size": 0.36, "vmin": 0.2, "vmax": 0.7, "grav": -0.35, "tan": 0.0, "rad": 0.6, "tex": "star"},
-		"fish": {"col": Color(0.45, 0.8, 1.0, 0.95), "amount": 46, "life": 1.5, "size": 0.24, "vmin": 0.5, "vmax": 1.5, "grav": 0.9, "tan": 0.0, "rad": 0.65, "tex": "bubble"},      # round 16: FISH TIME: bubbles of the deep
+		"fish": {"col": Color(0.45, 0.8, 1.0, 0.95), "amount": 46, "life": 1.5, "size": 0.24, "vmin": 0.5, "vmax": 1.5, "grav": 0.9, "tan": 0.0, "rad": 0.65, "tex": "bubble"},      # round 16: OCEAN TIME: bubbles of the deep
 	}
 	for k in cfg:
 		var c = cfg[k]
@@ -425,7 +428,7 @@ func _update_aura(delta):
 		c = Color.from_hsv(star_hue, 0.4, 1.0)
 		strong = 1.0
 	elif GS.fish_mode():
-		c = Color(0.2, 0.55, 1.0)               # FISH TIME: the colour of the deep sea
+		c = Color(0.2, 0.55, 1.0)               # OCEAN TIME: the colour of the deep sea
 		strong = 1.0
 	if c == null or strong <= 0.0:
 		aura.visible = false
@@ -561,18 +564,52 @@ func get_swatted(from_npc, kind = "punch"):
 		fov_kick = 6.0
 		show_toast("DODGE", 0.7)
 		return
-	GS.stats["swats"] += 1
-	GS.player_hurt.emit("swat_" + kind, snatch.carry_fry != null)
-	snatch.on_hit()
 	var away = global_position - from_npc.global_position
 	away.y = 0.0
 	if away.length() < 0.05:
 		away = Vector3(sin(yaw), 0.0, cos(yaw))
+	if not GS.dp("hits"):
+		# round 18, EASY: the town is kind. Even when the crowd is on full alert a swing is a firm bump: the gull is pushed away, nothing is dropped, nothing is lost
+		GS.stats["swats"] += 1
+		GS.add_heat(0.3)
+		soft_bump(away.normalized(), 1.2)
+		show_toast("BONK", 0.8)
+		return
+	GS.stats["swats"] += 1
+	GS.player_hurt.emit("swat_" + kind, snatch.carry_fry != null)
+	snatch.on_hit()
 	GS.add_heat(1.0)
-	# FLUFF fries (orange) soften every hit: less damage, less time on the floor
+	# CHARM fries (pink) soften every hit: less damage, less time on the floor
 	start_tumble(away.normalized() * 6.0 + Vector3(0, 3.0, 0), 30.0 * GS.hurt_mult(), 1.2 * GS.stun_mult())
-	Sfx.play("thud")
-	Sfx.play("cry", -4.0, 1.1)
+	Sfx.play("thud", -11.0)
+	Sfx.play("cry", -15.0, 1.0)
+
+# round 18: a bump that does not hurt: a low round thump and a puff of feathers, a push away from whatever it was, a little shake of the picture
+func soft_bump(normal, strength = 1.0):
+	var n = Vector3(normal.x, 0.0, normal.z)
+	if n.length() < 0.05:
+		n = Vector3(sin(yaw), 0.0, cos(yaw))
+	knock += n.normalized() * 5.0 * strength
+	speed = min(speed, 6.0)
+	shake = max(shake, 0.22)
+	fov_kick = 2.0
+	Sfx.play("soft_bump", -5.0, randf_range(0.94, 1.08))
+	_feather_puff()
+
+func _feather_puff():
+	var p = _make_particles(Color(1.0, 1.0, 1.0, 0.85), 0.14, 14, 0.9)
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.direction = Vector3.UP
+	p.spread = 180.0
+	p.initial_velocity_min = 0.8
+	p.initial_velocity_max = 2.4
+	p.gravity = Vector3(0, -0.8, 0)
+	p.top_level = true
+	add_child(p)
+	p.global_position = global_position
+	p.emitting = true
+	get_tree().create_timer(1.4).timeout.connect(p.queue_free)
 
 # a fright that is not a hit: a kid yelling "BOO", a gull-sized dog bark... the gull hops into the air and loses a little breath
 func startle(from_pos, amount = 6.0):
@@ -581,7 +618,8 @@ func startle(from_pos, amount = 6.0):
 	if invuln_t > 0.0 or mode == M.TUMBLE:
 		return
 	GS.stats["scares"] += 1
-	spend(amount * GS.hurt_mult())
+	if GS.dp("hits"):
+		spend(amount * GS.hurt_mult())
 	var away = global_position - from_pos
 	away.y = 0.0
 	if away.length() < 0.05:
@@ -595,7 +633,7 @@ func startle(from_pos, amount = 6.0):
 	flap_anim = 0.4
 	fov_kick = 4.0
 	shake = max(shake, 0.25)
-	Sfx.play("cry", -8.0, 1.25)
+	Sfx.play("cry", -16.0, 1.1)
 
 func start_tumble(kick, dmg, dur):
 	if mode == M.TUMBLE:
@@ -612,7 +650,7 @@ func start_tumble(kick, dmg, dur):
 	tumbled.emit()
 	if snatch.carry_fry != null:
 		snatch.drop_carry()
-	Sfx.play("tumble", -4.0)
+	Sfx.play("tumble", -11.0)
 
 func set_override(xf, fov, goal, rate = 8.0):
 	ov_xf = xf
@@ -648,7 +686,8 @@ func _physics_process(delta):
 		var cost = GS.vision_cost() if (mode == M.FLY and not GS.free_flight()) else 0.0
 		GS.stats["vision_s"] += real_dt
 		if cost > 0.0:
-			stamina = max(stamina - cost * real_dt, 0.0)
+			# round 18: EASY pays per second of GAME time (the slow world turns the cost into a trickle); HARD still pays per real second
+			stamina = max(stamina - cost * (delta if GS.dp("sight_game") else real_dt), 0.0)
 			since_spend = 0.0
 			if stamina <= 0.0:
 				GS.vision_tired = true
@@ -716,6 +755,7 @@ func _fly(delta, mouse):
 		drain = 3.0
 	if GS.free_flight():
 		drain = 0.0           # the cocktail and STARLIGHT: flying costs nothing
+	drain *= GS.drain_mult()      # round 18: EASY flight costs half
 	if drain > 0.0:
 		stamina = max(stamina - drain * delta, 0.0)
 		since_spend = 0.0
@@ -727,10 +767,22 @@ func _fly(delta, mouse):
 	# up in the sky (where the cloud, the stars and the sun are) the gull turns much more eagerly: a fast gull used to need half the sky to bring the sun into its beak
 	var sky_k = clamp((global_position.y - 38.0) / 45.0, 0.0, 1.0)
 	var rate = _interp(TURN_TABLE, speed, 1) * max(lerp(1.0, 2.8, focus), lerp(1.0, 3.2, vision)) * (1.0 + 0.45 * star_t_vis) * (1.0 + 1.25 * sky_k)
+	# round 18: Q = turn right round (a quick U-turn: the players could not find a fry that was behind them)
+	if not input_locked and Input.is_action_just_pressed("turn_back") and uturn_left <= 0.0:
+		uturn_left = PI
+		uturn_dir = -1.0 if yaw_rate < -0.3 else 1.0
+		Sfx.play("whoosh", -14.0, 1.2)
+	if uturn_left > 0.0:
+		aim_yaw = yaw + uturn_dir * 1.3
+		rate = min(rate * 2.4, 9.0)
 	var dyaw_goal = clamp(angle_difference(yaw, aim_yaw), -1.3, 1.3)
 	aim_yaw = yaw + dyaw_goal
 	var step_y = clamp(dyaw_goal, -rate * delta, rate * delta)
 	yaw += step_y
+	if uturn_left > 0.0:
+		uturn_left -= abs(step_y)
+		if uturn_left <= 0.0:
+			aim_yaw = yaw
 	var step_p = clamp(aim_pitch - pitch, -rate * (0.8 + 0.25 * sky_k) * delta, rate * (0.8 + 0.25 * sky_k) * delta)
 	pitch += step_p
 	yaw_rate = lerp(yaw_rate, step_y / max(delta, 0.001), 1.0 - exp(-10.0 * delta))
@@ -739,7 +791,7 @@ func _fly(delta, mouse):
 		for k in ["bank_left", "bank_right"]:
 			if Input.is_action_just_pressed(k):
 				var now = GS.msec() / 1000.0
-				if now - last_tap[k] < 0.28 and roll_cd <= 0.0 and stamina >= 10.0 and roll_t <= 0.0:
+				if now - last_tap[k] < 0.28 and roll_cd <= 0.0 and stamina >= 10.0 * GS.drain_mult() and roll_t <= 0.0:
 					_start_roll(1.0 if k == "bank_right" else -1.0)
 				last_tap[k] = now
 	if roll_t > 0.0:
@@ -779,16 +831,16 @@ func _fly(delta, mouse):
 		# TAILWIND fries change only THIS: a long runway at first, a snappy start once maxed. Top speeds never change.
 		acc *= GS.accel_mult() * (1.0 + dive * 1.5)
 		if launch_t > 0.0:
-			acc *= 7.0          # the FISH TIME launch: a few tenths of a second of enormous acceleration (the top speed is still the gull's own)
+			acc *= 7.0          # the OCEAN TIME launch: a few tenths of a second of enormous acceleration (the top speed is still the gull's own)
 		speed = move_toward(speed, target, acc * delta)
 	else:
 		speed = move_toward(speed, target, (18.0 if landing else (8.0 if was_boost and not boosting else 4.0)) * delta)
 	accel_now = lerp(accel_now, (speed - speed_before) / max(delta, 0.0001), 1.0 - exp(-10.0 * delta))
 	# flap
 	if not input_locked and Input.is_action_just_pressed("flap"):
-		if flap_cd <= 0.0 and (stamina >= 6.0 or GS.free_flight()):
+		if flap_cd <= 0.0 and (stamina >= 6.0 * GS.drain_mult() or GS.free_flight()):
 			if not GS.free_flight():
-				spend(6.0)
+				spend(6.0 * GS.drain_mult())
 			flap_cd = 0.3
 			flap_anim = 0.4
 			vert_boost = max(vert_boost, 0.0) + 6.5
@@ -833,11 +885,14 @@ func _fly(delta, mouse):
 	elif worst > 9.0 and water_grace <= 0.0:
 		GS.award("WALL KISS")
 		GS.stats["walls"] += 1
-		Sfx.play("thud")
-		Sfx.play("cry", -6.0, 1.15)
-		GS.player_hurt.emit("crash", snatch.carry_fry != null)
-		start_tumble(wn * 4.0 + Vector3(0, 2.0, 0), 12.0 * GS.hurt_mult(), 1.2 * GS.stun_mult())
-		return
+		if not GS.dp("hits"):
+			soft_bump(wn, 1.0)          # round 18, EASY: a wall is a bump: no tumble, no breath lost, no shout
+		else:
+			Sfx.play("thud", -10.0)
+			Sfx.play("cry", -16.0, 1.0)
+			GS.player_hurt.emit("crash", snatch.carry_fry != null)
+			start_tumble(wn * 4.0 + Vector3(0, 2.0, 0), 12.0 * GS.hurt_mult(), 1.2 * GS.stun_mult())
+			return
 	elif worst > 2.5:
 		shake = max(shake, clamp(worst / 20.0, 0.1, 0.4))
 		speed = min(speed, max(get_real_velocity().length(), 3.0))
@@ -864,7 +919,7 @@ func _start_roll(dir):
 	invuln_t = 0.45
 	roll_cd = GS.roll_cooldown()
 	if not GS.free_flight():
-		spend(10.0)
+		spend(10.0 * GS.drain_mult())
 	var right = Vector3(cos(yaw), 0, -sin(yaw))
 	knock += right * dir * 7.0
 	Sfx.play("roll", -6.0)
@@ -908,6 +963,12 @@ func _ground(delta, mouse):
 		return
 	var sens = 0.0022 * GS.mouse_sens_mult
 	yaw -= mouse.x * sens
+	if not input_locked and Input.is_action_just_pressed("turn_back") and uturn_left <= 0.0:
+		uturn_left = PI
+	if uturn_left > 0.0:
+		var su = min(uturn_left, 9.0 * delta)
+		yaw += su
+		uturn_left -= su
 	aim_yaw = yaw
 	pitch = clamp(pitch - mouse.y * sens * (-1.0 if GS.invert_y else 1.0), deg_to_rad(-40.0), deg_to_rad(25.0))
 	aim_pitch = pitch
@@ -1009,7 +1070,7 @@ func _water(_delta):
 		return
 	if global_position.y < WATER_Y + 0.3 and _over_water():
 		if GS.fish_active() and mode == M.FLY and not scripted_move and launch_t <= 0.3:
-			_enter_water(true)      # round 16: in FISH TIME the sea is a surfboard, not a crash
+			_enter_water(true)      # round 16: in OCEAN TIME the sea is a surfboard, not a crash
 			return
 		# round 12: coming down on the sea (Ctrl, a slow glide, no breath left, a steep drop) is a landing, not a crash
 		if mode == M.FLY and not scripted_move and (landing or speed < 13.0 or stamina <= 1.0 or velocity.y < -3.0):
@@ -1053,7 +1114,7 @@ func _enter_water(surf = false):
 	var hh = get_tree().current_scene.get("hud")
 	if surf:
 		if hh != null:
-			hh.hint("surf", "FISH TIME:  W - SURF    SPACE - LAUNCH AT THE FISH", 4.5)
+			hh.hint("surf", "OCEAN TIME:  W - SURF    HOLD TAB - LOCK A FISH    SPACE - LAUNCH AT IT", 5.5)
 		return
 	if hh != null:
 		hh.hint("water", "ON THE WATER:  YOUR BREATH COMES BACK.   SPACE - TAKE OFF", 4.5)
@@ -1067,7 +1128,7 @@ func _float(delta, mouse):
 	var surfing = GS.fish_active()
 	var bank = 0.0 if input_locked else Input.get_axis("bank_left", "bank_right")
 	if surfing:
-		yaw -= bank * 1.9 * delta          # FISH TIME: A / D steer the surfboard
+		yaw -= bank * 1.9 * delta          # OCEAN TIME: A / D steer the surfboard
 	aim_yaw = yaw
 	pitch = 0.0
 	aim_pitch = 0.0
@@ -1089,7 +1150,7 @@ func _float(delta, mouse):
 			d -= r
 	var moving = d.length() > 0.1
 	if surfing:
-		# ROUND 16, FISH TIME: the water is a surfboard. W builds speed (Shift more), the gull follows its heading, and nothing costs breath.
+		# ROUND 16, OCEAN TIME: the water is a surfboard. W builds speed (Shift more), the gull follows its heading, and nothing costs breath.
 		var hv = Vector3(velocity.x, 0.0, velocity.z)
 		var cur = hv.length()
 		var wfwd = (not input_locked) and Input.is_action_pressed("move_forward")
@@ -1158,7 +1219,7 @@ func _float(delta, mouse):
 		on_water = false
 		spray.emitting = false
 		return
-	# take off again (in FISH TIME: the LAUNCH). From ANY patch of water: if something (a pier, a marina deck, an overhanging cliff) is right above the gull, it first pops out
+	# take off again (in OCEAN TIME: the LAUNCH). From ANY patch of water: if something (a pier, a marina deck, an overhanging cliff) is right above the gull, it first pops out
 	# to the nearest open water, and for a moment nothing can hurt it, so a take-off can never end in a crash or a tumble under a roof.
 	if not input_locked and Input.is_action_just_pressed("flap"):
 		on_water = false
@@ -1214,14 +1275,19 @@ func _pop_to_open_water():
 			show_toast("SLIPPED OUT FROM UNDER THE ROOF", 1.2)
 			return
 
-# ROUND 16: Space on the water in FISH TIME. A huge, short burst of acceleration (the gull's top speed stays its own) and a column of water: the way to the fish that jump.
+# ROUND 16: Space on the water in OCEAN TIME. A huge, short burst of acceleration (the gull's top speed stays its own) and a column of water: the way to the fish that jump.
 func _launch(hs):
 	mode = M.FLY
 	launch_speed = max(GS.boost_speed(), hs + 7.0)
+	var tp = snatch.fish_aim_point(global_position, launch_speed)       # round 18b: a fish locked with TAB: the launch points at where it will be
+	if tp != null:
+		var dn = (tp - global_position).normalized()
+		yaw = atan2(-dn.x, -dn.z)
+		aim_pitch_launch = clamp(asin(clamp(dn.y, -1.0, 1.0)), 0.15, 0.95)
 	speed = launch_speed                       # the LAUNCH: the top speed at once (also in Gull Sight's slow motion: this is the way to the fish)
 	launch_t = 2.2
-	pitch = 0.4
-	aim_pitch = 0.4
+	pitch = 0.4 if tp == null else aim_pitch_launch
+	aim_pitch = pitch
 	aim_yaw = yaw
 	vert_boost = 11.0
 	flap_anim = 0.4

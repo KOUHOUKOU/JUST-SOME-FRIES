@@ -9,10 +9,44 @@ const Pattern = preload("res://scripts/world/pattern.gd")
 # kinds that exist once per world (the first one the world builder places wins, the rest are quietly dropped)
 const UNIQUE = ["hat", "sailor", "topper", "beret", "glasses", "shades", "necklace", "bowtie", "scarf", "pipe", "hawaii", "stripes", "coat", "socks", "balloon", "ball", "cloud", "raincloud", "moon", "sun", "skybow"]
 const ICE_COLORS = ["F7C7D4", "BFEBD2", "FFF1C7", "8A5636", "FFB36B", "9DB5F5", "FF6F91", "D6B6FF"]
+const DRINKS = ["coffee", "alcohol", "icecream"]
 static var claimed = {}
 static var ice_count = 0
 
+# ROUND 18: DRINK STATIONS. A player takes one cup of each kind in one place and moves on: three coffees in a row, ten cocktails on one beach only buried the ones that mattered.
+# So a drink exists only at a STATION (a place of the island, listed here); every station holds one drink of its kind (the others that used to stand around it are just props).
+# Start (the boardwalk): coffee at the espresso table, ice cream at the shop, a cocktail at the supermarket cafe. The beach: a thermos of coffee, a cocktail at the tiki bar, an ice
+# cream on a beach table. The pier: one more ice cream; the hill: coffee and a cocktail; far away on the sea and the summit: one more of each for those who go looking.
+const STATION_R = 4.5
+const STATIONS = {
+	"coffee": [Vector2(10.8, -0.4), Vector2(36.0, 24.0), Vector2(-49.4, -37.8), Vector2(-35.2, 127.6), Vector2(10.3, -75.2)],
+	"alcohol": [Vector2(35.0, -6.4), Vector2(63.6, 28.1), Vector2(-41.4, -35.5), Vector2(31.0, -56.5), Vector2(35.0, -79.7)],
+	"icecream": [Vector2(-25.2, -12.3), Vector2(58.0, 31.0), Vector2(0.3, 30.1), Vector2(93.3, 57.1)],
+}
+static var used_stations = {}
+static var skip_station = false          # a respawn of a drink that already has its station
+
+static func _station_index(kind, wp):
+	var st = STATIONS.get(kind, [])
+	for i in st.size():
+		if Vector2(wp.x - st[i].x, wp.z - st[i].y).length() <= STATION_R:
+			return i
+	return -1
+
+# does a free station of this kind lie at wp? (a peek: nothing is claimed)
+static func station_free(kind, wp):
+	var i = _station_index(kind, wp)
+	return i >= 0 and not used_stations.get("%s%d" % [kind, i], false)
+
+static func station_claim(kind, wp):
+	var i = _station_index(kind, wp)
+	if i < 0 or used_stations.get("%s%d" % [kind, i], false):
+		return false
+	used_stations["%s%d" % [kind, i]] = true
+	return true
+
 static func reset_claims():
+	used_stations = {}
 	claimed = {}
 	ice_count = 0
 
@@ -38,6 +72,7 @@ var visual
 var t = 0.0
 var base_y = 0.0
 var quest_item = false
+var refused = false                # round 18: a drink that has no station (it is not placed at all)
 
 func setup(p_kind, parent, local_pos, p_owner = null):
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
@@ -49,6 +84,15 @@ func setup(p_kind, parent, local_pos, p_owner = null):
 			return
 		claimed[kind] = true
 	owner_amb = p_owner
+	if kind in DRINKS and not skip_station and parent != null:
+		var wp1 = parent.to_global(local_pos) if (parent is Node3D and parent.is_inside_tree()) else local_pos
+		if not station_claim(kind, wp1):
+			refused = true
+			queue_free()
+			return
+	if kind in DRINKS and OS.get_cmdline_user_args().has("--drinklog"):
+		var wp0 = parent.to_global(local_pos) if (parent is Node3D and parent.is_inside_tree()) else local_pos
+		print("[DRINK] %s %.1f %.1f %.1f %s" % [kind, wp0.x, wp0.y, wp0.z, "held" if p_owner != null else "placed"])
 	add_to_group("mischief")
 	parent.add_child(self)
 	position = local_pos
@@ -370,7 +414,9 @@ static func respawn_static(parent, pos, kind):
 		return
 	var m = Node3D.new()
 	m.set_script(load("res://scripts/fries/mischief.gd"))
+	skip_station = true
 	m.setup(kind, parent, pos)
+	skip_station = false
 
 # a rival gull took it (a drink): it is gone for a while, then the bar serves a fresh one
 func rival_take(restock = 14.0):

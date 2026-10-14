@@ -37,6 +37,7 @@ var visual
 var halo
 var rim
 var sense_ring
+var beacon                  # round 18: the light pillar over the fry (shaders/beacon.gdshader)
 var glints
 var halo_color = Color.WHITE
 var halo_alpha = 0.0
@@ -180,6 +181,9 @@ func _rebuild():
 		sense_ring.queue_free()
 	if glints != null:
 		glints.queue_free()
+	if beacon != null:
+		beacon.queue_free()
+		beacon = null
 	visual = Node3D.new()
 	add_child(visual)
 	rng.seed = hash(id) + kind
@@ -442,7 +446,44 @@ func _build_halo():
 		gq.material = gm
 		glints.mesh = gq
 		glints.position = Vector3(0, 0.3, 0)
+
 		add_child(glints)
+	_build_beacon()
+
+# round 18: a pillar of light over every fry that can be taken ("a fry is an icon in a ring with a light going up to the sky": it must be found from far away, in the normal
+# view as well). Gull Sight draws its own pillars, so these hide while it is open. Higher rarity = taller and brighter.
+static var _beacon_sh = null
+
+func _build_beacon():
+	if beacon != null:
+		beacon.queue_free()
+		beacon = null
+	if ftype == "ordinary":
+		return
+	if _beacon_sh == null:
+		_beacon_sh = load("res://shaders/beacon.gdshader")
+	var hgt = [46.0, 62.0, 92.0, 130.0, 72.0][clamp(tier, 0, 4)]
+	var cm = CylinderMesh.new()
+	cm.top_radius = 0.12
+	cm.bottom_radius = 0.26 + 0.05 * clamp(tier, 0, 4)
+	cm.height = hgt
+	cm.radial_segments = 10
+	cm.rings = 1
+	cm.cap_top = false
+	cm.cap_bottom = false
+	beacon = MeshInstance3D.new()
+	beacon.mesh = cm
+	var m = ShaderMaterial.new()
+	m.shader = _beacon_sh
+	var bc = halo_color if ftype != "tutorial" else Color(1.0, 0.9, 0.55)
+	m.set_shader_parameter("col", Color(bc.r, bc.g, bc.b, 1.0))
+	m.set_shader_parameter("height", hgt)
+	m.set_shader_parameter("strength", 0.5 if tier <= 1 else 0.62)
+	beacon.material_override = m
+	beacon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	beacon.position = Vector3(0, hgt * 0.5 + 0.2, 0)
+	add_child(beacon)
+
 
 # a very faint wisp of steam: the one thing about the plain fry that is not a glow. Strength 0..1 (see main.gd hunger ladder).
 func set_steam(level):
@@ -497,6 +538,8 @@ func _process(delta):
 		return
 	if tier >= 4 and not carried and halo != null:
 		halo_color = rarity_color()
+		if beacon != null:
+			beacon.material_override.set_shader_parameter("col", Color(halo_color.r, halo_color.g, halo_color.b, 1.0))
 		_apply_halo()
 		if rim != null:
 			rim.material_override.albedo_color = Color(halo_color.r, halo_color.g, halo_color.b, 0.9)
@@ -517,6 +560,8 @@ func _process(delta):
 		rim.material_override.albedo_color.a = 0.45 if GS.sense_active else 0.9
 	if glints != null:
 		glints.emitting = (not carried) and revealed and (not consumed)
+	if beacon != null:
+		beacon.visible = revealed and not carried and not consumed and not vanished and not GS.sense_active and not plain
 
 func reveal():
 	revealed = true

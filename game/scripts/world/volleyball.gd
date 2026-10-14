@@ -90,6 +90,8 @@ func _next():
 func _smash_ok():
 	if gull.mode == 2 or GS.gull_sense_count < 3 or GS.ordinary_eaten or gull.input_locked:
 		return false
+	if not GS.hostile():
+		return false           # round 18: the players only turn on the gull when the crowd is on full alert (they used to spike at any gull that hung around the court)
 	var d2 = Vector2(gull.global_position.x - net_x, gull.global_position.z - global_position.z).length()
 	return d2 < 22.0 and gull.global_position.y < 9.0 and gull.snatch.state == "idle" and gull.snatch.lock_fry == null
 
@@ -148,7 +150,7 @@ func _smash_step(delta):
 	if cool <= 0.0 and gull.mode != 2 and gull.invuln_t <= 0.0 and ball.global_position.distance_to(gull.global_position) < 1.25:
 		cool = 4.0
 		GS.stats["bops"] += 1
-		Sfx.play("bop", -4.0, 0.7)
+		Sfx.play("bop", -9.0, 0.8)
 		gull.get_swatted(self, "ball")
 		u = 1.0
 	if u >= 1.0 or smash_t > 2.5:
@@ -180,7 +182,15 @@ func _process(delta):
 		if ball.global_position.distance_to(gull.global_position) < 1.2:
 			cool = 4.0
 			GS.stats["bops"] += 1
-			Sfx.play("bop", -4.0, 0.7)
-			gull.get_swatted(self, "ball")
+			if GS.hostile():
+				Sfx.play("bop", -9.0, 0.8)
+				gull.get_swatted(self, "ball")
+			else:
+				# round 18: a gull that cuts through a rally is not an enemy: the ball just bounces off it, softly (and the players are surprised, not angry)
+				Sfx.play("bop", -14.0, 1.0)
+				gull.soft_bump(gull.global_position - ball.global_position, 0.7)
+				for n in people:
+					if is_instance_valid(n) and n.rig != null and n.global_position.distance_to(gull.global_position) < 14.0:
+						n.rig.emote("surprise", 0.8)
 	if u >= 1.0:
 		_next()

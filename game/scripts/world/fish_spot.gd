@@ -13,11 +13,12 @@ const Terrain = preload("res://scripts/world/terrain.gd")
 static var avoid_rects = []      # [x0, x1, z0, z1] areas of water that must stay free of leaps (the pier, the marina, the harbour...)
 static var avoid_discs = []      # [Vector3 centre, radius] (sailing boats, buoys)
 static var live = 0              # leaps being prepared / flying right now (at most MAX_LIVE at a time)
-static var live_rar = [0, 0, 0]  # ...and how many of each rarity (round 16: FISH TIME always keeps one of every rarity in the air)
+static var live_rar = [0, 0, 0]  # ...and how many of each rarity (round 16: OCEAN TIME always keeps one of every rarity in the air)
 const MAX_LIVE = 4
-const MAX_LIVE_FRENZY = 6
-const FRENZY_R = 150.0           # the spots this close to the gull join in
-const LEAP_SEC = [2.6, 3.0, 3.6]
+const MAX_LIVE_FRENZY = 9        # (round 18b: 6 -> 9: there is always something to catch)
+const FRENZY_R = 260.0           # the spots this close to the gull join in
+const NEAR_R = 85.0              # OCEAN TIME keeps at least one fish of every rarity in the air this close to the gull
+const LEAP_SEC = [3.5, 4.0, 4.7]   # (round 18b: ~30 % more time in the air)
 const LEAP_H = [3.2, 3.8, 4.4]
 
 # ---- the fish itself (the snatch code treats it like a decorative steal with ftype "fish") ----
@@ -91,6 +92,7 @@ class Fish extends Node3D:
 		min_speed = GS.FISH_NEED[rarity] / GS.SPEED_UNIT
 		scl = clamp(0.38 + len_cm / 95.0, 0.5, 2.7)
 		add_to_group("mischief")
+		add_to_group("fish_live")
 		physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 		visual = Node3D.new()
 		add_child(visual)
@@ -168,6 +170,38 @@ class Fish extends Node3D:
 			add_child(gl)
 			gl.emitting = true
 
+	# round 18b: the fish that TAB has locked wears a bright ring that turns towards the camera and breathes
+	var mark = null
+	static var _ring_tex = null
+	static func ring_tex():
+		if _ring_tex == null:
+			var n = 128
+			var img = Image.create(n, n, false, Image.FORMAT_RGBA8)
+			for y in n:
+				for x in n:
+					var r = Vector2(x - n * 0.5 + 0.5, y - n * 0.5 + 0.5).length() / (n * 0.5)
+					var a = clamp(1.0 - abs(r - 0.82) / 0.07, 0.0, 1.0) + 0.35 * clamp(1.0 - abs(r - 0.7) / 0.18, 0.0, 1.0) * (1.0 - clamp(abs(r - 0.82) / 0.07, 0.0, 1.0))
+					img.set_pixel(x, y, Color(1, 1, 1, clamp(a, 0.0, 1.0)))
+			_ring_tex = ImageTexture.create_from_image(img)
+		return _ring_tex
+	func set_marked(on):
+		if on and mark == null:
+			mark = Sprite3D.new()
+			mark.texture = ring_tex()
+			mark.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			mark.no_depth_test = true
+			mark.shaded = false
+			mark.pixel_size = 0.014 * max(scl, 0.9)
+			mark.modulate = GS.FISH_RARITY_COLORS[clamp(rarity, 0, 2)].lerp(Color(1, 1, 1), 0.35)
+			mark.render_priority = 100
+			add_child(mark)
+		elif not on and mark != null:
+			mark.queue_free()
+			mark = null
+	func _process(_dt):
+		if mark != null:
+			var k = 1.0 + 0.12 * sin(GS.msec() * 0.009)
+			mark.scale = Vector3(k, k, k)
 	func is_snatchable():
 		return available and not taken and visible
 	func is_fry_like():
@@ -199,7 +233,7 @@ class Fish extends Node3D:
 		if rarity == 2:
 			GS.award("BIG FISH ENERGY")
 		var info = GS.fish_record({"sp": species, "len": len_cm, "kg": kg})
-		GS.add_fish_time(rarity)          # round 16: every fish starts / tops up FISH TIME and the streak
+		GS.add_fish_time(rarity)          # round 16: every fish starts / tops up OCEAN TIME and the streak
 		GS.quest_finish("fish")
 		GS.quests_check()
 		player.refill()
@@ -235,7 +269,7 @@ var plan_rarity = 0
 var forecast_t = 0.0           # real seconds left until the leap (forecast + bubbles): Gull Sight shows it
 var holds_live = false
 var holds_rar = -1
-var fc_len = 5.0               # seconds of forecast / of bubbles (FISH TIME: much shorter, so that fish keep jumping)
+var fc_len = 5.0               # seconds of forecast / of bubbles (OCEAN TIME: much shorter, so that fish keep jumping)
 var bub_len = 2.4
 
 func setup(p_player, pos, p_water_y = -0.75, p_radius = 9.0):
@@ -344,25 +378,59 @@ func _path_free(a, b, margin):
 			return false
 	return true
 
+# round 18b: the rarities that will still be in the air near the gull in a moment: the fish that fly now (and have more than 1.5 s to go) and the leaps that are being prepared
+func _have_rar():
+	var have = [0, 0, 0]
+	var flying = [0, 0, 0]
+	for f in get_tree().get_nodes_in_group("fish_live"):
+		if is_instance_valid(f) and not f.taken and f.available:
+			var r = clamp(f.rarity, 0, 2)
+			flying[r] += 1
+			if f.global_position.distance_to(player.global_position) < NEAR_R and f.spot != null and f.spot.leap_dur - f.spot.st > 1.5:
+				have[r] += 1
+	for r in 3:
+		have[r] += max(live_rar[r] - flying[r], 0)
+	return have
+
+# the fish of the leap that is flying now, `ahead` game-seconds from now (null when nothing flies here): the launch aims at where a fish WILL be
+func predict(ahead):
+	if state != "leap" or fish == null or not is_instance_valid(fish):
+		return null
+	var u = clamp((st + ahead) / leap_dur, 0.0, 1.0)
+	var yy = water_y - 0.2 + leap_h * (1.0 - pow(2.0 * u - 1.0, 2.0))
+	var p = leap_from.lerp(leap_to, u)
+	return Vector3(p.x, yy, p.z)
+
 func _frenzy_rarity():
-	# FISH TIME: the rarity that is missing in the air right now (rarest first); with all three up, any
+	# OCEAN TIME: the rarity that is missing near the gull (rarest first); with all three there, any
+	var have = _have_rar()
 	for r in [2, 1, 0]:
-		if live_rar[r] <= 0:
+		if have[r] <= 0:
 			return r
 	var x = randf()
-	return 0 if x < 0.45 else (1 if x < 0.8 else 2)
+	return 0 if x < 0.4 else (1 if x < 0.75 else 2)
 
 func _plan_leap():
 	var sp = GS.fish_pick_species(_frenzy_rarity() if GS.fish_active() else -1)
 	plan = GS.fish_roll(sp)
 	plan_rarity = GS.FISH_SPECIES[sp][1]
-	leap_dur = LEAP_SEC[plan_rarity]
+	leap_dur = LEAP_SEC[plan_rarity] * (randf_range(0.9, 1.15) if GS.fish_active() else 1.0)
 	leap_h = LEAP_H[plan_rarity]
 	var reach = 2.2 + plan_rarity * 0.5
-	for i in 16:
+	var frenzy = GS.fish_active() and player != null
+	for i in 18:
 		var ang = randf() * TAU
 		var rad = sqrt(randf()) * region_r
 		var c = Vector3(center.x + cos(ang) * rad, water_y, center.z + sin(ang) * rad)
+		if frenzy and global_position.distance_to(player.global_position) < FRENZY_R:
+			# round 18b: in OCEAN TIME the fish jump where the gull is: 16..58 m away, half of them in the half of the sea the gull looks at
+			var pp = player.global_position
+			var look = atan2(-cos(player.yaw), -sin(player.yaw))
+			var an2 = look + randf_range(-0.9, 0.9) if i % 2 == 0 else randf() * TAU
+			var rd2 = randf_range(16.0, 58.0)
+			c = Vector3(pp.x + cos(an2) * rd2, water_y, pp.z + sin(an2) * rd2)
+			if Terrain.H(c.x, c.z) > water_y - 0.6:
+				continue
 		var hd = randf() * TAU
 		var dir = Vector3(cos(hd), 0, sin(hd))
 		var a = c - dir * (reach * 0.5 + 0.6)
@@ -382,10 +450,10 @@ func _process(delta):
 	var rdt = delta / max(Engine.time_scale, 0.05)
 	match state:
 		"idle":
-			if GS.gull_sense_count < 3 or GS.ordinary_eaten or d > 110.0:
+			if GS.gull_sense_count < 3 or GS.ordinary_eaten or d > (FRENZY_R if GS.fish_active() else 110.0):
 				return
-			if GS.fish_active() and wait > 1.2:
-				wait = randf_range(0.2, 1.2)          # FISH TIME: the whole sea wakes up
+			if GS.fish_active() and wait > 0.8:
+				wait = randf_range(0.1, 0.8)          # OCEAN TIME: the whole sea wakes up
 			wait -= delta
 			if wait <= 0.0:
 				var frenzy = GS.fish_active()
@@ -401,8 +469,8 @@ func _process(delta):
 					holds_live = true
 					holds_rar = plan_rarity
 					live_rar[holds_rar] += 1
-					fc_len = 1.0 if frenzy else 5.0
-					bub_len = 1.1 if frenzy else 2.4
+					fc_len = 0.6 if frenzy else 5.0
+					bub_len = 0.9 if frenzy else 2.4
 					forecast_t = fc_len + bub_len
 				else:
 					wait = 3.0
@@ -513,7 +581,7 @@ func fish_gone(caught):
 	st = 0.0
 	wait = 20.0 if caught else randf_range(6.0, 14.0)
 	if GS.fish_active():
-		wait = randf_range(0.8, 2.2)         # FISH TIME: the next leap is already on its way
+		wait = randf_range(0.25, 1.1)        # OCEAN TIME: the next leap is already on its way
 
 func _splash(pos):
 	var p = CPUParticles3D.new()

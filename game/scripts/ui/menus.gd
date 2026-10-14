@@ -27,6 +27,10 @@ var slot_btns = []
 var slot_mode = "new"
 var slot_title = null
 var slot_pending = 0             # a filled slot that START has asked to overwrite (a second press confirms)
+var diff_panel = null            # round 18: EASY or HARD, asked after the slot of a new run
+var diff_btns = []
+var diff_btn = null              # the pause menu's switch
+var off_label = null             # the rhythm timing offset line of the pause menu
 var lang_pick = null             # round 17: the language card before the cover (English / 简体中文 / 繁體中文 / 日本語)
 static var lang_asked = false    # it is shown once when the game starts; the small LANGUAGE link on the cover opens it again
 
@@ -401,14 +405,16 @@ func _ready():
 	var c = _vbox(controls_panel)
 	c.add_child(_lbl("CONTROLS", 56, Color(1, 0.93, 0.7)))
 	c.add_child(_spacer(14))
-	for line in ["Mouse - steer          W - throttle          S - brake", "Shift - boost          Ctrl - land now          Space - flap          A / D - bank (double-tap: roll)",
+	for line in ["Mouse - steer          W - throttle          S - brake          R - turn right round", "Shift - boost          Ctrl - land now          Space - flap          A / D - bank (double-tap: roll)",
+			"HOW TO GET A FRY:  1  climb above it.   2  put it in the middle of the screen (hold TAB: the world slows down).   3  dive at it with Shift.   4  press E on the green." if not GS.is_hard() else "HOW TO GET A FRY:  1  climb above it.   2  put it in the middle of the screen (hold TAB: the world slows down).   3  dive at it with Shift.   4  press E on the beat.",
 			"Reach the speed a fry needs (the number on the speed meter) and fly straight at it.",
-			"Circles appear around it. Press E when a white wave shrinks onto the green ring; the gold ring inside it counts double.",
+			"Circles appear around it. Press E when a white wave shrinks onto the green ring; the gold ring inside it counts double." if not GS.is_hard() else "Circles appear around it and the music plays by itself. Press E on the beat: when a white wave is in the gold ring.",
+			"Q - hide or show the goals board (top left).",
 			"E while flying free - points out the nearest fry that you can really catch.",
 			"Hold Tab - Gull Sight (free on the ground). Everything that glows is worth stealing; the number is the speed it needs.",
 			"C - Codex (fries, wardrobe, fish book; right-click a taken item to wear it)",
 				"F - squawk: on a roof it calls the gulls, on the ground a calm crowd says hello and a wary one chases you off.",
-				"Catch a fish: FISH TIME. On the sea W surfs, Space launches you at the fish that keep jumping.",
+				"Catch a fish: OCEAN TIME. On the sea W surfs; hold TAB to lock the fish in the middle of the view, Space launches you straight at it.",
 			"Every drink gives breath back and adds its time. All three drinks at once: RAINBOW TIME.",
 			"Land anywhere to rest - higher is faster. Trees and roofs count."]:
 		c.add_child(_lbl(line, 20))
@@ -445,6 +451,33 @@ func _ready():
 	inv.button_pressed = GS.invert_y
 	inv.toggled.connect(func(on): GS.invert_y = on)
 	p.add_child(inv)
+	diff_btn = _btn(_diff_btn_text(), func(): _toggle_diff())
+	diff_btn.custom_minimum_size = Vector2(520, 52)
+	diff_btn.add_theme_font_size_override("font_size", 22)
+	p.add_child(diff_btn)
+	# round 18: two settings for hands and screens: TAB as a switch, and a timing offset for the rhythm (a laggy screen or speakers)
+	var tgl = CheckBox.new()
+	tgl.text = "TAB SWITCHES GULL SIGHT ON AND OFF"
+	tgl.add_theme_font_size_override("font_size", 20)
+	tgl.button_pressed = GS.tab_toggle
+	tgl.toggled.connect(func(on):
+		GS.tab_toggle = on
+		GS.save_settings())
+	p.add_child(tgl)
+	off_label = _lbl("", 20)
+	p.add_child(off_label)
+	var osl = HSlider.new()
+	osl.min_value = -120.0
+	osl.max_value = 120.0
+	osl.step = 10.0
+	osl.value = GS.input_offset_ms
+	osl.custom_minimum_size = Vector2(300, 24)
+	osl.value_changed.connect(func(val):
+		GS.input_offset_ms = val
+		GS.save_settings()
+		_refresh_off_label())
+	p.add_child(osl)
+	_refresh_off_label()
 	p.add_child(_btn("ACHIEVEMENTS", func(): gallery.open()))
 	p.add_child(_btn("CONTROLS", func():
 		pause_panel.visible = false
@@ -453,6 +486,12 @@ func _ready():
 		save_pressed.emit()
 		set_paused(false)
 		quit_to_menu_pressed.emit()))
+	# round 18: the pause menu got longer (difficulty, TAB switch, timing): a little tighter, so that it still fits a small window
+	p.add_theme_constant_override("separation", 4)
+	for ch in p.get_children():
+		if ch is Button:
+			ch.custom_minimum_size = Vector2(ch.custom_minimum_size.x, 42)
+			ch.add_theme_font_size_override("font_size", 22)
 	pause_panel.visible = false
 	slot_panel = _panel(0.78)
 	slot_panel.theme = ui_theme
@@ -462,16 +501,89 @@ func _ready():
 	sv.add_child(_spacer(10))
 	for i in range(1, GS.SLOTS + 1):
 		var b = _btn("", func(): _slot_pressed(i))
-		b.custom_minimum_size = Vector2(560, 112)
+		b.custom_minimum_size = Vector2(560, 136)
 		b.add_theme_font_size_override("font_size", 24)
 		slot_btns.append(b)
 		sv.add_child(b)
 	sv.add_child(_spacer(10))
 	sv.add_child(_btn("BACK", func(): _close_slots()))
 	slot_panel.visible = false
+	# round 18: the difficulty card (asked after the slot of a new run)
+	diff_panel = _panel(0.8)
+	diff_panel.theme = ui_theme
+	var dv = _vbox(diff_panel)
+	dv.add_child(_lbl("HOW DO YOU WANT TO FLY?", 52, Color(1, 0.93, 0.7)))
+	dv.add_child(_spacer(12))
+	for dname in ["easy", "hard"]:
+		var db = _btn("", func(): _diff_pressed(dname))
+		db.custom_minimum_size = Vector2(820, 176)
+		diff_btns.append(db)
+		dv.add_child(db)
+		# the card: a big coloured name and two lines under it (labels on top of the button, they let the clicks through)
+		var cc2 = VBoxContainer.new()
+		cc2.set_anchors_preset(Control.PRESET_FULL_RECT)
+		cc2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cc2.alignment = BoxContainer.ALIGNMENT_CENTER
+		cc2.add_theme_constant_override("separation", 4)
+		db.add_child(cc2)
+		var hl = _lbl("", 50, Color("86E3A6") if dname == "easy" else Color("FF8F62"))
+		hl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cc2.add_child(hl)
+		for q in 3:
+			var dl = _lbl("", 21 if q < 2 else 22, CREAM if q < 2 else Color(1.0, 0.86, 0.5))
+			dl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			cc2.add_child(dl)
+		db.set_meta("card", cc2)
+	dv.add_child(_spacer(12))
+	dv.add_child(_btn("BACK", func(): _close_diff()))
+	diff_panel.visible = false
 	# a stand-in for the old CONTINUE button so that the test bots can still read `.disabled`
+
 	continue_btn = Button.new()
 	continue_btn.disabled = true
+
+func _refresh_off_label():
+	if off_label != null:
+		off_label.text = "RHYTHM TIMING OFFSET:  %d ms" % int(GS.input_offset_ms)
+
+# ---- round 18: the difficulty card
+func _diff_lines(d):
+	if d == "easy":
+		return ["EASY", "A gentle first flight: lots of breath, clear rings, a friendly town.", "The way to learn every trick and enjoy the view.", ""]
+	var best = ("BEST TIME:  %s" % GS.time_text(GS.hard_best)) if GS.hard_best > 0.0 else "NO RECORD YET"
+	return ["HARD", "The race, and a real rhythm game: one gold band, three beats a circle, the music plays by itself, a wary town.", "The fastest time to the 24 fries is kept.", best]
+
+func _open_diff():
+	slot_panel.visible = false
+	diff_panel.visible = true
+	for i in diff_btns.size():
+		var ls = _diff_lines(["easy", "hard"][i])
+		var cc3 = diff_btns[i].get_meta("card")
+		for q in 4:
+			cc3.get_child(q).text = ls[q]
+
+func _close_diff():
+	diff_panel.visible = false
+	slot_panel.visible = true
+	_refresh_slots()
+
+func _diff_pressed(d):
+	GS.set_diff(d)
+	GS.diff_changed = false
+	diff_panel.visible = false
+	start_pressed.emit()
+
+# the pause menu: switch between EASY and HARD in the middle of a run (a run that was ever EASY does not count for the HARD record)
+func _diff_btn_text():
+	return "DIFFICULTY:  EASY   (CLICK FOR HARD)" if GS.is_easy() else ("DIFFICULTY:  HARD   (CLICK FOR EASY)" if GS.is_hard() else "DIFFICULTY:  CLASSIC")
+
+func _toggle_diff():
+	if GS.diff == "classic":
+		return
+	GS.set_diff("hard" if GS.is_easy() else "easy", true)
+	diff_btn.text = _diff_btn_text()
+	if save_note != null:
+		save_note.text = "hard: the record needs a run that was hard from the start." if GS.is_hard() else "easy: breath, clear rings, a friendly town."
 
 func _on_cover_chosen(id):
 	match id:
@@ -492,7 +604,8 @@ func _slot_text(i):
 	var info = GS.slot_info(i)
 	if info.is_empty():
 		return "SLOT %d\n-  EMPTY  -" % i
-	var t = "SLOT %d\n%d / 24 FRIES    %s    %d FISH KINDS" % [i, info["fries"], info["time"], info["fish"]]
+	var t = ("SLOT %d   -   HARD" if info.get("diff", "easy") == "hard" else "SLOT %d   -   EASY") % i
+	t += "\n%d / 24 FRIES    %s    %d FISH KINDS" % [info["fries"], info["time"], info["fish"]]
 	if info["free"]:
 		t += "\nTHE END, AND KEEP PLAYING"
 	return t
@@ -537,8 +650,11 @@ func _slot_pressed(i):
 		return
 	GS.slot = i
 	GS.delete_save(i)
-	slot_panel.visible = false
-	start_pressed.emit()
+	if GS.diff == "classic":
+		slot_panel.visible = false
+		start_pressed.emit()
+		return
+	_open_diff()
 
 func _on_lang_picked(_code):
 	if not in_game:
@@ -580,6 +696,8 @@ func set_paused(p):
 	paused = p
 	if p and save_note != null:
 		save_note.text = ""
+	if p and diff_btn != null:
+		diff_btn.text = _diff_btn_text()
 	Engine.max_fps = 30 if p else 60
 	get_tree().paused = p
 	pause_panel.visible = p

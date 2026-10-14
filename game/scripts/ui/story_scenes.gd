@@ -237,7 +237,7 @@ const MEM_TEXT = {
 	"all24": ["EVERYTHING", "every kind of magic there was. i had it.", "all24"],
 	"moon": ["THE MOON", "i held the moon. no cheese. a surprising amount of mouse.", "moon"],
 	"raincloud": ["A RAIN CLOUD", "i carried my own weather. it only rained on me.", "raincloud"],
-	"fishtime": ["FISH TIME", "the sea gave me a ride. i gave it a fish.", "fishtime"],
+	"fishtime": ["OCEAN TIME", "the sea gave me a ride. i gave it a fish.", "fishtime"],
 }
 const MEM_PRIORITY = ["sun", "moon", "skybow", "meteor", "cloud", "raincloud", "starlight", "fishtime", "bigfish", "fish", "all24", "coffee", "alcohol", "ice", "friend", "gift", "rainbow", "kid", "thermal", "wall", "skim", "armed"]
 
@@ -656,7 +656,7 @@ func _free_lines():
 	if nf < GS.FISH_ORDER.size():
 		pool.append(["%d kinds of fish so far. Nine exist." % nf, "Catch one and the sea wakes up. Then you can ride it. Space on the water, kid."])
 	else:
-		pool.append(["All nine fish. The sea has stopped returning your calls.", "Five in one FISH TIME? Go on. I'll pretend not to watch."])
+		pool.append(["All nine fish. The sea has stopped returning your calls.", "Five in one OCEAN TIME? Go on. I'll pretend not to watch."])
 	if not GS.sky_got.has("sun") or not GS.sky_got.has("moon"):
 		pool.append(["Nine suns, they say. One of them is real.", "Nine rings per sun. Nine per moon. The sky is a strict teacher."])
 	pool.append(["%d of %d achievements." % [GS.ach_count(), GS.ACH.size()], "The rest are mostly things you do by accident. Or on purpose, if you're me."])

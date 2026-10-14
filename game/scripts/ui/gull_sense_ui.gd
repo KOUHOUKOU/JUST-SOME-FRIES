@@ -99,9 +99,11 @@ class Pane extends Control:
 				draw_circle(c + Vector2(-s * 0.28, -s * 0.15), s * 0.32, col)
 				draw_circle(c + Vector2(s * 0.28, -s * 0.15), s * 0.32, col)
 				draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.58, -s * 0.02), c + Vector2(s * 0.58, -s * 0.02), c + Vector2(0, s * 0.7)]), col)
-			"pink":         # a shield
-				draw_colored_polygon(PackedVector2Array([c + Vector2(-s * 0.55, -s * 0.5), c + Vector2(s * 0.55, -s * 0.5), c + Vector2(s * 0.5, s * 0.15), c + Vector2(0, s * 0.7), c + Vector2(-s * 0.5, s * 0.15)]), col)
-				draw_line(c + Vector2(0, -s * 0.4), c + Vector2(0, s * 0.5), Color(1, 1, 1, 0.6), 2.0)
+			"pink":         # a smile: CHARM
+				draw_circle(c, s * 0.62, col)
+				draw_circle(c + Vector2(-s * 0.22, -s * 0.15), s * 0.08, Color(0.12, 0.12, 0.18))
+				draw_circle(c + Vector2(s * 0.22, -s * 0.15), s * 0.08, Color(0.12, 0.12, 0.18))
+				draw_arc(c + Vector2(0, s * 0.02), s * 0.34, deg_to_rad(20), deg_to_rad(160), 10, Color(0.12, 0.12, 0.18), 3.0, true)
 
 	func _cup(c, s, steam):
 		draw_rect(Rect2(c + Vector2(-s * 0.45, -s * 0.2), Vector2(s * 0.9, s * 0.7)), Color(0.96, 0.94, 0.88))
@@ -244,7 +246,7 @@ class Pane extends Control:
 			"purple":
 				return "x%.1f" % GS.REGEN_PERCH_TAB[lv]
 			"pink":
-				return "-%d%%" % int(round((1.0 - GS.HURT_TAB[lv]) * 100.0))
+				return "LV %d" % lv
 		return ""
 
 	func _draw():

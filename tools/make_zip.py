@@ -10,11 +10,15 @@ RECOMMENDED: play this Windows version. It has the clearest graphics and runs mu
 2. Double-click JustSomeFries.exe. Keep JustSomeFries.pck in the same folder.
    If Windows SmartScreen says "Windows protected your PC", click "More info" -> "Run anyway".
 
-Mouse = steer   W = fly   Shift = boost   S = brake   A/D = bank (double-tap = roll)
+EASY or HARD: the game asks when you start a new run (EASY = the way in: lots of breath, clear rings, a friendly town;
+HARD = the race and a real rhythm game: one gold band, the music plays by itself and you press E on the beat, breath that runs out, a clock for the 24 fries). You can switch in the pause menu.
+
+HOW TO GET A FRY:  1  climb above it.  2  put it in the middle of the screen (hold TAB: the world slows down).  3  dive at it with Shift.  4  press E when a white ring hits the green (HARD: on the beat, in the gold ring).
+Mouse = steer   W = fly   Shift = boost   S = brake   A/D = bank (double-tap = roll)   R = turn right round   Q = hide / show the goals board
 Space = flap   Ctrl (hold) = land / rest   E = grab (press as each ring closes; green good, gold perfect)
-TAB (hold) = Gull Sight (the world and your drinks slow down while you look)   C = Fry Codex   Esc = pause
+TAB (hold) = Gull Sight (the world slows down while you look)   C = Fry Codex   Esc = pause
 F = squawk: on a roof it calls the gulls; on the ground a calm crowd says hello, a wary one chases you off.
-Catch a fish and FISH TIME begins: on the sea W surfs, Space launches you at the fish that keep jumping.
+Catch a fish and OCEAN TIME begins: on the sea W surfs, hold TAB to lock the fish in the middle of the view, Space launches you straight at it.
 Two save slots. After the end, HOLD E at the credits to keep playing (the big brother has things to say).
 
 Languages: English, 简体中文, 繁體中文, 日本語. The game asks when it starts; on the title screen press L to change it.

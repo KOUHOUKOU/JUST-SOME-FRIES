@@ -196,7 +196,7 @@ T = [
 ("Fly into a wall at full speed.", "全速撞上一堵墙。", "全速撞上一堵牆。", "全速力で壁に突っこむ。"),
 ("The wall is fine. The wall is always fine.", "墙没事。墙永远没事。", "牆沒事。牆永遠沒事。", "壁は無事。壁はいつだって無事。"),
 ("SCHOOL'S IN", "鱼群开课", "魚群開課", "魚の学校"),
-("Catch five fish in one FISH TIME.", "在一次捕鱼时间里抓到五条鱼。", "在一次捕魚時間裡抓到五條魚。", "1回のフィッシュタイムで魚を5匹つかまえる。"),
+("Catch five fish in one OCEAN TIME.", "在一次海洋时间里抓到五条鱼。", "在一次海洋時間裡抓到五條魚。", "1回のオーシャンタイムで魚を5匹つかまえる。"),
 ("The sea ran out of excuses before you ran out of beak.", "你的嘴还没累，大海先没借口了。", "你的嘴還沒累，大海先沒藉口了。", "くちばしより先に、海の言い訳が尽きた。"),
 ("BIRDS OF A FEATHER", "物以类聚", "物以類聚", "類は友を呼ぶ"),
 ("Call a flock of gulls to a rooftop with F.", "在屋顶上按 F，召来一群海鸥。", "在屋頂上按 F，召來一群海鷗。", "屋根の上でFを押して、カモメの群れを呼ぶ。"),

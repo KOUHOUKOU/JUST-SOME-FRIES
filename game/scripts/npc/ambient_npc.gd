@@ -291,6 +291,12 @@ func _add_mischief(kind):
 		"coffee", "alcohol":
 			m.setup(kind, rig.hand_r, Vector3(0, 0.05, 0.06), self)
 			m.scale = Vector3(0.7, 0.7, 0.7)
+	if m.refused:
+		# round 18: this cup has no drink station (see mischief.gd): the person just holds one for show
+		var props = {"icecream": "icecream", "coffee": "mug", "alcohol": "cocktail"}
+		if props.has(kind) and rig.has_method("give_item_r"):
+			rig.give_item_r(props[kind])
+		return
 	mischief_item = m
 
 func theft_reaction():
@@ -329,7 +335,7 @@ func _grump(delta):
 	var d = reach_c.distance_to(player.global_position)
 	match swing_state:
 		"":
-			if swing_cd <= 0.0 and GS.watch >= 1.6 and GS.gull_sense_count >= 3 and d < 2.9 and player.mode != 2 and player.invuln_t <= 0.0 and player.speed < 9.5 \
+			if swing_cd <= 0.0 and GS.hostile() and GS.gull_sense_count >= 3 and d < 2.9 and player.mode != 2 and player.invuln_t <= 0.0 and player.speed < 9.5 \
 					and player.snatch.state == "idle" and alarm_t <= 0.0:
 				swing_state = "wind"
 				swing_t = 0.0
@@ -521,7 +527,7 @@ func _chase(delta):
 				_chase_end(false)              # a wall in the way: no use running into it
 				return
 			if flat.length() < 1.8:
-				if GS.watch < 1.6:
+				if not GS.hostile():
 					_hello()
 					_chase_end(false)
 					return
@@ -568,7 +574,7 @@ const SHOOS = ["SHOO!", "QUIET, YOU!", "OUT! OUT!", "NOT AGAIN!", "GO AWAY, BIRD
 func answer_call():
 	if not active or alarm_t > 0.0 or swing_state != "" or chase_state != "" or kk_state != "" or shoo_state != "" or rig == null or rig.seated:
 		return 0
-	if GS.watch < 1.6:
+	if not GS.hostile():
 		_hello()
 		return 1
 	shoo_state = "run"
@@ -614,7 +620,7 @@ func _shoo(delta):
 # people wave at a gull that sits quietly near them
 func _friendly(delta):
 	wave_cd = max(wave_cd - delta, 0.0)
-	if wave_cd > 0.0 or ((grumpy or chaser) and GS.watch >= 1.6) or alarm_t > 0.0 or swing_state != "" or chase_state != "":
+	if wave_cd > 0.0 or ((grumpy or chaser) and GS.hostile()) or alarm_t > 0.0 or swing_state != "" or chase_state != "":
 		return
 	if player.mode == 1 and player.calm > 0.6 and mode in ["stand", "stroll", "chat", "lie"]:
 		if global_position.distance_to(player.global_position) < 9.0 and randf() < 0.03:

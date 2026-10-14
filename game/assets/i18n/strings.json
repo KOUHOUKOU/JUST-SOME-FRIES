@@ -19,6 +19,16 @@
 "zh_CN": "{0} / {1}",
 "zh_TW": "{0} / {1}"
 },
+"%d / %d FRIES EATEN ON THE WAY": {
+"ja": "ここまでに食べたポテト {0} / {1}",
+"zh_CN": "一路上已吃了 {0} / {1} 根薯条",
+"zh_TW": "一路上已吃了 {0} / {1} 根薯條"
+},
+"%d / 24 FRIES    %s    %d FISH KINDS": {
+"ja": "ポテト {0} / 24    {1}    魚 {2} 種",
+"zh_CN": "薯条 {0} / 24    {1}    鱼 {2} 种",
+"zh_TW": "薯條 {0} / 24    {1}    魚 {2} 種"
+},
 "%d cm": {
 "ja": "{0} cm",
 "zh_CN": "{0} 厘米",
@@ -83,6 +93,11 @@
 "ja": "{0}   {1}",
 "zh_CN": "{0}   {1}",
 "zh_TW": "{0}   {1}"
+},
+"%s   -   HITS -%d %%": {
+"ja": "{0}   -   ダメージ -{1} %",
+"zh_CN": "{0}   -   受击伤害 -{1} %",
+"zh_TW": "{0}   -   受擊傷害 -{1} %"
 },
 "%s  %dm": {
 "ja": "{0}  {1}m",
@@ -158,6 +173,11 @@
 "ja": "+0.9 最高速度",
 "zh_CN": "+0.9 极速",
 "zh_TW": "+0.9 極速"
+},
+"+1 % CHARM": {
+"ja": "+1 % チャーム",
+"zh_CN": "+1 % 魅力",
+"zh_TW": "+1 % 魅力"
 },
 "+2 % BANDS": {
 "ja": "+2% 判定帯",
@@ -309,6 +329,21 @@
 "zh_CN": "……你也是？",
 "zh_TW": "……キミもか？"
 },
+"24 fries in %s.  (a run that began easy is not a record.)": {
+"ja": "24本、{0}。  （かんたんで始めた記録はランキング対象外です。）",
+"zh_CN": "24 根薯条，用时 {0}。  （从简单开始的一局不算纪录。）",
+"zh_TW": "24 根薯條，用時 {0}。  （從簡單開始的一局不算紀錄。）"
+},
+"24 fries in %s.  (your best: %s)": {
+"ja": "24本、{0}。  （自己ベスト：{1}）",
+"zh_CN": "24 根薯条，用时 {0}。  （你的最快：{1}）",
+"zh_TW": "24 根薯條，用時 {0}。  （你的最快：{1}）"
+},
+"24 fries in %s.  A NEW BEST TIME.": {
+"ja": "24本、{0}。  ベストタイム更新！",
+"zh_CN": "24 根薯条，用时 {0}。  新的最快纪录！",
+"zh_TW": "24 根薯條，用時 {0}。  新的最快紀錄！"
+},
 "A BARBECUE": {
 "ja": "バーベキュー",
 "zh_CN": "一个烧烤架",
@@ -318,6 +353,16 @@
 "ja": "納屋の屋根",
 "zh_CN": "谷仓屋顶",
 "zh_TW": "穀倉屋頂"
+},
+"A BETTER GULL": {
+"ja": "もっとすごいカモメ",
+"zh_CN": "更强的海鸥",
+"zh_TW": "更強的海鷗"
+},
+"A BOOST": {
+"ja": "ブースト",
+"zh_CN": "一次加速",
+"zh_TW": "一次加速"
 },
 "A CAFE TABLE": {
 "ja": "カフェのテーブル",
@@ -494,6 +539,11 @@
 "zh_CN": "游艇港的桅杆",
 "zh_TW": "遊艇港的桅杆"
 },
+"A NEW LOOK": {
+"ja": "新しいおしゃれ",
+"zh_CN": "新造型",
+"zh_TW": "新造型"
+},
 "A PUPPY CIRCLED YOU. FOR NO REASON. HEARTS.": {
 "ja": "子犬がぐるぐる回った。理由はない。ハート。",
 "zh_CN": "一只小狗绕着你转圈。毫无理由。爱心。",
@@ -629,6 +679,16 @@
 "zh_CN": "全套集齐。码头开始紧张了。",
 "zh_TW": "全套集齊。碼頭開始緊張了。"
 },
+"A gentle first flight: lots of breath, big slow rings, a friendly town.": {
+"ja": "やさしい初フライト：スタミナたっぷり、輪は大きくゆっくり、街もやさしい。",
+"zh_CN": "温柔的初次飞行：体力充沛，圆圈又大又慢，小镇很友好。",
+"zh_TW": "溫柔的初次飛行：體力充沛，圓圈又大又慢，小鎮很友好。"
+},
+"A gentle first flight: lots of breath, clear rings, a friendly town.": {
+"ja": "やさしい初フライト：スタミナたっぷり、見やすい輪、やさしい町。",
+"zh_CN": "温柔的初次飞行：体力充沛，圆圈清晰，小镇很友好。",
+"zh_TW": "溫柔的初次飛行：體力充沛，圓圈清晰，小鎮很友好。"
+},
 "A gull for every season. And every umbrella.": {
 "ja": "どの季節にもカモメを。どの傘にも。",
 "zh_CN": "四季皆宜的海鸥。雨伞也皆宜。",
@@ -664,6 +724,11 @@
 "zh_CN": "成就",
 "zh_TW": "成就"
 },
+"AIM AT IT": {
+"ja": "ねらう",
+"zh_CN": "对准它",
+"zh_TW": "對準它"
+},
 "ALERT": {
 "ja": "厳戒",
 "zh_CN": "戒备",
@@ -688,6 +753,11 @@
 "ja": "3つ同時",
 "zh_CN": "三杯齐上",
 "zh_TW": "三杯齊上"
+},
+"ALL YOUR BREATH BACK AND MORE SPEED": {
+"ja": "スタミナ全回復、スピードもアップ",
+"zh_CN": "体力全满，速度更快",
+"zh_TW": "體力全滿，速度更快"
 },
 "ALL-SEEING FRY": {
 "ja": "千里眼ポテト",
@@ -799,6 +869,16 @@
 "zh_CN": "最佳纪录   -   已抓 x{0}",
 "zh_TW": "最佳紀錄   -   已抓 x{0}"
 },
+"BEST  %s": {
+"ja": "ベスト  {0}",
+"zh_CN": "最快  {0}",
+"zh_TW": "最快  {0}"
+},
+"BEST TIME:  %s": {
+"ja": "ベストタイム：{0}",
+"zh_CN": "最快用时：{0}",
+"zh_TW": "最快用時：{0}"
+},
 "BIG BRO": {
 "ja": "アニキ",
 "zh_CN": "大哥",
@@ -834,6 +914,11 @@
 "zh_CN": "咚",
 "zh_TW": "咚"
 },
+"BONUS GOALS  -  EACH ONE GIVES A REWARD": {
+"ja": "おまけの目標  -  ひとつずつごほうびがある",
+"zh_CN": "额外目标  -  每一个都有奖励",
+"zh_TW": "額外目標  -  每一個都有獎勵"
+},
 "BOO!": {
 "ja": "わっ！",
 "zh_CN": "哇！",
@@ -858,6 +943,11 @@
 "ja": "蝶ネクタイ",
 "zh_CN": "领结",
 "zh_TW": "領結"
+},
+"BREATH": {
+"ja": "スタミナ",
+"zh_CN": "体力",
+"zh_TW": "體力"
 },
 "BREATH IS SOLD BY THE CARTON.": {
 "ja": "スタミナは紙パックで売られている。",
@@ -939,6 +1029,21 @@
 "zh_CN": "链子",
 "zh_TW": "鍊子"
 },
+"CHARM": {
+"ja": "チャーム",
+"zh_CN": "魅力",
+"zh_TW": "魅力"
+},
+"CHARM FRY": {
+"ja": "チャームポテト",
+"zh_CN": "魅力薯条",
+"zh_TW": "魅力薯條"
+},
+"CHARMING FRY": {
+"ja": "うっとりポテト",
+"zh_CN": "迷人薯条",
+"zh_TW": "迷人薯條"
+},
 "CHOMP!": {
 "ja": "パクッ！",
 "zh_CN": "嗷呜！",
@@ -948,6 +1053,16 @@
 "ja": "きれいに逃げきった",
 "zh_CN": "全身而退",
 "zh_TW": "全身而退"
+},
+"CLIMB": {
+"ja": "上昇",
+"zh_CN": "爬升",
+"zh_TW": "爬升"
+},
+"CLIMB ABOVE THE FRY:  W AND LOOK UP,  OR TAP SPACE": {
+"ja": "ポテトより高く：Wで上を向いて進むか、スペースを連打",
+"zh_CN": "飞到薯条上方：按 W 并抬头，或点按空格",
+"zh_TW": "飛到薯條上方：按 W 並抬頭，或點按空白鍵"
 },
 "CLINK": {
 "ja": "チャリン",
@@ -1069,10 +1184,15 @@
 "zh_CN": "抓住一朵云、一颗星星、月亮、太阳和一道彩虹。",
 "zh_TW": "抓住一朵雲、一顆星星、月亮、太陽和一道彩虹。"
 },
-"Catch a fish: FISH TIME. On the sea W surfs, Space launches you at the fish that keep jumping.": {
-"ja": "魚をつかまえるとフィッシュタイム。海の上でWでサーフィン、スペースで跳ねる魚に飛びかかる。",
-"zh_CN": "抓到一条鱼：捕鱼时间。在海上按 W 冲浪，按空格扑向不停跃出水面的鱼。",
-"zh_TW": "抓到一條魚：捕魚時間。在海上按 W 衝浪，按空白鍵撲向不停躍出水面的魚。"
+"Catch a fish: OCEAN TIME. On the sea W surfs, Space launches you at the fish that keep jumping.": {
+"ja": "魚をつかまえるとオーシャンタイム。海の上でWでサーフィン、スペースで跳ねる魚に飛びかかる。",
+"zh_CN": "抓到一条鱼：海洋时间。在海上按 W 冲浪，按空格扑向不停跃出水面的鱼。",
+"zh_TW": "抓到一條魚：海洋時間。在海上按 W 衝浪，按空白鍵撲向不停躍出水面的魚。"
+},
+"Catch a fish: OCEAN TIME. On the sea W surfs; hold TAB to lock the fish in the middle of the view, Space launches you straight at it.": {
+"ja": "魚を捕まえる：オーシャンタイム。海ではWでサーフィン。TAB長押しで視界の真ん中の魚をロックし、スペースでまっすぐ飛び出す。",
+"zh_CN": "抓到鱼：海洋时间。在海上 W 冲浪；按住 TAB 锁定视野正中的鱼，空格直接朝它发射。",
+"zh_TW": "抓到魚：海洋時間。在海上 W 衝浪；按住 TAB 鎖定視野正中的魚，空白鍵直接朝牠發射。"
 },
 "Catch a legendary fish.": {
 "ja": "伝説の魚をつかまえる。",
@@ -1089,10 +1209,10 @@
 "zh_CN": "抓遍每一种鱼。",
 "zh_TW": "抓遍每一種魚。"
 },
-"Catch five fish in one FISH TIME.": {
-"ja": "1回のフィッシュタイムで魚を5匹つかまえる。",
-"zh_CN": "在一次捕鱼时间里抓到五条鱼。",
-"zh_TW": "在一次捕魚時間裡抓到五條魚。"
+"Catch five fish in one OCEAN TIME.": {
+"ja": "1回のオーシャンタイムで魚を5匹つかまえる。",
+"zh_CN": "在一次海洋时间里抓到五条鱼。",
+"zh_TW": "在一次海洋時間裡抓到五條魚。"
 },
 "Catch one and the sea wakes up. Then you can ride it. Space on the water, kid.": {
 "ja": "1匹つかまえれば海が目をさます。そしたら乗れる。水の上でスペースだ。",
@@ -1128,6 +1248,11 @@
 "ja": "中国語・日本語フォント：Noto Sans SC / JP（SIL Open Font License）",
 "zh_CN": "中文与日文字体：Noto Sans SC / JP（SIL 开放字体许可证）",
 "zh_TW": "中文與日文字體：Noto Sans SC / JP（SIL 開放字型授權）"
+},
+"Circles appear around it and the music plays by itself. Press E on the beat: when a white wave is in the gold ring.": {
+"ja": "まわりに輪が現れ、音楽がひとりでに流れる。ビートに合わせて E：白い波が金の輪に入ったとき。",
+"zh_CN": "它周围会出现圆环，音乐会自己响起来。踩着节拍按 E：白色波纹进入金色圆环的时候。",
+"zh_TW": "它周圍會出現圓環，音樂會自己響起來。踩著節拍按 E：白色波紋進入金色圓環的時候。"
 },
 "Circles appear around it. Press E when a white wave shrinks onto the green ring; the gold ring inside it counts double.": {
 "ja": "まわりにリングが出る。白い波が緑のリングに重なったらE。内側の金のリングは2倍。",
@@ -1169,6 +1294,26 @@
 "zh_CN": "钻石",
 "zh_TW": "鑽石"
 },
+"DIFFICULTY:  CLASSIC": {
+"ja": "むずかしさ：クラシック",
+"zh_CN": "难度：经典",
+"zh_TW": "難度：經典"
+},
+"DIFFICULTY:  EASY   (CLICK FOR HARD)": {
+"ja": "むずかしさ：かんたん   （クリックでむずかしいに）",
+"zh_CN": "难度：简单   （点击切换为困难）",
+"zh_TW": "難度：簡單   （點擊切換為困難）"
+},
+"DIFFICULTY:  HARD   (CLICK FOR EASY)": {
+"ja": "むずかしさ：むずかしい   （クリックでかんたんに）",
+"zh_CN": "难度：困难   （点击切换为简单）",
+"zh_TW": "難度：困難   （點擊切換為簡單）"
+},
+"DIVE": {
+"ja": "急降下",
+"zh_CN": "俯冲",
+"zh_TW": "俯衝"
+},
 "DODGE": {
 "ja": "回避",
 "zh_CN": "闪避",
@@ -1188,6 +1333,11 @@
 "ja": "E  -  アニキと話す",
 "zh_CN": "E  -  和大哥聊聊",
 "zh_TW": "E  -  和大哥聊聊"
+},
+"E - ON THE BEAT: WHEN A WHITE RING IS IN THE GOLD BAND.": {
+"ja": "E - ビートに合わせて：白い輪が金の帯に入ったら。",
+"zh_CN": "E - 踩着节拍：白圈进入金色环带时按下。",
+"zh_TW": "E - 踩著節拍：白圈進入金色環帶時按下。"
 },
 "E - TALK": {
 "ja": "E - 話す",
@@ -1219,6 +1369,11 @@
 "zh_CN": "早起的鸟儿",
 "zh_TW": "早起的鳥兒"
 },
+"EASY": {
+"ja": "かんたん",
+"zh_CN": "简单",
+"zh_TW": "簡單"
+},
 "EAT": {
 "ja": "食べる",
 "zh_CN": "吃",
@@ -1243,6 +1398,11 @@
 "ja": "エスプレッソ",
 "zh_CN": "浓缩咖啡",
 "zh_TW": "濃縮咖啡"
+},
+"EVEN THE DOGS ARE FRIENDS": {
+"ja": "犬までともだち",
+"zh_CN": "连狗狗都成了朋友",
+"zh_TW": "連狗狗都成了朋友"
 },
 "EVERYTHING": {
 "ja": "すべて",
@@ -1293,6 +1453,11 @@
 "ja": "さらに考えなくていい。",
 "zh_CN": "脑子用得更少了。",
 "zh_TW": "腦子用得更少了。"
+},
+"Even the dogs want to be friends.": {
+"ja": "犬までともだちになりたがる。",
+"zh_CN": "连狗狗都想和你做朋友。",
+"zh_TW": "連狗狗都想和你做朋友。"
 },
 "Every drink gives breath back and adds its time. All three drinks at once: RAINBOW TIME.": {
 "ja": "ドリンクはスタミナを回復し、効果時間をのばす。3つ同時でレインボータイム。",
@@ -1384,25 +1549,10 @@
 "zh_CN": "鱼 {0} 秒后",
 "zh_TW": "魚 {0} 秒後"
 },
-"FISH TIME": {
-"ja": "フィッシュタイム",
-"zh_CN": "捕鱼时间",
-"zh_TW": "捕魚時間"
-},
-"FISH TIME  x%d": {
-"ja": "フィッシュタイム  x{0}",
-"zh_CN": "捕鱼时间  x{0}",
-"zh_TW": "捕魚時間  x{0}"
-},
-"FISH TIME.   THE SEA IS YOURS. SPACE ON THE WATER = LAUNCH.": {
-"ja": "フィッシュタイム。   海はキミのもの。水の上でスペース＝飛びかかる。",
-"zh_CN": "捕鱼时间。   大海归你了。在水上按空格 = 扑出去。",
-"zh_TW": "捕魚時間。   大海歸你了。在水上按空白鍵 = 撲出去。"
-},
-"FISH TIME:  W - SURF    SPACE - LAUNCH AT THE FISH": {
-"ja": "フィッシュタイム：  W - サーフィン    スペース - 魚に飛びかかる",
-"zh_CN": "捕鱼时间：  W - 冲浪    空格 - 扑向鱼",
-"zh_TW": "捕魚時間：  W - 衝浪    空白鍵 - 撲向魚"
+"FISH LOCKED:  TURN ROUND TO SEE IT": {
+"ja": "魚をロック中：振り向くと見える",
+"zh_CN": "已锁定一条鱼：转过身就能看到它",
+"zh_TW": "已鎖定一條魚：轉過身就能看到牠"
 },
 "FISH x%d. THE POND IS RUNNING OUT OF EXCUSES.": {
 "ja": "魚 x{0}。池の言い訳が尽きてきた。",
@@ -1433,6 +1583,11 @@
 "ja": "もっとふわふわポテト",
 "zh_CN": "更蓬松薯条",
 "zh_TW": "更蓬鬆薯條"
+},
+"FLY FREE, NOTHING CAN HURT YOU, SPEED SOARS": {
+"ja": "自由に飛べて、無敵、スピードもぐんぐん",
+"zh_CN": "自由飞行，无敌，速度飙升",
+"zh_TW": "自由飛行，無敵，速度飆升"
 },
 "FLY TO THE GLOWING FRY  -  AIM WITH THE MOUSE, HOLD  W": {
 "ja": "光るポテトへ飛べ  -  マウスで狙って  W 長押し",
@@ -1519,15 +1674,15 @@
 "zh_CN": "费利克斯·门德尔松  -  《意大利》与《苏格兰》交响曲",
 "zh_TW": "費利克斯·孟德爾頌  -  《義大利》與《蘇格蘭》交響曲"
 },
-"Five in one FISH TIME? Go on. I'll pretend not to watch.": {
-"ja": "1回のフィッシュタイムで5匹？やってみな。見てないふりしとく。",
-"zh_CN": "一次捕鱼时间抓五条？去吧。我假装没在看。",
-"zh_TW": "一次捕魚時間抓五條？去吧。我假裝沒在看。"
+"Five in one OCEAN TIME? Go on. I'll pretend not to watch.": {
+"ja": "1回のオーシャンタイムで5匹？やってみな。見てないふりしとく。",
+"zh_CN": "一次海洋时间抓五条？去吧。我假装没在看。",
+"zh_TW": "一次海洋時間抓五條？去吧。我假裝沒在看。"
 },
 "Fluffier. Harder to hurt.": {
-"ja": "もっとふわふわ。もっと打たれ強く。",
-"zh_CN": "更蓬松，更扛揍。",
-"zh_TW": "更蓬鬆，更耐揍。"
+"ja": "もっとふわふわ。傷つきにくい。",
+"zh_CN": "更蓬松，更不容易受伤。",
+"zh_TW": "更蓬鬆，更不容易受傷。"
 },
 "Fly into a wall at full speed.": {
 "ja": "全速力で壁に突っこむ。",
@@ -1599,6 +1754,11 @@
 "zh_CN": "走开，鸟！",
 "zh_TW": "走開，鳥！"
 },
+"GOALS": {
+"ja": "目標",
+"zh_CN": "目标",
+"zh_TW": "目標"
+},
 "GOLD": {
 "ja": "ゴールド",
 "zh_CN": "金",
@@ -1633,6 +1793,11 @@
 "ja": "ゲット",
 "zh_CN": "到手",
 "zh_TW": "到手"
+},
+"GOT IT!": {
+"ja": "ゲット！",
+"zh_CN": "到手！",
+"zh_TW": "到手！"
 },
 "GRAB": {
 "ja": "くわえる",
@@ -1679,6 +1844,11 @@
 "zh_CN": "又是海鸥时间。   白环碰到绿环时按  E   （金色算双倍）",
 "zh_TW": "又是海鷗時間。   白環碰到綠環時按  E   （金色算雙倍）"
 },
+"GULLS COME TO SAY HELLO": {
+"ja": "カモメが挨拶に来る",
+"zh_CN": "海鸥会飞来打招呼",
+"zh_TW": "海鷗會飛來打招呼"
+},
 "GULP.": {
 "ja": "ゴクリ。",
 "zh_CN": "咕咚。",
@@ -1719,6 +1889,11 @@
 "zh_CN": "欢乐时光",
 "zh_TW": "歡樂時光"
 },
+"HARD": {
+"ja": "むずかしい",
+"zh_CN": "困难",
+"zh_TW": "困難"
+},
 "HAT": {
 "ja": "帽子",
 "zh_CN": "帽子",
@@ -1733,6 +1908,11 @@
 "ja": "頭は雲の上",
 "zh_CN": "脑袋在云里",
 "zh_TW": "腦袋在雲裡"
+},
+"HIDE": {
+"ja": "しまう",
+"zh_CN": "收起",
+"zh_TW": "收起"
 },
 "HITS -%d %%": {
 "ja": "ダメージ -{0}%",
@@ -1769,10 +1949,30 @@
 "zh_CN": "随时都能按住。在地面上免费。",
 "zh_TW": "隨時都能按住。在地面上免費。"
 },
+"HOLD TAB:  THE WORLD SLOWS DOWN.  PUT THE FRY IN THE MIDDLE OF THE SCREEN": {
+"ja": "TABを押し続ける：世界がゆっくりに。ポテトを画面の真ん中へ",
+"zh_CN": "按住 TAB：世界会慢下来。让薯条出现在屏幕正中",
+"zh_TW": "按住 TAB：世界會慢下來。讓薯條出現在螢幕正中"
+},
 "HOT HANDHELD FRY": {
 "ja": "ほかほか手持ちポテト",
 "zh_CN": "热乎手持薯条",
 "zh_TW": "熱呼手持薯條"
+},
+"HOW DO YOU WANT TO FLY?": {
+"ja": "どんなふうに飛ぶ？",
+"zh_CN": "你想怎么飞？",
+"zh_TW": "你想怎麼飛？"
+},
+"HOW TO GET A FRY:  1  climb above it.   2  put it in the middle of the screen (hold TAB: the world slows down).   3  dive at it with Shift.   4  press E on the beat.": {
+"ja": "ポテトの取り方：  1  上に飛ぶ。   2  画面の真ん中に入れる（TAB長押しで世界がゆっくりに）。   3  Shiftで急降下。   4  ビートに合わせて E。",
+"zh_CN": "怎么弄到一根薯条：  1  先飞到它上方。   2  让它出现在屏幕正中（按住 TAB：世界会慢下来）。   3  按住 Shift 朝它俯冲。   4  踩着节拍按 E。",
+"zh_TW": "怎麼弄到一根薯條：  1  先飛到它上方。   2  讓它出現在螢幕正中（按住 TAB：世界會慢下來）。   3  按住 Shift 朝它俯衝。   4  踩著節拍按 E。"
+},
+"HOW TO GET A FRY:  1  climb above it.   2  put it in the middle of the screen (hold TAB: the world slows down).   3  dive at it with Shift.   4  press E on the green.": {
+"ja": "ポテトの取り方：  1  まず上まで上がる。   2  画面の真ん中に入れる（TABを押し続ける：世界がゆっくりに）。   3  Shiftで急降下。   4  輪が緑に重なったらE。",
+"zh_CN": "怎么弄到一根薯条：  1  先飞到它上方。   2  让它出现在屏幕正中（按住 TAB：世界会变慢）。   3  按 Shift 朝它俯冲。   4  圈落在绿色上时按 E。",
+"zh_TW": "怎麼弄到一根薯條：  1  先飛到它上方。   2  讓它出現在螢幕正中（按住 TAB：世界會變慢）。   3  按 Shift 朝它俯衝。   4  圈落在綠色上時按 E。"
 },
 "HUGE. the whole pier saw that. definitely.": {
 "ja": "デカい。桟橋じゅうが見てた。たぶん。",
@@ -1798,6 +1998,11 @@
 "ja": "ハートは交わした。ポテトは分けなかった。",
 "zh_CN": "交换了爱心。没有分享薯条。",
 "zh_TW": "交換了愛心。沒有分享薯條。"
+},
+"Hits hurt a little less, too.": {
+"ja": "ぶつかっても、ちょっと痛くない。",
+"zh_CN": "挨打也没那么疼了。",
+"zh_TW": "挨打也沒那麼痛了。"
 },
 "Hold Tab - Gull Sight (free on the ground). Everything that glows is worth stealing; the number is the speed it needs.": {
 "ja": "Tab長押し - カモメアイ（地上ならタダ）。光っているものは盗む価値あり。数字は必要な速度。",
@@ -1863,6 +2068,16 @@
 "ja": "マウスY軸を反転",
 "zh_CN": "反转鼠标 Y 轴",
 "zh_TW": "反轉滑鼠 Y 軸"
+},
+"IRRESISTIBLE FRY": {
+"ja": "ぬけだせないポテト",
+"zh_CN": "无法抗拒薯条",
+"zh_TW": "無法抗拒薯條"
+},
+"IT ADDS A LITTLE TO ITS COLOUR FOR EVER": {
+"ja": "その色の力が、ずっと少しだけ増える",
+"zh_CN": "为它的颜色永久增加一点点能力",
+"zh_TW": "為它的顏色永久增加一點點能力"
 },
 "IT DID. IT HAD SOMETHING TO DO WITH THE FRIES.": {
 "ja": "あった。ポテトに関係あった。",
@@ -1939,6 +2154,11 @@
 "zh_CN": "通关后继续玩。",
 "zh_TW": "通關後繼續玩。"
 },
+"Kids and other gulls come to say hello.": {
+"ja": "子どもたちや仲間のカモメが挨拶に来る。",
+"zh_CN": "孩子们和别的海鸥会来打招呼。",
+"zh_TW": "孩子們和別的海鷗會來打招呼。"
+},
 "LANGUAGES": {
 "ja": "言語",
 "zh_CN": "语言",
@@ -1954,6 +2174,11 @@
 "zh_CN": "传说",
 "zh_TW": "傳說"
 },
+"LOCKED:  %s": {
+"ja": "ロック：{0}",
+"zh_CN": "锁定：{0}",
+"zh_TW": "鎖定：{0}"
+},
 "LONG COAT": {
 "ja": "ロングコート",
 "zh_CN": "长大衣",
@@ -1963,6 +2188,16 @@
 "ja": "見上げて",
 "zh_CN": "抬头看",
 "zh_TW": "抬頭看"
+},
+"LOW BREATH:  CTRL - LAND AND REST": {
+"ja": "スタミナ不足：CTRLで着地して休もう",
+"zh_CN": "体力不足：按 CTRL 落地休息",
+"zh_TW": "體力不足：按 CTRL 落地休息"
+},
+"LV %d": {
+"ja": "Lv {0}",
+"zh_CN": "等级 {0}",
+"zh_TW": "等級 {0}"
 },
 "Land anywhere to rest - higher is faster. Trees and roofs count.": {
 "ja": "どこにでも降りて休める。高いところほど早く回復。木や屋根もOK。",
@@ -2044,6 +2279,11 @@
 "zh_CN": "再来一份一样的。没意见。",
 "zh_TW": "再來一份一樣的。沒意見。"
 },
+"MOUSE": {
+"ja": "マウス",
+"zh_CN": "鼠标",
+"zh_TW": "滑鼠"
+},
 "MOUSE SENSITIVITY": {
 "ja": "マウス感度",
 "zh_CN": "鼠标灵敏度",
@@ -2068,6 +2308,16 @@
 "ja": "マウス - 方向          W - 加速          S - ブレーキ",
 "zh_CN": "鼠标 - 转向          W - 加速          S - 减速",
 "zh_TW": "滑鼠 - 轉向          W - 加速          S - 減速"
+},
+"Mouse - steer          W - throttle          S - brake          Q - turn right round": {
+"ja": "マウス - 方向          W - 加速          S - ブレーキ          Q - くるっと反転",
+"zh_CN": "鼠标 - 转向          W - 加速          S - 减速          Q - 立刻掉头",
+"zh_TW": "滑鼠 - 轉向          W - 加速          S - 減速          Q - 立刻掉頭"
+},
+"Mouse - steer          W - throttle          S - brake          R - turn right round": {
+"ja": "マウス - 方向          W - 加速          S - ブレーキ          R - くるっと反転",
+"zh_CN": "鼠标 - 转向          W - 加速          S - 减速          R - 立刻掉头",
+"zh_TW": "滑鼠 - 轉向          W - 加速          S - 減速          R - 立刻掉頭"
 },
 "NEAREST FRY": {
 "ja": "一番近いポテト",
@@ -2124,6 +2374,16 @@
 "zh_CN": "新！",
 "zh_TW": "新！"
 },
+"NEXT:  EAT %d FRIES   %d / %d": {
+"ja": "つぎ：ポテトを{0}本食べる   {1} / {2}",
+"zh_CN": "下一步：吃掉 {0} 根薯条   {1} / {2}",
+"zh_TW": "下一步：吃掉 {0} 根薯條   {1} / {2}"
+},
+"NEXT:  FIND 3 VISION FRIES   %d / 3": {
+"ja": "つぎ：ビジョンポテトを3本さがす   {0} / 3",
+"zh_CN": "下一步：找到 3 根视觉薯条   {0} / 3",
+"zh_TW": "下一步：找到 3 根視覺薯條   {0} / 3"
+},
 "NO BRAKES. NO BREATH NEEDED.": {
 "ja": "ブレーキなし。息つぎ不要。",
 "zh_CN": "不用刹车。不用喘气。",
@@ -2139,10 +2399,20 @@
 "zh_CN": "本游戏制作过程中，没有薯条受到伤害。",
 "zh_TW": "本遊戲製作過程中，沒有薯條受到傷害。"
 },
+"NO LONGER HUNGRY": {
+"ja": "もう腹ぺこじゃない",
+"zh_CN": "不再饿了",
+"zh_TW": "不再餓了"
+},
 "NO LONGER HUNGRY   0 / 1": {
 "ja": "もう腹ぺこじゃない   0 / 1",
 "zh_CN": "不再饿了   0 / 1",
 "zh_TW": "不再餓了   0 / 1"
+},
+"NO RECORD YET": {
+"ja": "まだ記録なし",
+"zh_CN": "还没有纪录",
+"zh_TW": "還沒有紀錄"
 },
 "NO REGRETS. SOME KETCHUP.": {
 "ja": "後悔なし。ケチャップ少々。",
@@ -2199,6 +2469,11 @@
 "zh_CN": "还没有够得着的",
 "zh_TW": "還沒有夠得著的"
 },
+"NOW DIVE:  HOLD SHIFT AND FLY STRAIGHT AT IT   (SPEED %d)": {
+"ja": "いま急降下：SHIFTを押しながらまっすぐ突っ込もう   （速さ {0}）",
+"zh_CN": "现在俯冲：按住 SHIFT，笔直朝它飞去   （速度 {0}）",
+"zh_TW": "現在俯衝：按住 SHIFT，筆直朝它飛去   （速度 {0}）"
+},
 "NOW LET GO.": {
 "ja": "はい、離して。",
 "zh_CN": "现在松开。",
@@ -2243,6 +2518,41 @@
 "ja": "達成   {0}",
 "zh_CN": "已达成   {0}",
 "zh_TW": "已達成   {0}"
+},
+"OCEAN TIME": {
+"ja": "オーシャンタイム",
+"zh_CN": "海洋时间",
+"zh_TW": "海洋時間"
+},
+"OCEAN TIME  x%d": {
+"ja": "オーシャンタイム  x{0}",
+"zh_CN": "海洋时间  x{0}",
+"zh_TW": "海洋時間  x{0}"
+},
+"OCEAN TIME.   THE SEA IS YOURS. SPACE ON THE WATER = LAUNCH.": {
+"ja": "オーシャンタイム。   海はキミのもの。水の上でスペース＝飛びかかる。",
+"zh_CN": "海洋时间。   大海归你了。在水上按空格 = 扑出去。",
+"zh_TW": "海洋時間。   大海歸你了。在水上按空白鍵 = 撲出去。"
+},
+"OCEAN TIME:  W - SURF    HOLD TAB - LOCK A FISH    SPACE - LAUNCH AT IT": {
+"ja": "オーシャンタイム：  W - サーフ    TAB長押し - 魚をロック    スペース - 発射",
+"zh_CN": "海洋时间：  W - 冲浪    按住 TAB - 锁定一条鱼    空格 - 朝它发射",
+"zh_TW": "海洋時間：  W - 衝浪    按住 TAB - 鎖定一條魚    空白鍵 - 朝牠發射"
+},
+"OCEAN TIME:  W - SURF    SPACE - LAUNCH AT THE FISH": {
+"ja": "オーシャンタイム：  W - サーフィン    スペース - 魚に飛びかかる",
+"zh_CN": "海洋时间：  W - 冲浪    空格 - 扑向鱼",
+"zh_TW": "海洋時間：  W - 衝浪    空白鍵 - 撲向魚"
+},
+"ON THE GOLD": {
+"ja": "金で押す",
+"zh_CN": "金环时按",
+"zh_TW": "金環時按"
+},
+"ON THE GREEN": {
+"ja": "緑で押す",
+"zh_CN": "绿圈时按",
+"zh_TW": "綠圈時按"
 },
 "ON THE WATER:  YOUR BREATH COMES BACK.   SPACE - TAKE OFF": {
 "ja": "水の上：  スタミナが回復する。   スペース - 飛び立つ",
@@ -2364,6 +2674,11 @@
 "zh_CN": "砰。一拳。来自一位老人家。",
 "zh_TW": "砰。一拳。來自一位老人家。"
 },
+"PRESS  E  ON THE BEAT:  WHEN A WHITE RING IS IN THE GOLD BAND": {
+"ja": "ビートに合わせて  E：白い輪が金の帯に入ったとき",
+"zh_CN": "踩着节拍按  E：白圈进入金色环带的时候",
+"zh_TW": "踩著節拍按  E：白圈進入金色環帶的時候"
+},
 "PRESS  E  TO CONTINUE": {
 "ja": "E で つづける",
 "zh_CN": "按  E  继续",
@@ -2374,10 +2689,35 @@
 "zh_CN": "白环碰到绿环时按  E   （金色算双倍）",
 "zh_TW": "白環碰到綠環時按  E   （金色算雙倍）"
 },
+"PRESS  E  WHEN A WHITE RING HITS THE GREEN BAND  (GOLD COUNTS DOUBLE)": {
+"ja": "白い輪が緑の帯に入ったら  E  （金色は2点）",
+"zh_CN": "白圈落进绿色环带时按  E  （金色算两分）",
+"zh_TW": "白圈落進綠色環帶時按  E  （金色算兩分）"
+},
+"PRESS SPACE TO TAKE OFF": {
+"ja": "スペースで飛び立つ",
+"zh_CN": "按空格起飞",
+"zh_TW": "按空白鍵起飛"
+},
+"People smile at you first.": {
+"ja": "みんなが先に笑いかけてくれる。",
+"zh_CN": "人们会先对你微笑。",
+"zh_TW": "人們會先對你微笑。"
+},
 "Press E when you want company. I'll be here. Looking expensive.": {
 "ja": "話し相手がほしけりゃEを押せ。おれはここにいる。高そうな顔してな。",
 "zh_CN": "想找个伴就按 E。我就在这儿，看起来很贵。",
 "zh_TW": "想找個伴就按 E。我就在這兒，看起來很貴。"
+},
+"Q - TURN RIGHT ROUND": {
+"ja": "Q - くるっと反転",
+"zh_CN": "Q - 立刻掉头",
+"zh_TW": "Q - 立刻掉頭"
+},
+"Q - hide or show the goals board (top left).": {
+"ja": "Q - 左上の目標ボードをしまう / 出す。",
+"zh_CN": "Q - 收起 / 展开左上角的目标栏。",
+"zh_TW": "Q - 收起 / 展開左上角的目標欄。"
 },
 "QUIET, YOU!": {
 "ja": "静かにしろ！",
@@ -2388,6 +2728,11 @@
 "ja": "やめる",
 "zh_CN": "退出",
 "zh_TW": "離開"
+},
+"R - TURN RIGHT ROUND": {
+"ja": "R - くるっと反転",
+"zh_CN": "R - 立刻掉头",
+"zh_TW": "R - 立刻掉頭"
 },
 "RAIN CLOUD": {
 "ja": "雨雲",
@@ -2469,6 +2814,11 @@
 "zh_CN": "老花镜",
 "zh_TW": "老花眼鏡"
 },
+"READY...": {
+"ja": "よーい……",
+"zh_CN": "准备……",
+"zh_TW": "準備……"
+},
 "RECOVERY": {
 "ja": "回復",
 "zh_CN": "恢复",
@@ -2513,6 +2863,16 @@
 "ja": "再開",
 "zh_CN": "继续游戏",
 "zh_TW": "繼續遊戲"
+},
+"REWARD:  %s": {
+"ja": "ごほうび：{0}",
+"zh_CN": "奖励：{0}",
+"zh_TW": "獎勵：{0}"
+},
+"RHYTHM TIMING OFFSET:  %d ms": {
+"ja": "リズム判定のずれ補正：{0} ms",
+"zh_CN": "节奏判定偏移：{0} 毫秒",
+"zh_TW": "節奏判定偏移：{0} 毫秒"
 },
 "RIVAL GULLS HATE THIS TRICK.": {
 "ja": "ライバルカモメが嫌うワザ。",
@@ -2634,6 +2994,11 @@
 "zh_CN": "墨镜",
 "zh_TW": "墨鏡"
 },
+"SHIFT": {
+"ja": "Shift",
+"zh_CN": "Shift",
+"zh_TW": "Shift"
+},
 "SHIFT - BOOST          CTRL - LAND": {
 "ja": "SHIFT - ブースト          CTRL - 着地",
 "zh_CN": "SHIFT - 冲刺          CTRL - 降落",
@@ -2729,6 +3094,21 @@
 "zh_CN": "存档 {0}\n这会覆盖旧的进度。   再按一次开始",
 "zh_TW": "存檔 {0}\n這會覆蓋舊的進度。   再按一次開始"
 },
+"SLOT %d   -   EASY": {
+"ja": "スロット {0}   -   かんたん",
+"zh_CN": "存档 {0}   -   简单",
+"zh_TW": "存檔 {0}   -   簡單"
+},
+"SLOT %d   -   HARD": {
+"ja": "スロット {0}   -   むずかしい",
+"zh_CN": "存档 {0}   -   困难",
+"zh_TW": "存檔 {0}   -   困難"
+},
+"SLOW + AIM": {
+"ja": "スロー + ねらう",
+"zh_CN": "慢动作 + 瞄准",
+"zh_TW": "慢動作 + 瞄準"
+},
 "SMACKED. BY AN ELDERLY HAND.": {
 "ja": "ペシッ。年季の入った手で。",
 "zh_CN": "啪。被一只苍老的手。",
@@ -2773,6 +3153,16 @@
 "ja": "ソニックポテト",
 "zh_CN": "音速薯条",
 "zh_TW": "音速薯條"
+},
+"SPACE": {
+"ja": "スペース",
+"zh_CN": "空格",
+"zh_TW": "空白鍵"
+},
+"SPACE  -  LAUNCH AT IT": {
+"ja": "スペース  -  発射",
+"zh_CN": "空格  -  朝它发射",
+"zh_TW": "空白鍵  -  朝牠發射"
 },
 "SPACE  -  TAKE OFF": {
 "ja": "スペース  -  飛び立つ",
@@ -2938,6 +3328,11 @@
 "ja": "盗んだ相手：傘のご婦人",
 "zh_CN": "偷自：撑伞的女士",
 "zh_TW": "偷自：撐傘的女士"
+},
+"STRANGERS SMILE FIRST": {
+"ja": "知らない人が先に笑ってくれる",
+"zh_CN": "陌生人会先对你微笑",
+"zh_TW": "陌生人會先對你微笑"
 },
 "STRAW HAT": {
 "ja": "麦わら帽子",
@@ -3114,6 +3509,16 @@
 "zh_CN": "当当！",
 "zh_TW": "噹噹！"
 },
+"TAB": {
+"ja": "Tab",
+"zh_CN": "Tab",
+"zh_TW": "Tab"
+},
+"TAB SWITCHES GULL SIGHT ON AND OFF": {
+"ja": "TABで視界を入切（押し続けなくていい）",
+"zh_CN": "TAB 键切换开关视野（不用一直按住）",
+"zh_TW": "TAB 鍵切換開關視野（不用一直按住）"
+},
 "TAILWIND": {
 "ja": "おいかぜ",
 "zh_CN": "顺风",
@@ -3209,6 +3614,11 @@
 "zh_CN": "已通关，继续游玩中",
 "zh_TW": "已通關，繼續遊玩中"
 },
+"THE FASTEST GULL ON THE PIER. FOR NOW.": {
+"ja": "桟橋でいちばん速いカモメ。いまのところは。",
+"zh_CN": "码头上最快的海鸥。暂时是。",
+"zh_TW": "碼頭上最快的海鷗。暫時是。"
+},
 "THE FERRIS WHEEL": {
 "ja": "観覧車",
 "zh_CN": "摩天轮",
@@ -3248,6 +3658,11 @@
 "ja": "ゲームのひとこと",
 "zh_CN": "游戏的看法",
 "zh_TW": "遊戲的看法"
+},
+"THE GOAL": {
+"ja": "ゴール",
+"zh_CN": "最终目标",
+"zh_TW": "最終目標"
 },
 "THE GULL": {
 "ja": "カモメ",
@@ -3313,6 +3728,11 @@
 "ja": "海が乗せてくれた。水の上でスペース＝飛びかかる。",
 "zh_CN": "大海载了你一程。在水上按空格 = 扑出去。",
 "zh_TW": "大海載了你一程。在水上按空白鍵 = 撲出去。"
+},
+"THE SEA IS YOURS: SURF IT, LAUNCH AT THE FISH": {
+"ja": "海はきみのもの：サーフして、魚めがけてジャンプ",
+"zh_CN": "大海归你：冲浪，扑向跃出的鱼",
+"zh_TW": "大海歸你：衝浪，撲向躍出的魚"
 },
 "THE SEA PAYS WELL.": {
 "ja": "海は払いがいい。",
@@ -3489,6 +3909,11 @@
 "zh_CN": "太慢了",
 "zh_TW": "太慢了"
 },
+"TOO SLOW:  NEED %d  -  HOLD SHIFT": {
+"ja": "遅い：{0} 必要  -  SHIFTを押し続けて",
+"zh_CN": "太慢了：需要 {0}  -  按住 SHIFT",
+"zh_TW": "太慢了：需要 {0}  -  按住 SHIFT"
+},
 "TOP %d   >   %d": {
 "ja": "最高 {0}   >   {1}",
 "zh_CN": "极速 {0}   >   {1}",
@@ -3513,6 +3938,16 @@
 "ja": "トラブルメーカー",
 "zh_CN": "捣蛋鬼",
 "zh_TW": "搗蛋鬼"
+},
+"TURN SO THAT THE FRY IS IN THE MIDDLE OF THE SCREEN   (Q - TURN AROUND)": {
+"ja": "ポテトが画面の真ん中に来るよう向きを変えよう   （Q - 反転）",
+"zh_CN": "转向，让薯条出现在屏幕正中   （Q - 掉头）",
+"zh_TW": "轉向，讓薯條出現在螢幕正中   （Q - 掉頭）"
+},
+"TURN SO THAT THE FRY IS IN THE MIDDLE OF THE SCREEN   (R - TURN AROUND)": {
+"ja": "ポテトが画面の真ん中に来るよう向きを変えよう   （R - 反転）",
+"zh_CN": "转向，让薯条出现在屏幕正中   （R - 掉头）",
+"zh_TW": "轉向，讓薯條出現在螢幕正中   （R - 掉頭）"
 },
 "TUTORIAL": {
 "ja": "チュートリアル",
@@ -3554,6 +3989,11 @@
 "zh_CN": "仪表上的数字不够用了。",
 "zh_TW": "儀表上的數字不夠用了。"
 },
+"The fastest time to the 24 fries is kept.": {
+"ja": "24本ぜんぶ食べるまでの最速タイムを記録します。",
+"zh_CN": "会记录吃齐 24 根薯条的最快用时。",
+"zh_TW": "會記錄吃齊 24 根薯條的最快用時。"
+},
 "The fry is eaten. The sky is not.": {
 "ja": "ポテトは食べた。空はまだある。",
 "zh_CN": "薯条吃完了，天空还没有。",
@@ -3563,6 +4003,16 @@
 "ja": "桟橋は見ていた。そして話を盛るだろう。",
 "zh_CN": "码头看见了。码头会添油加醋的。",
 "zh_TW": "碼頭看見了。碼頭會加油添醋的。"
+},
+"The race, and a real rhythm game: one gold band, three beats a circle, the music plays by itself, a wary town.": {
+"ja": "レースであり本物のリズムゲーム：金の帯は1本、1つの輪に3拍、音楽はひとりでに流れ、町は警戒している。",
+"zh_CN": "竞速，也是真正的音游：只有一条金色环带，每圈三拍，音乐自己响，小镇满是戒备。",
+"zh_TW": "競速，也是真正的音遊：只有一條金色環帶，每圈三拍，音樂自己響，小鎮滿是戒備。"
+},
+"The race: fast rings, three waves a circle, higher speeds, thin breath, a wary town.": {
+"ja": "レース：輪は速く、1つの輪に波が3回、必要な速さも上がり、スタミナはぎりぎり、街は警戒中。",
+"zh_CN": "竞速模式：圆圈又快又密，每圈三道波，速度要求更高，体力吃紧，小镇满是戒备。",
+"zh_TW": "競速模式：圓圈又快又密，每圈三道波，速度要求更高，體力吃緊，小鎮滿是戒備。"
 },
 "The rest are mostly things you do by accident. Or on purpose, if you're me.": {
 "ja": "残りはだいたい、うっかりやるやつだ。おれならわざとやるがな。",
@@ -3608,6 +4058,11 @@
 "ja": "壁は無事。壁はいつだって無事。",
 "zh_CN": "墙没事。墙永远没事。",
 "zh_TW": "牆沒事。牆永遠沒事。"
+},
+"The way to learn every trick and enjoy the view.": {
+"ja": "コツをぜんぶ覚えて、景色も楽しめる。",
+"zh_CN": "学会所有诀窍、好好欣赏风景的最佳方式。",
+"zh_TW": "學會所有訣竅、好好欣賞風景的最佳方式。"
 },
 "They did not want your hello. They wanted a quiet pier.": {
 "ja": "「こんにちは」はいらない。静かな桟橋がほしかった。",
@@ -3664,6 +4119,11 @@
 "zh_CN": "非常艺术",
 "zh_TW": "非常藝術"
 },
+"VISION FRY": {
+"ja": "ビジョンポテト",
+"zh_CN": "视觉薯条",
+"zh_TW": "視覺薯條"
+},
 "VISION FRY   %d / 3": {
 "ja": "ビジョンポテト   {0} / 3",
 "zh_CN": "视觉薯条   {0} / 3",
@@ -3699,6 +4159,16 @@
 "zh_CN": "警惕",
 "zh_TW": "警惕"
 },
+"WEAR IT FROM THE CODEX (C)": {
+"ja": "図鑑で身につけよう（C）",
+"zh_CN": "在图鉴里穿上它（按 C）",
+"zh_TW": "在圖鑑裡穿上它（按 C）"
+},
+"WEAR THE SKY": {
+"ja": "空をまとう",
+"zh_CN": "穿上天空",
+"zh_TW": "穿上天空"
+},
 "WEEKEND MODE": {
 "ja": "週末モード",
 "zh_CN": "周末模式",
@@ -3733,6 +4203,11 @@
 "ja": "条件",
 "zh_CN": "达成条件",
 "zh_TW": "達成條件"
+},
+"WHAT YOU CATCH UP THERE STAYS WITH YOU": {
+"ja": "空でつかまえたものは、ずっといっしょ",
+"zh_CN": "你在天上抓到的东西会一直伴着你",
+"zh_TW": "你在天上抓到的東西會一直伴著你"
 },
 "WHEEEEEE!": {
 "ja": "ひゃっほーー！",
@@ -4044,6 +4519,16 @@
 "zh_CN": "存档失败。",
 "zh_TW": "存檔失敗。"
 },
+"easy: breath, big rings, a friendly town.": {
+"ja": "かんたん：スタミナ、大きな輪、やさしい街。",
+"zh_CN": "简单：体力、大圆圈、友好的小镇。",
+"zh_TW": "簡單：體力、大圓圈、友好的小鎮。"
+},
+"easy: breath, clear rings, a friendly town.": {
+"ja": "かんたん：スタミナ、見やすい輪、やさしい町。",
+"zh_CN": "简单：体力、清晰的圆圈、友好的小镇。",
+"zh_TW": "簡單：體力、清晰的圓圈、友好的小鎮。"
+},
 "enter: skip": {
 "ja": "Enter：スキップ",
 "zh_CN": "回车：跳过",
@@ -4143,6 +4628,11 @@
 "ja": "カモメ！カモメ！カモメ！",
 "zh_CN": "海鸥！海鸥！海鸥！",
 "zh_TW": "海鷗！海鷗！海鷗！"
+},
+"hard: the record needs a run that was hard from the start.": {
+"ja": "むずかしい：記録は、最初からむずかしいで通した記録だけです。",
+"zh_CN": "困难：只有从头到尾都是困难的一局才算纪录。",
+"zh_TW": "困難：只有從頭到尾都是困難的一局才算紀錄。"
 },
 "hats, scarves, balloons: things strangers carry": {
 "ja": "帽子、マフラー、風船：知らない人が持っているもの",
@@ -4323,6 +4813,11 @@
 "ja": "あとで。逃げやしない。",
 "zh_CN": "待会儿吧。它跑不了。",
 "zh_TW": "待會兒吧。它跑不了。"
+},
+"lost? the arrow points at the nearest fry you can catch.": {
+"ja": "迷った？矢印が、いちばん近くて取れるポテトをさしているよ。",
+"zh_CN": "迷路了？箭头指着离你最近、你抓得到的薯条。",
+"zh_TW": "迷路了？箭頭指著離你最近、你抓得到的薯條。"
 },
 "mouse or arrow keys  -  Esc to go back": {
 "ja": "マウスか矢印キー  -  Escでもどる",

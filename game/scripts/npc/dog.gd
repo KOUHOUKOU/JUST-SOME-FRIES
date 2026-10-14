@@ -91,15 +91,15 @@ func _physics_process(delta):
 			head.rotation.x = lerp(head.rotation.x, 0.6, 4.0 * delta)
 			body.scale.x = 1.0 + sin(GS.msec() * 0.002) * 0.02
 			tail.rotation.y = 0.0
-			var landed = player.mode == 1 and d < 8.5 and GS.gull_sense_count >= 3
-			if landed and not carrying and GS.watch < 1.6 and cd <= 0.0 and player.snatch.state == "idle":
+			var landed = player.mode == 1 and d < 8.5 + 6.0 * clamp(GS.charm() - 1.0, 0.0, 2.0) and GS.gull_sense_count >= 3      # (round 18: the more charm, the further a dog notices a landed gull... to be its friend)
+			if landed and not GS.hostile() and cd <= 0.0 and player.snatch.state == "idle":
 				# round 15: nobody is watching the gull, so the dog just wants to play
 				state = "friend"
 				friend_a = atan2(-to.z, -to.x)
 				friend_t = 0.0
 				circled = false
 				Sfx.play("bark", -12.0, 1.7)
-			elif ((d < 9.0 and (player.speed > 9.0 or carrying)) or landed) and cd <= 0.0:
+			elif ((d < 9.0 and (player.speed > 9.0 or carrying) and GS.hostile()) or (landed and GS.hostile())) and cd <= 0.0:
 				state = "bark"
 				st = 0.0
 				Sfx.play("bark", -4.0)
@@ -118,7 +118,7 @@ func _physics_process(delta):
 			tail.rotation.y = sin(GS.msec() * 0.03) * 0.6
 			if int(st * 3.0) != int((st - delta) * 3.0) and st < 1.4:
 				Sfx.play("bark", -8.0, randf_range(0.9, 1.1))
-			if (carrying or (player.mode == 1 and GS.gull_sense_count >= 3 and GS.watch >= 1.6)) and d < 6.5 and cd <= 0.0:
+			if GS.hostile() and d < 6.5 and cd <= 0.0:
 				state = "crouch"
 				st = 0.0
 				# the warning: a "!" over the dog and a red patch where it will land
@@ -153,7 +153,7 @@ func _physics_process(delta):
 				load("res://scripts/world/rest_events.gd").heart_fx(get_tree().current_scene, global_position + Vector3(0, 1.1, 0))
 			if friend_t > 2.2 and global_position.distance_to(player.global_position) < 3.4:
 				circled = true
-			if friend_t > 8.0 or player.mode != 1 or GS.watch >= 1.6 or carrying:
+			if friend_t > 8.0 or player.mode != 1 or GS.hostile():
 				state = "return"
 				cd = 25.0
 		"crouch":

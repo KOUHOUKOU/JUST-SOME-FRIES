@@ -319,6 +319,13 @@ func _make_item(kind, hand):
 			_box(n, Vector3(0.22, 0.12, 0.1), Vector3(0.16, 0.12, 0.04), "2BA7A0", Vector3(0, 0, -0.6))
 	return n
 
+# round 18: a prop in the right hand (a cup, a cone) that is only for show
+func give_item_r(name):
+	if item_node_r != null and is_instance_valid(item_node_r):
+		item_node_r.queue_free()
+	item_node_r = _make_item(name, hand_r)
+
+
 func emote(kind, sec = 0.8):
 	emote_t = sec
 	if kind == "surprise":
