@@ -390,6 +390,7 @@ func _web_warm_up():
 
 func _reload(skip, slot = 0):
 	GS.replay = ""
+	Sfx.set_surf(false, 0.0, 0.3)
 	GS.skip_menu = skip
 	GS.autoload_slot = slot
 	Engine.time_scale = 1.0

@@ -22,6 +22,8 @@ var sounds = {}
 var pool = []
 var pool_i = 0
 var wind
+var surf                         # round 20: a calm sea under the quiet last scene of the ending
+var sfx_bus = "Master"
 var waves
 var murmur
 var music = []                 # (legacy name) the two cross-fading players
@@ -54,10 +56,13 @@ var hush_db = 0.0
 
 func _ready():
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_make_sfx_bus()
 	for i in 30:
 		var p = AudioStreamPlayer.new()
+		p.bus = sfx_bus
 		add_child(p)
 		pool.append(p)
+	surf = _loop_player(-80.0)
 	wind = _loop_player(-80.0)
 	waves = _loop_player(-80.0)
 	murmur = _loop_player(-80.0)
@@ -100,7 +105,7 @@ func _load_assets():
 			if ost != null and "loop" in ost:
 				ost.loop = true
 			music_streams[n] = ost
-	for n in ["wind", "waves", "murmur"]:
+	for n in ["wind", "waves", "murmur", "surf_soft"]:
 		if sounds.has(n) and sounds[n] is AudioStreamWAV:
 			sounds[n].loop_mode = AudioStreamWAV.LOOP_FORWARD
 			sounds[n].loop_begin = 0
@@ -146,6 +151,7 @@ func _finish_loading():
 	wind.stream = sounds.get("wind")
 	waves.stream = sounds.get("waves")
 	murmur.stream = sounds.get("murmur")
+	surf.stream = sounds.get("surf_soft")
 	waves.volume_db = -14.0
 	wind.volume_db = -40.0
 	murmur.volume_db = -30.0
@@ -156,6 +162,44 @@ func _finish_loading():
 		play_theme(theme_want, theme_loop)
 	if music_wanted:
 		_zone_changed(true)
+
+# round 20: every sound effect goes through one bus ("SFX") with a very light room and a limiter: the sounds sit in the same space (nothing is dry and pasted on), and a busy
+# moment (a flock, a streak of notes, a drink and a landing together) can never pile up into harshness or clipping. The music keeps its own path.
+func _make_sfx_bus():
+	if AudioServer.get_bus_index("SFX") >= 0:
+		sfx_bus = "SFX"
+		return
+	AudioServer.add_bus()
+	var i = AudioServer.bus_count - 1
+	AudioServer.set_bus_name(i, "SFX")
+	AudioServer.set_bus_send(i, "Master")
+	var rv = AudioEffectReverb.new()
+	rv.room_size = 0.32
+	rv.damping = 0.65
+	rv.spread = 1.0
+	rv.predelay_msec = 18.0
+	rv.dry = 1.0
+	rv.wet = 0.07
+	AudioServer.add_bus_effect(i, rv)
+	var lim = AudioEffectHardLimiter.new()
+	lim.ceiling_db = -1.5
+	lim.pre_gain_db = 0.0
+	AudioServer.add_bus_effect(i, lim)
+	sfx_bus = "SFX"
+
+# the sea under a quiet scene (fades in and out; db is the level it settles at)
+func set_surf(on, db = -26.0, sec = 3.0):
+	if surf == null or surf.stream == null:
+		return
+	var tw = create_tween().set_ignore_time_scale(true)
+	if on:
+		if not surf.playing:
+			surf.volume_db = -60.0
+			surf.play()
+		tw.tween_property(surf, "volume_db", db, sec)
+	else:
+		tw.tween_property(surf, "volume_db", -60.0, sec)
+		tw.tween_callback(surf.stop)
 
 func _loop_player(db):
 	var p = AudioStreamPlayer.new()
@@ -226,14 +270,11 @@ func _reward_motif(sound_name, vol_db, pitch):
 		else:
 			get_tree().create_timer(0.13 * i, true, false, true).timeout.connect(func(): play_note("harp", m, v))
 
-# round 20: every isolated ringing sound is gone (bells, chimes, pings, harp flourishes, welcome songs, "tick" blips, the squawk of F). They stay silent on purpose: a lone
-# "bling" is worse than nothing. What is left are the sounds of things (wings, steps, wind, water, crunch, thuds, voices of people and dogs) and the real music.
-const MUTED = ["chime", "ready_chime", "perfect", "vn_next", "vn_pop", "tick_ui", "ui_go", "count_tick", "gs_tick", "gs_complete", "success", "blip", "drop_tick", "equip", "heart",
-	"hello", "feed", "star_on", "star_off", "star_riser", "friend_come", "friend_gift", "friend_welcome", "meteor_get", "meteor_pass", "ring_ok", "ring_gold", "prism_0", "prism_1",
-	"prism_2", "prism_3", "prism_4", "prism_5", "prism_6", "special_blue", "special_cyan", "special_green", "special_orange", "special_pink", "special_purple", "special_red",
-	"buff_ice", "buff_coffee", "buff_alcohol", "buff_end", "tonic", "reward_1", "reward_2", "reward_3", "lure", "cine_in", "cine_out", "pop", "bubble"]
-# (the bright bell voices that used to sit on top of the judgement tunes)
-const MUTED_INSTS = ["tinkle", "glock", "xylo"]
+# round 20: the typed-word "voice" (a lone marimba note per letter) and the old F call were the only sounds the user could not stand: the typing voices are gone (story.gd,
+# yonkoma.gd) and F has a new, soft call (lure.wav, tools/audio/r20_audio.py). Everything else (rewards, drinks, fry jingles, bells) stays. A sound that must be silenced
+# again can be listed here (play() ignores it) without touching the rest.
+const MUTED = []
+const MUTED_INSTS = []
 
 func play(sound_name, vol_db = 0.0, pitch = 1.0):
 	if sound_name in MUTED:

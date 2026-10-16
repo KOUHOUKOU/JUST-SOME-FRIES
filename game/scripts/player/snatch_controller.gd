@@ -219,6 +219,7 @@ func _fish_lock_tick(delta):
 	fish_lock = best
 	fish_lock.set_marked(true)
 	Sfx.play("alert", -13.0, 1.7)
+	Sfx.play_note("tinkle", 91, -10.0)
 
 func _clear_fish_lock():
 	if fish_lock != null and is_instance_valid(fish_lock):

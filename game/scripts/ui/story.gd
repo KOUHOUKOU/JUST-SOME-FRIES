@@ -1138,6 +1138,7 @@ const CARD_COL = {"fry": [Color("FFE9A8"), Color("F6C453")], "plain": [Color("F6
 func card(kind, title, life = 3.8, nx = 0.5, ny = 0.46, rot = -4.0, extra = {}):
 	cards.append({"kind": kind, "title": title, "t0": GS.msec(), "life": life, "pos": Vector2(nx, ny), "rot": rot, "extra": extra})
 	Sfx.play("vn_pop", -12.0, 1.3)
+	Sfx.play("page", -14.0, randf_range(0.95, 1.08))       # round 20: the polaroid slides onto the picture
 
 func _cards(ci, R, u):
 	var i = 0

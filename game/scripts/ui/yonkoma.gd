@@ -214,6 +214,7 @@ func _ink(i, sec = 0.8):
 	pen = 0.0
 	frame_a[i] = 1.0
 	Sfx.play("vn_pop", -12.0, 1.1 + 0.08 * i)
+	Sfx.play("page", -15.0, 0.95 + 0.04 * i)               # round 20: the panel is drawn onto the page
 	Sfx.play("whoosh", -22.0, 1.6)
 	var tw = create_tween().set_ignore_time_scale(true)
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)

@@ -542,11 +542,13 @@ func ending(fry):
 		b.rotation.y = lerp_angle(b.rotation.y, yaw_s, 0.08)
 		await get_tree().process_frame
 	el.rig.set_mode("wave")
+	Sfx.set_surf(true, -27.0, 4.0)          # round 20: the calm sea under the last quiet minute
 	await st.wait(1.2)
 	await st.caption("nothing shiny. nothing fast.", 2.0)
 	await st.caption("just a fry, and somebody to eat it with.", 2.8)
 	await st.wait(0.6)
 	await st.frame_out(0.8)
+	Sfx.set_surf(false, 0.0, 5.0)
 	# round 16: the last picture of the game is the fourth panel of the strip it came from: the game turns into the comic
 	if m.yk != null and not m.autotest:
 		var last = await m.yk.grab()

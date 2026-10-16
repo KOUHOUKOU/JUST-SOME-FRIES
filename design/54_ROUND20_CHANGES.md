@@ -1,18 +1,19 @@
 # Round 20 - no more "bling": silence instead of ringing sounds, and WATCH STORY
 
-## The sound
-The user found every isolated ringing sound unbearable (the typing "voice" in the story boxes and the comic, the F call, flocks and dogs arriving, the title and the reward jingles).
-Rule from now on: **a lone bell is worse than nothing**.
+## The sound (corrected after the user's reply)
+First pass muted ~55 sounds; the user said that was wrong: the fry / coffee / drink / reward sounds are good and full of spirit. Only two things were bad:
+the **marimba "typing voice"** (one note per typed letter, in the story boxes, the comic and the hold-E ring) and the **F call** (`lure`: a nasal sawtooth squawk).
+Everything else is back (`MUTED` / `MUTED_INSTS` in `audio_manager.gd` are now empty lists, kept as a switch).
 
-* `audio_manager.gd`: `MUTED` (sound names that `play()` now ignores) and `MUTED_INSTS` (`tinkle`, `glock`, `xylo`: the bell voices that sat on top of the judgement tunes).
-  Muted: chime, ready_chime, perfect, vn_next, vn_pop, tick_ui, ui_go, count_tick, gs_tick, gs_complete, success, blip, drop_tick, equip, heart, hello, feed, star_on/off/riser,
-  friend_come/gift/welcome, meteor_get/pass, ring_ok/gold, prism_0..6, special_*, buff_*, tonic, reward_1..3 (the harp flourishes), lure (the F call), cine_in/out.
-  They were chosen by measurement (spectral flatness ~ 0 = a pure ringing tone) and by where the user heard them.
-* The typing voices are gone (`story.gd` `_voice_note`, the hold-E ticks, `yonkoma.gd`): words appear silently, the music carries the scene.
-* F (squawk): no sound at all (the visual kick stays); a roof flock arrives without a cry; the gift friend does not cry out either; dog barks lowered and un-pitched.
-* Still sounding: wings, steps, landings, wind, water, crunch, thuds, people's "oh", dogs, the real orchestral music, and the main instrument of the judgement tunes
-  (kalimba / music box / harp / celesta / marimba) - the tune itself, without the bell on top.
-* `tools/audio` is untouched (the WAVs are still in the project, just not played): to bring one back, remove it from `MUTED`.
+* Typing voices: gone (`story.gd` `_voice_note` and the hold-E ticks, `yonkoma.gd`); words appear silently over the real music.
+* F call: new `lure.wav` (`tools/audio/r20_audio.py`): a warm two-note coo, formants 450 / 900 / 2200 Hz, soft harmonic roll-off, nothing above ~3 kHz (old: centroid 893 Hz, nasal 1.5-2.9 kHz formants).
+  A roof flock arrives answering with the same call, softer and a little higher; the old shrill `rival_call` / `gull_far` cries at the flock and at the gift friend are gone. Barks are as before.
+* New sounds: `page` (paper slide + a muffled tap; on every memory polaroid and every comic panel), `surf_soft` (20 s seamless calm sea, stereo, fades in under the last quiet roof scene of the ending
+  and out before the comic).
+* New `SFX` bus (`audio_manager._make_sfx_bus`): a very light room (wet 0.07) and a hard limiter at -1.5 dB; every sound effect and judgement note goes through it, the music does not.
+  Sounds sit in one space and a busy moment cannot pile up into harshness or clipping.
+* Audit (`peak / loudest 100 ms / click at start and end`) of all ~100 WAVs: peaks -2..-9 dB, no clicks, nothing to rework; the existing sounds were left alone on purpose.
+* Old F call kept in `tools/audio/old_sfx_r20/lure.wav`.
 
 ## WATCH STORY (menu)
 * Cover menu: START / CONTINUE / ACHIEVEMENTS / **WATCH STORY** / QUIT. Greyed (with a small line of explanation) until a finished save exists
