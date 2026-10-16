@@ -8,6 +8,7 @@ extends Node
 # The director's notes live in docs/26_ROUND7_CHANGES.md and docs/28_ROUND8_CHANGES.md.
 
 const CineCam = preload("res://scripts/ui/cine_cam.gd")
+const BroTalks = preload("res://scripts/ui/bro_talks.gd")
 var main
 var st
 var cine_busy = false
@@ -383,6 +384,7 @@ func ending(fry):
 		if dg.global_position.distance_to(spot) < 8.0:
 			dg.visible = false
 	st.begin(pl)
+	st.ff_ok = true                       # round 20: HOLD E fast-forwards the talk of the ending
 	st.frame = 0.0
 	st.cam = null
 	Engine.time_scale = 0.35
@@ -485,9 +487,9 @@ func ending(fry):
 	var tgt = Vector3(-7.35, roof_y + 1.05, -1.3)
 	st.cam_set(side, tgt, 33.0, side + Vector3(0.25, 0.0, -0.5), tgt, 31.5, 22.0, 0.004)
 	await st.wait(1.0)
-	await _bro_say("...You brought it all the way up here.", 0.7, {"dist": 1.05, "yaw": 0.5, "up": 0.07, "fov": 34.0})
-	await _bro_say("The coat. The hat. The chain. I got everything.", 0.7)
-	await _bro_say("...and you're the one who looks full.", 0.75, {"dist": 1.0, "yaw": 0.42, "up": 0.04, "fov": 34.0, "roll": 0.05})
+	# round 20, the roof. He starts short and cool (he is the one who has everything); he is moved by something small and does not say so. Never explained.
+	await _bro_say("...That's a lot of hats, kid.", 0.7, {"dist": 1.05, "yaw": 0.5, "up": 0.07, "fov": 34.0})
+	await _bro_say("I'd know.", 0.75, {"dist": 1.0, "yaw": 0.42, "up": 0.04, "fov": 34.0, "roll": 0.05})
 	await st.vn_end(0.3)
 	# the little gull puts the fry down between them
 	var mid_spot = Vector3(-7.35, roof_y + 0.04, -1.3)
@@ -499,9 +501,15 @@ func ending(fry):
 	f2.scale = Vector3.ONE
 	await st.wait(0.7)
 	Sfx.play("drop_tick", -9.0, 1.0)
-	await st.wait(0.5)
-	await _you_say("...it's just a fry.", 1.4, {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0})
-	await _you_say("...just some fries.", 1.4, {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0})
+	await st.wait(0.9)
+	var close_b = {"dist": 1.0, "yaw": 0.35, "up": 0.05, "fov": 32.0}
+	var close_y = {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0}
+	await _bro_say("...What's that.", 0.7)
+	await _you_say("...it's just a fry.", 1.4, close_y)
+	await _bro_say("It doesn't glow.", 0.72)
+	await _bro_say("It doesn't make you fast.", 0.72)
+	await _bro_say("...It doesn't do anything.", 0.78, close_b)
+	await _you_say("...just some fries.", 1.4, close_y)
 	await st.vn_end(0.3)
 	# everything the little gull wore falls away: it never needed any of it
 	if not pl.gull.worn.is_empty():
@@ -510,13 +518,22 @@ func ending(fry):
 		Sfx.play("equip", -6.0, 0.6)
 		Sfx.play("whoosh", -9.0, 1.4)
 		await st.wait(1.0)
-	# the big brother takes his shades off: his eyes, for the first time
+	# his answer to the question he asked at the start (and the last word of the comic)
 	_ground_shot(b.gull, {"az": 40, "spread": 36, "h": 0.04, "fov": 33, "size": 0.27, "push": 0.07, "side": -1.0}, 8.0, b.global_rotation.y)
 	await st.wait(0.9)
+	await _bro_say("...same.", 0.8, {"dist": 1.0, "yaw": 0.35, "up": 0.05, "fov": 32.0})
+	await st.wait(0.5)
+	await _bro_say("Mine took years to put on.", 0.75)
+	await _bro_say("I never tried the other direction.", 0.75)
+	await st.vn_end(0.3)
+	# the shades come off: his eyes, for the first time
+	await st.wait(0.5)
 	b.gull.unwear("shades")
 	Sfx.play("equip", -8.0, 0.6)
 	await st.wait(1.1)
-	await _bro_say("...same.", 0.8, {"dist": 1.0, "yaw": 0.35, "up": 0.05, "fov": 32.0})
+	await _bro_say("...It's the colour I remembered.", 0.8, close_b)
+	await _bro_say("You carried it all the way up here.", 0.75)
+	await _bro_say("...It's still warm.", 0.8)
 	await st.vn_end(0.3)
 	# he eats it, slowly
 	var bt = b.gull.create_tween()
@@ -526,15 +543,17 @@ func ending(fry):
 	await st.wait(0.35)
 	if is_instance_valid(f2):
 		f2.consume()
-	await st.wait(1.4)
-	await _bro_say("...warm.", 0.75, {"dist": 1.0, "yaw": 0.35, "up": 0.05, "fov": 32.0})
-	await _you_say("...yeah.", 1.4, {"dist": 0.85, "yaw": -0.4, "up": 0.02, "fov": 32.0})
+	await st.wait(1.6)
+	await _bro_say("...Oh.", 0.8, close_b)
+	await _bro_say("Salt.", 0.8)
+	await _bro_say("I'd forgotten it was this small.", 0.75)
+	await _you_say("...yeah.", 1.4, close_y)
 	await st.vn_end(0.3)
 	# both turn to the sea and sit there: the old man waves from far below, the sun goes down on a town that was always plain
 	var t1 = GS.msec()
 	var yaw_s = PI
 	var camp = Vector3(-7.35, roof_y + 2.5, -9.0)
-	st.cam_set(camp, Vector3(-7.35, roof_y + 1.2, 6.0), 36.0, camp + Vector3(0.6, 0.6, 0.0), Vector3(-7.35, roof_y + 1.5, 6.0), 40.0, 11.0, 0.004)
+	st.cam_set(camp, Vector3(-7.35, roof_y + 1.2, 6.0), 36.0, camp + Vector3(0.6, 0.6, 0.0), Vector3(-7.35, roof_y + 1.5, 6.0), 40.0, 26.0, 0.004)
 	while GS.msec() - t1 < 1600:
 		pl.yaw = lerp_angle(pl.yaw, yaw_s, 0.08)
 		pl.aim_yaw = pl.yaw
@@ -544,6 +563,22 @@ func ending(fry):
 	el.rig.set_mode("wave")
 	Sfx.set_surf(true, -27.0, 4.0)          # round 20: the calm sea under the last quiet minute
 	await st.wait(1.2)
+	# the chain: the one thing he lets go of (nobody asks him to), and the hat that he keeps
+	b.gull.unwear("necklace")
+	Sfx.play("equip", -10.0, 0.6)
+	await st.caption("he took off the chain. nobody asked him to.", 2.4)
+	await _bro_say("I'm keeping the hat.", 0.75)
+	await _you_say("...good hat.", 1.4)
+	await _bro_say("...It is a good hat.", 0.75)
+	await st.vn_end(0.3)
+	await st.wait(1.0)
+	await _bro_say("That old man. Does he still drop them?", 0.72)
+	await _you_say("...every morning.", 1.4)
+	Sfx.play("drop_tick", -22.0, 0.8)           # far below: tk.
+	await st.wait(0.9)
+	await _bro_say("...Good.", 0.8)
+	await st.vn_end(0.4)
+	await st.wait(0.8)
 	await st.caption("nothing shiny. nothing fast.", 2.0)
 	await st.caption("just a fry, and somebody to eat it with.", 2.8)
 	await st.wait(0.6)
@@ -606,37 +641,21 @@ func bro_chat(id):
 	orbit_id += 1
 	cc().shoot(st, mid, sep + 3.2, atan2(-line.x, -line.z), {"size": 0.62, "fov": 36, "az": 90, "spread": 70, "h": 0.1, "push": 0.07, "third": false, "look_h": 0.2, "lift": 0.14}, 14.0, 0.004)
 	await st.wait(0.5)
-	match id:
-		"chat1":
-			await _bro_say("Saw you land. Clean. Not bad, kid.")
-			await _bro_say("Fast beats strong. Strong beats loud.")
-			await _bro_say("Go make the sky nervous. I'll be here. Looking expensive.", 0.7)
-		"chat2":
-			await _bro_say("Ten fries. You fly like you're late for something.")
-			await _bro_say("I was fast like that once. Then I found accessories.")
-			await _bro_say("...Hats are heavy. So is wanting things.", 0.8)
-		"chat3":
-			await _bro_say("Eighteen. Where do you think we're headed, kid?", 0.75)
-			await _bro_say("...Nineteen, I suppose. That's not a direction. That's arithmetic.")
-			await _bro_say("Funny thing about having everything: it takes up room. In here.")
-			await _bro_say("Still hungry? ...Yeah. Me too.", 0.8)
-		"chat4":
-			await _bro_say("All twenty-four. The whole spectrum.", 0.75)
-			await _bro_say("So. Big picture. Where does this path end?")
-			await _bro_say("...What does the stomach say?")
-			await _bro_say("...Right. Mine too. Something about fries, on a pier. Funny, that.", 0.8)
-			await _bro_say("Go look at the table you started at. I never did.", 0.7)
-		"free_intro":
-			await _bro_say("...You're back. The fry is gone, and you're back.", 0.75)
-			await _bro_say("Good. The sky did not get any smaller.")
-			await _bro_say("Press E when you want company. I'll be here. Looking expensive.", 0.7)
-		"free":
-			for ln in _free_lines():
-				await _bro_say(ln, 0.72)
-		"chat_sky":
-			await _bro_say("You caught the moon. I tried once. It laughed.", 0.75)
-			await _bro_say("Cloud, star, sun, rainbow. The lot.")
-			await _bro_say("And you came back to a roof. ...Interesting.", 0.8)
+	# round 20: one TALK per visit (ui/bro_talks.gd): "talk" = the first key talk the gull has earned and not heard yet, else a small talk that fits how far it has come
+	var lines = []
+	if id == "talk":
+		id = BroTalks.next_talk(b)
+		if id != "":
+			GS.cine_seen[id] = true
+	if id == "" or id == "free" or id == "talk":
+		lines = BroTalks.small_talk()
+	else:
+		lines = BroTalks.lines(id)
+	for ln in lines:
+		if ln.begins_with("Y|"):
+			await _you_say(ln.substr(2), 1.4)
+		else:
+			await _bro_say(ln, 0.72)
 	await st.vn_end(0.25)
 	b.look_at_player = true
 	pl.input_locked = false
@@ -644,31 +663,6 @@ func bro_chat(id):
 	m.hud.visible = true
 	st.finish()
 	cine_busy = false
-
-# round 16: the big brother after the end. What he says depends on what is still left to do (one short talk per press of E, never the same one twice in a row)
-var _free_last = -1
-func _free_lines():
-	var pool = []
-	var missing = GS.FRY_CAP - GS.fry_total()
-	if missing > 0:
-		pool.append(["%d fries are still out there. I counted. I was bored." % missing, "Golds hide on roofs. Diamonds hide where you'd need a ladder, if you had one."])
-	else:
-		pool.append(["All twenty-four. Show-off.", "Try the rainbow ones. They keep coming. Like regrets."])
-	var nf = GS.fish_book.size()
-	if nf < GS.FISH_ORDER.size():
-		pool.append(["%d kinds of fish so far. Nine exist." % nf, "Catch one and the sea wakes up. Then you can ride it. Space on the water, kid."])
-	else:
-		pool.append(["All nine fish. The sea has stopped returning your calls.", "Five in one OCEAN TIME? Go on. I'll pretend not to watch."])
-	if not GS.sky_got.has("sun") or not GS.sky_got.has("moon"):
-		pool.append(["Nine suns, they say. One of them is real.", "Nine rings per sun. Nine per moon. The sky is a strict teacher."])
-	pool.append(["%d of %d achievements." % [GS.ach_count(), GS.ACH.size()], "The rest are mostly things you do by accident. Or on purpose, if you're me."])
-	pool.append(["Squawk on a roof. F. They come. Don't ask me why.", "Squawk at a crowd that doesn't like you. ...Don't."])
-	pool.append(["I spent years collecting hats.", "Now I mostly collect the view."])
-	var i = randi() % pool.size()
-	if i == _free_last:
-		i = (i + 1) % pool.size()
-	_free_last = i
-	return pool[i]
 
 # ------------------------------------------------------------------ THE CINEMATIC MOMENTS (round 10: short, 4-9 seconds, each with a face of its own)
 # The player's attention is something to soothe, not to interrupt: gulls collect these things one after another, so

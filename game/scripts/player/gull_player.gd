@@ -90,6 +90,7 @@ var last_bump_ms = -10000
 var water_grace = 0.0           # round 16: after a take-off from the water a wall cannot make the gull tumble for a moment
 var launch_t = 0.0               # round 16: seconds of the OCEAN TIME launch burst left (a huge short acceleration out of the sea)
 var launch_speed = 0.0
+var cam_len_s = -1.0               # round 20: the smoothed length of the camera arm (see update_camera)
 var aim_pitch_launch = 0.4       # round 18b: the pitch of an aimed launch
 var surf_t = 0.0
 var wake_t = 0.0
@@ -1534,12 +1535,22 @@ func update_camera(delta, snap):
 	dist_t -= 0.7 * focus
 	vision = move_toward(vision, 1.0 if GS.sense_active else 0.0, 4.0 * dt_f) if not snap else 0.0
 	fov_t += 7.0 * vision
-	fov_kick = move_toward(fov_kick, 0.0, 22.0 * delta)
+	# round 20: the kick and the shake die away in REAL time (in the slow motion of TAB a launch used to shake the picture for seconds)
+	fov_kick = move_toward(fov_kick, 0.0, 22.0 * dt_f)
 	cam_fov = lerp(cam_fov, fov_t, 1.0 if snap else 1.0 - exp(-4.0 * dt_f))
 	cam.fov = cam_fov + fov_kick
 	cam_dist = lerp(cam_dist, dist_t, 1.0 if snap else 1.0 - exp(-3.0 * dt_f))
 	arm.spring_length = cam_dist
-	shake = move_toward(shake, 0.0, 2.5 * delta)
+	# round 20, THE LAUNCH JITTER: the spring arm tests its collisions once per PHYSICS tick, and in the slow motion of TAB (time x0.3) that is only ~18 times a second while the camera
+	# rig moves every frame: right after a launch from the sea (the camera low behind the gull, the camera-only floor just above the water) the arm's length jumped between 2 and 6 m from
+	# one frame to the next. The camera now sits at a smoothed length, in real time: a wall still pulls it in at once, it comes back out gently.
+	var hit_len = min(arm.get_hit_length(), arm.spring_length)
+	if snap or cam_len_s < 0.0:
+		cam_len_s = hit_len
+	else:
+		cam_len_s = lerp(cam_len_s, hit_len, 1.0 - exp(-(18.0 if hit_len < cam_len_s else 3.2) * dt_f))
+	cam.position = Vector3(0.0, 0.0, min(cam_len_s, arm.spring_length))
+	shake = move_toward(shake, 0.0, 2.5 * dt_f)
 	cam.h_offset = randf_range(-1.0, 1.0) * shake * 0.12
 	cam.v_offset = randf_range(-1.0, 1.0) * shake * 0.12
 	# cinematic / intro / sense override camera

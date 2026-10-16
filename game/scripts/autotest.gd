@@ -46,7 +46,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u", "--r16s": "r16s", "--r16a": "r16a", "--r16b": "r16b", "--r16c": "r16c", "--r16d": "r16d", "--r16e": "r16e", "--r16f": "r16f", "--r16h": "r16h", "--r16g": "r16g", "--r17": "r17_menus", "--r18a": "r18a", "--r18b": "r18b", "--r18v": "r18v", "--r18m": "r18m", "--r18n": "r18n", "--r18h": "r18h", "--r18f": "r18f", "--r18w": "r18w", "--r18s": "r18s"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u", "--r16s": "r16s", "--r16a": "r16a", "--r16b": "r16b", "--r16c": "r16c", "--r16d": "r16d", "--r16e": "r16e", "--r16f": "r16f", "--r16h": "r16h", "--r16g": "r16g", "--r17": "r17_menus", "--r18a": "r18a", "--r18b": "r18b", "--r18v": "r18v", "--r18m": "r18m", "--r18n": "r18n", "--r18h": "r18h", "--r18f": "r18f", "--r18w": "r18w", "--r18s": "r18s", "--r20j": "r20j", "--r20t": "r20t", "--r20s": "r20s"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -4987,6 +4987,24 @@ func _r18_node():
 
 func r18a():
 	_r18_node().r18a()
+
+# round 20
+func _r20_node():
+	var t = Node.new()
+	t.set_script(load("res://scripts/autotest_r20.gd"))
+	t.at = self
+	t.main = main
+	add_child(t)
+	return t
+
+func r20j():
+	_r20_node().r20j()
+
+func r20t():
+	_r20_node().r20t()
+
+func r20s():
+	_r20_node().r20s()
 
 func r18b():
 	_r18_node().r18b()

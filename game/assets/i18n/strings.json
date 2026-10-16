@@ -229,15 +229,110 @@
 "zh_CN": "-1% 伤害",
 "zh_TW": "-1% 傷害"
 },
+"...Broke it daily.": {
+"ja": "……毎日破ってたがな。",
+"zh_CN": "……天天违反。",
+"zh_TW": "……天天違反。"
+},
+"...Fair.": {
+"ja": "……なるほど。",
+"zh_CN": "……有道理。",
+"zh_TW": "……有道理。"
+},
+"...Good.": {
+"ja": "……そうか。いい。",
+"zh_CN": "……那就好。",
+"zh_TW": "……那就好。"
+},
 "...Hats are heavy. So is wanting things.": {
 "ja": "帽子は重い。何かを欲しがるのもな。",
 "zh_CN": "帽子很沉，想要的东西也是。",
 "zh_TW": "帽子很沉，想要的東西也是。"
 },
+"...He always looked fed.": {
+"ja": "……なのに、いつも満ち足りた顔をしてた。",
+"zh_CN": "……可他看上去总是吃饱了的样子。",
+"zh_TW": "……可他看上去總是吃飽了的樣子。"
+},
+"...I didn't say that. Forget it.": {
+"ja": "……今のは言ってない。忘れろ。",
+"zh_CN": "……我没说过这话。忘了吧。",
+"zh_TW": "……我沒說過這話。忘了吧。"
+},
+"...I never asked politely.": {
+"ja": "……おれは、ていねいに頼んだことがなかった。",
+"zh_CN": "……我从没礼貌地问过。",
+"zh_TW": "……我從沒禮貌地問過。"
+},
+"...I think about that.": {
+"ja": "……あれを、よく思い出す。",
+"zh_CN": "……我常想起这事。",
+"zh_TW": "……我常想起這事。"
+},
+"...I'd forgotten that.": {
+"ja": "……忘れてたよ。",
+"zh_CN": "……我都忘了。",
+"zh_TW": "……我都忘了。"
+},
+"...I'll practise.": {
+"ja": "……練習しとく。",
+"zh_CN": "……我再练练。",
+"zh_TW": "……我再練練。"
+},
+"...Interesting.": {
+"ja": "……面白い。",
+"zh_CN": "……有意思。",
+"zh_TW": "……有意思。"
+},
+"...It doesn't do anything.": {
+"ja": "……何の役にも立たない。",
+"zh_CN": "……它什么用都没有。",
+"zh_TW": "……它什麼用都沒有。"
+},
+"...It is a good hat.": {
+"ja": "……いい帽子だよな。",
+"zh_CN": "……确实是顶好帽子。",
+"zh_TW": "……確實是頂好帽子。"
+},
+"...It isn't.": {
+"ja": "……そうじゃないがな。",
+"zh_CN": "……其实不是。",
+"zh_TW": "……其實不是。"
+},
+"...It was me. Mostly.": {
+"ja": "……おれだった。たいてい。",
+"zh_CN": "……是我。差不多吧。",
+"zh_TW": "……是我。差不多吧。"
+},
+"...It's still warm.": {
+"ja": "……まだ、あったかい。",
+"zh_CN": "……还是热的。",
+"zh_TW": "……還是熱的。"
+},
+"...It's the colour I remembered.": {
+"ja": "……おぼえてた色だ。",
+"zh_CN": "……是我记得的那个颜色。",
+"zh_TW": "……是我記得的那個顏色。"
+},
+"...Land softer.": {
+"ja": "……もう少しそっと降りろ。",
+"zh_CN": "……落地轻点。",
+"zh_TW": "……落地輕點。"
+},
 "...Nineteen, I suppose. That's not a direction. That's arithmetic.": {
 "ja": "19本、だろうな。それは方角じゃない。算数だ。",
 "zh_CN": "十九根吧，我猜。那可不是方向，那是算术。",
 "zh_TW": "十九根吧，我猜。那可不是方向，那是算術。"
+},
+"...Oh.": {
+"ja": "……ああ。",
+"zh_CN": "……啊。",
+"zh_TW": "……啊。"
+},
+"...Respect.": {
+"ja": "……敬意を表する。",
+"zh_CN": "……佩服。",
+"zh_TW": "……佩服。"
 },
 "...Right. Mine too. Something about fries, on a pier. Funny, that.": {
 "ja": "だよな。おれのもだ。桟橋の、ポテトの話。おかしなもんだ。",
@@ -249,15 +344,50 @@
 "zh_CN": "我也是。",
 "zh_TW": "我也是。"
 },
+"...Same as most things.": {
+"ja": "……たいていのものはそうだ。",
+"zh_CN": "……大多数东西都这样。",
+"zh_TW": "……大多數東西都這樣。"
+},
+"...That's a lot of hats, kid.": {
+"ja": "……ずいぶんかぶってるな、おチビ。",
+"zh_CN": "……帽子可真不少，小家伙。",
+"zh_TW": "……帽子可真不少，小傢伙。"
+},
+"...That's how it starts.": {
+"ja": "……そこから始まるんだ。",
+"zh_CN": "……一切就是这样开始的。",
+"zh_TW": "……一切就是這樣開始的。"
+},
+"...That's why the hat is waterproof. Mostly.": {
+"ja": "……だから、この帽子は防水なんだ。だいたいな。",
+"zh_CN": "……所以这顶帽子防水。大体上。",
+"zh_TW": "……所以這頂帽子防水。大體上。"
+},
+"...Then it went and sat in your beak. Typical.": {
+"ja": "……それが、お前のくちばしにおさまった。やれやれ、らしいな。",
+"zh_CN": "……结果它跑去坐在了你嘴里。真有它的。",
+"zh_TW": "……結果它跑去坐在了你嘴裡。真有它的。"
+},
 "...What does the stomach say?": {
 "ja": "腹はなんて言ってる？",
 "zh_CN": "肚子是怎么说的？",
 "zh_TW": "肚子是怎麼說的？"
 },
+"...What's that.": {
+"ja": "……それは何だ。",
+"zh_CN": "……那是什么。",
+"zh_TW": "……那是什麼。"
+},
 "...You brought it all the way up here.": {
 "ja": "わざわざここまで持ってきたのか。",
 "zh_CN": "你居然一路把它叼上来了。",
 "zh_TW": "你居然一路把它叼上來了。"
+},
+"...You think these shades are for show?": {
+"ja": "……このサングラスが飾りだと思ったか？",
+"zh_CN": "……你以为这墨镜只是摆设？",
+"zh_TW": "……你以為這墨鏡只是擺設？"
 },
 "...You're back. The fry is gone, and you're back.": {
 "ja": "戻ってきたか。ポテトはなくなって、キミは戻ってきた。",
@@ -274,6 +404,26 @@
 "zh_CN": "可看起来吃饱了的，倒是你。",
 "zh_TW": "可看起來吃飽了的，倒是你。"
 },
+"...beak was full.": {
+"ja": "くちばしがいっぱいだった。",
+"zh_CN": "嘴里塞满了。",
+"zh_TW": "嘴裡塞滿了。"
+},
+"...every morning.": {
+"ja": "毎朝。",
+"zh_CN": "每天早上。",
+"zh_TW": "每天早上。"
+},
+"...good hat.": {
+"ja": "いい帽子。",
+"zh_CN": "好帽子。",
+"zh_TW": "好帽子。"
+},
+"...it tastes like a rainbow.": {
+"ja": "虹の味がした。",
+"zh_CN": "有彩虹的味道。",
+"zh_TW": "有彩虹的味道。"
+},
 "...it would have been the fries again, wouldn't it.": {
 "ja": "……どうせまた、ポテトだったよね。",
 "zh_CN": "……许的肯定又是薯条，对吧。",
@@ -289,6 +439,16 @@
 "zh_CN": "不过是些薯条。",
 "zh_TW": "不過是些薯條。"
 },
+"...like this.": {
+"ja": "こう。",
+"zh_CN": "这样。",
+"zh_TW": "這樣。"
+},
+"...no.": {
+"ja": "ちがう。",
+"zh_CN": "不对。",
+"zh_TW": "不對。"
+},
 "...oh.": {
 "ja": "あ。",
 "zh_CN": "啊。",
@@ -299,6 +459,16 @@
 "zh_CN": "我也是。",
 "zh_TW": "我也是。"
 },
+"...soft.": {
+"ja": "ふわふわ。",
+"zh_CN": "软软的。",
+"zh_TW": "軟軟的。"
+},
+"...still hungry?": {
+"ja": "まだ、はらぺこ？",
+"zh_CN": "还饿吗？",
+"zh_TW": "還餓嗎？"
+},
 "...that seems about right.": {
 "ja": "まあ、そんなもんか。",
 "zh_CN": "这样也挺合理。",
@@ -306,8 +476,8 @@
 },
 "...warm.": {
 "ja": "あったかい。",
-"zh_CN": "暖的。",
-"zh_TW": "暖的。"
+"zh_CN": "暖暖的。",
+"zh_TW": "暖暖的。"
 },
 "...what was it, again?": {
 "ja": "えっと、なんだっけ？",
@@ -704,6 +874,11 @@
 "zh_CN": "全套集齐。码头开始紧张了。",
 "zh_TW": "全套集齊。碼頭開始緊張了。"
 },
+"A falling star. In your beak, no less.": {
+"ja": "流れ星か。しかも、お前のくちばしの中に。",
+"zh_CN": "一颗流星。居然叼在你嘴里。",
+"zh_TW": "一顆流星。居然叼在你嘴裡。"
+},
 "A gentle first flight: lots of breath, big slow rings, a friendly town.": {
 "ja": "やさしい初フライト：スタミナたっぷり、輪は大きくゆっくり、街もやさしい。",
 "zh_CN": "温柔的初次飞行：体力充沛，圆圈又大又慢，小镇很友好。",
@@ -718,6 +893,11 @@
 "ja": "どの季節にもカモメを。どの傘にも。",
 "zh_CN": "四季皆宜的海鸥。雨伞也皆宜。",
 "zh_TW": "四季皆宜的海鷗。雨傘也皆宜。"
+},
+"A rain cloud. Your own private weather.": {
+"ja": "雨雲か。自分専用の天気だな。",
+"zh_CN": "一朵雨云。你专属的天气。",
+"zh_TW": "一朵雨雲。你專屬的天氣。"
 },
 "A taste for the whole spectrum. Mostly salt, though.": {
 "ja": "スペクトル全色の味。ほぼ塩味だけど。",
@@ -838,6 +1018,26 @@
 "ja": "24本ぜんぶ。スペクトル全色だ。",
 "zh_CN": "全部二十四根。整条光谱。",
 "zh_TW": "全部二十四根。整條光譜。"
+},
+"Always. That's the trick of it.": {
+"ja": "いつもだ。そこがミソなんだ。",
+"zh_CN": "一直饿。这就是它的把戏。",
+"zh_TW": "一直餓。這就是它的把戲。"
+},
+"And fear of the hat.": {
+"ja": "あと、帽子がこわかったってのもある。",
+"zh_CN": "也怕那顶帽子。",
+"zh_TW": "也怕那頂帽子。"
+},
+"And somewhere in all that, I lost track of the first one. Where it was. What it tasted like.": {
+"ja": "追いかけてるうちに、最初の1本を見失った。どこにあったのか。どんな味だったのか。",
+"zh_CN": "追着追着，我忘了第一根薯条在哪儿，是什么味道。",
+"zh_TW": "追著追著，我忘了第一根薯條在哪兒，是什麼味道。"
+},
+"And you came back down to a roof.": {
+"ja": "それで、お前は屋根に戻ってきた。",
+"zh_CN": "而你回到的，是一片屋顶。",
+"zh_TW": "而你回到的，是一片屋頂。"
 },
 "And you came back to a roof. ...Interesting.": {
 "ja": "それで屋根に戻ってきた。面白いな。",
@@ -1023,6 +1223,11 @@
 "ja": "大局的に言えば、ポテトに関係がある。証明はできんがな。",
 "zh_CN": "往大了说：跟薯条有关。我只是证明不了。",
 "zh_TW": "往大了說：跟薯條有關。我只是證明不了。"
+},
+"By morning I was at the far end of the island and it was still up there. Calm as a plate.": {
+"ja": "朝になると島の反対側まで来てたが、月はまだ上にあった。皿みたいに涼しい顔でな。",
+"zh_CN": "天亮时我到了岛的另一头，它还在上面，平静得像个盘子。",
+"zh_TW": "天亮時我到了島的另一頭，它還在上面，平靜得像個盤子。"
 },
 "C - CODEX          F - SQUAWK (TRY IT ON A ROOF)": {
 "ja": "C - 図鑑          F - 鳴く（屋根の上でどうぞ）",
@@ -1274,6 +1479,11 @@
 "zh_CN": "抬起头，小家伙。风是免费的。",
 "zh_TW": "抬起頭，小傢伙。風是免費的。"
 },
+"Chin up, kid. Wings out.": {
+"ja": "顔を上げろ、おチビ。翼を広げろ。",
+"zh_CN": "抬头，小家伙。翅膀张开。",
+"zh_TW": "抬頭，小傢伙。翅膀張開。"
+},
 "Chinese and Japanese letters: Noto Sans SC / JP (SIL Open Font License)": {
 "ja": "中国語・日本語フォント：Noto Sans SC / JP（SIL Open Font License）",
 "zh_CN": "中文与日文字体：Noto Sans SC / JP（SIL 开放字体许可证）",
@@ -1293,6 +1503,11 @@
 "ja": "クロード・ドビュッシー  -  月の光",
 "zh_CN": "克劳德·德彪西  -  《月光》",
 "zh_TW": "克勞德·德布西  -  《月光》"
+},
+"Cloud, star, sun, moon, rainbow. The whole sky.": {
+"ja": "雲、星、太陽、月、虹。空ぜんぶだ。",
+"zh_CN": "云，星，太阳，月亮，彩虹。整片天空。",
+"zh_TW": "雲，星，太陽，月亮，彩虹。整片天空。"
 },
 "Cloud, star, sun, rainbow. The lot.": {
 "ja": "雲、星、太陽、虹。ひととおりだな。",
@@ -1368,6 +1583,26 @@
 "ja": "ポタッ。",
 "zh_CN": "滴答。",
 "zh_TW": "滴答。"
+},
+"Did you wish?": {
+"ja": "願いごとはしたか？",
+"zh_CN": "许愿了吗？",
+"zh_TW": "許願了嗎？"
+},
+"Do they do that now?": {
+"ja": "今はそういうことするのか？",
+"zh_CN": "现在流行这样了？",
+"zh_TW": "現在流行這樣了？"
+},
+"Do you remember what the first one tasted like?": {
+"ja": "最初の1本は、どんな味だったか覚えてるか？",
+"zh_CN": "你还记得第一根是什么味道吗？",
+"zh_TW": "你還記得第一根是什麼味道嗎？"
+},
+"Don't waste it.": {
+"ja": "無駄にするな。",
+"zh_CN": "别浪费了。",
+"zh_TW": "別浪費了。"
 },
 "E  -  TALK TO BIG BRO": {
 "ja": "E  -  アニキと話す",
@@ -1503,6 +1738,21 @@
 "ja": "ドリンクはスタミナを回復し、効果時間をのばす。3つ同時でレインボータイム。",
 "zh_CN": "每种饮品都会恢复体力并延长时间。三种饮品同时生效：彩虹时间。",
 "zh_TW": "每種飲品都會恢復體力並延長時間。三種飲品同時生效：彩虹時間。"
+},
+"Everybody does. Even me.": {
+"ja": "誰だってそうだ。おれもな。",
+"zh_CN": "谁都这样。我也一样。",
+"zh_TW": "誰都這樣。我也一樣。"
+},
+"Everybody looks up and sees height. Nobody mentions the cushions.": {
+"ja": "みんな空を見上げて高さばかり見る。クッションの話は誰もしない。",
+"zh_CN": "人人抬头只看见高度，没人提起那些软垫子。",
+"zh_TW": "人人抬頭只看見高度，沒人提起那些軟墊子。"
+},
+"Everything I own, I wear.": {
+"ja": "持ってるものは、ぜんぶ身につけてる。",
+"zh_CN": "我所有的东西，都穿在身上。",
+"zh_TW": "我所有的東西，都穿在身上。"
 },
 "Everything far away glows.": {
 "ja": "遠くのものがぜんぶ光る。",
@@ -1754,6 +2004,16 @@
 "zh_CN": "什么都有，说起来挺好笑：它占地方，就占在这里面。",
 "zh_TW": "什麼都有，說起來挺好笑：它佔地方，就佔在這裡面。"
 },
+"Funny. It's never the outside that feels heavy.": {
+"ja": "妙だな。重いのは、いつも外側じゃない。",
+"zh_CN": "怪了，沉的从来不是外面这层。",
+"zh_TW": "怪了，沉的從來不是外面這層。"
+},
+"Funny. The hat is lighter.": {
+"ja": "妙だな。帽子が軽くなった。",
+"zh_CN": "怪了，帽子轻了。",
+"zh_TW": "怪了，帽子輕了。"
+},
 "G U L L   T I M E": {
 "ja": "カ モ メ タ イ ム",
 "zh_CN": "海 鸥 时 间",
@@ -1924,10 +2184,25 @@
 "zh_CN": "金的藏在屋顶上。钻石的藏在得用梯子的地方——如果你有梯子的话。",
 "zh_TW": "金的藏在屋頂上。鑽石的藏在得用梯子的地方——如果你有梯子的話。"
 },
+"Good.": {
+"ja": "そうか。いい。",
+"zh_CN": "那就好。",
+"zh_TW": "那就好。"
+},
 "Good. The sky did not get any smaller.": {
 "ja": "よし。空はちっとも狭くなってない。",
 "zh_CN": "很好。天空一点也没变小。",
 "zh_TW": "很好。天空一點也沒變小。"
+},
+"Good. The sky didn't get any smaller.": {
+"ja": "よし。空は少しも小さくなってない。",
+"zh_CN": "很好。天空一点没变小。",
+"zh_TW": "很好。天空一點沒變小。"
+},
+"Gulls and thieves, same rule: look innocent from the knees down.": {
+"ja": "カモメも泥棒も同じだ。ひざから下は無実の顔をしておけ。",
+"zh_CN": "海鸥和小偷，规矩一样：膝盖以下要看起来无辜。",
+"zh_TW": "海鷗和小偷，規矩一樣：膝蓋以下要看起來無辜。"
 },
 "HAPPY HOUR": {
 "ja": "ハッピーアワー",
@@ -2034,6 +2309,11 @@
 "zh_CN": "嘘——",
 "zh_TW": "噓——"
 },
+"Ha. Good. Wishes are for gulls with nothing in their beaks.": {
+"ja": "はは。いい。願いごとってのは、くちばしが空っぽのカモメがするもんだ。",
+"zh_CN": "哈。好。许愿是留给嘴里空着的海鸥的。",
+"zh_TW": "哈。好。許願是留給嘴裡空著的海鷗的。"
+},
 "He is not guarding anything. He just likes you.": {
 "ja": "何も守ってない。ただキミが好きなだけ。",
 "zh_CN": "他什么也没在守，他只是喜欢你。",
@@ -2069,6 +2349,16 @@
 "zh_CN": "我本来打算去弄点薯条。就在码头那边。",
 "zh_TW": "我本來打算去弄點薯條。就在碼頭那邊。"
 },
+"I don't give advice.": {
+"ja": "おれは助言なんかしない。",
+"zh_CN": "我不给人建议。",
+"zh_TW": "我不給人建議。"
+},
+"I flew at it all night.": {
+"ja": "一晩じゅう、あれに向かって飛んだ。",
+"zh_CN": "我冲着它飞了一整夜。",
+"zh_TW": "我衝著它飛了一整夜。"
+},
 "I got everything.": {
 "ja": "ぜんぶ手に入れた。",
 "zh_CN": "我什么都有了。",
@@ -2079,20 +2369,115 @@
 "zh_CN": "链子，我有了。",
 "zh_TW": "鍊子，我有了。"
 },
+"I had a rule once: never fly with a full beak and an empty head.": {
+"ja": "昔、ルールを決めた。くちばしがいっぱいで頭が空っぽのときは飛ぶな、と。",
+"zh_CN": "我曾有条规矩：嘴里塞满、脑袋空空，不许起飞。",
+"zh_TW": "我曾有條規矩：嘴裡塞滿、腦袋空空，不許起飛。"
+},
+"I had one of those, years ago. It only ever rained on my hat.": {
+"ja": "何年か前、おれにもあった。降るのは、いつもおれの帽子の上だけだった。",
+"zh_CN": "我多年前也有过一朵。它只往我的帽子上下雨。",
+"zh_TW": "我多年前也有過一朵。它只往我的帽子上下雨。"
+},
+"I had them all, once. I could name every one in my sleep.": {
+"ja": "おれも昔は全部持ってた。寝ぼけてても、ぜんぶ名前が言えた。",
+"zh_CN": "我也曾经全都有过。闭着眼睛都叫得出每一种的名字。",
+"zh_TW": "我也曾經全都有過。閉著眼睛都叫得出每一種的名字。"
+},
+"I held it for one second, once. It left a mark.": {
+"ja": "一度だけ、1秒だけくわえたことがある。跡が残った。",
+"zh_CN": "我有一回叼了它一秒钟。留了个印子。",
+"zh_TW": "我有一回叼了它一秒鐘。留了個印子。"
+},
+"I keep a list of everything I have.": {
+"ja": "持ってるものを、ぜんぶ書き出した表がある。",
+"zh_CN": "我留着一张清单，写着我拥有的一切。",
+"zh_TW": "我留著一張清單，寫著我擁有的一切。"
+},
+"I knew a gull who only ever ate what fell. Never took a thing.": {
+"ja": "落ちてきたものしか食べないカモメを知ってた。何も奪わないやつだ。",
+"zh_CN": "我认识一只海鸥，只吃掉下来的东西，从不抢。",
+"zh_TW": "我認識一隻海鷗，只吃掉下來的東西，從不搶。"
+},
+"I never tried the other direction.": {
+"ja": "逆向きは、試したことがない。",
+"zh_CN": "反过来脱，我从没试过。",
+"zh_TW": "反過來脫，我從沒試過。"
+},
+"I never trusted a gull who couldn't hold a cocktail and a grudge at the same time.": {
+"ja": "カクテルと恨みを同時に持てないカモメは、信用しない主義だ。",
+"zh_CN": "我从不信任那种没法一边端着鸡尾酒、一边揣着怨气的海鸥。",
+"zh_TW": "我從不信任那種沒法一邊端著雞尾酒、一邊揣著怨氣的海鷗。"
+},
+"I saw a gull land next to you. Just to say hello.": {
+"ja": "お前の隣にカモメが降りてきたのを見た。あいさつしに来ただけで。",
+"zh_CN": "我看见有只海鸥落在你旁边，就为了打声招呼。",
+"zh_TW": "我看見有隻海鷗落在你旁邊，就為了打聲招呼。"
+},
+"I smelled the sea on you.": {
+"ja": "お前から海のにおいがした。",
+"zh_CN": "我在你身上闻到了海的味道。",
+"zh_TW": "我在你身上聞到了海的味道。"
+},
 "I spent years collecting hats.": {
 "ja": "何年も帽子を集めてきた。",
 "zh_CN": "我花了好些年收集帽子。",
 "zh_TW": "我花了好些年收集帽子。"
+},
+"I thought he was a fool.": {
+"ja": "バカだと思ってた。",
+"zh_CN": "我当时觉得他是个傻子。",
+"zh_TW": "我當時覺得他是個傻子。"
+},
+"I used to leave one of those.": {
+"ja": "おれも昔は、ああいうのを残してた。",
+"zh_CN": "我以前也留下过一道。",
+"zh_TW": "我以前也留下過一道。"
 },
 "I was fast like that once. Then I found accessories.": {
 "ja": "おれも昔はそれくらい速かった。そのあとアクセサリーに出会った。",
 "zh_CN": "我以前也那么快。后来我发现了配饰。",
 "zh_TW": "我以前也那麼快。後來我發現了配飾。"
 },
+"I went down to the cafe at dawn. Before the shutters.": {
+"ja": "夜明けにカフェまで降りてみた。シャッターが開く前にな。",
+"zh_CN": "我天亮时去了趟咖啡馆。卷帘门还没拉开。",
+"zh_TW": "我天亮時去了趟咖啡館。捲簾門還沒拉開。"
+},
+"I wished once. For a hat. ...Look how that went.": {
+"ja": "一度だけ願ったことがある。帽子をくれ、とな。……ご覧のとおりだ。",
+"zh_CN": "我许过一次愿。要一顶帽子。……看看后来怎么样了。",
+"zh_TW": "我許過一次願。要一頂帽子。……看看後來怎麼樣了。"
+},
+"I'd forgotten it was this small.": {
+"ja": "こんなに小さかったことを、忘れてた。",
+"zh_CN": "我都忘了，它这么小。",
+"zh_TW": "我都忘了，它這麼小。"
+},
+"I'd know.": {
+"ja": "おれには分かる。",
+"zh_CN": "我懂的。",
+"zh_TW": "我懂的。"
+},
 "I'd say don't copy me. But look at that hat.": {
 "ja": "おれのマネはするなと言いたい。だがその帽子はいいな。",
 "zh_CN": "我本想说别学我。可看看那顶帽子。",
 "zh_TW": "我本想說別學我。可看看那頂帽子。"
+},
+"I'll be here. Without the chain. ...Still looking expensive.": {
+"ja": "おれはここにいる。鎖はなしでな。……それでも高そうだろ。",
+"zh_CN": "我就在这儿。没了金链子，……还是看起来很贵。",
+"zh_TW": "我就在這兒。沒了金鍊子，……還是看起來很貴。"
+},
+"I'm keeping the hat.": {
+"ja": "帽子は残す。",
+"zh_CN": "帽子我留着。",
+"zh_TW": "帽子我留著。"
+},
+"I'm not sure either of us should be proud.": {
+"ja": "どっちも誇れることじゃない気がするがな。",
+"zh_CN": "我不确定我们俩谁该为此骄傲。",
+"zh_TW": "我不確定我們倆誰該為此驕傲。"
 },
 "ICE CREAM": {
 "ja": "アイス",
@@ -2134,15 +2519,50 @@
 "zh_CN": "这就够了。",
 "zh_TW": "這就夠了。"
 },
+"In my day we ignored each other. Out of respect. And pride.": {
+"ja": "おれの頃は、お互い無視し合った。敬意と、プライドからな。",
+"zh_CN": "我那会儿，大家互相不理睬。出于尊重，还有骄傲。",
+"zh_TW": "我那會兒，大家互相不理睬。出於尊重，還有驕傲。"
+},
+"It doesn't glow.": {
+"ja": "光ってない。",
+"zh_CN": "它不发光。",
+"zh_TW": "它不發光。"
+},
+"It doesn't make you fast.": {
+"ja": "速くもならない。",
+"zh_CN": "它不会让你变快。",
+"zh_TW": "它不會讓你變快。"
+},
 "It is, regrettably, not fruit flavoured.": {
 "ja": "残念ながら、フルーツ味ではない。",
 "zh_CN": "很遗憾，不是水果味的。",
 "zh_TW": "很遺憾，不是水果味的。"
 },
+"It never was the kind you can see on a plate.": {
+"ja": "皿の上に見えるようなものじゃなかった、最初から。",
+"zh_CN": "它从来就不是盘子里看得见的那种东西。",
+"zh_TW": "它從來就不是盤子裡看得見的那種東西。"
+},
+"It was still warm when it got up here.": {
+"ja": "ここに着いたとき、まだあったかかった。",
+"zh_CN": "它送到这儿的时候，还是热的。",
+"zh_TW": "它送到這兒的時候，還是熱的。"
+},
 "It was warm, it was salty, and it was somebody else's.": {
 "ja": "あったかくて、しょっぱくて、他人のものだった。",
 "zh_CN": "热乎乎的，咸滋滋的，而且是别人的。",
 "zh_TW": "熱呼呼的，鹹滋滋的，而且是別人的。"
+},
+"It's just quiet in places.": {
+"ja": "ところどころ静かなだけだ。",
+"zh_CN": "只是有些地方很安静。",
+"zh_TW": "只是有些地方很安靜。"
+},
+"It's very long. There's a gap near the bottom where something used to be.": {
+"ja": "ずいぶん長い。下のほうに、前は何かあった空白がある。",
+"zh_CN": "很长。靠近底下有一处空着，原先该有样东西。",
+"zh_TW": "很長。靠近底下有一處空著，原先該有樣東西。"
 },
 "JET FRY": {
 "ja": "ジェットポテト",
@@ -2249,6 +2669,11 @@
 "zh_CN": "随便找个地方落脚休息——越高恢复越快。树和屋顶都算。",
 "zh_TW": "隨便找個地方落腳休息——越高恢復越快。樹和屋頂都算。"
 },
+"Late in the afternoon the whole pier goes the colour of a fry.": {
+"ja": "夕方になると、桟橋ぜんぶがポテトの色になる。",
+"zh_CN": "傍晚，整个码头都会变成薯条的颜色。",
+"zh_TW": "傍晚，整個碼頭都會變成薯條的顏色。"
+},
 "Less runway. More gull.": {
 "ja": "助走は短く、カモメは多めに。",
 "zh_CN": "用不着助跑，海鸥自带。",
@@ -2258,6 +2683,11 @@
 "ja": "ほかのカモメを隣に座らせる。",
 "zh_CN": "让另一只海鸥坐到你身边。",
 "zh_TW": "讓另一隻海鷗坐到你身邊。"
+},
+"Like this?": {
+"ja": "こうか？",
+"zh_CN": "这样？",
+"zh_TW": "這樣？"
 },
 "Look all you like. It costs nothing.": {
 "ja": "見放題。タダです。",
@@ -2338,6 +2768,16 @@
 "ja": "音楽",
 "zh_CN": "音乐",
 "zh_TW": "音樂"
+},
+"Mind the old man's table.": {
+"ja": "じいさんのテーブルに気をつけろ。",
+"zh_CN": "留神老爷子的桌子。",
+"zh_TW": "留神老爺子的桌子。"
+},
+"Mine took years to put on.": {
+"ja": "おれのは、着るのに何年もかかった。",
+"zh_CN": "我这一身，花了好些年才穿上。",
+"zh_TW": "我這一身，花了好些年才穿上。"
 },
 "More hats than a gull has heads. Mathematically concerning.": {
 "ja": "頭の数より帽子が多い。数学的に心配。",
@@ -2554,6 +2994,31 @@
 "zh_CN": "听说有九个太阳。其中一个是真的。",
 "zh_TW": "聽說有九個太陽。其中一個是真的。"
 },
+"No. Don't tell me. A hat should keep its own story.": {
+"ja": "いや、言うな。帽子の話は、帽子のものだ。",
+"zh_CN": "不，别告诉我。帽子的故事，该由帽子自己留着。",
+"zh_TW": "不，別告訴我。帽子的故事，該由帽子自己留著。"
+},
+"Nobody gets the whole sky. It's not that kind of thing.": {
+"ja": "空をまるごと手に入れるやつなんていない。そういうものじゃない。",
+"zh_CN": "没人能得到整片天空。它不是那种东西。",
+"zh_TW": "沒人能得到整片天空。它不是那種東西。"
+},
+"Not sure that's a compliment. To either of us.": {
+"ja": "ほめ言葉かどうかは分からん。お前にとっても、おれにとってもな。",
+"zh_CN": "不知道这算不算夸奖。对你，对我，都一样。",
+"zh_TW": "不知道這算不算誇獎。對你，對我，都一樣。"
+},
+"Not that he'd notice. ...Still.": {
+"ja": "気づかれやしないがな。……それでもだ。",
+"zh_CN": "倒不是说他会发现。……还是留神点。",
+"zh_TW": "倒不是說他會發現。……還是留神點。"
+},
+"Notice how a crowd watches your feet, not your face?": {
+"ja": "人ごみは顔じゃなく足元を見てるって、気づいたか？",
+"zh_CN": "有没有注意到，人群盯的是你的脚，不是你的脸？",
+"zh_TW": "有沒有注意到，人群盯的是你的腳，不是你的臉？"
+},
 "Now I mostly collect the view.": {
 "ja": "いまはだいたい、景色を集めてる。",
 "zh_CN": "现在我主要收集风景。",
@@ -2749,10 +3214,20 @@
 "zh_CN": "按空格起飞",
 "zh_TW": "按空白鍵起飛"
 },
+"People on the pier thought it was a plane.": {
+"ja": "桟橋の連中は飛行機だと思ってた。",
+"zh_CN": "码头上的人还以为是架飞机。",
+"zh_TW": "碼頭上的人還以為是架飛機。"
+},
 "People smile at you first.": {
 "ja": "みんなが先に笑いかけてくれる。",
 "zh_CN": "人们会先对你微笑。",
 "zh_TW": "人們會先對你微笑。"
+},
+"Press E when you want company.": {
+"ja": "話し相手がほしけりゃEを押せ。",
+"zh_CN": "想找个伴就按 E。",
+"zh_TW": "想找個伴就按 E。"
 },
 "Press E when you want company. I'll be here. Looking expensive.": {
 "ja": "話し相手がほしけりゃEを押せ。おれはここにいる。高そうな顔してな。",
@@ -2958,6 +3433,16 @@
 "ja": "休憩はいまや競技スポーツ。",
 "zh_CN": "休息现在是竞技项目了。",
 "zh_TW": "休息現在是競技項目了。"
+},
+"Roofs are better for resting than trees.": {
+"ja": "休むなら、木より屋根だ。",
+"zh_CN": "歇脚，屋顶比树强。",
+"zh_TW": "歇腳，屋頂比樹強。"
+},
+"Roofs hold still. Trees gossip.": {
+"ja": "屋根は動かない。木はおしゃべりだ。",
+"zh_CN": "屋顶稳得住。树爱嚼舌根。",
+"zh_TW": "屋頂穩得住。樹愛嚼舌根。"
 },
 "Run coffee, cocktail and ice cream at the same time.": {
 "ja": "コーヒー・カクテル・アイスを同時に効かせる。",
@@ -3459,10 +3944,35 @@
 "zh_CN": "唰！",
 "zh_TW": "唰！"
 },
+"Salt, and a small sound. tk.": {
+"ja": "塩と、小さな音。コツ。",
+"zh_CN": "盐味，还有一声轻轻的响。嗒。",
+"zh_TW": "鹽味，還有一聲輕輕的響。嗒。"
+},
+"Salt.": {
+"ja": "塩だ。",
+"zh_CN": "盐味。",
+"zh_TW": "鹽味。"
+},
+"Salt. That's what I remember best now.": {
+"ja": "塩。今、いちばん覚えてるのはそれだ。",
+"zh_CN": "盐味。现在我记得最清楚的就是它。",
+"zh_TW": "鹽味。現在我記得最清楚的就是它。"
+},
+"Same hat.": {
+"ja": "同じ帽子なのにな。",
+"zh_CN": "还是那顶帽子。",
+"zh_TW": "還是那頂帽子。"
+},
 "Saw you land. Clean. Not bad, kid.": {
 "ja": "着地、見てたぞ。きれいだ。悪くないな、おチビ。",
 "zh_CN": "看见你落地了。干净利落。不赖嘛，小家伙。",
 "zh_TW": "看見你落地了。乾淨俐落。不賴嘛，小傢伙。"
+},
+"Say thank you on your way out, kid. The water remembers manners.": {
+"ja": "帰りにありがとうを言っとけ、おチビ。水は礼儀を覚えてる。",
+"zh_CN": "走的时候记得说声谢谢，小家伙。水是记礼数的。",
+"zh_TW": "走的時候記得說聲謝謝，小傢伙。水是記禮數的。"
 },
 "She only looks up when you think she won't.\nNoted.": {
 "ja": "見ないだろうと思ったときに限って、彼女は顔を上げる。\nメモしておこう。",
@@ -3474,10 +3984,30 @@
 "zh_CN": "Shift - 冲刺          Ctrl - 立刻降落          空格 - 扑翅          A / D - 侧倾（双击：翻滚）",
 "zh_TW": "Shift - 衝刺          Ctrl - 立刻降落          空白鍵 - 拍翅          A / D - 側傾（連按兩下：翻滾）"
 },
+"Show me the squint properly.": {
+"ja": "目の細め方、ちゃんと教えてくれ。",
+"zh_CN": "把眯眼正经教教我。",
+"zh_TW": "把瞇眼正經教教我。"
+},
+"Silver, gold, diamond. The shinier it is, the faster it runs.": {
+"ja": "銀、金、ダイヤ。ピカピカなやつほど足が速い。",
+"zh_CN": "银的，金的，钻石的。越亮的，跑得越快。",
+"zh_TW": "銀的，金的，鑽石的。越亮的，跑得越快。"
+},
+"Sit. The view's the same.": {
+"ja": "座れ。景色は変わらない。",
+"zh_CN": "坐。风景还是那个风景。",
+"zh_TW": "坐。風景還是那個風景。"
+},
 "Skim the sea at speed.": {
 "ja": "高速で海面すれすれを飛ぶ。",
 "zh_CN": "高速贴着海面飞。",
 "zh_TW": "高速貼著海面飛。"
+},
+"So it gave you something. It never gave me anything.": {
+"ja": "そうか、海はお前に何かくれたのか。おれには何もくれなかったがな。",
+"zh_CN": "这么说，它给了你点东西。它从没给过我什么。",
+"zh_TW": "這麼說，它給了你點東西。它從沒給過我什麼。"
 },
 "So.  What do YOU want?": {
 "ja": "で。キミは何がほしい？",
@@ -3498,6 +4028,11 @@
 "ja": "あたたかい上昇気流に乗って舞い上がる。",
 "zh_CN": "乘着一股上升的暖气流飞上去。",
 "zh_TW": "乘著一股上升的暖氣流飛上去。"
+},
+"Soft. Yes. That's what I'd forgotten about the sky.": {
+"ja": "ふわふわ、か。そうだった。空のそういうところを忘れてた。",
+"zh_CN": "软软的。对。我忘了天空是这样的。",
+"zh_TW": "軟軟的。對。我忘了天空是這樣的。"
 },
 "Softer landings.\nSwats hurt less.": {
 "ja": "着地がやわらかく。\nはたかれても痛くない。",
@@ -3539,6 +4074,11 @@
 "zh_CN": "还是眯着眼，不过这回带着魔法。\n鸥之眼能看两倍远。",
 "zh_TW": "還是瞇著眼，不過這回帶著魔法。\n鷗之眼能看兩倍遠。"
 },
+"Start small. Work up.": {
+"ja": "小さいところから始めろ。少しずつ上げていけ。",
+"zh_CN": "从小的开始，一点点往上。",
+"zh_TW": "從小的開始，一點點往上。"
+},
 "Steal your very first fry.": {
 "ja": "最初のポテトを盗む。",
 "zh_CN": "偷到你的第一根薯条。",
@@ -3558,6 +4098,21 @@
 "ja": "まだ動いてて、まだあったかい。\nキミもね。",
 "zh_CN": "还在动，还是热的。\n你也一样。",
 "zh_TW": "還在動，還是熱的。\n你也一樣。"
+},
+"Stood where you stood. The stone is cold in the morning.": {
+"ja": "お前が立ってた場所に立った。朝の石は冷たい。",
+"zh_CN": "站在你站过的地方。早晨的石头是凉的。",
+"zh_TW": "站在你站過的地方。早晨的石頭是涼的。"
+},
+"Straight through a rainbow. Every colour there is, and none of them has a taste.": {
+"ja": "虹のど真ん中を抜けたか。ありとあらゆる色があって、どれも味がしない。",
+"zh_CN": "一头穿过彩虹。所有的颜色都有，却没一种有味道。",
+"zh_TW": "一頭穿過彩虹。所有的顏色都有，卻沒一種有味道。"
+},
+"Strange. You'd think they would.": {
+"ja": "妙なもんだ。味くらいありそうなのにな。",
+"zh_CN": "怪了。你本以为会有的。",
+"zh_TW": "怪了。你本以為會有的。"
 },
 "TA-DAA!": {
 "ja": "ジャジャーン！",
@@ -4064,10 +4619,40 @@
 "zh_CN": "十根了。你飞得像赶着去干什么似的。",
 "zh_TW": "十根了。你飛得像趕著去幹什麼似的。"
 },
+"That hat. ...Where'd you find it?": {
+"ja": "その帽子。……どこで拾った？",
+"zh_CN": "这帽子。……你在哪儿找到的？",
+"zh_TW": "這帽子。……你在哪兒找到的？"
+},
+"That old man. Does he still drop them?": {
+"ja": "あのじいさん、まだ落としてくれるのか？",
+"zh_CN": "那位老爷子，现在还会掉吗？",
+"zh_TW": "那位老爺子，現在還會掉嗎？"
+},
+"That old man. Still drops them?": {
+"ja": "あのじいさん。まだ落としてるのか？",
+"zh_CN": "那位老爷子，还在掉薯条吗？",
+"zh_TW": "那位老爺子，還在掉薯條嗎？"
+},
+"That streak across the sky the other day. Every colour. Very loud.": {
+"ja": "こないだ空を走ってった筋。ありとあらゆる色。やかましいやつだ。",
+"zh_CN": "前两天划过天空的那道光。什么颜色都有。吵得很。",
+"zh_TW": "前兩天劃過天空的那道光。什麼顏色都有。吵得很。"
+},
+"That's not a rule. I just noticed.": {
+"ja": "法則じゃない。ただ気づいただけだ。",
+"zh_CN": "这不是规律。我只是注意到了。",
+"zh_TW": "這不是規律。我只是注意到了。"
+},
 "The coat. The hat. The chain. I got everything.": {
 "ja": "コート。帽子。チェーン。ぜんぶ持ってる。",
 "zh_CN": "大衣。帽子。链子。我什么都有了。",
 "zh_TW": "大衣。帽子。鍊子。我什麼都有了。"
+},
+"The company isn't.": {
+"ja": "連れは、同じじゃないがな。",
+"zh_CN": "陪伴可不一样了。",
+"zh_TW": "陪伴可不一樣了。"
 },
 "The dial runs out of numbers.": {
 "ja": "メーターの数字が足りなくなった。",
@@ -4104,10 +4689,25 @@
 "zh_CN": "剩下的大多是不小心做到的。要是我的话，就是故意的。",
 "zh_TW": "剩下的大多是不小心做到的。要是我的話，就是故意的。"
 },
+"The rest is details.": {
+"ja": "あとは些細なことだ。",
+"zh_CN": "剩下的都是细节。",
+"zh_TW": "剩下的都是細節。"
+},
+"The rings shrink when you're nervous.": {
+"ja": "緊張するとリングが縮む。",
+"zh_CN": "你一紧张，圈就缩。",
+"zh_TW": "你一緊張，圈就縮。"
+},
 "The runway is now a rumour.": {
 "ja": "助走なんて、もはや都市伝説。",
 "zh_CN": "助跑？听说过，没见过。",
 "zh_TW": "助跑？聽說過，沒見過。"
+},
+"The sea looks flat from up here.": {
+"ja": "ここから見ると、海は平らだ。",
+"zh_CN": "从上面看，大海是平的。",
+"zh_TW": "從上面看，大海是平的。"
 },
 "The sea ran out of excuses before you ran out of beak.": {
 "ja": "くちばしより先に、海の言い訳が尽きた。",
@@ -4119,6 +4719,11 @@
 "zh_CN": "墨镜。帽子。大衣。",
 "zh_TW": "墨鏡。帽子。大衣。"
 },
+"The sky isn't empty.": {
+"ja": "空は空っぽじゃない。",
+"zh_CN": "天空不是空的。",
+"zh_TW": "天空不是空的。"
+},
 "The sky made room. So did the laws of physics.": {
 "ja": "空が道をあけた。物理法則も。",
 "zh_CN": "天空让了路，物理定律也让了。",
@@ -4128,6 +4733,11 @@
 "ja": "空はモノであふれてる。どれもしっくりこない。",
 "zh_CN": "天上满是东西，可没有一样是对的。",
 "zh_TW": "天上滿是東西，可沒有一樣是對的。"
+},
+"The sun. In a beak.": {
+"ja": "太陽か。くちばしの中の。",
+"zh_CN": "太阳，叼在嘴里。",
+"zh_TW": "太陽，叼在嘴裡。"
 },
 "The top of the dial moves up again.": {
 "ja": "メーターの上限がまた上がった。",
@@ -4354,6 +4964,16 @@
 "zh_CN": "温暖、耀眼，还有点烫嘴。",
 "zh_TW": "溫暖、耀眼，還有點燙嘴。"
 },
+"Warm. Yes.": {
+"ja": "あったかい。そうだ。",
+"zh_CN": "暖的。对。",
+"zh_TW": "暖的。對。"
+},
+"Warm?": {
+"ja": "あったかかったか？",
+"zh_CN": "暖和吗？",
+"zh_TW": "暖和嗎？"
+},
 "Wear a top hat, shades, a chain, a pipe and a long coat at once.": {
 "ja": "シルクハット、サングラス、チェーン、パイプ、ロングコートを同時に身につける。",
 "zh_CN": "同时戴上高礼帽、墨镜、金链子、烟斗，穿上长大衣。",
@@ -4363,6 +4983,11 @@
 "ja": "島じゅうの服をぜんぶ身につける。",
 "zh_CN": "把岛上每一种衣物都穿一遍。",
 "zh_TW": "把島上每一種衣物都穿一遍。"
+},
+"Wear it low. The sun is rude up here.": {
+"ja": "深めにかぶれ。ここの太陽は遠慮がない。",
+"zh_CN": "压低点戴。这上面的太阳没礼貌。",
+"zh_TW": "壓低點戴。這上面的太陽沒禮貌。"
 },
 "Wet feet, dry wit.": {
 "ja": "足はびしょびしょ、ユーモアはカラッと。",
@@ -4388,6 +5013,11 @@
 "ja": "判定の帯が広く、リングがゆっくりに。\n考えるより、くわえろ。",
 "zh_CN": "判定带更宽，圆环更慢。\n少动脑，多下嘴。",
 "zh_TW": "判定帶更寬，圓環更慢。\n少動腦，多下嘴。"
+},
+"Wind's good today.": {
+"ja": "今日は風がいい。",
+"zh_CN": "今天风不错。",
+"zh_TW": "今天風不錯。"
 },
 "Wish granted: more speed. Wish pending: more fries.": {
 "ja": "かなった願い：もっと速く。保留中の願い：もっとポテトを。",
@@ -4439,10 +5069,20 @@
 "zh_CN": "你撞墙了。墙感觉更糟。",
 "zh_TW": "你撞牆了。牆感覺更糟。"
 },
+"Years of chasing magic fries. The fast ones. The shiny ones. The ones that sing.": {
+"ja": "何年も魔法のポテトを追いかけた。速いやつ。光るやつ。歌うやつ。",
+"zh_CN": "那些年一直在追魔法薯条。快的，亮的，会唱歌的。",
+"zh_TW": "那些年一直在追魔法薯條。快的，亮的，會唱歌的。"
+},
 "You are mostly lungs now.": {
 "ja": "キミはもはや、ほぼ肺。",
 "zh_CN": "你现在基本就是一个肺。",
 "zh_TW": "你現在基本就是一個肺。"
+},
+"You carried it all the way up here.": {
+"ja": "ここまで、ずっとくわえてきたのか。",
+"zh_CN": "你一路把它叼到了这上面。",
+"zh_TW": "你一路把它叼到了這上面。"
 },
 "You caught the moon. I tried once. It laughed.": {
 "ja": "月をつかまえたのか。おれも一度やった。笑われたよ。",
@@ -4458,6 +5098,26 @@
 "ja": "空はキミのものだ。航空会社にはナイショで。",
 "zh_CN": "天空现在归你了。请别告诉航空公司。",
 "zh_TW": "天空現在歸你了。請別告訴航空公司。"
+},
+"You smell like a cafe, a bar and a freezer.": {
+"ja": "カフェとバーと冷凍庫のにおいがする。",
+"zh_CN": "你身上一股咖啡馆、酒吧加冷柜的味儿。",
+"zh_TW": "你身上一股咖啡館、酒吧加冷櫃的味兒。"
+},
+"You squint like me now. Did you notice?": {
+"ja": "お前の目の細め方、おれに似てきたぞ。気づいてたか？",
+"zh_CN": "你现在眯眼的样子跟我一模一样。发现了吗？",
+"zh_TW": "你現在瞇眼的樣子跟我一模一樣。發現了嗎？"
+},
+"You wore a cloud. ...How was it?": {
+"ja": "雲をかぶったそうだな。……どうだった？",
+"zh_CN": "你戴过一朵云。……感觉怎么样？",
+"zh_TW": "你戴過一朵雲。……感覺怎麼樣？"
+},
+"You've got the squint now. ...You're starting to look like me.": {
+"ja": "お前も目を細めるようになったな。……だんだんおれに似てきた。",
+"zh_CN": "你也会眯眼了。……你越来越像我了。",
+"zh_TW": "你也會瞇眼了。……你越來越像我了。"
 },
 "You've got the squint now. Welcome.": {
 "ja": "キミもその目つきになったか。ようこそ。",
@@ -4764,6 +5424,11 @@
 "zh_CN": "他又掉了一根。",
 "zh_TW": "他又掉了一根。"
 },
+"he took off the chain. nobody asked him to.": {
+"ja": "アニキは鎖を外した。誰も頼んでないのに。",
+"zh_CN": "他把金链子摘了下来。没人要他这么做。",
+"zh_TW": "他把金鍊子摘了下來。沒人要他這麼做。"
+},
 "hello, you.": {
 "ja": "こんにちは。",
 "zh_CN": "你好呀。",
@@ -4778,6 +5443,11 @@
 "ja": "ヒック！",
 "zh_CN": "嗝！",
 "zh_TW": "嗝！"
+},
+"hold E: fast-forward": {
+"ja": "Eを長押し：早送り",
+"zh_CN": "按住 E：快进",
+"zh_TW": "按住 E：快進"
 },
 "hold TAB. see what glows.": {
 "ja": "TABを長押し。光るものを見よう。",

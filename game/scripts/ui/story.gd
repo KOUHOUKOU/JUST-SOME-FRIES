@@ -42,6 +42,9 @@ var poster_a = 0.0
 var poster_t0 = 0.0
 var hold = {"on": false, "p": 0.0, "label": ""}
 var last_press = 0
+var ff_ok = false                  # round 20: in the ending, HOLD E fast-forwards the talk (typing, reading time, waits)
+func _ff():
+	return ff_ok and Input.is_action_pressed("interact")
 var cam = null
 var halftone = null
 var typing_blip = 0
@@ -169,6 +172,7 @@ func begin(p):
 	vn = null
 
 func finish():
+	ff_ok = false
 	active = false
 	cam = null
 	frame = 0.0
@@ -253,11 +257,17 @@ func _wait_press(p0, min_sec, auto_sec):
 			return
 		if last_press > p0 and el > min_sec:
 			return
+		if _ff() and el > 0.2:
+			return
 
 func wait(sec):
-	var t0 = GS.msec()
-	while GS.msec() - t0 < sec * 1000.0:
+	var left = sec
+	var tl = GS.msec()
+	while left > 0.0:
 		await get_tree().process_frame
+		var now = GS.msec()
+		left -= (now - tl) / 1000.0 * (4.0 if _ff() else 1.0)
+		tl = now
 
 # round 19: the "voice" of typed words. It used to be a sharp blip at a random pitch (a tinkling with no pattern); now every voice walks slowly up and down the pentatonic scale with a
 # soft marimba, a note for every other letter, quiet, in the register of the speaker (pitch 1.0 = G3).
@@ -285,6 +295,9 @@ func _speak(d, text, voice_pitch, hold = -1.0, cps = 34.0):
 		if last_press > p0:
 			d["shown"] = n
 			p0 = last_press
+			break
+		if _ff():
+			d["shown"] = n
 			break
 		await get_tree().process_frame
 	d["shown"] = n

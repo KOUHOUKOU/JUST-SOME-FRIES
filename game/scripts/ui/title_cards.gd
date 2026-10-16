@@ -81,6 +81,8 @@ var sub
 var hintl
 var scroll
 var skipping = false
+var ff = 1.0                       # round 20: HOLD E fast-forwards the ending cards and the credits (nothing is skipped by a key press any more)
+var scroll_tw = null
 var mode = ""
 var can_input = false
 var poster = null
@@ -164,9 +166,10 @@ func _label(sz, col):
 	return l
 
 func _wait(sec):
-	var t0 = GS.msec()
-	while (GS.msec() - t0) < sec * 1000.0 and not skipping:
+	var left = sec
+	while left > 0.0 and not skipping:
 		await get_tree().process_frame
+		left -= get_process_delta_time() * ff
 
 func _fade(node, to, sec):
 	var tw = create_tween().set_ignore_time_scale(true)
@@ -175,6 +178,10 @@ func _fade(node, to, sec):
 	await tw.finished
 
 func _process(delta):
+	# round 20: hold E = four times faster through the ending cards and the credits roll (the roll slows back down when the key is let go)
+	ff = 4.0 if (visible and Input.is_action_pressed("interact") and (mode == "ending" or (mode == "credits" and not can_input))) else 1.0
+	if scroll_tw != null and scroll_tw.is_valid():
+		scroll_tw.set_speed_scale(ff)
 	# credits are over: hold E to fly again (a stray tap does nothing)
 	if mode == "credits" and can_input and visible:
 		if Input.is_action_pressed("interact"):
@@ -195,7 +202,7 @@ func _input(event):
 		get_viewport().set_input_as_handled()
 		skipping = true
 	elif mode == "ending" and press:
-		skipping = true
+		get_viewport().set_input_as_handled()
 	elif mode == "credits":
 		if press and can_input:
 			get_viewport().set_input_as_handled()
@@ -204,8 +211,8 @@ func _input(event):
 				menu_requested.emit()
 			elif false:
 				pass
-		elif press and event.keycode == KEY_ENTER:
-			skipping = true
+		elif press:
+			get_viewport().set_input_as_handled()
 
 # ------------------------------------------------------------------ one page of words, then the little portrait in the corner
 func pivot_poster():
@@ -423,13 +430,18 @@ func play_credits():
 	var tw = create_tween().set_ignore_time_scale(true)
 	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tw.tween_property(scroll, "position:y", vp.y * 0.5 - h + 40.0, dur)
-	hintl.text = "enter: skip"
+	scroll_tw = tw
+	hintl.text = "hold E: fast-forward"
 	_fade(hintl, 1.0, 1.0)
 	while tw.is_running() and not skipping:
 		await get_tree().process_frame
 	tw.kill()
+	scroll_tw = null
+	ff = 1.0
 	scroll.position.y = vp.y * 0.5 - h + 40.0
 	skipping = false
+	while Input.is_action_pressed("interact"):
+		await get_tree().process_frame           # (a key that is still down from the fast-forward must not count as "keep playing")
 	can_input = true
 	hintl.text = "HOLD  E  -  KEEP PLAYING          ESC  -  menu"
 	hintl.modulate.a = 0.0

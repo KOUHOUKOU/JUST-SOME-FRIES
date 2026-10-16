@@ -25,6 +25,9 @@ FILES = [
 NOTES = (
     "**Recommended: download `JustSomeFries_Windows.zip` and play locally.** Unzip, double-click `JustSomeFries.exe` (keep the `.pck` next to it). "
     "The in-browser page is only a light trial and may not run stably; the local version has clearer graphics and runs much more smoothly.\n\n"
+    "Round 20: the big brother is a character now (one talk for every visit to his roof: your accessories, drinks, fish and each thing of the sky you catch; E talks to him any time) and the ending on the roof is rewritten; "
+    "HOLD E fast-forwards the credits and the ending talk; the camera no longer jitters when you launch out of the sea in slow motion; the typing voice is gone and F has a soft new call; "
+    "WATCH STORY on the title screen replays the opening and the ending once you have finished the game. Round 19: a steady beat for the rings, a sea-freeze fix, an UNSTICK button, three save slots. "
     "Round 17: the game speaks English, Simplified Chinese, Traditional Chinese and Japanese (pick the language on the first card; L on the title changes it). "
     "Round 16: FISH TIME (surf the sea, launch with Space), the moon and sun as nine circles, F calls a flock, two save slots and KEEP PLAYING, an opening and ending drawn as a four-panel comic (a tribute to *What Fries Ahead*, False Knees #319, by Joshua Barkman), a fix for take-off from the water, and a new trailer. "
     "Round 15 (final content pass): a TAB lesson for Gull Sight, RAINBOW TIME first on the board, a SKY HIGH quest (cloud, star, moon, sun, rainbow, plus a rain cloud), "

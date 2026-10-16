@@ -4,6 +4,7 @@ extends Node3D
 # Purely a visual with a few little lines; nothing about him ever matters for the flight or the fries.
 
 const GullVisual = preload("res://scripts/player/gull_visual.gd")
+const BroTalks = preload("res://scripts/ui/bro_talks.gd")
 
 var gull
 var player = null
@@ -18,6 +19,7 @@ var main = null
 var scripted_talk = false      # the ending: the line is part of the scene, whatever the distance
 var calm_head = false          # the ending: his head stays turned to whoever he talks to
 var talk_cd = 0.0
+var away = true                # round 20: the gull has been away from the roof since his last talk (an automatic talk needs a new visit; E can always ask for one)
 var pose_mode = "ground"      # "throttle" while he flies down to the cafe in the ending
 
 const EARLY = ["Chin up, kid. The wind's free.", "Fly like the sea owes you rent.", "Careful. The old man's watching. Or sleeping. Hard to tell.", "Nice landing. I'd give it a 7. I'm a tough crowd."]
@@ -40,8 +42,6 @@ func _next_chat():
 			GS.cine_seen[CHATS[j]] = true        # (the last one is set again by the caller; the older ones are simply out of date)
 		GS.cine_seen.erase(CHATS[best])
 		return CHATS[best]
-	if GS.sky_got.size() >= 5 and not GS.cine_seen.has("chat_sky"):
-		return "chat_sky"
 	return ""
 
 func setup(p_player, pos, face_pos):
@@ -92,6 +92,8 @@ func _process(delta):
 	# idle life: a slow head turn, now and then a puff on the pipe
 	gull.head.rotation.y = lerp(gull.head.rotation.y, 0.0, 0.1) if calm_head else sin(t * 0.4) * 0.35
 	gull.head.rotation.x = 0.0 if calm_head else sin(t * 0.23) * 0.06
+	if main != null and main.scenes != null and main.scenes.cine_busy and not scripted_talk:
+		bubble_t = 0.0                     # round 20: never a floating line over a talk in the visual-novel box
 	if bubble_t > 0.0:
 		bubble_t -= delta
 		var ba = clamp(min(bubble_t, 0.6) / 0.6, 0.0, 1.0) * 0.95
@@ -111,24 +113,29 @@ func _process(delta):
 	# a hint, now and then, when the gull comes close: the big brother knows where this is going
 	line_cd = max(line_cd - delta, 0.0)
 	near_t = near_t + delta if d < 7.0 else 0.0
-	# round 16: after the end he is somebody to talk to: E next to him
+	if d > 14.0:
+		away = true
+	# round 16: after the end he is somebody to talk to: E next to him. Round 20: before the end too (once the gull has three fries): every press is ONE talk
 	talk_cd = max(talk_cd - delta, 0.0)
+	var can_talk = GS.free_play or (GS.gull_sense_count >= 3 and not GS.ordinary_eaten)
 	if main != null:
 		main.bro_prompt = ""
-		if GS.free_play and d < 6.8 and near_t > 0.4 and player.mode == 1 and not main.autotest and not main.scenes.cine_busy and not GS.showcase_active and not player.input_locked:
+		if can_talk and d < 6.8 and near_t > 0.4 and player.mode == 1 and not main.autotest and not main.scenes.cine_busy and not GS.showcase_active and not player.input_locked:
 			main.bro_prompt = "E  -  TALK TO BIG BRO"
 			if Input.is_action_just_pressed("interact") and talk_cd <= 0.0:
 				talk_cd = 2.0
-				main.scenes.bro_chat("free")
+				away = false
+				main.scenes.bro_chat("talk")
 				return
-	# a little talk the first time the gull sits next to him after three / ten / eighteen fries (round 8: he is part of the story, not a prop)
-	if near_t > 1.0 and player.mode == 1 and main != null and not main.autotest and not GS.showcase_active and not main.scenes.cine_busy and GS.gull_sense_count >= 3 and not GS.ordinary_eaten:
-		var cid = _next_chat()
+	# one talk when the gull comes to sit next to him (round 8: he is part of the story, not a prop; round 20: a key talk that it has earned and not heard, once per visit)
+	if near_t > 1.0 and away and player.mode == 1 and main != null and not main.autotest and not GS.showcase_active and not main.scenes.cine_busy and can_talk and not player.input_locked:
+		var cid = BroTalks.next_talk(self)
 		if cid != "":
 			GS.cine_seen[cid] = true
+			away = false
 			main.scenes.bro_chat(cid)
 			return
-	if near_t > 1.2 and line_cd <= 0.0 and not GS.ordinary_eaten and player.mode == 1 and GS.gull_sense_count >= 3:
+	if near_t > 1.2 and line_cd <= 0.0 and not GS.ordinary_eaten and player.mode == 1 and GS.gull_sense_count >= 3 and not (main != null and main.scenes.cine_busy):
 		line_cd = 40.0
 		var n = GS.fry_total()
 		var pool = EARLY if n < 10 else (MID if n < 20 else LATE)

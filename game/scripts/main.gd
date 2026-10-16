@@ -260,7 +260,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u", "--r16s", "--r16a", "--r16b", "--r16c", "--r16d", "--r16e", "--r16f", "--r16g", "--r16h", "--r18a", "--r18b", "--r18v", "--r18m", "--r18n", "--r18h", "--r18f", "--r18w", "--r18s"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u", "--r16s", "--r16a", "--r16b", "--r16c", "--r16d", "--r16e", "--r16f", "--r16g", "--r16h", "--r18a", "--r18b", "--r18v", "--r18m", "--r18n", "--r18h", "--r18f", "--r18w", "--r18s", "--r20j", "--r20t", "--r20s"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -429,6 +429,8 @@ func _on_story_pressed(which):
 	GS.slot = sl
 	GS.replay = "ending"
 	_restore_run(d)
+	bro.gull.wear("shades", true)          # (the ending takes them off again)
+	bro.gull.wear("necklace", true)
 	GS.cine_seen["free_intro"] = true     # (the big brother's talk after the end must not cut in)
 	_start_game()
 	await get_tree().create_timer(0.6, true, false, true).timeout
@@ -756,6 +758,8 @@ func _free_play_start():
 	ordinary.available = false
 	ordinary.visible = false
 	ordinary.remove_from_group("fries")
+	bro.gull.unwear("shades")              # round 20: after the end he sits on his roof without the shades and without the chain (the hat stays: it is a good hat)
+	bro.gull.unwear("necklace")
 	GS.ach_unlock("freeplay")
 	GS.comic.emit("free_play", "THE FRY IS GONE. THE SKY IS NOT.", {"tier": 0})
 	var land = WB.BRO_POS + Vector3(-3.8, 0.0, 0.0)
