@@ -328,6 +328,18 @@ func _terrain():
 	sea.position = Vector3(0, Terrain.WATER_Y, 0)
 	sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	map.add_child(sea)
+	# round 19: a camera-only plate just above the water (layer 16: only the gull's camera arm looks at it): lifting off the sea with the nose up used to swing the camera under the
+	# water plane (one-sided) and showed the sea bed
+	var cam_floor = StaticBody3D.new()
+	cam_floor.collision_layer = 16
+	cam_floor.collision_mask = 0
+	var cfs = CollisionShape3D.new()
+	var cfb = BoxShape3D.new()
+	cfb.size = Vector3(2600, 0.2, 2600)
+	cfs.shape = cfb
+	cfs.position = Vector3(0, Terrain.WATER_Y + 0.38, 0)
+	cam_floor.add_child(cfs)
+	map.add_child(cam_floor)
 	var floor_body = StaticBody3D.new()
 	floor_body.collision_layer = 1
 	floor_body.collision_mask = 0

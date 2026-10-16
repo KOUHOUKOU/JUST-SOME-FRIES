@@ -295,7 +295,6 @@ func play_ending():
 		# ...and now the gull in the corner has one
 		var tw = create_tween().set_ignore_time_scale(true)
 		tw.tween_property(portrait, "fry", 1.0, 1.1).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		Sfx.play("reward_3", -10.0)
 		await _wait(3.6)
 	for pl in page:
 		_fade(pl, 0.0, 1.0)
@@ -305,7 +304,6 @@ func play_ending():
 	if poster.texture != null:
 		pivot_poster()
 		poster.scale = Vector2(1.0, 1.0)
-		Sfx.play("reward_3", -9.0, 0.8)
 		var tz = create_tween().set_ignore_time_scale(true)
 		tz.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 		tz.tween_property(poster, "scale", Vector2(1.07, 1.07), 22.0)

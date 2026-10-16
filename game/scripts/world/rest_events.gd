@@ -164,9 +164,7 @@ func call_flock():
 		g.global_position = from
 		flock.append({"g": g, "from": from, "to": spot + (Vector3.ZERO if hover else Vector3(0, 0.4, 0)), "hover": hover, "delay": 0.25 * i + randf() * 0.2, "t": 0.0,
 			"phase": "wait", "hearts": 0})
-	Sfx.play("rival_call", -9.0, 1.3)
-	for i in 3:
-		get_tree().create_timer(0.4 * i + 0.3, true, false, true).timeout.connect(func(): Sfx.play("gull_far", -12.0 + 2.0 * i, randf_range(0.95, 1.3)))
+	# round 20: a flock arrives without any cry (the shrill calls are gone; only wings and the landing thumps remain)
 
 func _step_flock(dt):
 	if flock.is_empty():
@@ -294,8 +292,7 @@ func _start_buddy():
 		if f.rim != null:
 			f.rim.visible = false
 		ev["gift"] = f
-	Sfx.play("gull_far", -10.0, 1.2)
-	Sfx.play("hello", -13.0)
+	pass       # round 20: no cry for a friend who brings a gift
 
 var gift_cd = 20.0
 
@@ -571,7 +568,7 @@ func _start_dog():
 	d.setup(player, spot, 0.0, ["B58A4B", "3A2A20", "F1E6D2", "8A6A4A"][randi() % 4], null)
 	d.cd = 0.0
 	ev = {"kind": "dog", "t": 0.0, "dog": d, "spot": spot}
-	Sfx.play("bark", -10.0, 1.3)
+	Sfx.play("bark", -14.0, 1.0)
 
 func _step_dog(dt):
 	var d = ev["dog"]
@@ -743,7 +740,7 @@ func _start_puppy():
 	d.cd = 0.0
 	d.scale = Vector3.ONE * 0.8
 	ev = {"kind": "puppy", "t": 0.0, "dog": d, "spot": spot}
-	Sfx.play("bark", -12.0, 1.7)
+	Sfx.play("bark", -16.0, 1.1)
 
 func _step_puppy(dt):
 	var d = ev["dog"]

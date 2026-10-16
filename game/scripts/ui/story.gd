@@ -259,6 +259,15 @@ func wait(sec):
 	while GS.msec() - t0 < sec * 1000.0:
 		await get_tree().process_frame
 
+# round 19: the "voice" of typed words. It used to be a sharp blip at a random pitch (a tinkling with no pattern); now every voice walks slowly up and down the pentatonic scale with a
+# soft marimba, a note for every other letter, quiet, in the register of the speaker (pitch 1.0 = G3).
+const VOICE_STEPS = [0, 2, 4, 7, 4, 2, 9, 7, 4, 2]
+var voice_i = 0
+func _voice_note(pitch, db):
+	voice_i += 1
+	var base = clamp(55 + int(round(12.0 * log(max(pitch, 0.5)) / log(2.0))), 53, 70)
+	pass       # round 20: typed words are silent now (the marimba "voice" read as a lone bling)
+
 # a sentence that is typed out. A press finishes the typing; the next press (or the reading time) goes on.
 func _speak(d, text, voice_pitch, hold = -1.0, cps = 34.0):
 	var n = text.length()
@@ -271,7 +280,7 @@ func _speak(d, text, voice_pitch, hold = -1.0, cps = 34.0):
 		var k = int((GS.msec() - t0) / 1000.0 * cps) + 1
 		d["shown"] = min(k, n)
 		if d["shown"] > last_n and (d["shown"] % 2 == 0) and text[d["shown"] - 1] != " ":
-			Sfx.play("blip", -24.0, voice_pitch * randf_range(0.93, 1.07))
+			_voice_note(voice_pitch, -25.0)
 		last_n = d["shown"]
 		if last_press > p0:
 			d["shown"] = n
@@ -687,7 +696,7 @@ func think(lines, hold = 1.2, cps = 34.0, last_hold = 2.4, on_last = Callable())
 		while d["typed"] < text.length():
 			d["typed"] = min(int((GS.msec() - t0) / 1000.0 * cps) + 1, text.length())
 			if d["typed"] > last_n and d["typed"] % 2 == 0 and text[d["typed"] - 1] != " ":
-				Sfx.play("blip", -26.0, 1.5 * randf_range(0.93, 1.07))
+				_voice_note(1.3, -26.0)
 			last_n = d["typed"]
 			await get_tree().process_frame
 		await wait(hold if i < lines.size() - 1 else last_hold)
@@ -794,7 +803,7 @@ func hold_to(label, secs = 0.9):
 			hold["p"] = min(hold["p"] + dt / secs, 1.0)
 			if int(hold["p"] * 8.0) > tick:
 				tick = int(hold["p"] * 8.0)
-				Sfx.play("blip", -20.0, 0.8 + 0.12 * tick)
+				pass       # round 20: no ticks while the key is held, the ring is enough
 		else:
 			hold["p"] = max(hold["p"] - dt * 2.4, 0.0)
 			tick = int(hold["p"] * 8.0)

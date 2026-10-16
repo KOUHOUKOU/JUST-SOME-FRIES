@@ -86,7 +86,8 @@ var off_floor_t = 0.0
 var skim_t = 0.0
 var on_water = false             # round 12: sitting on the sea with the wings spread: no sinking, no crash, the breath comes back, and Space takes off again
 var ripple_t = 0.0
-var water_grace = 0.0            # round 16: after a take-off from the water a wall cannot make the gull tumble for a moment
+var last_bump_ms = -10000
+var water_grace = 0.0           # round 16: after a take-off from the water a wall cannot make the gull tumble for a moment
 var launch_t = 0.0               # round 16: seconds of the OCEAN TIME launch burst left (a huge short acceleration out of the sea)
 var launch_speed = 0.0
 var aim_pitch_launch = 0.4       # round 18b: the pitch of an aimed launch
@@ -160,7 +161,7 @@ func _ready():
 	add_child(rig)
 	arm = SpringArm3D.new()
 	arm.spring_length = cam_dist
-	arm.collision_mask = 1
+	arm.collision_mask = 1 | 16        # round 19: layer 16 = a camera-only floor just above the sea (the camera must never dip below the water and see the sea bed)
 	arm.margin = 0.3
 	rig.add_child(arm)
 	cam = Camera3D.new()
@@ -593,6 +594,10 @@ func soft_bump(normal, strength = 1.0):
 	speed = min(speed, 6.0)
 	shake = max(shake, 0.22)
 	fov_kick = 2.0
+	var now_ms = GS.msec()
+	if now_ms - last_bump_ms < 900:        # round 19: one bump at a time (a gull jammed in a corner must not buzz)
+		return
+	last_bump_ms = now_ms
 	Sfx.play("soft_bump", -5.0, randf_range(0.94, 1.08))
 	_feather_puff()
 
@@ -894,10 +899,8 @@ func _fly(delta, mouse):
 			start_tumble(wn * 4.0 + Vector3(0, 2.0, 0), 12.0 * GS.hurt_mult(), 1.2 * GS.stun_mult())
 			return
 	elif worst > 2.5:
-		shake = max(shake, clamp(worst / 20.0, 0.1, 0.4))
+		# round 19: brushing a wall at flying speed is not an event: no sound, no shake (inside a box the old cue buzzed every frame)
 		speed = min(speed, max(get_real_velocity().length(), 3.0))
-		if worst > 5.0:
-			Sfx.play("land", -8.0)
 	if is_on_floor() and speed < 9.0:
 		speed = move_toward(speed, 0.0, 3.0 * delta)
 	_water(delta)

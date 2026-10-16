@@ -185,13 +185,14 @@ func _ready():
 	add_child(bro)
 	bro.main = self
 	bro.setup(player, WB.BRO_POS, Vector3(WB.SPAWN_POS.x, 5.4, WB.SPAWN_POS.z))
-	title.restart_requested.connect(func(): _reload(true, GS.slot))        # round 16: after the credits, HOLD E = keep playing (free flight in the same save)
+	title.restart_requested.connect(func(): _reload(GS.replay == "", GS.slot if GS.replay == "" else 0))        # round 16: after the credits, HOLD E = keep playing (free flight in the same save); round 20: after WATCH STORY, back to the menu
 	title.menu_requested.connect(func(): _reload(false))
 	menus = CanvasLayer.new()
 	menus.set_script(MENU_SCRIPT)
 	add_child(menus)
 	menus.start_pressed.connect(_on_start_pressed)
 	menus.continue_pressed.connect(_on_continue_pressed)
+	menus.story_pressed.connect(_on_story_pressed)
 	menus.save_pressed.connect(func(): menus.note_saved(save_now()))
 	rivals = Node.new()
 	rivals.set_script(RIVAL_SCRIPT)
@@ -218,6 +219,7 @@ func _ready():
 	mcam.menus = menus
 	add_child(mcam)
 	menus.restart_pressed.connect(func(): _reload(true))
+	menus.unstick_pressed.connect(_unstick)
 	menus.quit_to_menu_pressed.connect(func(): _reload(false))
 	menus.resume_pressed.connect(func():
 		_close_sense()
@@ -258,7 +260,7 @@ func _ready():
 				get_tree().quit())
 	var dev_modes = ["--autotest", "--tour", "--intro", "--wary", "--ui", "--cam", "--systems", "--cone", "--audio", "--prism", "--star", "--mischief",
 		"--yellow", "--fuzz", "--early", "--restart", "--soak", "--census", "--showcase", "--focus", "--flee", "--vision", "--gauge", "--comics", "--title", "--credits", "--one",
-		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u", "--r16s", "--r16a", "--r16b", "--r16c", "--r16d", "--r16e", "--r16f", "--r16g", "--r16h", "--r18a", "--r18b", "--r18v", "--r18m", "--r18n", "--r18h", "--r18f", "--r18w"]
+		"--save", "--fish", "--rival", "--volley", "--wear", "--ending", "--hud", "--tiers", "--hunger", "--world", "--hazards", "--rhythm", "--land", "--rainbow", "--topdown", "--one", "--places", "--rest", "--codex", "--drink", "--smash", "--stand", "--sky", "--census2", "--reach", "--bank", "--cams", "--r7", "--r7b", "--r8", "--r8b", "--r8c", "--r8t", "--r8e", "--r8m", "--r9speed", "--shotcheck", "--r9tab", "--r9trail", "--r9sky", "--r9cine", "--r9open", "--r9end", "--r9rb", "--r9quiet", "--r10beats", "--r10npc", "--r10misc", "--r10look", "--r12", "--r12audio", "--r13reload", "--r15a", "--r15b", "--r15n", "--r15g", "--r15u", "--r16s", "--r16a", "--r16b", "--r16c", "--r16d", "--r16e", "--r16f", "--r16g", "--r16h", "--r18a", "--r18b", "--r18v", "--r18m", "--r18n", "--r18h", "--r18f", "--r18w", "--r18s"]
 	var is_dev = false
 	for m in dev_modes:
 		if m in args:
@@ -276,6 +278,28 @@ func _ready():
 		t.set_script(load("res://scripts/autotest.gd"))
 		t.main = self
 		add_child(t)
+	elif "--r20ending" in args or "--r20opening" in args:
+		# dev (round 20): WATCH STORY straight from the start (record it with --write-movie; the run quits 25 s into the credits)
+		autotest = false
+		GS.no_focus_pause = true
+		get_tree().paused = true
+		Engine.max_fps = 30
+		menus.show_main()
+		await get_tree().create_timer(0.5, true, false, true).timeout
+		title.finished.connect(func(): get_tree().create_timer(25.0, true, false, true).timeout.connect(func(): get_tree().quit()))
+		if "--r20opening" in args:
+			# the bot holds E at the "HOLD E TO FLY" prompt and the run quits when the opening is over (it would go back to the menu)
+			get_tree().create_timer(0.1, true, false, true).timeout.connect(func():
+				while true:
+					await get_tree().process_frame
+					if GS.replay == "":
+						get_tree().quit()
+						return
+					if story.hold.get("on", false):
+						Input.action_press("interact")
+					else:
+						Input.action_release("interact"))
+		_on_story_pressed("ending" if "--r20ending" in args else "opening")
 	elif "--film" in args:
 		# dev: the walkthrough video (run with --write-movie): the real menu, opening and ending, the bot flies in between
 		autotest = false
@@ -365,6 +389,7 @@ func _web_warm_up():
 	JavaScriptBridge.eval("window.JSF && JSF.gameReady && JSF.gameReady()")
 
 func _reload(skip, slot = 0):
+	GS.replay = ""
 	GS.skip_menu = skip
 	GS.autoload_slot = slot
 	Engine.time_scale = 1.0
@@ -386,6 +411,36 @@ func _on_continue_pressed():
 	_restore_run(d)
 	_start_game()
 
+# round 20: WATCH STORY. The opening plays exactly as it does at the start of a run. The ending plays from the memories of the first finished save (the same gull, the same
+# things it wore and remembered); nothing is saved meanwhile, and the end of either goes back to the menu.
+func _on_story_pressed(which):
+	if which == "opening":
+		GS.replay = "opening"
+		get_tree().paused = false
+		menus.begin_game()
+		scenes.opening()
+		return
+	var sl = GS.finished_slot()
+	var d = GS.read_save(sl) if sl > 0 else null
+	if d == null:
+		menus.show_main()
+		return
+	GS.slot = sl
+	GS.replay = "ending"
+	_restore_run(d)
+	GS.cine_seen["free_intro"] = true     # (the big brother's talk after the end must not cut in)
+	_start_game()
+	await get_tree().create_timer(0.6, true, false, true).timeout
+	GS.ordinary_eaten = true
+	GS.phase = GS.Phase.ENDED
+	Sfx.ending = true
+	Sfx.fade_music(4.0)
+	elder.look_at_pos(player.global_position, 8.0)
+	elder.rig.set_mode("idle")
+	var f = scenes._new_plain_fry(player.global_position + Vector3(0, 0.3, 0))
+	f.attach(player.beak_socket)
+	scenes.ending(f)
+
 func _on_start_pressed():
 	if GS.skip_intro:
 		_start_game()
@@ -396,6 +451,12 @@ func _on_start_pressed():
 
 # the last beat of the opening (HOLD E) is over: the page frame opens up and the gull is yours
 func start_after_opening():
+	if GS.replay == "opening":
+		if OS.get_cmdline_user_args().size() > 0:
+			GS.replay = ""                # (dev recording: the bot above quits the run)
+			return
+		_reload(false)                    # round 20: WATCH STORY: the opening is over, back to the menu (nothing was changed or saved)
+		return
 	GS.skip_intro = true
 	story.cam = null
 	story.frame_out(0.9)
@@ -627,6 +688,66 @@ func _restore_run(d):
 	if GS.free_play:
 		_free_play_start()
 
+# round 19: UNSTICK (the pause menu). Whatever has gone wrong (a rhythm that never ended, locked input, a stuck slow motion, a gull wedged in a wall), this puts the gull in the AIR above
+# the start (not on the roof: that would start the big brother's talk), clears every state and every buff, and keeps everything that was collected (fries, codex, fish book, quests).
+func _unstick():
+	var sn = player.snatch
+	if sn.carry_fry != null and is_instance_valid(sn.carry_fry):
+		sn.drop_carry()
+	sn.carry_fry = null
+	sn._unlock()
+	sn.seq = null
+	sn.lock_fry = null
+	sn.state = "idle"
+	sn.cine = {}
+	sn.letterbox = 0.0
+	sn.focus_owned = false
+	sn.snatch_cd = 1.0
+	sn.presses.clear()
+	sn._clear_fish_lock()
+	Engine.time_scale = 1.0
+	Sfx.muffle(false, 0.2)
+	player.input_locked = false
+	player.scripted_move = false
+	player.set_override(Transform3D.IDENTITY, 60.0, 0.0, 6.0)
+	player.gull.head_lunge = 0.0
+	_close_sense()
+	_close_codex()
+	GS.vision_tired = false
+	GS.sense_active = false
+	GS.set_drink("")
+	GS.end_star()
+	GS.fish_t = 0.0
+	GS.fish_streak = 0
+	GS.fish_streak_t = 0.0
+	GS.cutscene = false
+	cine_queue.clear()
+	if scenes != null:
+		scenes.cine_busy = false
+		scenes.beat_busy = false
+	hud.quiet_busy = false
+	hud.quiet_bar = 0.0
+	hud.ui_root.modulate.a = 1.0
+	player.launch_t = 0.0
+	player.on_water = false
+	player.tumble_t = 0.0
+	player.perch_high = false
+	player.mode = 0
+	player.knock = Vector3.ZERO
+	player.vert_boost = 0.0
+	player.velocity = Vector3.ZERO
+	player.global_position = WB.SPAWN_POS + Vector3(0, 11, 0)
+	player.yaw = atan2(-1.0, 0.0) + PI
+	player.aim_yaw = player.yaw
+	player.cam_yaw = player.yaw
+	player.pitch = 0.05
+	player.aim_pitch = 0.05
+	player.speed = 9.0
+	player.stamina = GS.stamina_max()
+	player.update_camera(0.0, true)
+	player.show_toast("BACK AT THE START", 1.4)
+	Sfx.play("whoosh", -10.0, 0.9)
+
 # round 16: the end of a run is not the end of the game. The plain fry has been eaten (it stays eaten); everything else is still out there: the fries that are missing, the
 # fish, the nine suns, the achievements. The gull wakes up on the big brother's roof, and he has something to say about it.
 func _free_play_start():
@@ -743,7 +864,7 @@ func _process(delta):
 	if GS.sense_active:
 		# Gull Sight lasts exactly as long as TAB is held (and the gull has the breath for it)
 		var s = player.snatch
-		if (not Input.is_action_pressed("gull_sense") and not GS.tab_toggle) or GS.vision_tired or player.mode == 2 or s.state != "idle" or s.lock_fry != null:
+		if (not Input.is_action_pressed("gull_sense") and not GS.tab_toggle) or GS.vision_tired or player.mode == 2 or s.state != "idle" or s.lock_fry != null or GS.cutscene or scenes.beat_busy:
 			if GS.vision_tired and (Input.is_action_pressed("gull_sense") or GS.tab_toggle):
 				hud.whisper("out of breath. land somewhere and rest.", 3.0)
 			_close_sense()
@@ -973,7 +1094,6 @@ func _unhandled_input(event):
 			last_yell = now
 			Sfx.play("lure", -2.0)
 			player.fov_kick = 2.0
-			get_tree().create_timer(0.9).timeout.connect(func(): Sfx.play("gull_far", -12.0, 1.1))
 			_squawk_effects()
 
 # round 16, the squawk has its own little world. ON A ROOF it calls the gulls of the neighbourhood (a flock lands around the gull, hearts, a short visit). ON THE GROUND
@@ -1015,7 +1135,7 @@ func _squawk_effects():
 
 # ---- Gull Sight: hold TAB. Slow motion, dark screen, every fry in range shines, everything else gets a number. Free on the ground. ----
 func _try_open_vision():
-	if codex_open or GS.sense_active or player.input_locked or GS.film_flow:
+	if codex_open or GS.sense_active or player.input_locked or GS.film_flow or GS.cutscene or scenes.cine_busy or scenes.beat_busy:       # round 19: never in a cut scene
 		return
 	if not GS.vision_unlocked():
 		hud.whisper("gull sight is not open yet. three fries first.", 3.0)
@@ -1039,7 +1159,7 @@ func _close_sense():
 	if not GS.sense_active:
 		return
 	GS.sense_active = false
-	if not player.snatch.focus_owned and player.snatch.state != "cine":
+	if not player.snatch.focus_owned and player.snatch.state != "cine" and not GS.cutscene:       # round 19: a cut scene keeps its own slow time
 		Engine.time_scale = 1.0
 	Sfx.play("vision_off", -12.0)
 	Sfx.muffle(false, 0.3)
@@ -1260,12 +1380,12 @@ func _ach_tick(rdt):
 # climbs with every new one, the little panel in the lower left, and a word + five pips at the top. The gull keeps flying and the player keeps looking where they were looking.
 const SKY_COLS = {"cloud": Color("EAF2FF"), "raincloud": Color("B9C8E0"), "star": Color("FFE27A"), "moon": Color("9FD2FF"), "sun": Color("FFD66B"), "rainbow": Color("FF9AD0")}
 const SKY_CAPS = {
-	"cloud": ["A WHOLE CLOUD. SOFTER THAN EXPECTED.", "CLOUD: CAUGHT. DAMP: SLIGHTLY."],
-	"raincloud": ["A RAIN CLOUD. IT DRIZZLES ON PURPOSE.", "RAIN, BUT PORTABLE."],
-	"star": ["A SHOOTING STAR. THE WISH IS FRIES.", "THE STAR WAS FAST. YOU WERE FASTER."],
-	"moon": ["THE MOON. NO CHEESE FOUND.", "OVER THE MOON. LITERALLY."],
-	"sun": ["THE SUN. WARM. SLIGHTLY STUBBORN.", "YOU HELD THE SUN. YOUR BEAK IS FINE."],
-	"rainbow": ["A RAINBOW. ALL SEVEN FLAVOURS OF NOTHING.", "THROUGH THE RAINBOW AND OUT THE OTHER COLOUR."],
+	"cloud": ["A WHOLE CLOUD. SOFTER THAN IT LOOKED, AND A LITTLE DAMP.", "A CLOUD, CAUGHT. THE MORNING STAYS ON YOUR FEATHERS."],
+	"raincloud": ["A RAIN CLOUD. IT FOLLOWS YOU HOME LIKE A SAD LITTLE DOG.", "RAIN, BUT YOURS. SOMEBODY HAD TO WEAR IT."],
+	"star": ["A FALLING STAR. THE WISH WAS FRIES. OBVIOUSLY.", "THE STAR WAS FAST. YOU WERE FASTER. SORRY, STAR."],
+	"moon": ["THE MOON. NO CHEESE, JUST A LOT OF QUIET.", "OVER THE MOON. IT TURNS OUT THAT IS A REAL PLACE."],
+	"sun": ["THE SUN. WARM, BRIGHT AND NOT A BIT SORRY.", "YOU HELD THE SUN. YOUR BEAK IS FINE. YOUR HEART IS LIT."],
+	"rainbow": ["A RAINBOW. SEVEN COLOURS, EVERY ONE OF THEM YOURS.", "THROUGH THE RAINBOW AND OUT INTO A BRAND NEW COLOUR."],
 }
 var _ring_tex_cache = null
 

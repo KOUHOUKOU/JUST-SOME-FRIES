@@ -98,7 +98,7 @@ func _physics_process(delta):
 				friend_a = atan2(-to.z, -to.x)
 				friend_t = 0.0
 				circled = false
-				Sfx.play("bark", -12.0, 1.7)
+				Sfx.play("bark", -16.0, 1.1)
 			elif ((d < 9.0 and (player.speed > 9.0 or carrying) and GS.hostile()) or (landed and GS.hostile())) and cd <= 0.0:
 				state = "bark"
 				st = 0.0

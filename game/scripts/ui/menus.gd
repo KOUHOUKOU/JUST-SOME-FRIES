@@ -7,7 +7,9 @@ signal save_pressed
 signal start_pressed
 signal resume_pressed
 signal restart_pressed
+signal unstick_pressed
 signal quit_to_menu_pressed
+signal story_pressed(which)       # round 20: WATCH STORY ("opening" or "ending")
 
 const GOLD = Color("F5C65A")
 const CREAM = Color("F8F0DC")
@@ -31,6 +33,7 @@ var diff_panel = null            # round 18: EASY or HARD, asked after the slot 
 var diff_btns = []
 var diff_btn = null              # the pause menu's switch
 var off_label = null             # the rhythm timing offset line of the pause menu
+var story_panel = null           # round 20: WATCH STORY: the opening and the ending again, once the game has been finished
 var lang_pick = null             # round 17: the language card before the cover (English / 简体中文 / 繁體中文 / 日本語)
 static var lang_asked = false    # it is shown once when the game starts; the small LANGUAGE link on the cover opens it again
 
@@ -175,7 +178,7 @@ class Cover extends Control:
 	var intro_t = 0.0
 	var items = []               # [{"id", "label", "on"}]
 	var sel = 0
-	var anim = [0.0, 0.0, 0.0, 0.0]
+	var anim = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 	var rects = []
 	var motes = []
 	var mpos = Vector2(0.5, 0.5)
@@ -196,7 +199,8 @@ class Cover extends Control:
 		bold = fv
 		for i in 54:
 			motes.append([randf(), randf(), randf(), randf()])
-		items = [{"id": "start", "label": "START", "on": true}, {"id": "continue", "label": "CONTINUE", "on": false}, {"id": "gallery", "label": "ACHIEVEMENTS", "on": true}]
+		items = [{"id": "start", "label": "START", "on": true}, {"id": "continue", "label": "CONTINUE", "on": false}, {"id": "gallery", "label": "ACHIEVEMENTS", "on": true},
+			{"id": "story", "label": "WATCH STORY", "on": false}]
 		if not OS.has_feature("web"):
 			items.append({"id": "quit", "label": "QUIT", "on": true})
 
@@ -207,6 +211,7 @@ class Cover extends Control:
 
 	func set_save(has):
 		items[1]["on"] = has
+		items[3]["on"] = GS.finished_slot() > 0       # round 20: the opening and the ending can be watched again once the game has been finished
 		sel = 1 if has else 0
 
 	func _process(delta):
@@ -349,7 +354,7 @@ class Cover extends Control:
 			var w = _width(Loc.t(it["label"]), fs, gap)
 			widths.append(w)
 			total += w
-		var spacing = 96.0 * u
+		var spacing = (96.0 if items.size() < 5 else 62.0) * u
 		total += spacing * (items.size() - 1)
 		var x = (W - total) * 0.5
 		var y = H * 0.905
@@ -369,6 +374,9 @@ class Cover extends Control:
 				draw_line(Vector2(ux - widths[i] * 0.5 * s, yy + 11.0 * u), Vector2(ux + widths[i] * 0.5 * s, yy + 11.0 * u), Color(GOLD.r, GOLD.g, GOLD.b, 0.9 * al), 2.5 * u)
 				_fry(Vector2(x - 30.0 * u, yy - 10.0 * u + sin(t * 3.0) * 1.5 * u), 15.0 * u * s, 0.95 * al * s)
 			x += widths[i] + spacing
+		# round 20: a locked WATCH STORY says what unlocks it
+		if not items[3]["on"] and (sel == 3 or (rects.size() > 3 and rects[3].has_point(mpos * size))):
+			draw_string(ThemeDB.fallback_font, Vector2(0.0, H * 0.905 + 44.0 * u), Loc.t("FINISH THE GAME ONCE TO UNLOCK THE OPENING AND THE ENDING"), HORIZONTAL_ALIGNMENT_CENTER, W, int(15 * u), Color(1, 1, 1, 0.6 * clamp((intro_t - 2.4) / 1.0, 0.0, 1.0)))
 		# footer: one line of small print
 		var fa = clamp((intro_t - 2.4) / 1.0, 0.0, 1.0)
 		draw_string(ThemeDB.fallback_font, Vector2(30.0 * u, H - 20.0 * u), Loc.t("a game about one gull, one pier and one fry"), HORIZONTAL_ALIGNMENT_LEFT, -1, int(13 * u), Color(1, 1, 1, 0.45 * fa))
@@ -426,8 +434,8 @@ func _ready():
 	pause_panel = _panel(0.6)
 	pause_panel.theme = ui_theme
 	var p = _vbox(pause_panel)
-	p.add_child(_lbl("PAUSED", 56, Color(1, 0.93, 0.7)))
-	p.add_child(_spacer(14))
+	p.add_child(_lbl("PAUSED", 44, Color(1, 0.93, 0.7)))
+	p.add_child(_spacer(4))
 	p.add_child(_btn("RESUME", func(): set_paused(false)))
 	save_btn = _btn("SAVE", func(): save_pressed.emit())
 	p.add_child(save_btn)
@@ -452,8 +460,9 @@ func _ready():
 	inv.toggled.connect(func(on): GS.invert_y = on)
 	p.add_child(inv)
 	diff_btn = _btn(_diff_btn_text(), func(): _toggle_diff())
-	diff_btn.custom_minimum_size = Vector2(520, 52)
-	diff_btn.add_theme_font_size_override("font_size", 22)
+	diff_btn.disabled = true
+	diff_btn.custom_minimum_size = Vector2(520, 34)
+	diff_btn.add_theme_font_size_override("font_size", 20)
 	p.add_child(diff_btn)
 	# round 18: two settings for hands and screens: TAB as a switch, and a timing offset for the rhythm (a laggy screen or speakers)
 	var tgl = CheckBox.new()
@@ -482,6 +491,10 @@ func _ready():
 	p.add_child(_btn("CONTROLS", func():
 		pause_panel.visible = false
 		controls_panel.visible = true))
+	# round 19: the way out of any freeze: back into the air above the start, every state cleared, everything collected is kept
+	p.add_child(_btn("UNSTICK - BACK TO THE START", func():
+		set_paused(false)
+		unstick_pressed.emit()))
 	p.add_child(_btn("SAVE & QUIT TO MENU", func():
 		save_pressed.emit()
 		set_paused(false)
@@ -490,8 +503,8 @@ func _ready():
 	p.add_theme_constant_override("separation", 4)
 	for ch in p.get_children():
 		if ch is Button:
-			ch.custom_minimum_size = Vector2(ch.custom_minimum_size.x, 42)
-			ch.add_theme_font_size_override("font_size", 22)
+			ch.custom_minimum_size = Vector2(ch.custom_minimum_size.x, 34)       # round 19: one more button (UNSTICK), a little tighter again
+			ch.add_theme_font_size_override("font_size", 20)
 	pause_panel.visible = false
 	slot_panel = _panel(0.78)
 	slot_panel.theme = ui_theme
@@ -501,7 +514,7 @@ func _ready():
 	sv.add_child(_spacer(10))
 	for i in range(1, GS.SLOTS + 1):
 		var b = _btn("", func(): _slot_pressed(i))
-		b.custom_minimum_size = Vector2(560, 136)
+		b.custom_minimum_size = Vector2(560, 112)
 		b.add_theme_font_size_override("font_size", 24)
 		slot_btns.append(b)
 		sv.add_child(b)
@@ -537,6 +550,22 @@ func _ready():
 	dv.add_child(_spacer(12))
 	dv.add_child(_btn("BACK", func(): _close_diff()))
 	diff_panel.visible = false
+	# round 20: WATCH STORY (the opening / the ending again; only once the game has been finished)
+	story_panel = _panel(0.8)
+	story_panel.theme = ui_theme
+	var tv = _vbox(story_panel)
+	tv.add_child(_lbl("WATCH STORY", 52, Color(1, 0.93, 0.7)))
+	tv.add_child(_spacer(12))
+	for pair in [["THE OPENING", "opening"], ["THE ENDING", "ending"]]:
+		var sb2 = _btn(pair[0], func():
+			story_panel.visible = false
+			story_pressed.emit(pair[1]))
+		sb2.custom_minimum_size = Vector2(520, 84)
+		sb2.add_theme_font_size_override("font_size", 32)
+		tv.add_child(sb2)
+	tv.add_child(_spacer(12))
+	tv.add_child(_btn("BACK", func(): _close_story()))
+	story_panel.visible = false
 	# a stand-in for the old CONTINUE button so that the test bots can still read `.disabled`
 
 	continue_btn = Button.new()
@@ -575,15 +604,11 @@ func _diff_pressed(d):
 
 # the pause menu: switch between EASY and HARD in the middle of a run (a run that was ever EASY does not count for the HARD record)
 func _diff_btn_text():
-	return "DIFFICULTY:  EASY   (CLICK FOR HARD)" if GS.is_easy() else ("DIFFICULTY:  HARD   (CLICK FOR EASY)" if GS.is_hard() else "DIFFICULTY:  CLASSIC")
+	return "DIFFICULTY:  EASY   (SET FOR THIS SAVE)" if GS.is_easy() else ("DIFFICULTY:  HARD   (SET FOR THIS SAVE)" if GS.is_hard() else "DIFFICULTY:  CLASSIC")
 
+# round 19: the difficulty is chosen once, with a new run, and cannot be changed afterwards: the pause menu only shows it
 func _toggle_diff():
-	if GS.diff == "classic":
-		return
-	GS.set_diff("hard" if GS.is_easy() else "easy", true)
-	diff_btn.text = _diff_btn_text()
-	if save_note != null:
-		save_note.text = "hard: the record needs a run that was hard from the start." if GS.is_hard() else "easy: breath, clear rings, a friendly town."
+	return
 
 func _on_cover_chosen(id):
 	match id:
@@ -593,6 +618,9 @@ func _on_cover_chosen(id):
 			_open_slots("load")
 		"gallery":
 			gallery.open()
+		"story":
+			cover.visible = false
+			story_panel.visible = true
 		"language":
 			cover.visible = false
 			lang_pick.open()
@@ -622,12 +650,44 @@ func _refresh_slots():
 	for i in range(1, GS.SLOTS + 1):
 		var b = slot_btns[i - 1]
 		b.text = _slot_text(i)
+		_slot_border(b, GS.slot_info(i))
 		if slot_mode == "load":
 			b.disabled = not GS.has_save(i)
 		else:
 			b.disabled = false
 			if slot_pending == i:
 				b.text = "SLOT %d\nTHIS ERASES THE OLD RUN.   PRESS AGAIN TO START" % i
+
+# round 19: a green frame for a slot that is EASY, a red one for HARD (an empty slot keeps the plain frame): the difficulty is chosen once, with the new run, and then it is fixed
+func _slot_border(b, info):
+	if info.is_empty():
+		for st in ["normal", "hover", "pressed", "disabled", "focus"]:
+			b.remove_theme_stylebox_override(st)
+		return
+	var hard = info.get("diff", "easy") == "hard"
+	var col = Color("FF6A5A") if hard else Color("5FD98C")
+	var mk = func(bg, a):
+		var sb = StyleBoxFlat.new()
+		sb.bg_color = bg
+		sb.border_color = Color(col.r, col.g, col.b, a)
+		sb.set_border_width_all(5)
+		sb.set_corner_radius_all(8)
+		sb.content_margin_left = 16
+		sb.content_margin_right = 16
+		sb.content_margin_top = 8
+		sb.content_margin_bottom = 8
+		return sb
+	b.add_theme_stylebox_override("normal", mk.call(Color(0.08, 0.1, 0.16, 0.85), 0.85))
+	b.add_theme_stylebox_override("hover", mk.call(Color(0.14, 0.15, 0.2, 0.92), 1.0))
+	b.add_theme_stylebox_override("pressed", mk.call(Color(0.22, 0.2, 0.14, 0.95), 1.0))
+	b.add_theme_stylebox_override("focus", mk.call(Color(0.14, 0.15, 0.2, 0.92), 1.0))
+	b.add_theme_stylebox_override("disabled", mk.call(Color(0.06, 0.07, 0.1, 0.6), 0.35))
+
+func _close_story():
+	story_panel.visible = false
+	cover.visible = true
+	cover.reset_intro()
+	cover.set_save(GS.has_any_save())
 
 func _close_slots():
 	slot_panel.visible = false
@@ -672,6 +732,8 @@ func show_main():
 		lang_pick.open()
 	if slot_panel != null:
 		slot_panel.visible = false
+	if story_panel != null:
+		story_panel.visible = false
 	cover.reset_intro()
 	var has = GS.has_any_save()
 	cover.set_save(has)
@@ -683,6 +745,8 @@ func begin_game():
 	main_panel.visible = false
 	if slot_panel != null:
 		slot_panel.visible = false
+	if story_panel != null:
+		story_panel.visible = false
 	controls_panel.visible = false
 	pause_panel.visible = false
 
@@ -710,6 +774,10 @@ func _notification(what):
 		set_paused(true)
 
 func _unhandled_input(event):
+	if story_panel != null and story_panel.visible and event.is_action_pressed("pause_game"):
+		_close_story()
+		get_viewport().set_input_as_handled()
+		return
 	if slot_panel != null and slot_panel.visible and event.is_action_pressed("pause_game"):
 		_close_slots()
 		get_viewport().set_input_as_handled()

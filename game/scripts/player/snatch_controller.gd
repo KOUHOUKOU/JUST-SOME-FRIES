@@ -92,6 +92,9 @@ var tut_assist = false     # kept for the tutorial director in main.gd
 var slow_t = 0.0           # round 18: cool-down of the "TOO SLOW" line in Gull Sight
 var fish_lock = null       # round 18b: the fish that TAB has locked while OCEAN TIME runs and the gull sits on the water (SPACE then launches straight at it)
 var fish_pick_t = 0.0
+var hit_fx_res = ""        # round 19: the last good judgement ("green" | "gold"), when (msec) and for which kind of catch: the corner glow of the hud
+var hit_fx_t = -10000
+var hit_fx_tier = 0
 
 func _ready():
 	pass
@@ -142,6 +145,12 @@ func step(delta):
 	if seq != null and last_step_usec > 0 and now - last_step_usec > 250000:
 		seq["t0"] += now - last_step_usec     # the game was paused: the rhythm waits too
 	last_step_usec = now
+	# round 19, THE SEA FREEZE: a fish that leaves the water frees its node while the rhythm on it is still running. A freed lock reads as `null`, so nothing ever released the gull:
+	# the rhythm stayed on, input stayed locked, the gull fell back on the sea and could neither move nor take off. A rhythm whose fry is gone is let go at once.
+	if seq != null and state == "idle" and not is_instance_valid(lock_fry):
+		_unlock()
+		Engine.time_scale = 1.0
+		focus_owned = false
 	_focus_time(delta)
 	_fish_lock_tick(delta)
 	match state:
@@ -210,7 +219,6 @@ func _fish_lock_tick(delta):
 	fish_lock = best
 	fish_lock.set_marked(true)
 	Sfx.play("alert", -13.0, 1.7)
-	Sfx.play_note("tinkle", 91, -10.0)
 
 func _clear_fish_lock():
 	if fish_lock != null and is_instance_valid(fish_lock):
@@ -423,8 +431,13 @@ func _seq_params(f):
 	if base["single"]:
 		base["gw"] = base["gg"]          # one band, the gold one, as wide as the green one used to be
 		base["gg"] = 0.0
-	base["appr"] = APPR * rs * gm * sk
-	base["gap"] = base["gap"] * rs * gm * sk
+	if GS.dp("beat") > 0.0:
+		# round 19: ONE steady beat for every wave of every catch (no faster second wave, no hurried tiers): `appr` seconds to shrink, `beat` seconds between two judgements
+		base["appr"] = GS.dp("appr") * rs * sk
+		base["gap"] = GS.dp("beat") * lad * rs * sk
+	else:
+		base["appr"] = APPR * rs * gm * sk
+		base["gap"] = base["gap"] * rs * gm * sk
 	var s0 = GS.dp("first_slow")
 	base["slow0"] = s0
 	base["appr0"] = base["appr"] * s0
@@ -520,6 +533,18 @@ func _seq_judge():
 			break
 	return s["done"]
 
+# round 19: the note of a good press belongs to its BEAT, not to the instant of the key: a press that came a little early waits for the middle of the gold band (at most
+# ON_BEAT_MAX), so that the tune comes out even whatever the hands do. Note i of the tune = wave i (a miss is a hole on its beat); a gold press is the same note with sparkle.
+const ON_BEAT_MAX = 0.14
+func _on_beat(nt, tp, fn):
+	var d = clamp((nt["t"] - nt["gw"] * 0.4) - tp, 0.0, ON_BEAT_MAX)
+	if d < 0.012:
+		fn.call()
+		return
+	var tree = Engine.get_main_loop()
+	if tree != null:
+		tree.create_timer(d, true, false, true).timeout.connect(fn)
+
 func _first_pending(s):
 	for i in s["notes"].size():
 		if s["notes"][i]["res"] == "":
@@ -530,6 +555,10 @@ func _note_result(s, idx, res, reason, tp):
 	var nt = s["notes"][idx]
 	nt["res"] = res
 	nt["res_t"] = tp
+	if res != "miss":
+		hit_fx_res = res            # round 19: a soft flash in the corners of the screen (the hud draws it): green = a pale glow, gold = a warmer, stronger one
+		hit_fx_t = GS.msec()
+		hit_fx_tier = s["tier"]
 	match res:
 		"gold":
 			s["golds"] += 1
@@ -537,17 +566,16 @@ func _note_result(s, idx, res, reason, tp):
 			if s["single"]:
 				# HARD: one point per beat; the tune is already playing by itself, a hit adds a bright voice on top of this beat
 				s["points"] += 1
-				Tunes.hit(s["tune"], idx, s["combo"])
+				var cmb = s["combo"]
+				_on_beat(nt, tp, func(): Tunes.hit(s["tune"], idx, cmb))
 			else:
-				var i0 = s["points"]
 				s["points"] += 2
-				Tunes.gold(s["tune"], i0)
+				_on_beat(nt, tp, func(): Tunes.gold(s["tune"], idx))
 		"green":
 			s["greens"] += 1
-			var i1 = s["points"]
 			s["points"] += 1
 			s["combo"] += 1
-			Tunes.play(s["tune"], i1, false)
+			_on_beat(nt, tp, func(): Tunes.play(s["tune"], idx, false))
 		_:
 			s["misses"] += 1
 			s["combo"] = 0
@@ -559,16 +587,11 @@ func _note_result(s, idx, res, reason, tp):
 		if q["res"] == "":
 			remaining += 1
 	var judged = s["n"] - remaining
-	# enough points: it is yours (a gold press pays for two waves, so skilled players finish early)
-	if s["points"] >= s["need"]:
+	# round 19: the WHOLE piece is played to its last note, whatever the points say (every note matters; no early "enough"), and only then it is counted: a gold press is worth
+	# two points, so after a gold one miss is forgiven
+	if remaining == 0:
 		s["done"] = true
-		s["ok"] = true
-	elif s["points"] + (1 if s["single"] else 2) * remaining < s["need"]:
-		s["done"] = true          # even all golds could not save it any more
-		s["ok"] = false
-	elif remaining == 0:
-		s["done"] = true
-		s["ok"] = false
+		s["ok"] = s["points"] >= s["need"]
 	if s["done"]:
 		s["perfect"] = s["ok"] and s["misses"] == 0 and (s["single"] or s["golds"] >= int(ceil(judged * 0.7)))
 

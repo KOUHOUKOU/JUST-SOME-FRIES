@@ -55,13 +55,13 @@ enum Phase { TUTORIAL, SPECIAL_HUNT, STILL_HUNGRY, ENDED }
 # `GS.dp(key)` reads the table for the current difficulty. Waves per circle: 0 = keep the number of the tier table.
 const DP = {
 	"easy": {"stam": 1.7, "drain": 0.5, "regen_air": 2.4, "regen_perch": 2.4, "free_early": true, "sight": 0.25, "sight_game": true, "need": 0.88, "band": 1.5, "band_x": 1.0,
-		"ring": 0.68, "first_slow": 1.0, "first_lead": 0.3, "ticks": 2, "gap": 1.0, "sky_slow": 1.5, "single": false, "ladder": [1.0, 0.92, 0.84, 0.76], "band_lad": [1.0, 0.9, 0.8, 0.72], "w_fry": 1, "w_rb": 2, "w_fish": 2, "w_sky": 2, "sky_need": 0.6,
+		"ring": 1.0, "first_slow": 1.0, "first_lead": 0.3, "ticks": 2, "gap": 1.0, "appr": 0.74, "beat": 0.62, "sky_slow": 1.1, "single": false, "ladder": [1.0, 0.97, 0.94, 0.92], "band_lad": [1.0, 0.92, 0.84, 0.78], "w_fry": 2, "w_rb": 2, "w_fish": 2, "w_sky": 2, "sky_need": 0.6,
 		"hostile": 3.0, "friend": 1.4, "hits": false, "star_sec": 45.0, "label": "EASY"},
 	"hard": {"stam": 1.0, "drain": 1.0, "regen_air": 1.0, "regen_perch": 1.0, "free_early": false, "sight": 1.0, "sight_game": false, "need": 1.1, "band": 0.85, "band_x": 0.8,
-		"ring": 0.62, "first_slow": 1.0, "first_lead": 0.1, "ticks": 1, "gap": 0.88, "sky_slow": 1.0, "single": true, "ladder": [1.0, 0.94, 0.88, 0.82], "band_lad": [1.0, 1.0, 1.0, 1.0], "w_fry": 3, "w_rb": 3, "w_fish": 3, "w_sky": 2, "sky_need": 1.0,
+		"ring": 1.0, "first_slow": 1.0, "first_lead": 0.1, "ticks": 1, "gap": 0.88, "appr": 0.66, "beat": 0.5, "sky_slow": 1.0, "single": true, "ladder": [1.0, 0.97, 0.94, 0.92], "band_lad": [1.0, 1.0, 1.0, 1.0], "w_fry": 3, "w_rb": 3, "w_fish": 3, "w_sky": 2, "sky_need": 1.0,
 		"hostile": 1.6, "friend": 0.5, "hits": true, "star_sec": 30.0, "label": "HARD"},
 	"classic": {"stam": 1.0, "drain": 1.0, "regen_air": 1.0, "regen_perch": 1.0, "free_early": false, "sight": 1.0, "sight_game": false, "need": 1.0, "band": 1.0, "band_x": 1.0,
-		"ring": 1.0, "first_slow": 1.0, "first_lead": 0.0, "ticks": 0, "gap": 1.0, "sky_slow": 1.0, "single": false, "ladder": [1.0, 1.0, 1.0, 1.0], "band_lad": [1.0, 1.0, 1.0, 1.0], "w_fry": 0, "w_rb": 0, "w_fish": 0, "w_sky": 0, "sky_need": 1.0,
+		"ring": 1.0, "first_slow": 1.0, "first_lead": 0.0, "ticks": 0, "gap": 1.0, "appr": 0.0, "beat": 0.0, "sky_slow": 1.0, "single": false, "ladder": [1.0, 1.0, 1.0, 1.0], "band_lad": [1.0, 1.0, 1.0, 1.0], "w_fry": 0, "w_rb": 0, "w_fish": 0, "w_sky": 0, "sky_need": 1.0,
 		"hostile": 1.6, "friend": 1.0, "hits": true, "star_sec": 30.0, "label": "CLASSIC"},
 }
 var diff = "easy"                    # "easy" | "hard" | "classic"
@@ -166,8 +166,8 @@ const WEAR_NAMES = {"hat": "STRAW HAT", "sailor": "SAILOR CAP", "topper": "TOP H
 const TUT_NEED = {"TUTORIAL_01": 7.5, "TUTORIAL_02": 8.5, "TUTORIAL_03": 9.5}   # m/s: the first three fries, a gentle ramp (gauge 45 / 51 / 57)
 # gauge speed needed to lock a fry of this type: [silver, gold, diamond]. The gull starts with a top speed of 90:
 # silvers need 78-84 (a boost run-up), golds need SONIC (96-114 - a silver SONIC fry gives 105, a gold one 123), diamonds need 120-138 (SONIC gold 123 / diamond 144).
-const NEED_GAUGE = {"red": [78, 102, 126], "orange": [78, 99, 132], "green": [72, 96, 138], "cyan": [78, 108, 126],
-	"blue": [78, 102, 138], "purple": [72, 99, 132], "pink": [84, 114, 144]}
+const NEED_GAUGE = {"red": [78, 90, 102], "orange": [78, 90, 106], "green": [72, 86, 102], "cyan": [78, 92, 104],
+	"blue": [78, 90, 104], "purple": [72, 88, 102], "pink": [84, 98, 110]}       # round 19: gold and diamond only ask for a LITTLE more speed (they asked up to 144); the rainbow fry (150) is where it gets hard
 # ROUND 7: the ladder of top speeds. The first SONIC fry (silver) covers EVERY silver and gold fry (the hardest gold needs 114), the second one (gold) covers every diamond
 # fry (the hardest needs 144), and one drink on top of the first one reaches a diamond fry too.
 const RAINBOW_NEED = 150.0           # round 8: a rainbow fry is five judgements and asks for a gold-SONIC gull or a drink or two on top of a silver one
@@ -206,7 +206,7 @@ const QUESTS = {
 	"drink": [3, "GET A DRINK", "", "A BOOST", "ALL YOUR BREATH BACK AND MORE SPEED"],
 	"wear": [3, "GET AN ACCESSORY", "", "A NEW LOOK", "WEAR IT FROM THE CODEX (C)"],
 	"rainbow": [6, "GET A RAINBOW FRY", "", "A BETTER GULL", "IT ADDS A LITTLE TO ITS COLOUR FOR EVER"],
-	"sky": [10, "SKY HIGH! CLOUD, STAR, MOON, SUN, RAINBOW", "the whole sky, in my beak.|it was softer, warmer and louder than i expected.|and somehow... i'm still hungry.", "WEAR THE SKY", "WHAT YOU CATCH UP THERE STAYS WITH YOU"],
+	"sky": [10, "SKY HIGH! CLOUD, STAR, MOON, SUN, RAINBOW", "the whole sky, in one beak.|it was softer, warmer and louder than i expected.|and somehow i'm still hungry.", "WEAR THE SKY", "WHAT YOU CATCH UP THERE STAYS WITH YOU"],
 }
 const BIG_QUESTS = ["sky"]
 const SKY_THINGS = ["cloud", "raincloud", "moon", "sun", "skybow", "meteor"]      # the things of the sky keep their speeds in every difficulty (their challenge is the challenge of EASY)
@@ -311,7 +311,16 @@ var test_boost_bonus = 0.0            # dev tests only: extra top speed so the b
 var star_t = 0.0                      # seconds of STARLIGHT left (all three drinks at once)
 var star_total = 0                    # how many times the gull has been in it
 var fish_book = {}                    # species id -> {"n": caught, "kg": heaviest, "cm": longest}
-var quest_done_at = {}                # quest id -> game seconds when it was ticked off (the board drops it a little later)
+const QUEST_POP_SEC = 4.6             # round 19: how long a finished goal holds the board on the screen
+var quest_pops = []                   # round 19: {id, t0} the finished goals that still have to be shown on the board
+func quest_pop(id):
+	var now = msec() / 1000.0
+	var t0 = now
+	if quest_pops.size() > 0:
+		t0 = max(now, quest_pops[quest_pops.size() - 1]["t0"] + QUEST_POP_SEC)
+	quest_done_at[id] = t0
+	quest_pops.append({"id": id, "t0": t0})
+var quest_done_at = {}             # quest id -> game seconds when it was ticked off (the board drops it a little later)
 var cine_hold = null                  # a caught thing (a fish, a star) that the cinematic moment keeps alive until it is over
 var sky_got = {}                      # round 15: the five sky things caught this run: cloud | star | moon | sun | rainbow
 var clouds_got = {}                   # ...which clouds: cloud | raincloud
@@ -335,6 +344,7 @@ var fish_streak_t = 0.0
 var fish_best_streak = 0
 var sea_zone = false                   # the gull is over the sea and low: the player script sets this every frame
 var cutscene = false                   # a film moment / the story is on screen: the drinks and OCEAN TIME wait (main / story_scenes set it)
+var replay = ""                      # round 20: "opening" / "ending" while WATCH STORY is playing (nothing is saved meanwhile)
 var free_play = false                  # round 16: the ending is over and the player kept playing (every colour, every fish, every achievement still to get)
 var slot = 1                           # which of the save slots this run lives in
 var autoload_slot = 0                  # a reload that must continue a slot at once (KEEP PLAYING after the credits)
@@ -519,6 +529,7 @@ func reset():
 	cine_hold = null
 	fish_book = {}
 	quest_done_at = {}
+	quest_pops = []
 	fish_t = 0.0
 	fish_streak = 0
 	fish_streak_t = 0.0
@@ -1171,7 +1182,7 @@ func rainbow_text(type):
 
 # ---- save game (a plain JSON file in the user folder): the run so far, the gull's stuff and where it was ----
 # round 16: two save slots. Slot 1 keeps the old file name (an older save simply is slot 1).
-const SLOTS = 2
+const SLOTS = 3         # round 19: three slots (it was two)
 func save_path(sl = 0):
 	var n = slot if sl <= 0 else sl
 	if OS.get_cmdline_user_args().size() > 0:
@@ -1180,6 +1191,14 @@ func save_path(sl = 0):
 
 func has_save(sl = 0):
 	return FileAccess.file_exists(save_path(sl))
+
+# round 20: the first slot whose run has been finished (0 = none): WATCH STORY needs one (the ending is replayed from its memories)
+func finished_slot():
+	for i in range(1, SLOTS + 1):
+		var info = slot_info(i)
+		if not info.is_empty() and info.get("free", false):
+			return i
+	return 0
 
 func has_any_save():
 	for i in range(1, SLOTS + 1):
@@ -1208,6 +1227,8 @@ func write_end_save(pos, yaw):
 	return write_save(pos, yaw, true)
 
 func write_save(pos, yaw, ended = false):
+	if replay != "":
+		return false                  # round 20: watching the story again never touches a save
 	if ordinary_eaten and not ended:
 		return false
 	var d = {"v": 1, "sense": gull_sense_count, "tut": tutorial_done.keys(), "lv": lv.duplicate(), "rb": rainbow.duplicate(), "stars": star_got.keys(),

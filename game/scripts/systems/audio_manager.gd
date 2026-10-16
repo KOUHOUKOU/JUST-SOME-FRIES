@@ -121,6 +121,8 @@ func _load_notes():
 			note_streams[inst] = d
 
 func play_note(inst, midi, vol_db = -6.0):
+	if inst in MUTED_INSTS:
+		return
 	var bank = note_streams.get(inst, null)
 	if bank == null:
 		play("ring_ok", vol_db, pow(2.0, float(midi - 72) / 12.0))           # (no sample bank: the old single bell, pitched)
@@ -210,7 +212,32 @@ func _process(delta):
 		if zone_tw[cur] == null or not zone_tw[cur].is_running():
 			active.volume_db = move_toward(active.volume_db, target, 24.0 * delta)
 
+# round 19: the old "reward" jingles (a spray of high bells, no pattern) are gone. A reward is now a tiny, soft, consonant motif on the harp: two to four notes of the C major
+# triad climbing, the way a music box says "well done". The pitch asked for only shifts it (at most five semitones).
+const REWARD_MOTIFS = {"reward_1": [67, 72], "reward_2": [67, 72, 76], "reward_3": [64, 67, 72, 76]}
+func _reward_motif(sound_name, vol_db, pitch):
+	var notes = REWARD_MOTIFS[sound_name]
+	var shift = int(clamp(round(12.0 * log(max(pitch, 0.25)) / log(2.0)), -5.0, 5.0))
+	for i in notes.size():
+		var m = notes[i] + shift
+		var v = vol_db - 4.0
+		if i == 0:
+			play_note("harp", m, v)
+		else:
+			get_tree().create_timer(0.13 * i, true, false, true).timeout.connect(func(): play_note("harp", m, v))
+
+# round 20: every isolated ringing sound is gone (bells, chimes, pings, harp flourishes, welcome songs, "tick" blips, the squawk of F). They stay silent on purpose: a lone
+# "bling" is worse than nothing. What is left are the sounds of things (wings, steps, wind, water, crunch, thuds, voices of people and dogs) and the real music.
+const MUTED = ["chime", "ready_chime", "perfect", "vn_next", "vn_pop", "tick_ui", "ui_go", "count_tick", "gs_tick", "gs_complete", "success", "blip", "drop_tick", "equip", "heart",
+	"hello", "feed", "star_on", "star_off", "star_riser", "friend_come", "friend_gift", "friend_welcome", "meteor_get", "meteor_pass", "ring_ok", "ring_gold", "prism_0", "prism_1",
+	"prism_2", "prism_3", "prism_4", "prism_5", "prism_6", "special_blue", "special_cyan", "special_green", "special_orange", "special_pink", "special_purple", "special_red",
+	"buff_ice", "buff_coffee", "buff_alcohol", "buff_end", "tonic", "reward_1", "reward_2", "reward_3", "lure", "cine_in", "cine_out", "pop", "bubble"]
+# (the bright bell voices that used to sit on top of the judgement tunes)
+const MUTED_INSTS = ["tinkle", "glock", "xylo"]
+
 func play(sound_name, vol_db = 0.0, pitch = 1.0):
+	if sound_name in MUTED:
+		return
 	if ALT.has(sound_name):
 		sound_name = ALT[sound_name][randi() % ALT[sound_name].size()]
 	if not sounds.has(sound_name):

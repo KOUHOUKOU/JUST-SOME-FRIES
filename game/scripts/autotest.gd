@@ -46,7 +46,7 @@ func _ready():
 		"--mischief": "mischief_test", "--star": "star_test", "--prism": "star_test", "--audio": "audio_report", "--cone": "cone_test", "--restart": "restart_test", "--soak": "soak_test",
 		"--census": "census", "--flee": "flee_test", "--comics": "comics_test", "--title": "title_test", "--credits": "credits_test", "--menu": "menu_test", "--world": "world_test",
 		"--hud": "hud_test", "--tiers": "tiers_test", "--fish": "fish_test", "--rival": "rival_test", "--volley": "volley_test", "--wear": "wear_test", "--save": "save_test",
-		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u", "--r16s": "r16s", "--r16a": "r16a", "--r16b": "r16b", "--r16c": "r16c", "--r16d": "r16d", "--r16e": "r16e", "--r16f": "r16f", "--r16h": "r16h", "--r16g": "r16g", "--r17": "r17_menus", "--r18a": "r18a", "--r18b": "r18b", "--r18v": "r18v", "--r18m": "r18m", "--r18n": "r18n", "--r18h": "r18h", "--r18f": "r18f", "--r18w": "r18w"}
+		"--hunger": "hunger_test", "--ending": "ending_test", "--hazards": "hazards_test", "--rhythm": "rhythm_test", "--land": "land_test", "--rainbow": "rainbow_test", "--one": "one_test", "--topdown": "topdown", "--places": "places_test", "--rest": "rest_test", "--codex": "codex_test", "--drink": "drink_test", "--smash": "smash_test", "--film": "film", "--stand": "stand_test", "--sky": "sky_test", "--census2": "mischief_census", "--reach": "reach_test", "--bank": "bank_test", "--cams": "cams_test", "--r7": "round7_test", "--r7b": "round7b_test", "--r8": "round8_test", "--r8b": "r8cine", "--r8c": "r8open", "--r8t": "r8tab", "--r8e": "r8end", "--r8m": "r8bro", "--r9speed": "r9speed", "--r9cine": "r9cine", "--r9sky": "r9sky", "--r9tab": "r9tab", "--r9trail": "r9trail", "--r9quiet": "r9quiet", "--shotcheck": "shotcheck", "--r10beats": "r10beats", "--r10npc": "r10npc", "--r10misc": "r10misc", "--r10look": "r10look", "--r12": "r12", "--r12audio": "r12audio", "--r13reload": "r13reload", "--r15a": "r15a", "--r15b": "r15b", "--r15n": "r15n", "--r15g": "r15g", "--r15u": "r15u", "--r16s": "r16s", "--r16a": "r16a", "--r16b": "r16b", "--r16c": "r16c", "--r16d": "r16d", "--r16e": "r16e", "--r16f": "r16f", "--r16h": "r16h", "--r16g": "r16g", "--r17": "r17_menus", "--r18a": "r18a", "--r18b": "r18b", "--r18v": "r18v", "--r18m": "r18m", "--r18n": "r18n", "--r18h": "r18h", "--r18f": "r18f", "--r18w": "r18w", "--r18s": "r18s"}
 	for k in table:
 		if k in args:
 			call(table[k])
@@ -1217,6 +1217,12 @@ func star_test():
 
 # the judgement: silver / gold / diamond rhythms, misses, early presses, the escape check
 func rhythm_test():
+	if OS.get_cmdline_user_args().has("--ringview"):
+		await ringview_test()
+		return
+	if OS.get_cmdline_user_args().has("--questpop"):
+		await questpop_test()
+		return
 	await get_tree().create_timer(1.0).timeout
 	var p = main.player
 	GS.gull_sense_count = 3
@@ -1262,6 +1268,57 @@ func rhythm_test():
 			g2.queue_free()
 		await get_tree().create_timer(2.5).timeout
 	GS.test_boost_bonus = 0.0
+	get_tree().quit()
+
+# round 19: `--rhythm --questpop`: a goal is finished while the board is folded away (shots/qp_*.png) and then a sky catch with the cut-scene queue busy: the board must come after it
+func questpop_test():
+	await get_tree().create_timer(1.0).timeout
+	GS.set_diff("easy")
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	GS.board_open = false
+	GS.quests["drink"] = "active"
+	GS.stats["drinks"] = 1
+	await get_tree().create_timer(0.5).timeout
+	GS.quests_check()
+	for t in [0.3, 0.9, 1.4, 1.9, 2.8, 4.6]:
+		await get_tree().create_timer(0.35 if t == 0.3 else 0.5).timeout
+		await shot("qp_%d" % int(t * 10))
+	say("[QP] pops left %d, board folded %s" % [GS.quest_pops.size(), str(not GS.board_open)])
+	get_tree().quit()
+
+# round 19: `--rhythm --ringview [--hard]`: a still picture of the circles for 1, 2, 3, 5, 7 and 9 circles (shots/rv_<n>.png), the waves caught a little before the contact
+func ringview_test():
+	await get_tree().create_timer(1.0).timeout
+	GS.set_diff("hard" if OS.get_cmdline_user_args().has("--hard") else "easy")
+	GS.gull_sense_count = 3
+	GS.tutorial_done = {"TUTORIAL_01": true, "TUTORIAL_02": true, "TUTORIAL_03": true}
+	main._reveal_specials()
+	var s = main.player.snatch
+	var f = main.world["fries"]["SPECIAL_BLUE"]
+	main.player.global_position = f.aim_point() + Vector3(0, 2.0, 22.0)
+	main.player.aim_yaw = 0.0
+	for nc in [1, 2, 3, 5, 7, 9]:
+		s._seq_begin("grab", f, f.aim_point())
+		var sq = s.seq
+		sq["layout"] = s.LAYOUTS[nc]
+		sq["circles"] = nc
+		var notes = []
+		for i in nc * 2:
+			notes.append({"t": 1.8 + i * sq["notes"][0]["appr"] * 0.65, "circle": i / 2, "wave": i % 2, "res": "", "res_t": 0.0, "appr": sq["appr"], "gw": sq["gw"], "gg": sq["gg"]})
+		sq["notes"] = notes
+		sq["n"] = nc * 2
+		sq["need"] = nc * 2
+		sq["ticks"] = []
+		for k in 4:
+			await get_tree().process_frame
+			sq["t0"] = GS.usec() - int(1.6 * 1000000.0)
+			s.seq = sq
+			s.seq_ts = 1.0
+			s.lock_fry = f
+		await shot("rv_%d" % nc)
+		s._unlock()
 	get_tree().quit()
 
 func flee_test():
@@ -4951,3 +5008,6 @@ func r18f():
 
 func r18w():
 	_r18_node().r18w()
+
+func r18s():
+	_r18_node().r18s()

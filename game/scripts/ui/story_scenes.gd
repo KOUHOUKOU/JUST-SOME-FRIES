@@ -688,11 +688,11 @@ const BEATS = {
 	"drink_ice": ["BRRR!", Color("FF8AD8"), ["ice cream. so cold it hurts. so sweet i don't care.", "nothing can hurt me. brain freeze is just speed."],
 		{"rot": -4.0, "shake": 0.9, "pitch": 1.6, "sfx": "buff_ice", "pos": Vector2(0.64, 0.34),
 		"extra": [["*shiver*", 0.84, 0.5, 6.0, Color("CFF3E4"), 32.0, 1.8]]}],
-	"quest_cloud": ["FLUFF!", Color("DDEBFF"), ["i caught a cloud.", "it was softer than i expected.", "and somehow... i'm still hungry."],
+	"quest_cloud": ["FLUFF!", Color("DDEBFF"), ["i caught a cloud.", "it was softer than i expected, and a little shy.", "and somehow i'm still hungry."],
 		{"rot": -5.0, "shake": 0.3, "pitch": 1.1, "pos": Vector2(0.64, 0.34), "size": 130.0, "life": 2.2}],
-	"quest_sky": ["WHOOSH!", Color("BFE3FF"), ["the whole sky, in my beak.", "it was softer, warmer and louder than i expected.", "and somehow... i'm still hungry."],
+	"quest_sky": ["WHOOSH!", Color("BFE3FF"), ["the whole sky, in one beak.", "it was softer, warmer and louder than i expected.", "and somehow i'm still hungry."],
 		{"rot": -5.0, "shake": 0.3, "pitch": 1.1, "pos": Vector2(0.64, 0.34), "size": 130.0, "life": 2.2}],
-	"quest_fishbook": ["GULP.", Color("7FC3E4"), ["the whole sea, written down.", "every one of them wetter than i expected.", "and somehow... i'm still hungry."],
+	"quest_fishbook": ["GULP.", Color("7FC3E4"), ["the whole sea, written down.", "every one of them wetter than i expected.", "and somehow i'm still hungry."],
 		{"rot": 4.0, "shake": 0.3, "pitch": 0.9, "pos": Vector2(0.64, 0.34), "size": 130.0, "life": 2.2}],
 }
 
@@ -1042,17 +1042,17 @@ func _close_triptych():
 # thin bars close in, one hand-lettered word on a starburst, and the gull's own thoughts typed in the empty middle, the last one slow. ~10 s each.
 const SKY_FLOW = {
 	"cloud": {"tag": "A CLOUD", "music": "cine_wish", "word": "FLUFF!", "col": Color("FFFFFF"), "star": Color("8EC8F0"), "prop": "cloud",
-		"lines": ["i caught a cloud.", "it was softer than i expected.", "i think it's a little shy.", "and somehow... i'm still hungry."]},
+		"lines": ["i caught a cloud.", "it was softer than i expected, and a little shy, like it had never been held.", "it left a bit of morning on my feathers.", "and somehow i'm still hungry."]},
 	"raincloud": {"tag": "A RAIN CLOUD", "music": "cine_wish", "word": "DRIP.", "col": Color("DDE6F5"), "star": Color("7F93B8"), "prop": "raincloud",
-		"lines": ["i caught a rain cloud.", "it only rains on me.", "...that seems about right.", "and somehow... i'm still hungry."]},
+		"lines": ["i caught a rain cloud.", "it only rains on me, which feels a little personal.", "somebody has to be rained on. i volunteered.", "and somehow i'm still hungry."]},
 	"moon": {"tag": "THE MOON", "music": "cine_wish", "word": "HUSH.", "col": Color("EAF2FF"), "star": Color("5C78C8"), "prop": "moon",
-		"lines": ["i caught the moon.", "no cheese. just a very large, very quiet thing.", "i wanted to tell someone. everybody was asleep.", "and somehow... i'm still hungry."]},
+		"lines": ["i caught the moon.", "no cheese. just something very large and very quiet.", "i wanted to tell someone. the whole island was asleep.", "and somehow i'm still hungry."]},
 	"sun": {"tag": "THE SUN", "music": "cine_sun", "word": "FWOOM!", "col": Color("FFF6D8"), "star": Color("FFA62B"), "prop": "sun",
-		"lines": ["i caught the sun.", "it was warm. something in me changed.", "everything went gold for a moment.", "and somehow... i'm still hungry."]},
+		"lines": ["i caught the sun.", "it was warm in a way that went all the way through.", "for a moment the whole world turned gold, and so did my beak.", "and somehow i'm still hungry."]},
 	"skybow": {"tag": "A WHOLE RAINBOW", "music": "cine_wish", "word": "TA-DAA!", "col": Color("FFFFFF"), "star": Color("FF8FC4"), "prop": "skybow",
-		"lines": ["i caught a rainbow.", "from the inside it has more colours than i thought.", "it doesn't taste of anything. it tastes of going.", "and somehow... i'm still hungry."]},
+		"lines": ["i caught a rainbow.", "from the inside it has more colours than anyone told me.", "it doesn't taste of anything. it tastes of leaving.", "and somehow i'm still hungry."]},
 	"meteor": {"tag": "A FALLING STAR", "music": "cine_wish", "word": "ZING!", "col": Color("FFF3B0"), "star": Color("F2B830"), "prop": "meteor",
-		"lines": ["it was falling. so i caught it.", "everybody says: make a wish.", "my beak is full.", "...it would have been the fries again, wouldn't it."]},
+		"lines": ["it was falling, so i caught it.", "everybody says you should make a wish.", "my beak was full.", "it would have been fries again, wouldn't it."]},
 }
 
 func _cine_sky(kind):

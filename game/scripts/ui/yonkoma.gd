@@ -245,7 +245,7 @@ func _say(b, hold = 1.0):
 		b["typed"] = u
 		if int(u) / 3 != last:
 			last = int(u) / 3
-			Sfx.play("blip", -26.0, randf_range(1.25, 1.55))
+			pass       # round 20: typed words are silent now
 		await get_tree().process_frame
 	skip = false
 	await _wait(hold + 0.025 * Loc.read_len(b["text"]))

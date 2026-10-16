@@ -233,7 +233,7 @@ class Reticle extends HC:
 		var layout = sq["layout"]
 		var multi = layout.size() > 1
 		# round 7: big, easy-to-read circles. Radius where the wave starts / where the gold band ends / spacing of the circles, per number of circles
-		var geo = {1: [172.0, 52.0, 0.0], 2: [120.0, 40.0, 262.0], 3: [100.0, 35.0, 208.0], 5: [106.0, 37.0, 228.0], 7: [76.0, 28.0, 148.0], 9: [56.0, 21.0, 132.0]}[layout.size()]
+		var geo = {1: [158.0, 58.0, 0.0], 2: [136.0, 50.0, 270.0], 3: [92.0, 34.0, 188.0], 5: [128.0, 46.0, 256.0], 7: [90.0, 34.0, 180.0], 9: [86.0, 33.0, 176.0]}[layout.size()]       # round 19: one comfortable size from 1 to 9 circles (no tiny nine, no huge one)
 		# round 18: bigger circles (EASY x1.35, HARD x1.1), shrunk back only as far as the whole picture needs to stay on the screen
 		var ks = GS.dp("ring")
 		var ew1 = geo[0] + 24.0
@@ -288,10 +288,10 @@ class Reticle extends HC:
 			if sq["tier"] == 11:      # the rainbow in the sky: seven colours, each circle with its golden ring
 				gcol = RAINBOW_COLS[ci % RAINBOW_COLS.size()]
 			if not single:
-				draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.14 * base_a), green_px + 12.0, true)
-				draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.85 * base_a), green_px, true)
+				draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.14 * base_a), green_px + 5.0 * u, true)
+				draw_arc(c, g_mid, 0, TAU, 96, Color(gcol.r, gcol.g, gcol.b, 0.8 * base_a), green_px, true)
 			var bandc = gcol if (single and sq["tier"] == 11) else RING_GOLD
-			draw_arc(c, o_mid, 0, TAU, 96, Color(bandc.r, bandc.g, bandc.b, 0.28 * base_a), gold_px + 8.0, true)
+			draw_arc(c, o_mid, 0, TAU, 96, Color(bandc.r, bandc.g, bandc.b, 0.28 * base_a), gold_px + 4.0 * u, true)
 			draw_arc(c, o_mid, 0, TAU, 96, Color(bandc.r, bandc.g, bandc.b, base_a), gold_px, true)
 		# round 18: the count-in. At every tick a ring pulses out of the first circle; and a "READY" waits above it until the slow first wave is close
 		var ct = sq.get("ticks", [])
@@ -337,20 +337,21 @@ class Reticle extends HC:
 			elif dt >= -(nt["gw"] + nt["gg"]) and dt < -nt["gw"]:
 				zone = "green"
 			var is_next = i == next_i
-			var rc = Color(1, 1, 1, (1.0 if is_next else 0.7) * fade)
-			var rw = (8.0 if is_next else 5.5) * u
+			# round 19: a THIN, crisp ring: the one to press for is bright, the ones still on their way are faint and thinner, so that the contact with the band can be seen
+			var rc = Color(1, 1, 1, (1.0 if is_next else 0.38) * fade)
+			var rw = (3.4 if is_next else 2.0) * u
 			if zone == "gold":
 				rc = Color(1, 1, 1, 1.0).lerp(RING_GOLD, 0.5 + 0.5 * sin(t * 26.0))
-				rw = 10.0 * u
+				rw = 4.4 * u
 			elif zone == "green":
-				rw = 9.0 * u
-				draw_arc(c2, max(r, 4.0), 0, TAU, 60, Color(band.r, band.g, band.b, 0.34 * fade), 20.0 * u, true)
+				rw = 3.8 * u
 			elif dt > 0.02:
 				rc = Color(1.0, 0.45, 0.4, 0.8 * fade)
-			# a dark rim under the white ring and a wide soft glow over it: bright and thick, readable on every background
-			draw_arc(c2, max(r, 4.0), 0, TAU, 72, Color(0.0, 0.02, 0.06, 0.55 * fade), rw + 6.0 * u, true)
-			draw_arc(c2, max(r, 4.0), 0, TAU, 72, Color(rc.r, rc.g, rc.b, 0.22 * fade), rw + 16.0 * u, true)
-			draw_arc(c2, max(r, 4.0), 0, TAU, 72, rc, rw, true)
+			# a thin dark rim under the white ring (it stays readable on a bright sky) and, for the next ring only, a narrow glow
+			draw_arc(c2, max(r, 4.0), 0, TAU, 96, Color(0.0, 0.02, 0.06, (0.6 if is_next else 0.22) * fade), rw + 2.6 * u, true)
+			if is_next:
+				draw_arc(c2, max(r, 4.0), 0, TAU, 96, Color(rc.r, rc.g, rc.b, 0.16 * fade), rw + 5.0 * u, true)
+			draw_arc(c2, max(r, 4.0), 0, TAU, 96, rc, rw, true)
 		# the little scoreboard: one pip per wave (green / gold / red) and the points you still need
 		var n = sq["n"]
 		var half_h = 0.0
@@ -488,7 +489,37 @@ class Vignette extends Control:
 		tex.fill_to = Vector2(1.05, 0.5)
 		tex.width = 256
 		tex.height = 256
+	# round 19: a good judgement lights the four corners of the screen for a moment: a pale glow in the colour of the band (green), a warmer and stronger one for gold
+	func _hit_glow():
+		var p = hud.player
+		if p == null:
+			return
+		var sn = p.snatch
+		if sn.hit_fx_res == "":
+			return
+		var age = (GS.msec() - sn.hit_fx_t) / 1000.0
+		if age < 0.0 or age > 0.5:
+			return
+		var k = 1.0 - age / 0.5
+		k = k * k
+		var gold = sn.hit_fx_res == "gold"
+		var col = RING_GOLD
+		if not gold:
+			col = RING_GREEN
+			if sn.hit_fx_tier == 12:
+				col = RING_ORANGE
+			elif sn.hit_fx_tier == 13:
+				col = RING_BLUE
+		var al = (0.36 if gold else 0.2) * k
+		var reach = size.y * (0.36 if gold else 0.28)
+		var c0 = Color(col.r, col.g, col.b, al)
+		var c1 = Color(col.r, col.g, col.b, 0.0)
+		for corner in [Vector2(0, 0), Vector2(size.x, 0), Vector2(size.x, size.y), Vector2(0, size.y)]:
+			var sx = 1.0 if corner.x < 1.0 else -1.0
+			var sy = 1.0 if corner.y < 1.0 else -1.0
+			draw_polygon(PackedVector2Array([corner, corner + Vector2(sx * reach, 0), corner + Vector2(sx * reach, sy * reach), corner + Vector2(0, sy * reach)]), PackedColorArray([c0, c1, c1, c1]))
 	func _draw():
+		_hit_glow()
 		var a = hud.focus_a
 		if a <= 0.01:
 			return
@@ -937,7 +968,21 @@ class FryGrid extends HC:
 		# ---- the mission board (round 18): ONE goal on top (stop being hungry), the step on the way to it (fries), and the BONUS GOALS, each with the REWARD it gives
 		var mx = 26.0 * u
 		var my = (12.0 + (2.0 * 76.0 if unlocked else 76.0) + 20.0) * u
-		if not GS.board_open:
+		# round 19: a finished goal ALWAYS shows the board (even a folded one slides in and out again): the number runs up from 0 to its end, the line flashes twice,
+		# a stroke is drawn through it, and the board slides away (or stays, when it was open)
+		var now_s = GS.msec() / 1000.0
+		while GS.quest_pops.size() > 0 and now_s > GS.quest_pops[0]["t0"] + GS.QUEST_POP_SEC:
+			GS.quest_pops.pop_front()
+		var pop_id = ""
+		var pop_age = -1.0
+		if GS.quest_pops.size() > 0 and now_s >= GS.quest_pops[0]["t0"]:
+			pop_id = GS.quest_pops[0]["id"]
+			pop_age = now_s - GS.quest_pops[0]["t0"]
+		var forced = pop_id != "" and not GS.board_open
+		if forced:
+			var kin = clamp(min(pop_age / 0.45, (GS.QUEST_POP_SEC - pop_age) / 0.55), 0.0, 1.0)
+			draw_set_transform(Vector2(-(1.0 - kin * kin * (3.0 - 2.0 * kin)) * 560.0 * u, 0.0))
+		if not GS.board_open and not forced:
 			# round 18b: the board is folded away: a small tab remembers that it is there (and which key brings it back)
 			var tb = Rect2(Vector2(mx - 14.0 * u, my - 12.0 * u), Vector2(158.0 * u, 34.0 * u))
 			draw_rect(tb, Color(0.03, 0.05, 0.1, 0.55))
@@ -1033,11 +1078,23 @@ class FryGrid extends HC:
 				draw_line(Vector2(mx + 5.0 * u, yy - 2.0 * u), Vector2(mx + 12.0 * u, yy - 11.0 * u), qc, 2.0)
 			var qfs = int((16 if isf else 14) * u)
 			var qlab = GS.quest_label(id)
+			var is_pop = id == pop_id and pop_age >= 0.0
+			if is_pop and pop_age < 2.3:
+				var prg = GS.quest_progress(id)
+				var tot_n = prg[1] if prg.size() == 2 else 1
+				qlab = "%s   %d / %d" % [GS.QUESTS[id][1], int(round(tot_n * clamp(pop_age / 0.9, 0.0, 1.0))), tot_n]
 			shadow(font, Vector2(mx + 24.0 * u, yy), qlab, qfs, qc)
 			var rw = GS.QUESTS[id][3]
 			var rcol = Color.from_hsv(fmod(t * 0.3, 1.0), 0.4, 1.0, qa) if id == "star" else Color(1.0, 0.82, 0.35, qa)
 			var rtxt = "REWARD:  %s" % rw
 			var lw = font.get_string_size(Loc.t(qlab), HORIZONTAL_ALIGNMENT_LEFT, -1, qfs).x
+			if is_pop:
+				if pop_age >= 0.9 and pop_age < 1.5:
+					var fl = abs(sin((pop_age - 0.9) / 0.6 * PI * 2.0))
+					draw_rect(Rect2(mx - 6.0 * u, yy - 18.0 * u, pw - 36.0 * u, 26.0 * u), Color(1.0, 0.96, 0.7, 0.42 * fl))
+				if pop_age >= 1.55:
+					var sk = clamp((pop_age - 1.55) / 0.45, 0.0, 1.0)
+					draw_line(Vector2(mx + 22.0 * u, yy - 5.0 * u), Vector2(mx + 26.0 * u + lw * sk, yy - 5.0 * u), Color(1.0, 0.95, 0.75, 0.95), 2.5 * u)
 			var rwid = font.get_string_size(Loc.t(rtxt), HORIZONTAL_ALIGNMENT_LEFT, -1, int(12 * u)).x
 			if not isf and 24.0 * u + lw + 12.0 * u + rwid < pw - 30.0 * u:
 				shadow(font, Vector2(panel.end.x - 16.0 * u - rwid, yy), rtxt, int(12 * u), rcol)
@@ -1856,14 +1913,27 @@ func fry_arrived(g):
 # "i caught the sun... and somehow i'm still hungry." Then everything returns. It is a moment of quiet, not a prize screen.
 func _on_quest_done(id):
 	if not (id in GS.BIG_QUESTS):
-		# a small task: it just ticks off with a chime and a line
-		toast_queue.append("TASK DONE   -   " + GS.QUESTS[id][1])
-		if not toast_busy:
-			_next_toast()
-		Sfx.play("chime", -10.0, 1.25)
+		# a small task: the board slides in, the number runs up, the line flashes and is struck through (round 19: no more toast), with a soft chime
+		GS.quest_pop(id)
+		Sfx.play("chime", -12.0, 1.25)
 		return
 	if id == "sun" or id == "skybow" or id == "cloud":
 		return                      # round 9: these two have a short cinematic of their own (story_scenes.gd), with the same words
+	# round 19: the thing that was caught comes FIRST (its own little moment), then the goal board ticks off the whole sky, then the film of the whole sky
+	_when_scenes_free(func():
+		GS.quest_pop(id)
+		Sfx.play("chime", -12.0, 1.25)
+		get_tree().create_timer(GS.QUEST_POP_SEC - 0.3, true, false, true).timeout.connect(func(): _big_quest_film(id)))
+
+func _when_scenes_free(cb, tries = 0):
+	var m = get_tree().current_scene
+	var busy = (not m.cine_queue.is_empty()) or m.scenes.cine_busy or m.scenes.beat_busy or quiet_busy or GS.msec() - m.scenes.cine_done_at < 1800
+	if busy and tries < 160:
+		get_tree().create_timer(0.5, true, false, true).timeout.connect(func(): _when_scenes_free(cb, tries + 1))
+		return
+	cb.call()
+
+func _big_quest_film(id):
 	var sc = get_tree().current_scene.scenes
 	if sc.has_beat("quest_" + id):
 		sc.beat_moment("quest_" + id)       # round 10: a beat (a word and three short lines), not a minute of bars

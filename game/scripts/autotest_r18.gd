@@ -80,7 +80,7 @@ func r18a():
 	GS.set_diff("hard")
 	var ph = sn._seq_params(silver)
 	GS.set_diff("easy")
-	chk("easy: a silver fry is 2 circles of one wave, hard: 2 circles of three", pe["w"] == 1 and ph["w"] == 3 and pe["c"] == 2, "easy w=%d hard w=%d" % [pe["w"], ph["w"]])
+	chk("round 19: easy: a silver fry is 2 circles of TWO waves, hard: 2 circles of three", pe["w"] == 2 and ph["w"] == 3 and pe["c"] == 2, "easy w=%d hard w=%d" % [pe["w"], ph["w"]])
 	var prb = sn._seq_params(rbf)
 	chk("a rainbow fry has SEVEN circles", prb["c"] == 7, "c=%d" % prb["c"])
 	var pcloud = sn._seq_params(cloud)
@@ -92,15 +92,15 @@ func r18a():
 	var pe_g = sn._seq_params(gstar)
 	var pe_d = sn._seq_params(dstar)
 	var pe_t = sn._seq_params(tut)
-	chk("easy: the waves of silver / gold / diamond come faster and faster", pe_t["appr"] > pe["appr"] and pe["appr"] > pe_g["appr"] and pe_g["appr"] > pe_d["appr"] and pe["gap"] > pe_d["gap"], "appr %.2f %.2f %.2f %.2f" % [pe_t["appr"], pe["appr"], pe_g["appr"], pe_d["appr"]])
+	chk("round 19: easy: ONE even speed for every wave (appr 0.8..1.3 s, beat 0.55..0.8 s, tiers within 10% of each other)", absf(pe_t["appr"] - pe_d["appr"]) < 0.01 and pe["appr"] > 0.6 and pe["appr"] < 1.3 and pe["gap"] > 0.55 and pe["gap"] < 0.8 and pe_d["gap"] > pe["gap"] * 0.9, "appr %.2f %.2f %.2f %.2f gap %.2f %.2f" % [pe_t["appr"], pe["appr"], pe_g["appr"], pe_d["appr"], pe["gap"], pe_d["gap"]])
 	chk("easy: the bands of the diamond are thinner than the silver ones", pe_d["gg"] < pe["gg"] * 0.95, "%.3f vs %.3f" % [pe_d["gg"], pe["gg"]])
 	GS.set_diff("hard")
 	var ph_g = sn._seq_params(gstar)
 	var ph_d = sn._seq_params(dstar)
-	chk("hard: the same ladder", ph["appr"] > ph_g["appr"] and ph_g["appr"] > ph_d["appr"], "appr %.2f %.2f %.2f" % [ph["appr"], ph_g["appr"], ph_d["appr"]])
+	chk("round 19: hard: the same even speed, a little quicker than easy", absf(ph["appr"] - ph_d["appr"]) < 0.01 and ph["gap"] < pe["gap"] and ph["gap"] > 0.4, "appr %.2f %.2f %.2f gap %.2f" % [ph["appr"], ph_g["appr"], ph_d["appr"], ph["gap"]])
 	chk("hard: ONE band (gold) as wide as the old green band", ph["single"] and ph["gg"] == 0.0 and ph["gw"] > 0.07, "gw %.3f gg %.3f" % [ph["gw"], ph["gg"]])
 	chk("hard: a quarter of the beats may be missed", ph["need"] == ph["n"] - int(ph["n"] / 4), "need %d of %d" % [ph["need"], ph["n"]])
-	chk("the rings are smaller than they were (easy 0.68, hard 0.62)", GS.DP["easy"]["ring"] <= 0.7 and GS.DP["hard"]["ring"] <= 0.65)
+	chk("round 19: the rings are full size again (ring factor 1.0)", GS.DP["easy"]["ring"] >= 1.0 and GS.DP["hard"]["ring"] >= 1.0)
 	GS.set_diff("easy")
 	# a real sequence: per-note windows and the first wave
 	sn._seq_begin("grab", silver, silver.aim_point())
@@ -485,7 +485,7 @@ func r18h():
 	for i in s["notes"].size():
 		_press_at(sn, s["notes"][i]["t"] - s["notes"][i]["gw"] * 0.5)
 	var done = sn._seq_judge()
-	chk("hard: hitting the middle of the band is a gold hit for every beat", done and s["ok"] and s["misses"] == 0 and s["golds"] == s["need"], "points %d need %d golds %d" % [s["points"], s["need"], s["golds"]])
+	chk("hard: hitting the middle of the band is a gold hit for every beat", done and s["ok"] and s["misses"] == 0 and s["golds"] == s["n"], "points %d need %d golds %d" % [s["points"], s["need"], s["golds"]])
 	chk("hard: a hit is worth ONE point", s["points"] == s["golds"])
 	# early presses (before the band) are misses and the rest cannot save it
 	sn._seq_begin("grab", silver, silver.aim_point())
@@ -522,8 +522,14 @@ func r18h():
 	s = sn.seq
 	chk("easy: two bands", not s["single"] and s["notes"][0]["gg"] > 0.0)
 	_press_at(sn, s["notes"][0]["t"] - s["notes"][0]["gw"] * 0.5)
+	_press_at(sn, s["notes"][1]["t"] - s["notes"][1]["gw"] * 0.5)
 	done = sn._seq_judge()
-	chk("easy: one gold press on a 2-circle silver fry is enough (two points)", done and s["ok"] and s["points"] == 2, "points %d need %d" % [s["points"], s["need"]])
+	chk("round 19: easy: two gold presses (four points = enough) do NOT end the rhythm early", not done and s["points"] == 4, "points %d need %d done %s" % [s["points"], s["need"], str(done)])
+	# the rest of the piece: one more gold, and one miss (forgiven by the gold points), then it ends and counts
+	_press_at(sn, s["notes"][2]["t"] - s["notes"][2]["gw"] * 0.5)
+	_press_at(sn, s["notes"][3]["t"] - s["notes"][3]["gw"] - s["notes"][3]["gg"] - 0.08)
+	done = sn._seq_judge()
+	chk("round 19: easy: the piece counts only at its last note, one miss after golds is forgiven", done and s["ok"] and s["misses"] == 1, "points %d need %d misses %d" % [s["points"], s["need"], s["misses"]])
 	sn.seq = null
 	sn.lock_fry = null
 	# the tune functions do not crash and the tunes are in the right register
@@ -660,6 +666,155 @@ func r18f():
 				break
 	chk("OCEAN TIME: a fish of every rarity in the air near the gull (90 % of the samples)", samples > 0 and float(have_all) / float(samples) >= 0.9, "%d of %d samples, fewest fish in the air %d" % [have_all, samples, min_air])
 	chk("OCEAN TIME: TAB locked a fish", locked_ok)
+	get_tree().quit()
+
+# --r18s (round 19): THE SEA SOAK. OCEAN TIME, again and again: sit on the water, TAB-lock a fish, launch, play the rhythm like a human with some error, and look for the freeze the players
+# reported (the gull cannot move or take off any more). Every frame it checks: input locked while nothing holds the gull, the world stuck in slow motion, the gull not moving at all.
+func _diag(p, sn):
+	return "mode %d on_water %s input_locked %s state %s lock_fry %s seq %s launch_t %.2f time_scale %.2f sense %s fish_lock %s cine %s scripted %s pos %s speed %.1f" % [p.mode, str(p.on_water), str(p.input_locked), sn.state,
+		str(sn.lock_fry != null), str(sn.seq != null), p.launch_t, Engine.time_scale, str(GS.sense_active), str(sn.fish_lock != null), str(not sn.cine.is_empty()), str(p.scripted_move), str(p.global_position.snapped(Vector3(0.1, 0.1, 0.1))), p.speed]
+
+func r18s():
+	await get_tree().create_timer(1.5).timeout
+	var p = _setup("easy")
+	var sn = p.snatch
+	GS.fish_t = 80.0
+	GS.fish_streak = 1
+	GS.fish_streak_t = 14.0
+	GS.tab_lesson = 2
+	GS.vision_tired = false
+	var home = Vector3(14.0, -0.7, 66.0)
+	p.global_position = home
+	p.velocity = Vector3.ZERO
+	p.yaw = PI
+	p.aim_yaw = PI
+	p._enter_water(true)
+	var t_all = GS.msec()
+	var phase = "sit"
+	var phase_t = GS.msec()
+	var cycles = 0
+	var catches = 0
+	var bad = 0
+	var wrong_since = -1.0
+	var press_at = {}
+	var max_cycles = 14
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--cycles="):
+			max_cycles = int(a.substr(9))
+	var last_log = -1
+	while (GS.msec() - t_all) < 200000 and cycles < max_cycles and bad == 0:
+		await get_tree().process_frame
+		GS.fish_t = max(GS.fish_t, 60.0)
+		p.stamina = GS.stamina_max()
+		var ph_s = (GS.msec() - phase_t) / 1000.0
+		if int((GS.msec() - t_all) / 4000.0) != last_log:
+			last_log = int((GS.msec() - t_all) / 4000.0)
+			at.say("[R18S] t %.0f phase %s cycles %d: %s" % [(GS.msec() - t_all) / 1000.0, phase, cycles, _diag(p, sn)])
+		var orphan = sn.seq != null and not is_instance_valid(sn.lock_fry)         # a rhythm whose fry has been freed under it (the real freeze)
+		var wrong = orphan or (p.input_locked and sn.state == "idle" and sn.lock_fry == null and sn.seq == null and sn.cine.is_empty()) or (Engine.time_scale < 0.6 and sn.state == "idle" and sn.lock_fry == null and not GS.sense_active and sn.seq == null)
+		if wrong:
+			if wrong_since < 0.0:
+				wrong_since = GS.msec()
+			elif (GS.msec() - wrong_since) > 1800.0:
+				at.say("[R18S] FREEZE after %d cycles, phase %s: %s" % [cycles, phase, _diag(p, sn)])
+				bad += 1
+		else:
+			wrong_since = -1.0
+		if sn.seq != null and not orphan:
+			var s = sn.seq
+			var idx = sn._first_pending(s)
+			if idx >= 0 and not press_at.has(idx):
+				var nt = s["notes"][idx]
+				press_at[idx] = nt["t"] - (nt["gw"] + nt["gg"] * 0.5) + randfn(0.0, 0.07)
+			if idx >= 0 and sn.seq_now() >= press_at.get(idx, 99.0):
+				press_at[idx] = 99.0
+				at.tap("interact")
+			continue
+		else:
+			press_at = {}
+		match phase:
+			"sit":
+				if not (p.on_water and p.mode == 1):
+					if ph_s > 3.0:
+						at.say("[R18S] not on the water in phase sit: %s" % _diag(p, sn))
+						p.global_position = home
+						p._enter_water(true)
+						phase_t = GS.msec()
+					continue
+				var best = null
+				var bd = 999.0
+				for f in get_tree().get_nodes_in_group("fish_live"):
+					if is_instance_valid(f) and not f.taken and f.available and f.spot != null and f.spot.leap_dur - f.spot.st > 2.8:
+						var dd = f.global_position.distance_to(p.global_position)
+						if dd < bd and dd < 60.0 and dd > 8.0:
+							bd = dd
+							best = f
+				if best != null:
+					Input.action_press("gull_sense")
+					if not GS.sense_active:
+						main._open_sense()
+					var wt = 0.0
+					while wt < 3.0 and sn.fish_lock == null and is_instance_valid(best):
+						at.aim_at(p, best.global_position)
+						await get_tree().process_frame
+						wt += get_process_delta_time() / max(Engine.time_scale, 0.05)
+					Input.action_release("gull_sense")
+					main._close_sense()
+					if sn.fish_lock != null:
+						await at.real(0.2)
+						at.tap("flap")
+						await at.real(0.3)
+						if p.mode != 0:
+							at.say("[R18S] SPACE did not launch: %s" % _diag(p, sn))
+							bad += 1
+						phase = "fly"
+						phase_t = GS.msec()
+				elif ph_s > 25.0:
+					phase_t = GS.msec()
+			"fly":
+				# keep flying at the fish for a while, then come home and sit again; the catch (if any) is played by the rhythm branch above
+				if ph_s < 9.0 and sn.state == "idle" and sn.lock_fry == null and p.mode == 0:
+					var tgt = null
+					for f in get_tree().get_nodes_in_group("fish_live"):
+						if is_instance_valid(f) and not f.taken and f.available:
+							tgt = f
+							break
+					Input.action_press("move_forward")
+					if tgt != null and not p.input_locked:
+						at.aim_at(p, tgt.global_position)
+				elif ph_s >= 9.0 and sn.state == "idle" and sn.lock_fry == null:
+					Input.action_release("move_forward")
+					cycles += 1
+					if sn.last_commit.size() > 0:
+						catches += 1
+					# back to the sea at a random spot near home, as a player would after a long glide
+					p.global_position = home + Vector3(randf_range(-6.0, 6.0), 6.0, randf_range(-10.0, 4.0))
+					p.velocity = Vector3.ZERO
+					p.mode = 0
+					p.speed = 6.0
+					p.pitch = -0.4
+					await at.real(1.2)
+					phase = "sit"
+					phase_t = GS.msec()
+					if not (p.on_water and p.mode == 1):
+						p.global_position = Vector3(home.x, -0.7, home.z)
+						p._enter_water(true)
+	Input.action_release("move_forward")
+	at.say("[R18S] cycles %d, catches/commits %d, freezes %d, last: %s" % [cycles, catches, bad, _diag(p, sn)])
+	chk("SEA SOAK: no freeze in %d launch cycles" % cycles, bad == 0 and cycles >= 3, "cycles %d bad %d" % [cycles, bad])
+	# UNSTICK (pause menu): a wrecked state is put right, the collection stays
+	var sense0 = GS.gull_sense_count
+	var fish0 = GS.fish_book.size()
+	p.input_locked = true
+	Engine.time_scale = 0.2
+	GS.add_buff("coffee")
+	GS.fish_t = 30.0
+	p.on_water = true
+	p.mode = 1
+	main._unstick()
+	chk("UNSTICK: input free, time normal, buffs and OCEAN TIME gone, in the air above the start, collection kept",
+		not p.input_locked and Engine.time_scale == 1.0 and GS.buff["coffee"] <= 0.0 and GS.fish_t <= 0.0 and p.mode == 0 and not p.on_water and p.global_position.y > 12.0 and GS.gull_sense_count == sense0 and GS.fish_book.size() == fish0,
+		_diag(p, sn))
 	get_tree().quit()
 
 # --r18w: the HARD rhythm on screen (one gold band) and the EASY one for comparison: a silver fry locked by hand, the bot presses E in the middle of the band

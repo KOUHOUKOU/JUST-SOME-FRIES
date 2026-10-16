@@ -32,16 +32,22 @@ const SONGS = {
 	"sakura": [[69, 69, 71], [69, 69, 71], [69, 71, 72, 71, 69, 71, 69, 65, 64], [69, 69, 71], [69, 69, 71], [69, 71, 72, 71, 69, 71, 69, 65, 64]],
 	"canon": [[76, 74, 72, 71, 69, 67, 69, 71], [72, 71, 69, 67, 65, 64, 65, 67], [64, 67, 69, 71, 72, 76, 74, 72], [71, 69, 71, 72, 69, 67, 65, 64]],
 	"morning": [[67, 64, 62, 64, 67, 64, 62, 64], [67, 64, 62, 64, 67, 69, 67, 64], [62, 64, 67, 69, 72, 69, 67, 64], [62, 64, 67, 64, 62, 60, 62, 64]],
+	# round 19: more of the tunes everybody knows (all public domain), each starting at its FIRST phrase so that it is recognised at once
+	"mary": [[64, 62, 60, 62], [64, 64, 64], [62, 62, 62], [64, 67, 67], [64, 62, 60, 62], [64, 64, 64, 64], [62, 62, 64, 62], [60]],
+	"elise": [[76, 75, 76, 75, 76, 71, 74, 72, 69], [60, 64, 69, 71], [64, 68, 71, 72], [64, 76, 75, 76, 75, 76, 71, 74, 72, 69], [60, 64, 69, 71], [64, 72, 71, 69]],
+	"saints": [[60, 64, 65, 67], [60, 64, 65, 67], [60, 64, 65, 67, 64, 60, 64, 62], [64, 64, 62, 60, 60, 64, 67, 67, 65], [60, 64, 65, 67, 64, 60, 62, 60]],
+	"susanna": [[60, 62, 64, 67], [67, 69, 67, 64, 60], [62, 64, 64, 62, 60, 62], [60, 62, 64, 67], [67, 69, 67, 64, 60], [62, 64, 64, 62, 62, 60]],
+	"jingle": [[64, 64, 64], [64, 64, 64], [64, 67, 60, 62, 64], [65, 65, 65, 65], [65, 64, 64, 64, 64], [64, 62, 62, 64, 62, 67]],
 }
 
 # what each family may pick: song names, the instrument, whether a soft pad swells under every fourth note
 const FAMILIES = {
-	"things": {"songs": ["jacques", "twinkle", "row"], "inst": "kalimba", "pad": false},
-	"silver": {"songs": ["lullaby", "twinkle", "jacques"], "inst": "musicbox", "pad": false},
-	"gold": {"songs": ["greensleeves", "amazing", "auld", "sakura", "lullaby"], "inst": "harp", "pad": false},
-	"diamond": {"songs": ["canon", "greensleeves", "morning", "auld"], "inst": "celesta", "pad": true},
+	"things": {"songs": ["jacques", "twinkle", "row", "mary", "saints", "susanna"], "inst": "kalimba", "pad": false},
+	"silver": {"songs": ["twinkle", "jacques", "mary", "lullaby", "saints", "susanna"], "inst": "musicbox", "pad": false},
+	"gold": {"songs": ["amazing", "auld", "sakura", "elise", "greensleeves", "lullaby", "saints"], "inst": "harp", "pad": false},
+	"diamond": {"songs": ["canon", "morning", "elise", "auld", "greensleeves", "amazing"], "inst": "celesta", "pad": true},
 	"rb": {"songs": [], "inst": "glock", "pad": false},
-	"fish": {"songs": ["row", "jacques", "sakura"], "inst": "marimba", "pad": false},
+	"fish": {"songs": ["row", "jacques", "sakura", "susanna", "mary", "jingle"], "inst": "marimba", "pad": false},
 	"cloud": {"songs": ["canon", "amazing"], "inst": "harp", "pad": true},
 	"raincloud": {"songs": ["greensleeves"], "inst": "harp", "pad": true},
 	"sun": {"songs": ["morning"], "inst": "harp", "pad": true},
@@ -84,9 +90,10 @@ static func rainbow(circles, w):
 	return out
 
 # a segment of a song: whole phrases from a random phrase on, cut to n notes
-static func segment(song, n):
+static func segment(song, n, start = -1):
 	var ph = SONGS[song]
-	var start = randi() % max(ph.size() - 1, 1)
+	if start < 0:
+		start = randi() % max(ph.size() - 1, 1)
 	var out = []
 	var i = start
 	var guard = 0
@@ -103,6 +110,18 @@ static func segment(song, n):
 					break
 	out = out.slice(0, n)
 	return out
+
+# how far (in notes) the nearest phrase end of the song is from `n` notes (counting from the first phrase)
+static func fit(song, n):
+	var ph = SONGS[song]
+	var cum = 0
+	var best = 99
+	for i in ph.size():
+		cum += ph[i].size()
+		best = min(best, abs(cum - n))
+		if cum > n + 3:
+			break
+	return best
 
 static func resolve(notes):
 	if notes.is_empty():
@@ -135,9 +154,18 @@ static func pick(tier, n, cls, key = ""):
 		var songs = f["songs"].duplicate()
 		if songs.size() > 1 and songs.has(last_song):
 			songs.erase(last_song)
-		name = songs[randi() % songs.size()]
+		# round 19: the tune is the BEGINNING of a well-known song, and the song is chosen so that its phrases end where the catch ends (the best fit of the family: a catch of 6 notes
+		# gets a song whose first phrases are 6 notes long), so every catch is a little complete piece, never a random cut
+		var good = []
+		var best_d = 99
+		for s in songs:
+			best_d = min(best_d, fit(s, n))
+		for s in songs:
+			if fit(s, n) <= max(best_d, 2):
+				good.append(s)
+		name = good[randi() % good.size()]
 		last_song = name
-		notes = segment(name, n)
+		notes = segment(name, n, 0)
 	notes = resolve(notes)
 	return {"name": name, "inst": f["inst"], "pad": f["pad"], "notes": notes, "n": n, "lift": LIFT.get(fam, 0)}
 
@@ -168,7 +196,7 @@ static func play(tune, i, gold = false, extra_db = 0.0):
 		return
 	var m = note_of(tune, i)
 	Sfx.play_note(tune["inst"], m, -2.0 + extra_db)
-	Sfx.play_note("tinkle", _bank_top(m + 12), -11.0 + extra_db)
+	Sfx.play_note("tinkle", _bank_top(m + 12), -15.0 + extra_db)       # round 19: the bell on top is softer (it was a little sharp)
 	if gold:
 		Sfx.play_note("glock", _bank_top(m + 12), -8.0 + extra_db)
 	if tune["pad"] and i % 4 == 0:
@@ -178,14 +206,8 @@ static func play(tune, i, gold = false, extra_db = 0.0):
 static func gold(tune, i0):
 	if tune == null or tune["notes"].is_empty():
 		return
-	play(tune, i0, true)
-	var tree = Engine.get_main_loop()
-	if tree == null:
-		return
-	tree.create_timer(0.07, true, false, true).timeout.connect(func(): play(tune, i0 + 1, false, 0.5))
-	var top = _bank_top(note_of(tune, i0 + 1) + 12)
-	for k in 3:
-		tree.create_timer(0.13 + 0.055 * k, true, false, true).timeout.connect(func(): Sfx.play_note("tinkle", _bank_top(up_pent(top, 1 + k)), -12.0 - 1.5 * k))
+	# round 19: a gold press sounds EXACTLY like a green one: the note of its own beat, nothing else (the difference is only on the screen; the music stays in tune)
+	play(tune, i0, false)
 
 # HARD: the music plays by itself. Beat i of the tune, quietly (a missed beat still sounds, it just does not shine)
 static func beat(tune, i):
@@ -205,5 +227,3 @@ static func hit(tune, i, combo = 1):
 	Sfx.play_note("xylo", _bank_top(m + 12), -7.0 + up)
 	Sfx.play_note("tinkle", _bank_top(m + 12), -9.0 + up)
 	Sfx.play_note(tune["inst"], m, -3.0 + up)
-	if combo >= 3 and combo % 2 == 1:
-		Sfx.play_note("glock", _bank_top(up_pent(m + 12, 2)), -10.0 + up)
