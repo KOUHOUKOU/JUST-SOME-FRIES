@@ -1987,6 +1987,10 @@ func film():
 			await film_seg30()
 		31:
 			await film_seg31()
+		40:
+			await _r20_node().film_seg40()
+		41:
+			await _r20_node().film_seg41()
 		6:
 			var preview=load("res://scripts/art/s4_film.gd").new();add_child(preview)
 			await preview.run(self)

@@ -285,6 +285,15 @@ func _ready():
 		get_tree().paused = true
 		Engine.max_fps = 30
 		menus.show_main()
+		if "--nomusic" in args:
+			# (the trailer has its own score: the recording keeps the effects and the ambience only)
+			AudioServer.add_bus()
+			var fm_idx = AudioServer.bus_count - 1
+			AudioServer.set_bus_name(fm_idx, "FilmMusic")
+			AudioServer.set_bus_mute(fm_idx, true)
+			for fm_pl in Sfx.music + [Sfx.theme_player, Sfx.theme_player2]:
+				if fm_pl != null:
+					fm_pl.bus = "FilmMusic"
 		await get_tree().create_timer(0.5, true, false, true).timeout
 		title.finished.connect(func(): get_tree().create_timer(25.0, true, false, true).timeout.connect(func(): get_tree().quit()))
 		if "--r20opening" in args:

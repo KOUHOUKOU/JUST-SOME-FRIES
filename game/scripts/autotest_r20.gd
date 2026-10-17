@@ -229,3 +229,126 @@ func r20s():
 		await at.real(1.5)
 	Loc.set_lang("en")
 	get_tree().quit()
+
+# ================================================================== the round-20 trailer: two more film segments (the rest are autotest.gd film_seg*)
+# 40: THE RAINBOW. The arch over the sea, a long dive through it, the 14 judgements, and the film moment that follows
+func film_seg40():
+	var p = await at.film_clean_start()
+	at.film16_ready(3)
+	main.hud.film_clean = true
+	GS.cine_seen.erase("skybow")
+	GS.test_boost_bonus = 30.0
+	main.meteors.set_process(false)
+	main.quest_t = 1.0e9
+	var rp = get_tree().get_first_node_in_group("rainbow_pair")
+	GS.quests["skybow"] = "active"
+	var it = main.quest_items.get("skybow", null)
+	if it == null:
+		it = Node3D.new()
+		it.set_script(load("res://scripts/fries/mischief.gd"))
+		it.setup("skybow", main, rp.apex())
+		main.quest_items["skybow"] = it
+	GS.add_buff("coffee")
+	GS.add_buff("alcohol")
+	GS.add_buff("ice")
+	rp.fade = 1.0
+	var ap = rp.apex()
+	var wv = rp.wide_view(Vector3(0, 60, 100))
+	# the approach: from far out on the side, a slow glide towards the arch (it fills the picture), then the dive
+	var side = (wv["pos"] - wv["look"]).normalized()
+	var start = ap + side * 120.0 + Vector3(0, -10.0, 0)
+	at.place(start, ap, 22.0)
+	p.input_locked = false
+	await at.real(2.0)
+	say("[film] rainbow at %s" % str(ap))
+	var r = await at.attempt(it, Vector3(side.x, 0.1, side.z), 90.0, 0.0, -1.0, {"soft": true, "no_place": true, "max_frames": 1500})
+	clock("rainbow %s" % str(r))
+	Input.action_press("move_forward")
+	var t0 = GS.msec()
+	var seen = false
+	while GS.msec() - t0 < 30000:
+		await at.real(0.5)
+		if main.scenes.cine_busy:
+			seen = true
+		elif seen:
+			break
+	clock("rainbow film done")
+	await at.real(2.0)
+	Input.action_release("move_forward")
+
+# 41: THE STAR. RAINBOW TIME high over the sea, a falling star, the chase (the bot presses on the beat), the new tail
+func film_seg41():
+	var p = await at.film_clean_start()
+	at.film16_ready(3)
+	main.hud.film_clean = true
+	GS.cine_seen.erase("meteor")
+	main.meteors.set_process(true)
+	GS.add_buff("coffee")
+	GS.add_buff("alcohol")
+	GS.add_buff("ice")
+	GS.star_t = max(GS.star_t, 40.0)
+	at.place(Vector3(60.0, 80.0, 110.0), Vector3(60.0, 80.0, 40.0), 30.0)
+	p.input_locked = false
+	Input.action_press("move_forward")
+	Input.action_press("dash")
+	await at.real(2.5)
+	main.meteors.star_pending = 0.0
+	main.meteors._plan_star()
+	var star = null
+	var t1 = GS.msec()
+	while GS.msec() - t1 < 24000:
+		await at.real(0.1)
+		p.aim_yaw += 0.01
+		GS.star_t = max(GS.star_t, 30.0)
+		if main.meteors.star != null and is_instance_valid(main.meteors.star) and main.meteors.star.age > 1.0:
+			star = main.meteors.star
+			break
+	say("[film] star=%s" % str(star))
+	if star != null:
+		var d = star.vel.normalized()
+		var start = star.global_position - d * 40.0
+		start.y = max(start.y, 30.0)
+		at.place(start, star.global_position, GS.need_speed(star) + 1.0)
+		Input.action_press("move_forward")
+		Input.action_press("dash")
+		for i in 1800:
+			await get_tree().process_frame
+			if not is_instance_valid(star) or star.taken:
+				break
+			GS.star_t = max(GS.star_t, 30.0)
+			if p.snatch.state == "idle" and p.snatch.lock_fry == null:
+				at.aim_at(p, star.global_position)
+				p.stamina = 60.0
+			var sq = p.snatch.seq
+			if sq != null:
+				var idx = p.snatch._first_pending(sq)
+				if idx >= 0:
+					var nt = sq["notes"][idx]
+					var now = p.snatch.seq_now()
+					if now >= nt["t"] - sq["gw"] - sq["gg"] * 0.55 and not sq.has("p%d" % idx):
+						sq["p%d" % idx] = true
+						at.tap("interact")
+	Input.action_release("dash")
+	await at.real(1.0)
+	clock("meteor caught=%s" % str(GS.stats["meteors"]))
+	Input.action_press("move_forward")
+	var t2 = GS.msec()
+	var seen_cine = false
+	while GS.msec() - t2 < 40000:
+		await at.real(0.5)
+		if main.scenes.cine_busy:
+			seen_cine = true
+		elif seen_cine:
+			break
+	clock("star film done")
+	Input.action_press("dash")
+	for i in 150:
+		p.aim_yaw += 0.012
+		p.aim_pitch = 0.05
+		await at.real(1.0 / 30.0)
+	Input.action_release("dash")
+	Input.action_release("move_forward")
+	await at.real(1.0)
+
+func clock(s):
+	at.clock(s)

@@ -1,44 +1,40 @@
 1
-00:00:00,150 --> 00:00:02,222
-Just Some Fries.
+00:00:00,900 --> 00:00:04,676
+One fry. On the floor. And nobody noticed.
 
 2
-00:00:02,899 --> 00:00:09,195
-A sleepy island. A cafe. One fry nobody notices... and one very hungry seagull.
+00:00:09,299 --> 00:00:12,043
+...except one very hungry seagull.
 
 3
-00:00:20,279 --> 00:00:25,087
-Dive. Lock on. When the world slows down, find the rhythm.
+00:00:17,199 --> 00:00:22,416
+Dive. Lock on. And when the world slows down... find the rhythm.
 
 4
-00:00:25,779 --> 00:00:28,115
-Steal one. Then the next.
+00:00:26,299 --> 00:00:29,787
+Hold Tab. Everything that glows is a fry.
 
 5
-00:00:34,579 --> 00:00:38,428
-Hold Tab. The island shows you everything worth stealing.
+00:00:30,249 --> 00:00:33,426
+Coffee. A cocktail. Ice cream.
 
 6
-00:00:38,479 --> 00:00:41,271
-Dive. Grab. Don't stop.
+00:00:33,320 --> 00:00:37,000
+All three at once... and the wind turns to colour.
 
 7
-00:00:58,879 --> 00:01:04,287
-Coffee. A cocktail. Ice cream. All three... and nothing can catch you.
+00:00:54,604 --> 00:00:56,676
+Catch a fish.
 
 8
-00:01:09,480 --> 00:01:12,656
-Then go higher. The moon. The sun.
+00:01:00,672 --> 00:01:02,744
+Catch a rainbow.
 
 9
-00:01:26,056 --> 00:01:28,128
-Fish. Why not.
+00:01:06,140 --> 00:01:08,212
+Catch a falling star.
 
 10
-00:01:32,056 --> 00:01:35,736
-Hat. Shades. Chain. The whole sky.
-
-11
-00:01:44,456 --> 00:01:46,912
-You came here for some fries... right?
+00:01:54,632 --> 00:01:56,704
+Just some fries.
 
